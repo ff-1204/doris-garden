@@ -291,7 +291,7 @@ function guideState() {
 }
 function guideSub(k, need) {
   const sub = t => `<small>${t}</small>`;
-  if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 눌러 상태창에서 💧 물을 줘요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
+  if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 누르고 꽃 둘레의 💧를 눌러요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
   if (k === 'harvested' && !need.harvest) return sub('꽃이 피면 노란 점이 생겨요');
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
   if (k === 'sold') return sub('블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요');
@@ -414,7 +414,7 @@ const TOOL_GROUPS = [
 ];
 const BATCH = ['water', 'weed', 'prune', 'fert', 'harvest'];
 const HINT = {
-  look: '꽃을 누르면 상태창에서 돌보기·옮겨 심기·번식을, 빈 칸을 누르면 심기를 할 수 있어요.',
+  look: '꽃을 누르면 꽃 둘레에서 돌보기를, 상태창에서 옮겨 심기·번식을, 빈 칸을 누르면 심기를 할 수 있어요.',
   plant: '위에서 심을 꽃을 고른 뒤, 빈 칸을 누르세요.',
   water: '목마른 꽃을 눌러 물을 줘요. 한 번 주면 2달(현실 하루) 동안 괜찮아요.',
   weed: '잡초 난 꽃을 눌러 잡초를 뽑아요. 2달(현실 하루) 동안 괜찮아요. 뽑은 잡초는 비료가 돼요.',
@@ -536,7 +536,11 @@ function drawFlower(f, cal) {
       if (F.look === 'spike') {
         for (let s = -1; s <= 1; s++) for (let j = 0; j < F.n; j++) ell(s * R * 0.35, R * 0.45 - j * R * 0.14 * open, R * 0.11, R * 0.08, 0, j % 2 ? F.petal : F.center);
       } else if (F.look === 'rose') {
-        [[0.75, F.petal], [0.52, F.center], [0.3, F.petal]].forEach(([s, c]) => { g.fillStyle = c; g.beginPath(); g.arc(0, 0, R * s * open, 0, 7); g.fill(); });
+        // 꽃잎 5장 + 안쪽 4장 + 가운데 (10-06: 예전엔 동그라미 세 겹이라 꽃으로 안 보였음)
+        g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 0.8;
+        for (let i = 0; i < 5; i++) { g.save(); g.rotate(i / 5 * Math.PI * 2 + f.x); g.fillStyle = F.petal; g.beginPath(); g.ellipse(0, -R * 0.4 * open, R * 0.34 * open, R * 0.3 * open, 0, 0, 7); g.fill(); g.stroke(); g.restore(); }
+        for (let i = 0; i < 4; i++) { g.save(); g.rotate(i / 4 * Math.PI * 2 + 0.6 + f.y); g.fillStyle = F.center; g.beginPath(); g.ellipse(0, -R * 0.17 * open, R * 0.2 * open, R * 0.15 * open, 0, 0, 7); g.fill(); g.stroke(); g.restore(); }
+        g.fillStyle = F.look === 'rose' && F.key === 'dongbaek' ? '#f2c94c' : F.petal; g.beginPath(); g.arc(0, 0, R * 0.1 * open, 0, 7); g.fill();
       } else {
         const len = { daisy: 0.55, star: 0.5, round: 0.5, lotus: 0.7 }[F.look], wid = { daisy: 0.13, star: 0.14, round: 0.3, lotus: 0.24 }[F.look];
         g.strokeStyle = 'rgba(0,0,0,.15)'; g.lineWidth = 0.8;
@@ -578,6 +582,7 @@ function dragTiles() {
 }
 function draw() {
   if (!canvas.width) return;
+  updateRing();
   const cal = E.calendar(st.virtual);
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -751,6 +756,7 @@ function renderStatus(force) {
   const can = {}; for (const t of ['water', 'weed', 'prune', 'fert', 'harvest']) can[t] = E.canCare(st, f, t, cal);
   const have = t => t === 'water' ? st.water > 0 : t === 'prune' ? st.shears > 0 : t === 'weed' ? st.hoe > 0 : t === 'harvest' ? st.basket > 0 : t === 'fert' ? st.fert > 0 : true;
   const TOOLNAME = { water: '물병', weed: '호미', prune: '가위', harvest: '바구니', fert: '비료' };
+  ui.careNeed = []; ui.careNeedFor = f.id;
   const careTile = (t, ic, label) => {
     let state, sub;
     const hH = { water: f.waterH, weed: f.weedH, prune: f.pruneH, fert: f.fertH }[t];
@@ -762,8 +768,10 @@ function renderStatus(force) {
     else if (!have(t)) { state = 'lack'; sub = TOOLNAME[t] + ' 없음'; }
     else { state = 'need'; sub = { water: '목말라요', weed: '잡초 났어요', prune: '칠 수 있어요', fert: '줄 수 있어요', harvest: '피었어요' }[t]; }
     const act = state === 'need';
+    if (act) ui.careNeed.push(t);   // 꽃 둘레 단추로 (10-06)
     return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${ic}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
   };
+  ['water', 'weed', 'prune', 'fert', 'harvest'].forEach(t => careTile(t, '', ''));   // 지금 할 수 있는 돌보기 → 꽃 둘레 단추 (10-06)
   const canMove = !cal.frozen && !f.withered && (F.sow.includes(cal.month) || f.stage === 'dormant');
   // 옮겨 심기와 번식: 할 수 있으면 버튼, 아니면 이유
   const propReason = (() => {
@@ -802,9 +810,7 @@ function renderStatus(force) {
       <div title="꽃이 바꾸는 땅의 범위"><span class="lbl">땅</span><b>${E.qualityRadius(f)}칸</b><span class="mini land"><i style="background:${LANDS[land].color}"></i></span><span class="sub">${LANDS[land].name}</span></div>
     </div>
     ${note ? `<div class="sx-note">💬 ${note}</div>` : ''}
-    <div class="sx-care">
-      ${careTile('water', '💧', '물')}${careTile('weed', '🌿', '잡초')}${careTile('prune', '✂️', '가지치기')}${careTile('fert', '🌱', '비료')}${careTile('harvest', '🧺', '수확')}
-    </div>
+    <!-- 돌보기 다섯 칸은 꽃 둘레 단추로 옮김 (10-06) -->
     ${actions}
     <details ${ui.detailsOpen ? 'open' : ''} data-act="details"><summary>자세히 보기 · 땅 · 일정 · 출신</summary>
       <h3 style="margin:10px 0 4px;font-size:14px">땅</h3>
@@ -874,10 +880,50 @@ function renderTileStatus(force) {
       : keys.length ? `<div class="pgrid">${list}</div>`
       : '<p class="note">지금 심을 수 있는 게 창고에 없어요. 화원에서 제철 꽃을 사 보세요.</p><div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}`;
 }
+function careOn(f, t) { return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
+// 꽃 둘레 돌보기 단추 (10-06): 고른 꽃에 지금 할 수 있는 돌보기만 꽃 위에 부채꼴로. (상태창의 다섯 칸은 뺌)
+const RING_IC = { water: '💧', weed: '🌿', prune: '✂️', fert: '🌱', harvest: '🧺' }, RING_NM = { water: '물', weed: '잡초', prune: '가지치기', fert: '비료', harvest: '수확' };
+var ringEl = document.getElementById('careRing');   // var: draw()가 먼저 불려도 안전하게
+function updateRing() {
+  if (!ringEl) return;
+  const f = ui.tab === 'garden' && ui.tool === 'look' && st.flowers.find(x => x.id === ui.selected);
+  const cares = f && ui.careNeedFor === f.id ? (ui.careNeed || []) : [];
+  if (!cares.length) { if (!ringEl.hidden) { ringEl.hidden = true; ringEl.innerHTML = ''; ui.ringSig = ''; } return; }
+  const cx = canvas.offsetLeft + (f.x + 0.5) * cell, cy = canvas.offsetTop + (f.y + 0.5) * cell;
+  const R = Math.max(46, cell * 1.6), step = 52, n = cares.length;   // 단추끼리 겹치지 않게 (활꼴 간격 ≥ 40px)
+  // 꽃 자리에 따라 (10-06): 지도 가운데 쪽으로 펼침 (오른쪽 끝 꽃 → 왼쪽, 위쪽 꽃 → 아래). 가운데 가까운 꽃은 위로. 안 들어가면 옆 방향을 차례로
+  const fw = ringEl.clientWidth, fh = ringEl.clientHeight, M = 20;
+  const pos = base => cares.map((t, i) => { const ang = (base + (i - (n - 1) / 2) * step) * Math.PI / 180; return [cx + Math.cos(ang) * R, cy + Math.sin(ang) * R]; });
+  const fits = ps => ps.every(([x, y]) => x >= M && x <= fw - M && y >= M && y <= fh - M);
+  const dx = fw / 2 - cx, dy = fh / 2 - cy, toC = Math.round(Math.atan2(dy, dx) * 180 / Math.PI / 45) * 45;   // 가운데 쪽 (45° 단위)
+  const first = Math.hypot(dx, dy) < Math.min(fw, fh) * 0.18 ? -90 : toC;
+  const bases = [first, first - 45, first + 45, first - 90, first + 90, -90, 90, 0, 180];
+  let base = bases.find(b => fits(pos(b)));
+  let pts;
+  if (base != null) pts = pos(base);
+  else {   // 지도 모서리 · 가장자리라 부채꼴이 안 들어가면: 지도 안쪽으로 한 줄 (좌우 끝이면 세로 줄, 위아래 끝이면 가로 줄)
+    const gap = 42, nearSide = Math.min(cx, fw - cx) < Math.min(cy, fh - cy);
+    base = nearSide ? 'col' : 'row';
+    const clampLine = (c0, lim) => Math.min(lim - M - (n - 1) * gap / 2, Math.max(M + (n - 1) * gap / 2, c0));
+    if (nearSide) { const x = cx < fw / 2 ? cx + R : cx - R, y0 = clampLine(cy, fh); pts = cares.map((t, i) => [x, y0 + (i - (n - 1) / 2) * gap]); }
+    else { const y = cy < fh / 2 ? cy + R : cy - R, x0 = clampLine(cx, fw); pts = cares.map((t, i) => [x0 + (i - (n - 1) / 2) * gap, y]); }
+  }
+  const sig = [f.id, cares.join(','), Math.round(cx), Math.round(cy), Math.round(R), base, fw, fh].join('|');
+  if (sig === ui.ringSig) return;
+  ui.ringSig = sig; ringEl.hidden = false;
+  ringEl.innerHTML = cares.map((t, i) => {
+    return `<button type="button" class="ring-btn" data-ring="${t}" style="--k:${CARE_COLOR[t]};left:${pts[i][0].toFixed(1)}px;top:${pts[i][1].toFixed(1)}px;--d:${i * 40}ms" title="${RING_NM[t]}" aria-label="${RING_NM[t]}"><span>${RING_IC[t]}</span></button>`;
+  }).join('');
+}
+ringEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-ring]'); if (!b) return;
+  e.stopPropagation();
+  const f = st.flowers.find(x => x.id === ui.selected); if (f) careOn(f, b.dataset.ring);
+});
 $('#status').addEventListener('click', e => {
   const b = e.target.closest('[data-act], [data-plantat], [data-care]'); if (!b || b.disabled) return;
   const f = st.flowers.find(x => x.id === ui.selected);
-  if (b.dataset.care && f) { const t = b.dataset.care; return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
+  if (b.dataset.care && f) return careOn(f, b.dataset.care);
   if (b.dataset.plantat && ui.selTile) return plantAt(b.dataset.plantat, ui.selTile[0], ui.selTile[1]);
   if (b.dataset.act === 'closeSheet') { ui.sheetOpen = false; ui.selected = null; ui.selTile = null; if (ui.tool === 'move') { ui.tool = 'look'; ui.moveFrom = null; renderToolbar(true); } renderStatus(true); }
   if (b.dataset.act === 'dex') openDexDetail('flower', b.dataset.key);

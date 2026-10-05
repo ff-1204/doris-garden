@@ -105,6 +105,11 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--panel); padding: 3px 10px; font-size: 13px; }
 .seg button[aria-pressed="true"] { background: var(--sunk); color: var(--ink); font-weight: 600; }
+.care-ring { position: absolute; inset: 0; pointer-events: none; z-index: 4; }   /* 꽃 둘레 돌보기 단추 (10-06) */
+.ring-btn { pointer-events: auto; position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; border: 2px solid var(--k); background: var(--panel); display: grid; place-items: center; font-size: 17px; padding: 0; cursor: pointer; box-shadow: 0 3px 10px rgba(40,30,20,.22); animation: ringPop .22s ease both; animation-delay: var(--d); }
+.ring-btn:hover { background: color-mix(in srgb, var(--k) 14%, var(--panel)); transform: scale(1.08); }
+@keyframes ringPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ring-btn { animation: none; } }
 .mapframe { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #a39b8e; box-shadow: 0 6px 18px rgba(40, 30, 20, .10); }
 canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair; }
 .feedback { min-height: 22px; font-size: 13px; color: var(--muted); }
@@ -853,6 +858,7 @@ input.tog:checked::before { transform: translateX(17px); }
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
+                <div class="care-ring" id="careRing" hidden></div>
               </div>
             </div>
           </div>
