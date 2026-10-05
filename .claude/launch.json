@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "flower-land", "runtimeExecutable": "node", "runtimeArgs": ["flower-land/serve.js"], "port": 5173 }
+  ]
+}
