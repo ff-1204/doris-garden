@@ -1055,7 +1055,7 @@ function openReserveConfirm() {                                                 
       return `<div class="rc-item" style="--pc:${s.F.petal}"><span class="rc-art">${spriteImg(s.F.key, 'flower', 40, false, s.F.name)}</span>
         <span class="rc-main"><b>${s.F.name} ${FORM[s.F.form].name} <span class="data">×${s.qty}</span></b>
           <small>${monthIc(s.window[0])} ${monthsText(s.window)} 심기</small>
-          <small>📦 ${s.year}년차 ${monthName(s.deliverMonth)} 1일 (${WEEKDAY[Math.floor(di / 2)]}) 오전 6시 도착</small></span>
+          <small>📦 내년 ${monthName(s.deliverMonth)} 1일 (${WEEKDAY[Math.floor(di / 2)]}) 오전 6시 도착</small></span>
         <span class="rc-price data">${won(s.total)}</span></div>`;
     }).join('')}</div>
     <div class="rc-total"><div><span class="muted">일반가</span><s class="data">${won(full)}</s></div><div><span class="muted">예약 할인</span><span class="data good">−${won(full - total)}</span></div><div class="rc-sum"><b>합계</b><b class="data">${won(total)}</b></div></div>
@@ -1081,7 +1081,8 @@ function groupItems() {
   return [...map.values()];
 }
 function renderStore(force) {
-  const cal = E.calendar(st.virtual);
+  const cal = E.calendar(st.virtual), yr0 = E.yearOf(st, cal);
+  const relYear = y => y <= yr0 ? '올해' : y === yr0 + 1 ? '내년' : `${y - yr0}년 뒤`;   // 10-06: ○년차 대신
   const groups = groupItems();
   const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx]);
   if (!force && ui.sigs.store === sig) return;
@@ -1101,13 +1102,13 @@ function renderStore(force) {
     const comp = gr.ids.filter(id => E.compostable(st.items.find(it => it.id === id)));   // 곧 시들고 품질 5% 이하 → 비료로
     const exp = gr.ageH < 12 * E.MONTH_H ? E.calendarAfterFlow(st.virtual, 12 * E.MONTH_H - gr.ageH) : null;
     const soon = !gr.packaged && gr.g > 0 && gr.ageH >= 10 * E.MONTH_H;          // 싹 트는 힘이 곧 줄기 시작함
-    const expTxt = gr.packaged ? '📦 심을 때까지 그대로' : exp ? `<span title="이때까지 싱싱해요 (그 뒤엔 싹 트는 힘이 줄어요)">🌿 ${E.yearOf(st, exp)}년차 ${monthName(exp.month)}까지</span>` : `${FORM[F.form].rate} ${Math.round(gr.g * 100)}%`;
+    const expTxt = gr.packaged ? '📦 심을 때까지 그대로' : exp ? `<span title="이때까지 싱싱해요 (그 뒤엔 싹 트는 힘이 줄어요)">🌿 ${relYear(E.yearOf(st, exp))} ${monthName(exp.month)}까지</span>` : `${FORM[F.form].rate} ${Math.round(gr.g * 100)}%`;
     return `<div class="shopcard storecard ${now ? 'ready' : ''}" style="--pc:${F.petal}">
       <div class="sc-art">${formArt(gr.type, 64)}<span class="chip sc-form">${FORM[F.form].name}</span><span class="sc-count left">×${gr.ids.length}</span>${gr.packaged ? '<span class="sc-pack" title="특수 포장">📦</span>' : soon ? '<span class="sc-last">곧 시들어요</span>' : ''}</div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(gr.q)}</span></div>
       <div class="cc-q">${qbar(gr.q)}<span class="data">${E.pct(gr.q)}%</span></div>
       <div class="cc-meta"><span class="st-from">${gr.origin}</span> ${expTxt}</div>
-      ${now ? `<button type="button" class="btn primary" data-plant="${gr.type}">🌰 심기</button>` : `<div class="sc-next">${gr.g <= 0 ? '싹이 트지 않아요' : cal.frozen ? `심는 때 <b>${monthsText(F.sow)}</b>` : `심는 때 <b>${monthsText(F.sow)}</b>${(ns => ns ? ` · ${realH(ns.hours / (st.speed || 1))} 뒤` : '')(nextSale(F))}`}</div>`}
+      ${now ? `<button type="button" class="btn primary" data-plant="${gr.type}">🌰 심기</button>` : `<div class="sc-next">${gr.g <= 0 ? '싹이 트지 않아요' : (ns => ns ? `다음 심는 때 <b>${monthName(ns.cal.month)}</b> · ${realH(ns.hours / (st.speed || 1))} 뒤` : `심는 때 <b>${sowText(F)}</b>`)(nextSale(F))}</div>`}
       ${comp.length ? `<button type="button" class="btn compost" data-compost="${comp.join(',')}">🌱 비료</button>` : ''}</div>`;
   };
   const isNow = gr => !cal.frozen && FLOWERS[gr.type].sow.includes(cal.month) && gr.g > 0;
@@ -1121,7 +1122,7 @@ function renderStore(force) {
       <span class="ar-main"><b>${F.name} <span class="muted">${FORM[F.form].name}</span></b><span class="ar-tag ${tagCls}">${tag}</span></span>
       <span class="ar-when"><b>${when}</b><small>${sub}</small></span></div>`; };
   const pend = st.pending.map(p => arrive(p.type, p.qs.length, `🌱 ${p.method}`, 'grow', `${flowH(Math.max(0, p.dueH))} 뒤`, '뿌리 내리는 중')).join('');
-  const resv = st.reservations.filter(r => !r.done).map(r => arrive(r.type, r.qty, '🗓️ 예약', 'resv', `${monthName(MONTHS[r.deliverIdx])} 1일`, `${r.year}년차 · 특수 포장`)).join('');
+  const resv = st.reservations.filter(r => !r.done).map(r => arrive(r.type, r.qty, '🗓️ 예약', 'resv', `${monthName(MONTHS[r.deliverIdx])} 1일`, `${relYear(r.year)} · 특수 포장`)).join('');
   $('#p-store').innerHTML = `<div class="stack">
     <div class="shop-news">
       <span><b>🌰 ${total}개</b> ${groups.length ? `${new Set(groups.map(g0 => g0.type)).size}가지 꽃` : '비어 있어요'}</span>
