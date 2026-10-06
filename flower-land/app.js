@@ -724,11 +724,15 @@ function blockers(f) {
   return st.flowers.filter(o => o !== f && !o.withered && homeLand(FLOWERS[o.type]) !== mine && Math.hypot(o.x - tile.x, o.y - tile.y) <= E.stageRadius(o) + 0.01);
 }
 // 기운이 낮은 이유 (목마름 / 땅이 아직 바뀌는 중 / 다른 꽃에 밀림)
-function vigorCause(f, match) {
-  if (f.thirstH > 0) return '물을 주면 기운이 돌아와요';
-  if (blockers(f).length) return '다른 꽃의 땅에 밀리고 있어요';
-  if (match < 0.8) return f.adaptH > 0 ? '땅이 아직 바뀌는 중이에요. 적응 기간이라 품질은 그대로예요' : '땅이 아직 바뀌는 중이에요';
-  return '';
+function vigorCause(f, match) {   // 10-06: 이유가 여럿이면 함께 (목마름 + 옆 꽃)
+  const out = [];
+  if (f.thirstH > 0) out.push('물을 주면 기운이 돌아와요');
+  const blk = blockers(f);
+  if (blk.length) {   // ⑭ 좋아하는 환경이 아주 다른 꽃이 옆이면 이름을 대고 띄워 심기를 권함
+    const F = FLOWERS[f.type], far = blk.map(o => FLOWERS[o.type]).map(O => ({ O, d: Math.abs(O.t - F.t) / 12 + Math.abs(O.m - F.m) / 30 })).sort((x, y) => y.d - x.d)[0];
+    out.push(far.d >= 1 ? `옆 ${josa(far.O.name, '과/와')} 좋아하는 환경이 너무 달라요 · 한 칸 띄워 심어 보세요` : '다른 꽃의 땅에 밀리고 있어요');
+  } else if (!out.length && match < 0.8) out.push(f.adaptH > 0 ? '땅이 아직 바뀌는 중이에요. 적응 기간이라 품질은 그대로예요' : '땅이 아직 바뀌는 중이에요');
+  return out.join(' · ');
 }
 function renderStatus(force) {
   const el = $('#status'), f = st.flowers.find(x => x.id === ui.selected);
@@ -756,7 +760,7 @@ function renderStatus(force) {
   const can = {}; for (const t of ['water', 'weed', 'prune', 'fert', 'harvest']) can[t] = E.canCare(st, f, t, cal);
   const have = t => t === 'water' ? st.water > 0 : t === 'prune' ? st.shears > 0 : t === 'weed' ? st.hoe > 0 : t === 'harvest' ? st.basket > 0 : t === 'fert' ? st.fert > 0 : true;
   const TOOLNAME = { water: '물병', weed: '호미', prune: '가위', harvest: '바구니', fert: '비료' };
-  ui.careNeed = []; ui.careNeedFor = f.id;
+  ui.careNeed = []; ui.careLack = []; ui.careNeedFor = f.id;
   const careTile = (t, ic, label) => {
     let state, sub;
     const hH = { water: f.waterH, weed: f.weedH, prune: f.pruneH, fert: f.fertH }[t];
@@ -769,6 +773,7 @@ function renderStatus(force) {
     else { state = 'need'; sub = { water: '목말라요', weed: '잡초 났어요', prune: '칠 수 있어요', fert: '줄 수 있어요', harvest: '피었어요' }[t]; }
     const act = state === 'need';
     if (act) ui.careNeed.push(t);   // 꽃 둘레 단추로 (10-06)
+    if (state === 'lack') ui.careLack.push(t);   // ⑯ 도구가 없으면 흐린 단추 (누르면 사기 창)
     return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${ic}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
   };
   ['water', 'weed', 'prune', 'fert', 'harvest'].forEach(t => careTile(t, '', ''));   // 지금 할 수 있는 돌보기 → 꽃 둘레 단추 (10-06)
@@ -882,12 +887,14 @@ function renderTileStatus(force) {
 }
 function careOn(f, t) { return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // 꽃 둘레 돌보기 단추 (10-06): 고른 꽃에 지금 할 수 있는 돌보기만 꽃 위에 부채꼴로. (상태창의 다섯 칸은 뺌)
+const RING_TOOL = { water: 'water', weed: 'hoe', prune: 'shears', fert: 'fert', harvest: 'basket' };
 const RING_IC = { water: '💧', weed: '🌿', prune: '✂️', fert: '🌱', harvest: '🧺' }, RING_NM = { water: '물', weed: '잡초', prune: '가지치기', fert: '비료', harvest: '수확' };
 var ringEl = document.getElementById('careRing');   // var: draw()가 먼저 불려도 안전하게
 function updateRing() {
   if (!ringEl) return;
   const f = ui.tab === 'garden' && ui.tool === 'look' && st.flowers.find(x => x.id === ui.selected);
-  const cares = f && ui.careNeedFor === f.id ? (ui.careNeed || []) : [];
+  const mine = f && ui.careNeedFor === f.id, need = mine ? (ui.careNeed || []) : [], lack = mine ? (ui.careLack || []) : [];
+  const cares = ['water', 'weed', 'prune', 'fert', 'harvest'].filter(t => need.includes(t) || lack.includes(t));
   if (!cares.length) { if (!ringEl.hidden) { ringEl.hidden = true; ringEl.innerHTML = ''; ui.ringSig = ''; } return; }
   const cx = canvas.offsetLeft + (f.x + 0.5) * cell, cy = canvas.offsetTop + (f.y + 0.5) * cell;
   const R = Math.max(46, cell * 1.6), step = 52, n = cares.length;   // 단추끼리 겹치지 않게 (활꼴 간격 ≥ 40px)
@@ -908,16 +915,18 @@ function updateRing() {
     if (nearSide) { const x = cx < fw / 2 ? cx + R : cx - R, y0 = clampLine(cy, fh); pts = cares.map((t, i) => [x, y0 + (i - (n - 1) / 2) * gap]); }
     else { const y = cy < fh / 2 ? cy + R : cy - R, x0 = clampLine(cx, fw); pts = cares.map((t, i) => [x0 + (i - (n - 1) / 2) * gap, y]); }
   }
-  const sig = [f.id, cares.join(','), Math.round(cx), Math.round(cy), Math.round(R), base, fw, fh].join('|');
+  const sig = [f.id, cares.join(','), lack.join(','), Math.round(cx), Math.round(cy), Math.round(R), base, fw, fh].join('|');
   if (sig === ui.ringSig) return;
   ui.ringSig = sig; ringEl.hidden = false;
   ringEl.innerHTML = cares.map((t, i) => {
-    return `<button type="button" class="ring-btn" data-ring="${t}" style="--k:${CARE_COLOR[t]};left:${pts[i][0].toFixed(1)}px;top:${pts[i][1].toFixed(1)}px;--d:${i * 40}ms" title="${RING_NM[t]}" aria-label="${RING_NM[t]}"><span>${RING_IC[t]}</span></button>`;
+    const lk = lack.includes(t);
+    return `<button type="button" class="ring-btn ${lk ? 'lack' : ''}" data-ring="${t}" ${lk ? `data-ringbuy="${RING_TOOL[t]}"` : ''} style="--k:${CARE_COLOR[t]};left:${pts[i][0].toFixed(1)}px;top:${pts[i][1].toFixed(1)}px;--d:${i * 40}ms" title="${lk ? `${RING_NM[t]} · ${E.SUPPLIES[RING_TOOL[t]].name} 없음 · 누르면 살 수 있어요` : RING_NM[t]}" aria-label="${RING_NM[t]}${lk ? ' (도구 없음)' : ''}"><span>${RING_IC[t]}</span>${lk ? '<i class="ring-lack">+</i>' : ''}</button>`;
   }).join('');
 }
 ringEl.addEventListener('click', e => {
   const b = e.target.closest('[data-ring]'); if (!b) return;
   e.stopPropagation();
+  if (b.dataset.ringbuy) return openSupply(b.dataset.ringbuy);
   const f = st.flowers.find(x => x.id === ui.selected); if (f) careOn(f, b.dataset.ring);
 });
 $('#status').addEventListener('click', e => {
@@ -1343,7 +1352,7 @@ function openBlendConfirm() {
     <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 등록돼요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.BLEND_KEYS.length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${sel.length}장이 들어가요 · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
   openModal('🫖 블렌딩', body, [
     { label: '취소', act: () => closeModal() },
-    { label: '🫖 블렌딩', primary: true, act: () => { closeModal(); const r = E.blend(st, ui.blendSel, ctx); if (r.ok) ui.blendSel = []; after(r, 'blended'); } },
+    { label: `🫖 블렌딩 · ${sel.length}장`, primary: true, act: () => { closeModal(); const r = E.blend(st, ui.blendSel, ctx); if (r.ok) ui.blendSel = []; after(r, 'blended'); } },
   ]);
 }
 function groupBy(list, keyFn) {

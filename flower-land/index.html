@@ -107,6 +107,8 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 .seg button[aria-pressed="true"] { background: var(--sunk); color: var(--ink); font-weight: 600; }
 .care-ring { position: absolute; inset: 0; pointer-events: none; z-index: 4; }   /* 꽃 둘레 돌보기 단추 (10-06) */
 .ring-btn { pointer-events: auto; position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; border: 2px solid var(--k); background: var(--panel); display: grid; place-items: center; font-size: 17px; padding: 0; cursor: pointer; box-shadow: 0 3px 10px rgba(40,30,20,.22); animation: ringPop .22s ease both; animation-delay: var(--d); }
+.ring-btn.lack { border-style: dashed; filter: grayscale(.85); opacity: .75; }   /* ⑯ 도구가 없는 돌보기 (10-06) */
+.ring-btn .ring-lack { position: absolute; right: -4px; bottom: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); font-size: 12px; line-height: 14px; font-style: normal; color: var(--muted); }
 .ring-btn:hover { background: color-mix(in srgb, var(--k) 14%, var(--panel)); transform: scale(1.08); }
 @keyframes ringPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ring-btn { animation: none; } }
