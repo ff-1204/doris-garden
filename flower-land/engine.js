@@ -81,10 +81,10 @@ function untilMonth(ms, test) {
 
 // ---------------------------------------------------------------- 꽃 (P09, P15-08, P17)
 const FORM = {
-  seed: { name: '씨앗', rate: '발아율' },
-  sapling: { name: '묘목', rate: '뿌리내림' },
-  seedling: { name: '모종', rate: '뿌리내림' },
-  rhizome: { name: '연근', rate: '뿌리내림' },
+  seed: { name: '씨앗', rate: '발아율', unit: '봉지' },        // 세는 말 (10-06): 화원에서 쓰는 단위
+  sapling: { name: '묘목', rate: '뿌리내림', unit: '그루' },
+  seedling: { name: '모종', rate: '뿌리내림', unit: '포기' },
+  rhizome: { name: '연근', rate: '뿌리내림', unit: '뿌리' },
 };
 const LIFE = { annual: '한해살이', perennial: '여러해살이', tree: '나무' };
 const FLOWERS = {
@@ -463,7 +463,7 @@ function onSlot(st, cal, ctx) {
     for (let i = 0; i < r.qty; i++) { const it = newItem(st, r.type, 1, '예약'); it.packaged = true; st.items.push(it); }
     r.done = true;
     const F = FLOWERS[r.type];
-    addLog(st, 3, `예약한 ${F.name} ${FORM[F.form].name} ${r.qty}개가 도착했어요`, ctx);
+    addLog(st, 3, `예약한 ${F.name} ${FORM[F.form].name} ${r.qty}${FORM[F.form].unit}가 도착했어요`, ctx);
   }
   st.reservations = st.reservations.filter(r => !r.done || r.year >= yr);
   // 심을 때 (P11-01-01)
@@ -535,7 +535,7 @@ function buy(st, type, n) {                      // P06-01-01
   if (st.money < cost) return no('돈이 모자라요');
   st.money -= cost;
   for (let i = 0; i < n; i++) st.items.push(newItem(st, type, 1, '화원'));
-  return ok(`${F.name} ${FORM[F.form].name} ${n}개를 샀어요`);
+  return ok(`${F.name} ${FORM[F.form].name} ${n}${FORM[F.form].unit}를 샀어요`);
 }
 
 // 화원 소모품: 비료 1개 = 1번, 물병 1개 = 물 주기 1번, 호미 1개 = 잡초 뽑기 10번, 가위 1개 = 가지치기 5번, 바구니 1개 = 수확 10번. 꽃잠에도 팔아요
@@ -573,7 +573,7 @@ function compostItems(st, ids) {
   if (!list.length) return no('비료로 만들 수 있는 게 없어요');
   for (const it of list) st.items.splice(st.items.indexOf(it), 1);
   addFert(st, list.length);
-  return ok(`${FLOWERS[list[0].type].name} ${FORM[FLOWERS[list[0].type].form].name} ${list.length}개로 비료 ${list.length}개를 만들었어요`);
+  return ok(`${FLOWERS[list[0].type].name} ${FORM[FLOWERS[list[0].type].form].name} ${list.length}${FORM[FLOWERS[list[0].type].form].unit}로 비료 ${list.length}개를 만들었어요`);
 }
 
 function reservedCount(st, type, year) {
@@ -676,7 +676,7 @@ function care(st, tool, tiles, ctx) {            // P13
     }
   }
   flushPending(st, ctx);
-  const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: '꽃잎을 수확해 찻집에 넣었어요' }[tool];
+  const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: '꽃잎을 거둬 제다실로 보냈어요' }[tool];
   return ok(`${targets.length}포기에 ${word}`, { count: targets.length });
 }
 
@@ -782,11 +782,11 @@ function blend(st, ids, ctx) {
 function sellBlends(st, ids) {
   if (!teaShopOpen(calendar(st.virtual))) return no('찻집은 겨울(12월)부터 열어요');
   const list = st.blends.filter(b => ids.includes(b.id));
-  if (!list.length) return no('팔 블렌딩 차가 없어요');
+  if (!list.length) return no('팔 블렌드 차가 없어요');
   let sum = 0;
   for (const b of list) { sum += blendValue(b); st.blends.splice(st.blends.indexOf(b), 1); }
   st.money += sum;
-  return ok(`블렌딩 차 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
+  return ok(`블렌드 차 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
 }
 // P17-10 우림 → 찻잔 → 판매: 찻집이 열렸을 때(토·일) 티백 · 생차 · 블렌드를 우려 찻잔으로. 판매는 찻잔에서만
 // 찻잔은 우린 달이 지나면 식어서 값이 반 (COLD_RATE)
@@ -863,7 +863,7 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
     st.dex.tea[t.type] = Math.max(st.dex.tea[t.type] || 0, t.q);                                     // P08-01-06 가장 좋은 품질
   }
   st.money += sum;
-  return ok(`차 ${list.length}개를 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
+  return ok(`차 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
 }
 
 const api = {
