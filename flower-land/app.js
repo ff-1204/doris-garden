@@ -1210,7 +1210,7 @@ function openTeaConfirm(ids, mode, counts) {
   const dried = mode === true, raw = mode === 'raw';
   const cal = E.calendar(st.virtual), src = (dried ? st.dried : st.petals).filter(p => ids.includes(p.id));
   if (!src.length) return;
-  const sk = E.seasonKey(st, cal), fresh = p => !dried && p.seasonKey === sk;
+  const fresh = () => false;   // 제철 보너스 없앰 (10-06)
   const key = p => [p.type, fresh(p), E.isHat(p.q)].join('|');
   const groups = groupType(src, key);
   // 줄마다 몇 개 만들지 (기본은 전부). 고른 수만큼 품질이 좋은 꽃잎부터 써요
@@ -1224,7 +1224,7 @@ function openTeaConfirm(ids, mode, counts) {
         <small><span class="stars">${starStr(g.q)}</span> · ${dried ? '말린 ' : ''}${F.name} 꽃잎 ${g.ids.length}장 중</small></span>
       <span class="stepper"><button type="button" data-tq="${k}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-tq="${k}|+" ${n >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span>
       </div>`; }).join('')}</div>
-    <div class="rc-notes">${raw ? '<span>🌸 생화 티백: 말리지 않고 바로 티백으로 · <b class="val-down">값 −10%</b> (말린 꽃잎 티백보다 조금 싸요)</span><span>🏷️ 티백이 되는 순간 지금 품질 그대로 멈춰요 · 생화로 두면 <b class="val-down">한 달에 20%씩 줄어요</b></span>' : `<span>${dried ? '🌾 말린 꽃잎으로 만든 티백은 제철 보너스가 없어요' : '🏷️ 만드는 순간의 꽃잎 품질 그대로 티백이 되고, 그 뒤로 품질이 줄지 않아요'}</span><span>🍵 티백은 찻집으로 가서 한 잔씩 우려 팔아요</span>`}<span>🍃 ★5 꽃잎은 햇차가 돼요 · <b class="val-up">값 +10%</b></span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 ${dried ? '꽃방' : '제다실'}에 있어요 · 좋은 꽃잎부터 써요</span>` : ''}</div></div>`;
+    <div class="rc-notes">${raw ? '<span>🌸 생화 티백: 말리지 않고 바로 티백으로 · <b class="val-down">값 −10%</b> (말린 꽃잎 티백보다 조금 싸요)</span><span>🏷️ 티백이 되는 순간 지금 품질 그대로 멈춰요 · 생화로 두면 <b class="val-down">한 달에 20%씩 줄어요</b></span>' : `<span>🏷️ 만드는 순간의 꽃잎 품질 그대로 티백이 되고, 그 뒤로 품질이 줄지 않아요</span><span>🍵 티백은 찻집으로 가서 한 잔씩 우려 팔아요</span>`}<span>🍃 ★5 꽃잎은 햇차가 돼요 · <b class="val-up">값 +10%</b></span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 ${dried ? '꽃방' : '제다실'}에 있어요 · 좋은 꽃잎부터 써요</span>` : ''}</div></div>`;
   openModal(raw ? '🌸 생화 티백' : '🏷️ 티백', body, [
     { label: '취소', act: () => closeModal() },
     { label: pick.length ? `티백 · ${pick.length}개` : '선택 없음', primary: true, act: () => { if (!pick.length) return; closeModal(); after(raw ? E.makeRaw(st, pick, ctx) : dried ? E.makeTeaDried(st, pick, ctx) : E.makeTea(st, pick, ctx), null, { label: '🍵 찻집', fn: () => setTab('cab') }); } },
@@ -1360,8 +1360,8 @@ function groupBy(list, keyFn) {
   for (const x of list) { const k = keyFn(x); if (!m.has(k)) m.set(k, { ...x, ids: [] }); m.get(k).ids.push(x.id); }
   return [...m.values()];
 }
-// 차 꼬리표: 🌸 생화 티백 (−10%) · 🍃 햇차 (★5 꽃잎, +10%) · ✨ 제철 (+10%)
-const teaTags = (t, pct) => `${t.raw ? ` <span class="chip raw-chip">🌸 생화${pct ? ' −10%' : ''}</span>` : ''}${t.hat ? ` <span class="chip hat-chip">🍃 햇차${pct ? ' +10%' : ''}</span>` : ''}${t.fresh ? ` <span class="chip fresh-chip">✨ 제철${pct ? ' +10%' : ''}</span>` : ''}`;
+// 차 꼬리표: 🌸 생화 티백 (−10%) · 🍃 햇차 (★5 꽃잎, +10%) (✨ 제철은 10-06에 없앰)
+const teaTags = (t, pct) => `${t.raw ? ` <span class="chip raw-chip">🌸 생화${pct ? ' −10%' : ''}</span>` : ''}${t.hat ? ` <span class="chip hat-chip">🍃 햇차${pct ? ' +10%' : ''}</span>` : ''}`;
 // 같은 꽃은 한 장으로 묶고 품질은 범위로 (★은 가장 좋은 것, 값은 "1,040~1,200원")
 function groupType(list, keyFn) {
   return groupBy(list, keyFn).map(g => { const qs = list.filter(x => g.ids.includes(x.id)).map(x => x.q); return { ...g, q: Math.max(...qs), qMin: Math.min(...qs) }; });

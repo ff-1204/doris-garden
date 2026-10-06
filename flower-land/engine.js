@@ -100,7 +100,7 @@ const FLOWERS = {
   marigold: { name: '메리골드', tea: '메리골드차', life: 'annual', form: 'seed', sow: [6, 7], bloom: [8, 9, 10], mature: 2, t: 21, m: 32, price: 500, teaBase: 1000, prop: '채종', propMonths: [], prune: false,
     petal: '#f39a1e', center: '#c9561a', look: 'daisy', n: 16,
     story: '주황빛 겹꽃이 한여름부터 가을까지 피어요. 말린 꽃을 우리면 노란 차가 돼요.' },
-  celosia: { name: '맨드라미', tea: '맨드라미차', life: 'annual', form: 'seed', sow: [7, 8], bloom: [9, 10, 11], mature: 2, t: 25, m: 40, price: 600, teaBase: 1200, prop: '채종', propMonths: [], prune: false,
+  celosia: { name: '맨드라미', tea: '맨드라미차', life: 'annual', form: 'seed', sow: [7, 8], bloom: [9, 10, 11], mature: 2, t: 25, m: 40, price: 600, teaBase: 1000, prop: '채종', propMonths: [], prune: false,
     petal: '#e23a5e', center: '#a8183a', look: 'spike', n: 6,
     story: '닭 볏을 닮은 붉은 꽃이에요. 늦여름에 심어 가을에 거두고, 말려서 붉은 차로 우려요.' },
   lavender: { name: '라벤더', tea: '라벤더차', life: 'perennial', form: 'sapling', sow: [3, 4, 6], bloom: [6, 7], mature: 2, t: 28, m: 12, price: 2500, teaBase: 800, prop: '꺾꽂이', propMonths: [3, 4, 5, 6], prune: true,
@@ -236,9 +236,9 @@ const teaValue = (F, q, fresh) => Math.round(F.teaBase * (0.5 + q) * (fresh ? 1.
 // P12-09 햇차: ★5(품질 80% 초과) 꽃잎으로 만들면 붙는 표시, 값 +10% / P12-11 생화 티백: 말리지 않고 바로 티백, 값 −10% (10-06)
 const HAT_RATE = 1.1, RAW_RATE = 0.9, RAW_DECAY = 0, TEA_DECAY = 0;   // 티백은 품질이 줄지 않음 (10-06)
 const isHat = q => stars(q) === 5;
-const teaItemValue = (st, t, cal) => Math.round(FLOWERS[t.type].teaBase * (0.5 + t.q) * (isFresh(st, t, cal) ? 1.1 : 1) * (t.hat ? HAT_RATE : 1) * (t.raw ? RAW_RATE : 1) / 10) * 10;
+const teaItemValue = (st, t, cal) => Math.round(FLOWERS[t.type].teaBase * (0.5 + t.q) * (t.hat ? HAT_RATE : 1) * (t.raw ? RAW_RATE : 1) / 10) * 10;   // ✨ 제철 보너스는 없앰 (10-06, P17-05)
 function seasonKey(st, cal) { const y = yearOf(st, cal); return y * 10 + (cal.season === 4 ? 3 : cal.season); } // P17-05-02: 꽃잠엔 겨울 티백 유지
-const isFresh = (st, tea, cal) => tea.seasonKey === seasonKey(st, cal);
+const isFresh = () => false;   // P17-05 제철 보너스 없앰 (10-06): 찻집이 겨울에만 열려 거의 받을 수 없었음. 예전 저장의 seasonKey는 그대로 둠
 
 // ---------------------------------------------------------------- 꽃방과 블렌딩 (P12-07, P12-08, P08-02)
 const DRY_H = MONTH_H;                           // P12-07-02: 꽃방에 널면 흐르는 시간 1달 뒤 다 마름
