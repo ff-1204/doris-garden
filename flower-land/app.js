@@ -293,6 +293,34 @@ function downloadSave() {
 }
 // 휴대폰: 공유 시트로 파일 보내기 (되는 브라우저에서만 단추가 보임)
 const canShareFile = (() => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'a.json', { type: 'application/json' })] })); } catch (e) { return false; } })();
+// 모바일 (10-17): 앱 안 브라우저(카카오톡 · 인스타그램 · 페이스북 · 라인 · 네이버)는 파일 내려받기가 막히거나 JSON이 글자로 열릴 수 있음
+const UA = navigator.userAgent || '';
+const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|FB_IAB|Line\/|NAVER\(inapp|DaumApps|everytimeApp|; wv\)/i.test(UA);
+const IS_IOS = /iP(hone|ad|od)/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/i.test(UA);
+const STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+// iPhone · iPad Safari는 7일 넘게 열지 않은 사이트의 저장 데이터를 지울 수 있음 (홈 화면 앱은 예외)
+const IOS_EVICT = IS_IOS && !STANDALONE && !IN_APP;
+// 브라우저에 "이 사이트 저장소는 지우지 말아 줘" 요청 (안드로이드 Chrome 등에서 받아들여질 수 있음, 실패해도 그만)
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { /* 무시 */ }
+function openOutside() {   // 바깥 브라우저로 같은 주소 열기
+  const url = location.href.split('#')[0];
+  if (/KAKAOTALK/i.test(UA)) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  else if (IS_ANDROID) location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+}
+function copyAddress() {
+  const url = location.href.split('#')[0];
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => feedback('주소를 복사했어요 · Chrome이나 Safari에 붙여 넣어 주세요'), () => feedback(url));
+}
+// 💾 저장 단추: 앱 안 브라우저면 먼저 안내 (P20-07과 같은 안내를 저장에도)
+function saveClick() {
+  if (!IN_APP) return downloadSave();
+  const canOpen = /KAKAOTALK/i.test(UA) || IS_ANDROID;
+  openModal('💾 저장하기', `<div class="stack" style="gap:10px"><p style="margin:0">지금은 <b>앱 안의 브라우저</b>라서 파일 저장이 막히거나 글자로 열릴 수 있어요.</p>
+    <p class="note">${canOpen ? '바깥 브라우저(Chrome · Safari)로 열어서 저장하면 확실해요. 정원은 브라우저마다 따로 저장되니, 지금 정원을 옮기려면 여기서 한 번 저장해 두세요.' : '오른쪽 위 ··· 메뉴에서 <b>Safari로 열기</b>를 고르면 확실해요. 정원은 브라우저마다 따로 저장되니, 지금 정원을 옮기려면 여기서 한 번 저장해 두세요.'}</p></div>`,
+    [{ label: '주소 복사', act: () => { closeModal(); copyAddress(); } }].concat(canOpen ? [{ label: '바깥 브라우저로 열기', act: () => { closeModal(); openOutside(); } }] : [])
+      .concat([{ label: '그래도 저장', primary: true, act: () => { closeModal(); downloadSave(); } }]));
+}
 async function shareSave() {
   const { name, sm, file } = saveFile();
   try { await navigator.share({ files: [file], title: name }); feedback(`💾 보냈어요 · ${yearWord(sm.year)} ${monthName(sm.month)}`); }
@@ -1925,7 +1953,9 @@ function renderSettings() {
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>'))}
     ${(() => { const us = undoSummary(); return group('💾', '저장', '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요',
       row('💾', '저장하기', `파일로 내려받아요 · ${st.lastExport ? `마지막 저장 ${whenText(st.lastExport)}` : '아직 저장한 적이 없어요'}${exportStale() ? ' · <b class="val-down">한동안 저장하지 않았어요</b>' : ''}`, `<span class="row" style="gap:6px"><button type="button" class="btn small" id="exportBtn">저장</button>${canShareFile ? '<button type="button" class="btn small" id="shareBtn">보내기</button>' : ''}</span>`)
-      + row('📂', '불러오기', '저장한 파일로 정원을 바꿔요. 바꾸기 전에 요약을 보여 줘요', '<button type="button" class="btn small" id="importBtn">불러오기</button><input type="file" id="importFile" accept=".json,application/json" hidden>')
+      + row('📂', '불러오기', '저장한 파일로 정원을 바꿔요. 바꾸기 전에 요약을 보여 줘요', '<button type="button" class="btn small" id="importBtn">불러오기</button><input type="file" id="importFile" hidden>')
+      + (IOS_EVICT ? row('📱', 'iPhone · iPad Safari', '7일 넘게 열지 않으면 Safari가 정원을 지울 수 있어요. <b>공유 › 홈 화면에 추가</b>로 앱처럼 쓰거나 💾 저장해 두세요', '') : '')
+      + (IN_APP ? row('💬', '앱 안의 브라우저', '카카오톡 · 인스타그램 안에서 연 정원은 그 앱 안에만 저장돼요. Chrome · Safari로 열면 다른 정원이 돼요', '<button type="button" class="btn small" id="copyAddrBtn">주소 복사</button>') : '')
       + (us ? row('↩︎', '불러오기 전으로 되돌리기', `보관한 정원: ${yearWord(us.year)} ${monthName(us.month)} · 도감 ${us.dex} / ${us.dexTotal} · 칭호 ${us.titles}개`, '<button type="button" class="btn small" id="undoBtn">되돌리기</button>') : ''));
     })()}
     ${group('🌱', '정원', '되돌릴 수 없어요',
@@ -1937,11 +1967,12 @@ function renderSettings() {
   </div>`;
   resetArmed = false;
   const root = $('#p-settings');
-  $('#exportBtn').addEventListener('click', downloadSave);
+  $('#exportBtn').addEventListener('click', saveClick);
   if ($('#shareBtn')) $('#shareBtn').addEventListener('click', shareSave);
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
   $('#importFile').addEventListener('change', e => { readImport(e.target.files[0]); e.target.value = ''; });
   if ($('#undoBtn')) $('#undoBtn').addEventListener('click', undoImport);
+  if ($('#copyAddrBtn')) $('#copyAddrBtn').addEventListener('click', copyAddress);
   root.querySelectorAll('[data-toast]').forEach(i => i.addEventListener('change', () => { s.toast[i.dataset.toast] = i.checked; save(); }));
   // 수면 시간은 바꾸면 막대와 선택 칸을 다시 그림
   $('#sleepOn').addEventListener('change', e => { s.sleep.on = e.target.checked; save(); renderSettings(); });
