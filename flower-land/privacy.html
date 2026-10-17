@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>개인정보처리방침 · 도리의 정원</title>
+<meta name="description" content="도리의 정원이 어떤 정보를 어디에 저장하고 어떻게 쓰는지 알려 드려요.">
+<link rel="stylesheet" href="policy.css">
+</head>
+<body>
+<main class="doc">
+  <p class="back"><a href="./">← 도리의 정원으로</a></p>
+  <h1>개인정보처리방침</h1>
+  <p class="meta">도리의 정원 (Dori's Garden) · 초안 2026-10-17 작성 · 시행일: <span class="todo">공개 배포일에 적어요</span></p>
+
+  <section class="tldr" aria-label="한눈에 보기">
+    <h2>한눈에 보기</h2>
+    <ul>
+      <li><b>운영자는 서버를 두지 않고, 여러분의 정보를 받아 보관하지 않아요.</b></li>
+      <li>정원 진행은 <b>여러분 브라우저 안</b>에 저장돼요. 구글 로그인을 켜면 <b>여러분 구글 드라이브의 앱 전용 숨김 폴더</b>에도 저장돼요.</li>
+      <li>광고 · 분석 도구 · 추적 쿠키를 쓰지 않아요.</li>
+      <li>글꼴을 불러올 때만 Google Fonts에 접속해요 (아래 4번).</li>
+    </ul>
+  </section>
+
+  <h2>1. 저장하는 정보와 저장하는 곳</h2>
+  <table>
+    <thead><tr><th>무엇을</th><th>어디에</th><th>언제까지</th></tr></thead>
+    <tbody>
+      <tr><td>정원 진행 (꽃 · 땅 · 창고 · 찻집 · 돈 · 도감 · 칭호 · 정원 일지 · 한 해 기록과 그 정원 그림) · 설정 (알림 · 수면 시간)</td><td>이 브라우저의 저장소(localStorage)<br><small>도리의 정원 주소 안에서만 읽혀요</small></td><td>여러분이 지우기 전까지 — 설정 › 처음부터 다시 시작, 또는 브라우저의 사이트 데이터 삭제</td></tr>
+      <tr><td>불러오기 직전의 정원 한 개 (되돌리기 칸)</td><td>같은 브라우저 저장소</td><td>되돌리거나 다음 불러오기 때까지</td></tr>
+      <tr><td>저장 파일 (.json)</td><td>여러분이 💾 저장하기로 내려받은 기기</td><td>여러분이 파일을 지울 때까지 — 운영자에게 전송되지 않아요</td></tr>
+      <tr><td>정원 저장 파일 (garden.json, 직전 저장본 하나)<br><small>구글 로그인을 켠 경우에만</small></td><td>여러분 구글 드라이브의 <b>앱 전용 숨김 폴더(appDataFolder)</b></td><td>로그아웃해도 남아요. 지우는 방법은 6번</td></tr>
+    </tbody>
+  </table>
+  <p>정원 진행에는 이름 · 연락처 같은 개인정보가 들어 있지 않아요. 저장 파일에는 정원을 구별하는 무작위 이름표(gardenId)가 들어 있지만, 사람을 알아볼 수 있는 정보와 연결되지 않아요.</p>
+
+  <h2>2. 구글 로그인과 구글 드라이브 <small class="tag">로그인 기능을 켠 뒤 적용</small></h2>
+  <p>구글 로그인은 고르는 기능이에요. 로그인하지 않아도 모든 기능을 쓸 수 있어요.</p>
+  <ul>
+    <li><b>요청하는 권한</b>
+      <ul>
+        <li><code>https://www.googleapis.com/auth/drive.appdata</code> — 드라이브에 <b>이 앱만 쓰는 숨김 폴더</b>를 만들고 그 안의 정원 파일만 읽고 써요. 여러분 드라이브의 다른 파일 · 폴더는 보지도 고치지도 않아요.</li>
+        <li><code>openid</code> · <code>email</code> · <code>profile</code> — 설정 화면에 "○○@gmail.com으로 로그인됨"을 보여 주고, 처음 로그인한 날을 기록하는 데만 써요.</li>
+      </ul>
+    </li>
+    <li><b>어디서 처리하나요</b> — 로그인과 드라이브 저장은 모두 <b>여러분 브라우저와 구글 사이에서만</b> 일어나요. 운영자의 서버는 없고, 구글 계정 정보 · 접근 토큰 · 정원 파일을 운영자가 받지 않아요.</li>
+    <li><b>접근 토큰</b> — 구글이 주는 접근 토큰(약 1시간)은 브라우저 메모리에만 두고 저장하지 않아요.</li>
+    <li><b>Google API 사용자 데이터 정책 준수</b> — 도리의 정원이 Google API에서 받은 정보를 쓰고 다른 앱으로 옮기는 방식은 제한적 사용(Limited Use) 요구 사항을 포함한 <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API 서비스 사용자 데이터 정책</a>을 따라요. 받은 정보는 정원 저장 · 불러오기와 로그인 표시에만 쓰고, 광고에 쓰거나 다른 사람에게 넘기거나 팔지 않으며, 사람이 열어 보지 않아요.</li>
+  </ul>
+
+  <h2>3. 운영자에게 보내는 정보</h2>
+  <p>없어요. 도리의 정원은 정적 웹 페이지(GitHub Pages)로만 배포되고, 진행 · 로그인 정보를 운영자에게 보내는 코드가 없어요. 광고 · 분석(애널리틱스) · 오류 수집 도구도 쓰지 않아요.</p>
+
+  <h2>4. 다른 곳에 접속하는 경우</h2>
+  <ul>
+    <li><b>GitHub Pages</b> — 페이지를 내려받을 때 호스팅하는 GitHub이 접속 기록(IP 주소 · 브라우저 정보 등)을 남길 수 있어요. <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub 개인정보처리방침</a>을 따라요.</li>
+    <li><b>Google Fonts</b> — 글꼴(주아 · 고운바탕 · IBM Plex)을 불러오려고 fonts.googleapis.com · fonts.gstatic.com에 접속해요. 이때 IP 주소 · 브라우저 정보가 구글에 전달될 수 있어요. <a href="https://developers.google.com/fonts/faq/privacy" rel="noopener">Google Fonts 개인정보 안내</a>를 따라요.</li>
+    <li><b>구글 로그인 · 드라이브</b> (켠 경우) — <a href="https://policies.google.com/privacy" rel="noopener">Google 개인정보처리방침</a>을 따라요.</li>
+  </ul>
+
+  <h2>5. 쿠키</h2>
+  <p>도리의 정원은 쿠키를 만들지 않아요. 구글 로그인을 쓰면 구글이 로그인 창에서 자기 쿠키를 쓸 수 있어요.</p>
+
+  <h2>6. 지우는 방법 · 여러분의 권리</h2>
+  <ul>
+    <li><b>브라우저의 정원</b> — 설정 › 🌱 정원 › 처음부터 다시 시작, 또는 브라우저 설정에서 이 사이트의 데이터 삭제.</li>
+    <li><b>내려받은 저장 파일</b> — 기기에서 파일을 지우면 돼요.</li>
+    <li><b>구글 드라이브의 정원</b> (켠 경우) — 구글 드라이브 › 설정 › 앱 관리에서 "도리의 정원"의 <b>숨겨진 앱 데이터 삭제</b>, 그리고 <a href="https://myaccount.google.com/connections" rel="noopener">구글 계정 › 타사 앱 연결</a>에서 연결을 해제하면 권한도 없어져요.</li>
+    <li>운영자는 여러분의 정보를 갖고 있지 않아서 대신 열람 · 정정 · 삭제해 드릴 정보가 없어요. 궁금한 점은 아래 연락처로 물어봐 주세요.</li>
+  </ul>
+
+  <h2>7. 어린이</h2>
+  <p>도리의 정원은 누구나 쓸 수 있는 놀이예요. 구글 계정의 나이 제한은 구글 정책을 따르고, 만 14세 미만이 구글 로그인을 쓰려면 보호자 동의가 필요할 수 있어요. 로그인 없이도 모든 기능을 쓸 수 있어요.</p>
+
+  <h2>8. 안전</h2>
+  <p>정원 진행은 여러분 기기와 여러분 구글 드라이브 안에만 있어요. 같은 기기 · 같은 브라우저를 쓰는 다른 사람은 정원을 볼 수 있으니, 공용 기기에서는 다 쓴 뒤 사이트 데이터를 지우거나 로그아웃해 주세요.</p>
+
+  <h2>9. 바뀔 때</h2>
+  <p>저장하는 정보나 쓰는 곳이 바뀌면 이 페이지를 고치고 맨 위 날짜를 바꿔요. 중요한 변경은 앱 안에서도 알려 드려요.</p>
+
+  <h2>10. 운영자 · 연락처</h2>
+  <p>운영자: 도리의 정원 운영자 (ff-1204)<br>연락처: <span class="todo">공개 배포 전에 연락받을 이메일을 적어요</span></p>
+
+  <p class="foot"><a href="terms.html">이용약관 · 오픈소스 고지</a></p>
+</main>
+</body>
+</html>

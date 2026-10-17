@@ -1,0 +1,33 @@
+/* 정책 문서 (개인정보처리방침 · 이용약관) — 게임과 같은 팔레트 · 글꼴, 읽기 좋은 한 단 */
+:root {
+  --bg: #eef0e8; --panel: #f8f9f4; --sunk: #e4e8de; --ink: #1f2a22; --muted: #5a675c; --line: #d2d9cc; --accent: #5b8a6e; --warn: #a8652a;
+  --font-display: "Gowun Batang", "Nanum Myeongjo", serif;
+  --font-body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #131814; --panel: #1b221d; --sunk: #232c25; --ink: #e4eae1; --muted: #98a59a; --line: #2e3831; --accent: #8fc4a3; --warn: #e0a066; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #131814; --panel: #1b221d; --sunk: #232c25; --ink: #e4eae1; --muted: #98a59a; --line: #2e3831; --accent: #8fc4a3; --warn: #e0a066; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+.doc { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-family: var(--font-display); font-size: 28px; margin: 8px 0 4px; }
+h1.h1-2 { margin-top: 48px; padding-top: 24px; border-top: 2px solid var(--line); }
+h2 { font-family: var(--font-display); font-size: 19px; margin: 32px 0 8px; }
+h2 small, .tag { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--muted); background: var(--sunk); padding: 1px 8px; vertical-align: 3px; }
+p, ul { margin: 8px 0; }
+ul { padding-left: 1.3em; }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+code { font-family: var(--font-data); font-size: 13px; background: var(--sunk); padding: 1px 5px; word-break: break-all; }
+small { color: var(--muted); }
+.meta { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+.back { margin: 0; font-size: 14px; }
+.tldr { background: var(--panel); border: 1px solid var(--line); padding: 4px 18px 10px; }
+.tldr h2 { margin-top: 12px; font-size: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: var(--sunk); font-weight: 600; }
+td { background: var(--panel); }
+.todo { color: var(--warn); font-weight: 600; border-bottom: 1px dashed var(--warn); }   /* 배포 전에 채울 곳 */
+.foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
+@media (max-width: 520px) { table, thead, tbody, tr, th, td { display: block; } thead { display: none; } td { border-top: 0; } tr { border-top: 1px solid var(--line); margin-bottom: 8px; } td:first-child { font-weight: 600; background: var(--sunk); } }
