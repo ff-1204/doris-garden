@@ -47,7 +47,9 @@ h3 { font-family: var(--font-display); font-size: 16px; margin: 0; font-weight: 
 /* ── 전체 틀 */
 .app { min-height: 100%; display: grid; grid-template-rows: auto 1fr auto; }
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--panel); border-bottom: 1px solid var(--line); padding: 9px 16px; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
-.topinfo { justify-self: end; font-size: 12px; color: var(--muted); text-align: right; line-height: 1.35; }
+.topinfo { justify-self: end; font-size: 12px; color: var(--muted); text-align: right; line-height: 1.35; display: flex; align-items: center; gap: 10px; }
+.toptitle { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--sunk); padding: 1px 8px 1px 2px; font-size: 12px; color: var(--ink); }   /* P19-05-05 대표 칭호 */
+.toptitle[hidden] { display: none; }
 @media (max-width: 640px) { .topbar { grid-template-columns: 1fr; gap: 3px; padding-block: 8px; } .brand { justify-self: start; } .topinfo { justify-self: start; text-align: left; font-size: 11.5px; } }
 .wallet { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 12px; font-family: var(--font-data); font-weight: 600; font-size: 14px; white-space: nowrap; }
 /* 로고: 도트 새싹 + 둥근 글씨 */
@@ -331,6 +333,46 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .beq-op { font-family: var(--font-data); font-size: 20px; font-weight: 500; color: var(--muted); align-self: center; padding-bottom: 18px; }
 .beq-x { position: absolute; top: -6px; right: -14px; font-style: normal; font-family: var(--font-data); font-size: 11px; font-weight: 600; padding: 1px 5px; background: var(--good); color: var(--accent-ink); }
 @media (max-width: 420px) { .ob-vis { grid-template-columns: 1fr; justify-items: center; } .ob-vis figcaption { text-align: center; } }
+/* 도감일지 · 퀘스트 · 칭호 (P19, 10-17): 네모 칸 · 도트 그림 규칙(P16-14)을 따름 */
+#jTabs { margin-bottom: 2px; }
+.jch { display: grid; gap: 10px; }
+.jch.closed { opacity: .72; }
+.jch-head { display: flex; align-items: center; gap: 12px; }
+.jch-t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.jch-t small { color: var(--muted); font-size: 11.5px; font-family: var(--font-data); }
+.jch-t b { font-family: var(--font-display); font-size: 16px; }
+.jch-stamps { display: flex; gap: 3px; }
+.jch-stamps i { width: 10px; height: 10px; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--line); }
+.jch-stamps i.on { background: #c8323c; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), inset 3px 3px 0 -1px rgba(255,255,255,.25); }
+.jch-n { font-size: 13px; color: var(--muted); }
+.jch.cleared .jch-n { color: var(--good); font-weight: 600; }
+.q-list { display: grid; gap: 4px; }
+.q-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; text-align: left; border: 1px solid var(--line); background: var(--panel); padding: 4px 10px 4px 4px; }
+.q-row .q-art { width: 36px; height: 36px; display: grid; place-items: center; background: var(--sunk); }
+.q-row .q-land { width: 24px; height: 24px; display: block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); }
+.q-row .q-name { font-size: 13.5px; }
+.q-row .q-st { font-size: 12px; white-space: nowrap; color: var(--muted); }
+.q-row.now { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.q-row.now .q-st { color: var(--good); font-weight: 600; }
+.q-row.later { opacity: .62; }
+.q-row.done .q-name { color: var(--muted); }
+.q-row.done .q-st { color: #c8323c; font-family: var(--font-data); }
+.jch-reward { font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+.ttl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ttl-card { display: grid; justify-items: center; gap: 5px; text-align: center; padding: 12px 8px; background: var(--panel); border: 1px solid var(--line); }
+.ttl-card b { font-family: var(--font-display); font-size: 14.5px; }
+.ttl-card small { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.ttl-card.locked b { color: var(--muted); }
+.ttl-card.on { border: 2px solid var(--accent); padding: 11px 7px; }
+.ttl-tier { font-size: 11px; padding: 1px 7px; background: var(--sunk); color: var(--muted); }
+.t-s .ttl-tier { background: color-mix(in srgb, #8a6a44 22%, var(--panel)); color: var(--ink); }
+.t-f .ttl-tier { background: color-mix(in srgb, #e39ab3 26%, var(--panel)); color: var(--ink); }
+.t-g .ttl-tier { background: color-mix(in srgb, #e2b33c 30%, var(--panel)); color: var(--ink); }
+.ttl-pop { display: grid; justify-items: center; gap: 6px; text-align: center; padding: 6px 0 2px; }
+.ttl-pop b { font-family: var(--font-display); font-size: 19px; }
+.ttl-pop small { color: var(--muted); font-size: 12.5px; }
+.ttl-anim { width: 132px; height: 132px; image-rendering: pixelated; }
+.jguide .btn.small { white-space: nowrap; }
 details > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .actions { display: grid; gap: 6px; padding-top: 2px; }
 .actions .act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; }
@@ -874,7 +916,7 @@ input.tog:checked::before { transform: translateX(17px); }
 <div class="app">
   <header class="topbar">
     <div class="brand"><svg class="logo-px" viewBox="0 0 11 10" width="24" height="22" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="#a6dc86"/><rect x="2" y="0" width="1" height="1" fill="#a6dc86"/><rect x="8" y="0" width="1" height="1" fill="#a6dc86"/><rect x="9" y="0" width="1" height="1" fill="#a6dc86"/><rect x="0" y="1" width="1" height="1" fill="#a6dc86"/><rect x="1" y="1" width="1" height="1" fill="#6db35a"/><rect x="2" y="1" width="1" height="1" fill="#6db35a"/><rect x="3" y="1" width="1" height="1" fill="#6db35a"/><rect x="7" y="1" width="1" height="1" fill="#6db35a"/><rect x="8" y="1" width="1" height="1" fill="#6db35a"/><rect x="9" y="1" width="1" height="1" fill="#6db35a"/><rect x="10" y="1" width="1" height="1" fill="#a6dc86"/><rect x="0" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="2" width="1" height="1" fill="#6db35a"/><rect x="2" y="2" width="1" height="1" fill="#6db35a"/><rect x="3" y="2" width="1" height="1" fill="#6db35a"/><rect x="4" y="2" width="1" height="1" fill="#6db35a"/><rect x="6" y="2" width="1" height="1" fill="#6db35a"/><rect x="7" y="2" width="1" height="1" fill="#6db35a"/><rect x="8" y="2" width="1" height="1" fill="#6db35a"/><rect x="9" y="2" width="1" height="1" fill="#6db35a"/><rect x="10" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="3" width="1" height="1" fill="#6db35a"/><rect x="3" y="3" width="1" height="1" fill="#6db35a"/><rect x="4" y="3" width="1" height="1" fill="#6db35a"/><rect x="5" y="3" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="3" width="1" height="1" fill="#6db35a"/><rect x="7" y="3" width="1" height="1" fill="#6db35a"/><rect x="8" y="3" width="1" height="1" fill="#6db35a"/><rect x="9" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="4" width="1" height="1" fill="#6db35a"/><rect x="3" y="4" width="1" height="1" fill="#6db35a"/><rect x="4" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="4" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="4" width="1" height="1" fill="#6db35a"/><rect x="7" y="4" width="1" height="1" fill="#6db35a"/><rect x="8" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="5" width="1" height="1" fill="#4f8f3e"/><rect x="5" y="6" width="1" height="1" fill="#4f8f3e"/><rect x="2" y="7" width="1" height="1" fill="#a5743f"/><rect x="3" y="7" width="1" height="1" fill="#a5743f"/><rect x="4" y="7" width="1" height="1" fill="#a5743f"/><rect x="5" y="7" width="1" height="1" fill="#a5743f"/><rect x="6" y="7" width="1" height="1" fill="#a5743f"/><rect x="7" y="7" width="1" height="1" fill="#a5743f"/><rect x="8" y="7" width="1" height="1" fill="#a5743f"/><rect x="1" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="8" width="1" height="1" fill="#a5743f"/><rect x="3" y="8" width="1" height="1" fill="#a5743f"/><rect x="4" y="8" width="1" height="1" fill="#a5743f"/><rect x="5" y="8" width="1" height="1" fill="#a5743f"/><rect x="6" y="8" width="1" height="1" fill="#a5743f"/><rect x="7" y="8" width="1" height="1" fill="#a5743f"/><rect x="8" y="8" width="1" height="1" fill="#a5743f"/><rect x="9" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="9" width="1" height="1" fill="#7a5230"/><rect x="3" y="9" width="1" height="1" fill="#7a5230"/><rect x="4" y="9" width="1" height="1" fill="#7a5230"/><rect x="5" y="9" width="1" height="1" fill="#7a5230"/><rect x="6" y="9" width="1" height="1" fill="#7a5230"/><rect x="7" y="9" width="1" height="1" fill="#7a5230"/><rect x="8" y="9" width="1" height="1" fill="#7a5230"/></svg><span class="bt"><b>도리의 정원</b><small>Dori's Garden</small></span></div>
-    <div class="topinfo" id="topInfo"></div>
+    <div class="topinfo"><span id="topInfo"></span><button type="button" class="toptitle" id="topTitle" hidden title="대표 칭호 · 눌러서 칭호 보기"></button></div>
   </header>
 
   <div class="body">
@@ -940,4 +982,5 @@ input.tog:checked::before { transform: translateX(17px); }
 
 <script src="engine.js"></script>
 <script src="sprites.js"></script>
+<script src="titles.js"></script>
 <script src="app.js"></script>

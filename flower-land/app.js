@@ -231,7 +231,7 @@ function load() {
       }
       s.dex.blend = s.dex.blend || {};
       s.dex.bagBlend = s.dex.bagBlend || {};
-      for (const b of [...(s.blends || []), ...(s.cups || []).filter(c => c.kind === 'blend')]) { const r = E.blendRecipe(b.parts); if (r !== (b.recipe || null)) { b.recipe = r; b.name = r ? E.BLENDS[r].name : `${b.parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`; } }   // 10-06 레시피가 바뀌어도 이름이 맞게
+      for (const b of [...(s.blends || []), ...(s.cups || []).filter(c => c.kind === 'blend')]) { const r = E.blendRecipe(b.parts, s); if (r !== (b.recipe || null)) { b.recipe = r; b.name = r ? E.BLENDS[r].name : `${b.parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`; } }   // 10-06 레시피가 바뀌어도 이름이 맞게
       if (!s.dex.teabag) { s.dex.teabag = {}; for (const k of [...Object.keys(s.dex.tea), ...s.teas.map(t => t.type)]) s.dex.teabag[k] = true; }   // 티백 도감 전: 만든 적 있는 차는 티백으로도 등록
       E.autoCompost(s);                            // 0%로 시든 씨앗·묘목은 열 때도 바로 비료로 (꽃잠엔 시간이 안 흘러서)
       if (!s.dex.form) {                           // 씨앗·묘목 도감 전: 가진 적 있는 것(창고 · 심은 꽃 · 핀 적 있는 꽃)은 등록해 둠
@@ -314,6 +314,7 @@ function after(r, kind, action) {
     }
     feedback(msg, !r.ok, r.ok ? action : null);
   }
+  E.checkJournal(st, ctx);
   save(); renderAll(true);
 }
 
@@ -377,6 +378,91 @@ function landPixel() {
   }
   return `<div class="landpx" role="img" aria-label="${F.name} 둘레 2칸이 ${L.name}으로 바뀐 모습">${html}</div>`;
 }
+// ---------------------------------------------------------------- 도감일지 · 칭호 (P19, 10-17)
+const TIER_NAME = { s: '🌱 새싹', f: '🌸 꽃', g: '👑 정원' };
+const titleCache = {};
+function titleURL(k, locked, frame) {
+  const T = E.TITLES[k], f = T.tier === 'g' && !locked ? frame % 22 : 0, id = `${k}|${locked ? 1 : 0}|${f}`;
+  if (titleCache[id]) return titleCache[id];
+  const c = document.createElement('canvas'); c.width = c.height = TITLE_ART.SIZE;
+  TITLE_ART.draw(c.getContext('2d'), k, T.tier, { locked, frame: f });
+  return (titleCache[id] = c.toDataURL());
+}
+// 칭호 그림은 22px의 정수배로만 (P16-14)
+const titleImg = (k, size, locked) => `<img class="px ttl-img" data-ttl="${k}" data-locked="${locked ? 1 : 0}" src="${titleURL(k, locked, 0)}" width="${size}" height="${size}" alt="${locked ? '아직 얻지 못한 칭호' : esc(E.TITLES[k].name)}">`;
+let ttlFrame = 0;
+setInterval(() => {   // 👑 정원 칭호: 반짝이가 번갈아 (보이는 그림만 0.4초마다 바꿈)
+  ttlFrame++;
+  document.querySelectorAll('img.ttl-img[data-locked="0"]').forEach(im => { if (E.TITLES[im.dataset.ttl].tier === 'g') im.src = titleURL(im.dataset.ttl, false, ttlFrame); });
+}, 400);
+// abs(달 번호) → "1년차 5월" (0년차는 "첫 해 전")
+const absText = abs => { const y = Math.floor(abs / 14) - st.firstWeek + 1; return `${y < 1 ? '첫 해 전' : `${y}년차`} ${monthName(MONTHS[abs % 14])}`; };
+// 퀘스트 그림: 그 꽃 · 땅 색 칸 · 찻잔
+const QART = {
+  c1_bloom: ['flower', 'chamomile'], c1_petal: ['petal', 'chamomile'], c1_dry: ['dried', 'chamomile'], c1_bag: ['teabag', 'chamomile'], c1_land: ['land', 'grassland'], c1_sell: ['tea', 'chamomile'],
+  c2_foothill: ['land', 'foothill'], c2_med: ['land', 'med'], c2_sub: ['land', 'subtropic'], c2_trop: ['land', 'tropical'], c2_edge: ['land', 'mossy'],
+  c3_root: ['form', 'lotus'], c3_bloom: ['flower', 'lotus'], c3_pond: ['land', 'pond'], c3_wet: ['land', 'wetland'], c3_sell: ['tea', 'lotus'],
+  c4_spring: ['tea', 'chamomile'], c4_sleep: ['tea', 'lavender'], c4_violet: ['tea', 'bpea'], c4_five: ['dried', 'rose'], c4_bag: ['teabag', 'rose'],
+  c5_guest: ['tea', 'rose'], c5_warm: ['tea', 'jasmine'], c5_hat: ['tea', 'lotus'], c5_blend: ['tea', 'hibiscus'], c5_five: ['tea', 'gamguk'],
+  c6_dongbaek: ['flower', 'dongbaek'], c6_maehwa: ['flower', 'maehwa'], c6_napmae: ['flower', 'napmae'], c6_plum: ['tea', 'maehwa'],
+};
+const questArt = q => { const [k, v] = QART[q.key]; return k === 'land' ? `<span class="q-land" style="background:${LANDS[v].color}"></span>` : spriteImg(v, k, 32, false, ''); };
+// 언제 할 수 있는지 (P19-04-03): 화원에 들어오는 달 · 심어 둔 꽃이 피는 달 · 찻집 여는 달
+function questWhen(q, cal) {
+  const w = q.when;
+  if (!w) return { now: true };
+  if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: `${SEASON_IC[3]} 12월부터` };
+  const F = FLOWERS[w.sow || w.bloom];
+  const next = test => { const n = E.untilMonth(st.virtual, c => !c.frozen && test(c)); return n ? `${monthIc(n.cal.month)} ${monthName(n.cal.month)}부터` : ''; };
+  if (w.bloom && st.flowers.some(f => f.type === F.key && !f.withered)) return F.bloom.includes(cal.month) && !cal.frozen ? { now: true } : { now: false, label: next(c => F.bloom.includes(c.month)).replace('부터', '에 펴요') };
+  if (st.items.some(it => it.type === F.key) || (!cal.frozen && F.sow.includes(cal.month))) return { now: !cal.frozen, label: next(() => true) };
+  return { now: false, label: next(c => F.sow.includes(c.month)) };
+}
+// 다음에 할 퀘스트: 열린 장에서 지금 할 수 있는 것 먼저, 없으면 첫 번째
+function nextQuest(cal) {
+  const pend = [];
+  for (const c of E.CHAPTERS) if (E.chapterOpen(st, c.key)) for (const q of c.quests) if (st.journal.done[q.key] == null) pend.push({ c, q, w: questWhen(q, cal) });
+  return pend.find(p => p.w.now) || pend[0] || null;
+}
+const hiddenBlendOf = tk => Object.keys(E.BLENDS).find(b => E.BLENDS[b].hidden === tk) || null;
+function journalHTML() {
+  const cal = E.calendar(st.virtual), done = st.journal.done, got = E.TITLE_KEYS.filter(k => st.titles[k] != null).length;
+  const seg = `<span class="seg" id="jTabs"><button type="button" data-jt="quest" aria-pressed="${ui.jTab !== 'title'}">📜 퀘스트</button><button type="button" data-jt="title" aria-pressed="${ui.jTab === 'title'}">🏅 칭호 <span class="data">${got} / ${E.TITLE_KEYS.length}</span></button></span>`;
+  if (ui.jTab === 'title') return seg + titlesHTML();
+  return seg + E.CHAPTERS.map(c => {
+    const open = E.chapterOpen(st, c.key), n = c.quests.filter(q => done[q.key] != null).length, tk = c.title, has = st.titles[tk] != null, hb = hiddenBlendOf(tk);
+    const lockMsg = c.key === 'c1' ? '🌱 첫걸음을 마치면 열려요' : c.key === 'c6' ? '🌳 나무는 오래 걸려서 2년차 3월에 열려요 · 첫해에 심어 두세요' : '1장 첫 꽃밭을 마치면 열려요';
+    const rows = open ? c.quests.map(q => {
+      const d = done[q.key], w = d != null ? null : questWhen(q, cal);
+      const state = d != null ? `<span class="q-st">🔖 ${absText(d)}</span>` : w.now ? '<span class="q-st">지금 할 수 있어요</span>' : `<span class="q-st">${w.label || '때가 되면'}</span>`;
+      return `<button type="button" class="q-row ${d != null ? 'done' : w.now ? 'now' : 'later'}" data-qgo="${q.go}"><span class="q-art">${questArt(q)}</span><span class="q-name">${q.name}</span>${state}</button>`;
+    }).join('') : '';
+    return `<div class="card jch ${open ? '' : 'closed'} ${has ? 'cleared' : ''}">
+      <div class="jch-head">${titleImg(tk, 44, !has)}<div class="jch-t"><small>${c.no}장</small><b>${c.name}</b><span class="jch-stamps" aria-label="${n} / ${c.quests.length}">${c.quests.map(q => `<i class="${done[q.key] != null ? 'on' : ''}"></i>`).join('')}</span></div><span class="data jch-n">${n} / ${c.quests.length}</span></div>
+      ${open ? `<div class="q-list">${rows}</div>` : `<p class="note">${lockMsg}</p>`}
+      <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
+  }).join('');
+}
+function titlesHTML() {
+  return `<p class="note">칭호를 하나 골라 대표로 걸면 위 막대에 보여요. 숨은 칭호는 수수께끼를 풀어 보세요.</p><div class="ttl-grid">${E.TITLE_KEYS.map(k => {
+    const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;
+    const sub = has ? `${hidden ? `${T.cond} · ` : ''}${absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
+    return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
+  }).join('')}</div>`;
+}
+// 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
+function showNewTitles() {
+  if (!st._newTitles || !st._newTitles.length || $('#modalRoot').innerHTML) return;
+  const k = st._newTitles.shift(), T = E.TITLES[k], ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), hb = hiddenBlendOf(k);
+  openModal('🏅 새 칭호', `<div class="ttl-pop t-${T.tier}"><canvas width="22" height="22" id="ttlAnim" class="ttl-anim" role="img" aria-label="${esc(T.name)} 칭호 문장"></canvas>
+    <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? `${ch.no}장 ${ch.name}을 마쳤어요` : T.cond}</small>
+    ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}</div>`,
+    [{ label: '닫기', act: () => { closeModal(); save(); showNewTitles(); } }, { label: '대표로 걸기', primary: true, act: () => { E.setTitleOn(st, k); closeModal(); save(); renderAll(true); } }]);
+  const x = $('#ttlAnim').getContext('2d'); let r = 0;
+  const tick = () => { if (!$('#ttlAnim')) return; TITLE_ART.draw(x, k, T.tier, { rows: r }); if (r++ < 16) setTimeout(tick, 38); };
+  tick();
+  save();
+}
 // 상태창 "오늘의 한 마디" (게임을 위해 새로 쓴 문장)
 const GARDEN_WORDS = [
   '꽃은 서두르지 않아요. 그래도 늘 제때 피어요.',
@@ -429,11 +515,14 @@ function monthWord(cal) {          // 그달 꽃들의 한 마디를 게임 하�
 function renderTop() {
   const cal = E.calendar(st.virtual);
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
+  const tt = $('#topTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호
+  if (tt.dataset.k !== tk) { tt.dataset.k = tk; tt.hidden = !tk; tt.innerHTML = tk ? `${titleImg(tk, 22, false)}<span>${E.TITLES[tk].name}</span>` : ''; }
   if (document.documentElement.dataset.season !== String(cal.season)) { document.documentElement.dataset.season = cal.season; requestAnimationFrame(() => document.documentElement.classList.add('season-anim')); }   // 계절 바탕색
 }
 
 // ---------------------------------------------------------------- 탭 (P16-02)
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#topTitle').addEventListener('click', () => { ui.dexTab = 'journal'; ui.jTab = 'title'; setTab('dex'); });
 $('#restBanner').addEventListener('click', e => { if (e.target.closest('[data-rest="close"]')) { ui.restClosed = true; $('#restBanner').hidden = true; } });
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]'); if (!go) return;
@@ -1386,15 +1475,15 @@ function openBrewConfirm(teaIds, blendIds, counts) {
 function openBlendConfirm() {
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)).filter(Boolean);
   if (sel.length < 2) return;
-  const parts = sel.map(p => p.type), recipe = E.blendRecipe(parts), q = sel.reduce((a, p) => a + p.q, 0) / sel.length;
-  const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`, val = E.blendValue({ parts, q });
+  const parts = sel.map(p => p.type), recipe = E.blendRecipe(parts, st), q = sel.reduce((a, p) => a + p.q, 0) / sel.length;
+  const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`, val = E.blendValue({ parts, q, recipe });
   const sep = sel.reduce((a, p) => a + E.teaValue(FLOWERS[p.type], p.q, false), 0);
   const body = `<div class="rc">
     <div class="bc-hero" style="--pc:${SPR.tea[parts[0]] || FLOWERS[parts[0]].petal}">
       <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 36, false, '')}<small>${FLOWERS[p.type].name}</small></span>`).join('<b class="bc-plus">+</b>')}</div>
       <span class="bc-arrow">↓</span>
       <div class="bc-out">${spriteImg(parts[0], 'tea', 56, false, name)}<div><b>${recipe ? '✨ ' : ''}${name}</b><span class="stars">${starStr(q)}</span></div></div></div>
-    <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 등록돼요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.BLEND_KEYS.length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${sel.length}장이 들어가요 · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
+    <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 등록돼요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.blendKeys(st).length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${sel.length}장이 들어가요 · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
   openModal('🫖 블렌딩', body, [
     { label: '취소', act: () => closeModal() },
     { label: `🫖 블렌딩 · ${sel.length}장`, primary: true, act: () => { closeModal(); const r = E.blend(st, ui.blendSel, ctx); if (r.ok) ui.blendSel = []; after(r, 'blended'); } },
@@ -1452,14 +1541,14 @@ function renderCab(force) {
   }).join('');
   // 🫖 블렌딩 (P12-08): 언제든 (10-06)
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)), parts = sel.map(p => p.type);
-  const recipe = parts.length >= 2 ? E.blendRecipe(parts) : null, avg = sel.length ? sel.reduce((a, p) => a + p.q, 0) / sel.length : 0;
-  const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg }) : 0;
+  const recipe = parts.length >= 2 ? E.blendRecipe(parts, st) : null, avg = sel.length ? sel.reduce((a, p) => a + p.q, 0) / sel.length : 0;
+  const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg, recipe }) : 0;
   // 한 줄: 재료 칸 세 개 → 결과 → 블렌딩하기. 레시피는 접어 둠
-  const gotN = E.BLEND_KEYS.filter(k => st.dex.blend[k] != null).length;
+  const gotN = E.blendKeys(st).filter(k => st.dex.blend[k] != null).length;
   // 레시피: 말린 꽃잎이 다 있는 것은 "지금 만들 수 있어요"로 맨 앞, 누르면 재료 칸에 담김 (10-06)
   const haveDried = new Set(st.dried.map(p => p.type)), canMake = k => E.BLENDS[k].parts.every(p => haveDried.has(p));
-  const recKeys = E.BLEND_KEYS.slice().sort((x, y) => canMake(y) - canMake(x)), readyN = E.BLEND_KEYS.filter(canMake).length;
-  const bookHTML = `<details class="bl-book"${ui.bookOpen ?? readyN > 0 ? ' open' : ''}><summary>📖 레시피 <span class="data">${gotN} / ${E.BLEND_KEYS.length}</span>${readyN ? ` · <b class="val-up">지금 만들 수 있어요 ${readyN}</b>` : ''}</summary>
+  const recKeys = E.blendKeys(st).slice().sort((x, y) => canMake(y) - canMake(x)), readyN = E.blendKeys(st).filter(canMake).length;
+  const bookHTML = `<details class="bl-book"${ui.bookOpen ?? readyN > 0 ? ' open' : ''}><summary>📖 레시피 <span class="data">${gotN} / ${E.blendKeys(st).length}</span>${readyN ? ` · <b class="val-up">지금 만들 수 있어요 ${readyN}</b>` : ''}</summary>
         <div class="bl-recs">${recKeys.map(k => { const B = E.BLENDS[k], got = st.dex.blend[k] != null, ok = canMake(k), inner = `${got ? '✓ ' : ''}<b>${B.name}</b> <small>${B.parts.map(p => FLOWERS[p].name).join(' + ')}</small>`; return ok ? `<button type="button" class="bl-rec ready ${got ? 'got' : ''} ${recipe === k ? 'on' : ''}" aria-pressed="${recipe === k}" data-recipe="${k}" title="재료를 블렌딩 칸에 담아요">🫖 ${inner}</button>` : `<span class="bl-rec ${got ? 'got' : ''}">${inner}</span>`; }).join('')}</div></details>`;
   const blendBox = true ? `
     <div class="cab-head" id="tr-blend"><span class="sb-title">🫖 블렌딩</span><span class="muted">말린 꽃잎 2~3가지</span></div>
@@ -1550,11 +1639,11 @@ function cabClick(e) {
 
 // ---------------------------------------------------------------- 📖 도감·기록 (P08, P04-02)
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, st.dex, st.records.length, st.records[0] && !!st.records[0].snapshot]);
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.jTab, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot]);
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
-  const tabs = `<span class="seg" id="dexTabs"><button type="button" data-dt="dex" aria-pressed="${ui.dexTab === 'dex'}">도감</button><button type="button" data-dt="rec" aria-pressed="${ui.dexTab === 'rec'}">기록</button></span>`;
+  const tabs = `<span class="seg" id="dexTabs"><button type="button" data-dt="dex" aria-pressed="${ui.dexTab === 'dex'}">도감</button><button type="button" data-dt="rec" aria-pressed="${ui.dexTab === 'rec'}">기록</button><button type="button" data-dt="journal" aria-pressed="${ui.dexTab === 'journal'}">📔 도감일지</button></span>`;
   let body;
   if (ui.dexTab === 'dex') {
     // 모은 카드는 작은 설명, 못 모은 카드는 "어떻게 모으는지" 힌트
@@ -1569,14 +1658,16 @@ function renderDex(force) {
       { key: 'form', ic: '🌰', title: '씨앗·묘목', got: nfo, total: FLOWER_KEYS.length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], on = !!st.dex.form[k], nm = `${F.name} ${FORM[F.form].name}`; return card('form', k, on, spriteImg(k, 'form', 56, !on, on ? nm : '아직 모르는 씨앗·묘목'), nm, on ? '' : `화원 ${sowText(F)}`, F.petal); }).join('')}</div>` },
       { key: 'flower', ic: '🌸', title: '꽃', got: nf, total: FLOWER_KEYS.length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], on = !!st.dex.flower[k]; return card('flower', k, on, spriteImg(k, 'flower', 56, !on, on ? F.name : '아직 모르는 꽃'), F.name, on ? '' : `화원 ${sowText(F)}`, F.petal); }).join('')}</div>` },
       { key: 'petal', ic: '🍂', title: '꽃잎', got: np, total: FLOWER_KEYS.length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], on = !!st.dex.petal[k]; return card('petal', k, on, spriteImg(k, 'petal', 52, !on, on ? `${F.name} 꽃잎` : '아직 모르는 꽃잎'), `${F.name} 꽃잎`, on ? '' : (st.dex.flower[k] ? '피면 거둬요' : '처음 거둘 때'), F.petal); }).join('')}</div>` },
-      { key: 'teabag', ic: '🏷️', title: '티백', got: ntb + Object.keys(st.dex.bagBlend || {}).length, total: FLOWER_KEYS.length + E.BLEND_KEYS.length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], on = !!(st.dex.teabag || {})[k], nm = `${F.name} 티백`; return card('teabag', k, on, spriteImg(k, 'teabag', 52, !on, on ? nm : '아직 모르는 티백'), nm, on ? '' : ((st.dex.petal || {})[k] ? '제다실에서 꽃잎으로' : '꽃잎을 티백으로'), F.petal); }).join('')}</div><div class="dexgrid big dex-blends">${E.BLEND_KEYS.map(k => { const B = E.BLENDS[k], on = !!(st.dex.bagBlend || {})[k], nm = `${B.name} 티백`; return card('blend', k, on, spriteImg(B.parts[0], 'teabag', 52, !on, on ? nm : '아직 모르는 블렌드 티백'), nm, on ? '' : (st.dex.blend[k] != null ? '블렌드를 티백으로' : '블렌딩 → 티백'), SPR.tea[B.parts[0]] || FLOWERS[B.parts[0]].petal, 'blend'); }).join('')}</div>` },
-      { key: 'tea', ic: '🍵', title: '차', got: nt + nb, total: FLOWER_KEYS.length + E.BLEND_KEYS.length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], q = st.dex.tea[k], on = q != null; return card('tea', k, on, spriteImg(k, 'tea', 56, !on, on ? F.tea : '아직 모르는 차'), F.tea, on ? `<span class="stars">${starStr(q)}</span>` : ((st.dex.teabag || {})[k] ? '찻집에서 우려 팔면' : '티백을 찻집에서'), SPR.tea[k] || F.petal); }).join('')}</div><div class="dexgrid big dex-blends">${E.BLEND_KEYS.map(k => { const B = E.BLENDS[k], q = st.dex.blend[k], on = q != null, known = B.parts.every(p => st.dex.petal[p]); return card('blend', k, on, spriteImg(B.parts[0], 'tea', 52, !on, on ? B.name : '아직 모르는 블렌드'), B.name, on ? `<span class="stars">${starStr(q)}</span>` : (known ? B.parts.map(p => FLOWERS[p].name).join(' + ') : '제다실에서 섞어 봐요'), SPR.tea[B.parts[0]] || FLOWERS[B.parts[0]].petal, 'blend'); }).join('')}</div>` },
+      { key: 'teabag', ic: '🏷️', title: '티백', got: ntb + Object.keys(st.dex.bagBlend || {}).length, total: FLOWER_KEYS.length + E.blendKeys(st).length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], on = !!(st.dex.teabag || {})[k], nm = `${F.name} 티백`; return card('teabag', k, on, spriteImg(k, 'teabag', 52, !on, on ? nm : '아직 모르는 티백'), nm, on ? '' : ((st.dex.petal || {})[k] ? '제다실에서 꽃잎으로' : '꽃잎을 티백으로'), F.petal); }).join('')}</div><div class="dexgrid big dex-blends">${E.blendKeys(st).map(k => { const B = E.BLENDS[k], on = !!(st.dex.bagBlend || {})[k], nm = `${B.name} 티백`; return card('blend', k, on, spriteImg(B.parts[0], 'teabag', 52, !on, on ? nm : '아직 모르는 블렌드 티백'), nm, on ? '' : (st.dex.blend[k] != null ? '블렌드를 티백으로' : '블렌딩 → 티백'), SPR.tea[B.parts[0]] || FLOWERS[B.parts[0]].petal, 'blend'); }).join('')}</div>` },
+      { key: 'tea', ic: '🍵', title: '차', got: nt + nb, total: FLOWER_KEYS.length + E.blendKeys(st).length, grid: `<div class="dexgrid big">${FLOWER_KEYS.map(k => { const F = FLOWERS[k], q = st.dex.tea[k], on = q != null; return card('tea', k, on, spriteImg(k, 'tea', 56, !on, on ? F.tea : '아직 모르는 차'), F.tea, on ? `<span class="stars">${starStr(q)}</span>` : ((st.dex.teabag || {})[k] ? '찻집에서 우려 팔면' : '티백을 찻집에서'), SPR.tea[k] || F.petal); }).join('')}</div><div class="dexgrid big dex-blends">${E.blendKeys(st).map(k => { const B = E.BLENDS[k], q = st.dex.blend[k], on = q != null, known = B.parts.every(p => st.dex.petal[p]); return card('blend', k, on, spriteImg(B.parts[0], 'tea', 52, !on, on ? B.name : '아직 모르는 블렌드'), B.name, on ? `<span class="stars">${starStr(q)}</span>` : (known ? B.parts.map(p => FLOWERS[p].name).join(' + ') : '제다실에서 섞어 봐요'), SPR.tea[B.parts[0]] || FLOWERS[B.parts[0]].petal, 'blend'); }).join('')}</div>` },
       { key: 'land', ic: '🟫', title: '땅', got: nl, total: 10, grid: `<div class="dexgrid big">${LAND_KEYS.map(k => { const L = LANDS[k], on = !!st.dex.land[k], mk = makers(k); return card('land', k, on, `<span class="dc-land" style="background-color:${on ? L.color : 'var(--line)'}"></span>`, L.name, on ? '' : (mk.some(f => st.dex.flower[f]) ? `${FLOWERS[mk.find(f => st.dex.flower[f])].name}의 땅` : mk.length ? '어떤 꽃의 땅일까요' : '꽃과 꽃 사이에서'), L.color); }).join('')}</div>` },
     ];
     const cat = cats.some(c => c.key === ui.dexCat) ? ui.dexCat : 'all';
     const chip = (key, label, got, total) => `<button type="button" class="dexchip ${got >= total ? 'done' : ''}" data-dc="${key}" aria-pressed="${cat === key}"><span>${label}</span><span class="data">${got} / ${total}</span><i style="--p:${Math.round(got / total * 100)}%"></i></button>`;
-    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '전체', n, E.DEX_TOTAL)}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
+    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '전체', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
       ${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${c.grid}`).join('')}`;
+  } else if (ui.dexTab === 'journal') {
+    body = journalHTML();
   } else {
     body = st.records.length ? st.records.map(r => {
       const total = W * H, order = LAND_KEYS.filter(k => r.counts[k]).sort((a, b) => (a === 'barren') - (b === 'barren') || r.counts[b] - r.counts[a]);
@@ -1588,7 +1679,7 @@ function renderDex(force) {
           <div class="rec-head"><h3>${r.year}년차 정원</h3><span class="muted">땅 ${land}가지</span></div>
           <div class="rec-chips">
             <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
-            <span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
+            ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
           </div>
           <div class="tally">${order.map(k => `<i style="width:${r.counts[k] / total * 100}%;background:${LANDS[k].color}" title="${LANDS[k].name} ${r.counts[k]}칸"></i>`).join('')}</div>
           <div class="rec-lands">${order.map(k => `<span><span class="sw" style="background:${LANDS[k].color}"></span>${LANDS[k].name} <span class="data">${r.counts[k]}</span></span>`).join('')}</div>
@@ -1600,6 +1691,9 @@ function renderDex(force) {
 $('#p-dex').addEventListener('click', e => {
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
+  const jt = e.target.closest('[data-jt]'); if (jt) { ui.jTab = jt.dataset.jt; return renderDex(true); }
+  const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
+  const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);
 });
 function openDexDetail(kind, k) {
@@ -1756,7 +1850,8 @@ function renderToday(force) {
   const cal = E.calendar(st.virtual), gd = guideState();
   const need = careNeed(cal);
   const showGuide = !gd.hidden && guideList().some(([k]) => !gd[k]);
-  const sig = JSON.stringify([need, cal.frozen, showGuide && guideList().map(([k]) => !!gd[k])]);
+  const nq = !showGuide && st.journal && !st.journal.hidden && guideList().every(([k]) => gd[k]) ? nextQuest(cal) : null;
+  const sig = JSON.stringify([need, cal.frozen, showGuide && guideList().map(([k]) => !!gd[k]), nq && [nq.q.key, nq.w.now, nq.w.label]]);
   if (!force && ui.sigs.today === sig) return;
   ui.sigs.today = sig;
   let html = '';
@@ -1768,6 +1863,12 @@ function renderToday(force) {
       <span class="gd-steps">${guideList().map(([k, label], i) => `<i class="${gd[k] ? 'done' : i === next ? 'now' : ''}" title="${label}${gd[k] ? ' ✓' : ''}">${[...label][0]}</i>`).join('')}</span>
       <span class="gd-now"><b>${nl}</b>${guideSub(nk, need)}</span>
       <button type="button" class="x" data-do="hideGuide" aria-label="첫걸음 안내 닫기" title="안내 닫기">✕</button></div>`;
+  } else if (nq) {
+    const n = nq.c.quests.filter(q => st.journal.done[q.key] != null).length;
+    html += `<div class="guide jguide"><span class="gd-t">📜 ${nq.c.no}장 ${nq.c.name} <span class="data">${n} / ${nq.c.quests.length}</span></span>
+      <span class="gd-now"><b>${nq.q.name}</b><small>${nq.w.now ? '지금 할 수 있어요' : nq.w.label || '때가 되면'}</small></span>
+      <button type="button" class="btn small" data-do="journal">📔 도감일지</button>
+      <button type="button" class="x" data-do="hideJournal" aria-label="퀘스트 안내 닫기" title="안내 닫기 (도감일지에서는 계속 보여요)">✕</button></div>`;
   }
   $('#today').innerHTML = html;
 }
@@ -1775,6 +1876,8 @@ $('#today').addEventListener('click', e => {
   const b = e.target.closest('[data-do]'); if (!b) return;
   const d = b.dataset.do;
   if (d === 'hideGuide') { guideState().hidden = true; save(); return renderToday(true); }
+  if (d === 'hideJournal') { st.journal.hidden = true; save(); return renderToday(true); }
+  if (d === 'journal') { ui.dexTab = 'journal'; ui.jTab = 'quest'; return setTab('dex'); }
   if (d === 'gocab') return setTab('tearoom');
   if (d === 'plant') { ui.tool = 'plant'; ui.plantType = null; renderToolbar(true); return renderEmpty(true); }
   const r = E.care(st, d, allFlowerTiles(), ctx);
@@ -1821,6 +1924,7 @@ function renderAll(force) {
   if (ui.tab === 'cab' || ui.tab === 'tearoom') renderCab(force);
   if (ui.tab === 'dex') renderDex(force);
   if (ui.tab === 'settings' && force) renderSettings();   // 입력 중에 다시 그려지지 않게, 들어올 때만
+  showNewTitles();
 }
 let lastUi = 0, lastSave = Date.now();
 function frame() {

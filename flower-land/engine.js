@@ -254,15 +254,22 @@ const BLENDS = {   // P12-08-06 (10-06 검토: 실제로 파는 짝으로 바꿈
   sunfield: { name: '햇살 들판', parts: ['marigold', 'chamomile'], story: '금빛 메리골드와 캐모마일을 섞은 노란 차예요. 허브차 가게에서 자주 보는 짝이에요.' },
   sunsetcomb: { name: '노을빛 볏', parts: ['celosia', 'rose'], story: '맨드라미차는 맛이 순해서 장미를 더해 향을 살리는 블렌딩을 권해요.' },
   plumwinter: { name: '겨울 매화향', parts: ['maehwa', 'napmae'], story: '한겨울에 피는 두 매화를 섞은 정원만의 블렌드예요. 실제로 파는 짝은 아니에요.', original: true },
+  // P19-08-03 숨은 레시피: 그 칭호를 얻어야 레시피 · 도감에 나타나고 이름이 붙음 (10-17, 열린 질문 ⑩)
+  threegarden: { name: '세 정원의 오후', parts: ['chamomile', 'rose', 'lavender'], story: '들판 · 장미 울타리 · 언덕의 꽃을 한 잔에 담은 정원만의 블렌드예요. 블렌드 연구가에게만 알려 줘요.', original: true, hidden: 't_blend' },
+  snowcamellia: { name: '동백 눈길', parts: ['dongbaek', 'maehwa'], story: '눈 속에 피는 동백과 매화를 섞은 정원만의 블렌드예요. 나무를 기다린 사람에게만 알려 줘요.', original: true, hidden: 't_tree' },
 };
-const BLEND_KEYS = Object.keys(BLENDS);
+const ALL_BLEND_KEYS = Object.keys(BLENDS);
+const BLEND_KEYS = ALL_BLEND_KEYS.filter(k => !BLENDS[k].hidden);
+const blendKeys = st => ALL_BLEND_KEYS.filter(k => !BLENDS[k].hidden || (st && st.titles && st.titles[BLENDS[k].hidden] != null));
 const DEX_TOTAL = FLOWER_KEYS.length * 5 + BLEND_KEYS.length + LAND_KEYS.length + BLEND_KEYS.length;   // 씨앗·묘목 13 · 꽃 13 · 꽃잎 13 · 티백(꽃 13 + 블렌드 9) · 차 13 · 땅 10 · 블렌드 9 = 93 (P08-03, P08-04, P12-08-06)
-function blendRecipe(parts) {
+const dexTotal = st => DEX_TOTAL + (blendKeys(st).length - BLEND_KEYS.length) * 2;   // 숨은 레시피를 열면 블렌드 · 블렌드 티백 칸이 하나씩 늘어남
+function blendRecipe(parts, st) {
   const s = parts.slice().sort().join('|');
-  return BLEND_KEYS.find(k => BLENDS[k].parts.slice().sort().join('|') === s) || null;
+  return blendKeys(st).find(k => BLENDS[k].parts.slice().sort().join('|') === s) || null;
 }
-const blendRate = parts => blendRecipe(parts) ? RECIPE_RATE : BLEND_RATE;
-const blendValue = b => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS[k], b.q, false), 0) * blendRate(b.parts) / 10) * 10;
+const blendRate = (parts, st) => blendRecipe(parts, st) ? RECIPE_RATE : BLEND_RATE;
+// 만든 블렌드는 b.recipe를 따르고(숨은 레시피 포함), 미리보기처럼 recipe가 없으면 재료로 찾음
+const blendValue = (b, st) => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS[k], b.q, false), 0) * (('recipe' in b ? b.recipe : blendRecipe(b.parts, st)) ? RECIPE_RATE : BLEND_RATE) / 10) * 10;
 
 // ---------------------------------------------------------------- 상태
 function create(now, rng) {
@@ -285,6 +292,7 @@ function _create(now, rng, cal) {
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {},           // P19 도감일지 · 칭호 · 퀘스트용 셈
   };
 }
 const nid = st => st.nextId++;
@@ -325,6 +333,7 @@ function advance(st, target, ctx) {
   flushPending(st, ctx);
   checkLands(st, ctx);
   checkHelp(st, calendar(st.virtual), ctx);
+  checkJournal(st, ctx);
 }
 
 function step(st, dtH, cal, ctx) {
@@ -471,7 +480,7 @@ function onSlot(st, cal, ctx) {
 function recordYear(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: DEX_TOTAL, log: st.log.slice(), snapshot: null };
+  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null };
   st.records.unshift(rec);
   st.records = st.records.slice(0, 10);
   if (ctx && ctx.onRecord) ctx.onRecord(rec);
@@ -738,6 +747,7 @@ function dryPetals(st, ids) {
   const list = st.petals.filter(p => ids.includes(p.id));
   if (!list.length) return no('널 꽃잎이 없어요');
   for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H }); }
+  bump(st, 'dried', list.length);
   return ok(`꽃잎 ${list.length}장을 꽃방에 널었어요. 1달 뒤에 다 말라요`);
 }
 // P12-07-04: 말린 꽃잎으로도 차를 만들 수 있음 (제철 보너스는 없음)
@@ -760,7 +770,7 @@ function blend(st, ids, ctx) {
   const parts = list.map(p => p.type);
   if (new Set(parts).size !== parts.length) return no('서로 다른 꽃의 꽃잎을 골라 주세요');
   for (const p of list) st.dried.splice(st.dried.indexOf(p), 1);
-  const q = list.reduce((a, p) => a + p.q, 0) / list.length, recipe = blendRecipe(parts);
+  const q = list.reduce((a, p) => a + p.q, 0) / list.length, recipe = blendRecipe(parts, st);
   const name = recipe ? BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
   const b = { id: nid(st), parts, q, recipe, name };
   st.blends.push(b);
@@ -818,6 +828,7 @@ function autoSell(st, cal, dtH, ctx) {
     st.cupTimerH -= CUP_SELL_H;
     const c = st.cups.shift(), v = cupValue(st, c, cal);
     st.money += v;
+    countCup(st, c, cal, true);
     if (c.kind === 'tea') {
       if (st.dex.tea[c.type] == null) addLog(st, 9, `도감에 등록: ${FLOWERS[c.type].tea}`, ctx);
       st.dex.tea[c.type] = Math.max(st.dex.tea[c.type] || 0, c.q);
@@ -834,6 +845,7 @@ function sellCups(st, ids, ctx) {
   let sum = 0;
   for (const c of list) {
     sum += cupValue(st, c, cal); st.cups.splice(st.cups.indexOf(c), 1);
+    countCup(st, c, cal, false);
     if (c.kind === 'tea') {
       if (st.dex.tea[c.type] == null) addLog(st, 9, `도감에 등록: ${FLOWERS[c.type].tea}`, ctx);   // 차는 처음 팔 때 도감에
       st.dex.tea[c.type] = Math.max(st.dex.tea[c.type] || 0, c.q);
@@ -857,13 +869,136 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
   return ok(`차 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
 }
 
+// ---------------------------------------------------------------- 도감일지: 퀘스트 → 칭호 (P19, 10-17)
+const bump = (st, k, n) => { st.stats = st.stats || {}; st.stats[k] = (st.stats[k] || 0) + (n || 1); };
+// 찻잔이 팔릴 때마다: 전체 · 손님(자동) · 갓 우린 · 햇차 · 블렌드 잔 수 (P19-07-01: 판매 잔 수 · 햇차 수만 새로 셈)
+function countCup(st, c, cal, auto) {
+  bump(st, 'cups'); if (auto) bump(st, 'autoCups');
+  if (!cupCold(c, cal)) bump(st, 'warmCups');
+  if (c.hat) bump(st, 'hatCups');
+  if (c.kind === 'blend') bump(st, 'blendCups');
+}
+const n0 = o => Object.keys(o || {}).length;
+const S = (st, k) => (st.stats || {})[k] || 0;
+// 퀘스트: 키 · 이름 · 판정 · 할 곳(탭) · 언제 할 수 있는지 힌트 ({ sow: 꽃 } 화원에 들어오는 달 · { bloom: 꽃 } 피는 달 · 'cafe' 찻집 여는 달)
+const Q = (key, name, test, go, when) => ({ key, name, test, go, when: when || null });
+const CHAPTERS = [
+  { key: 'c1', no: 1, name: '첫 꽃밭', title: 't_first', quests: [
+    Q('c1_bloom', '캐모마일 피우기', st => !!st.dex.flower.chamomile, 'garden', { bloom: 'chamomile' }),
+    Q('c1_petal', '캐모마일 꽃잎 거두기', st => !!(st.dex.petal || {}).chamomile, 'garden', { bloom: 'chamomile' }),
+    Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom'),
+    Q('c1_bag', '캐모마일 티백 만들기', st => !!(st.dex.teabag || {}).chamomile, 'tearoom'),
+    Q('c1_land', '초원 만들기', st => !!st.dex.land.grassland, 'garden'),
+    Q('c1_sell', '캐모마일차 팔기', st => st.dex.tea.chamomile != null, 'cab', 'cafe'),
+  ] },
+  { key: 'c2', no: 2, name: '땅 바꾸기', title: 't_land', quests: [
+    Q('c2_foothill', '산기슭 만들기', st => !!st.dex.land.foothill, 'shop', { sow: 'gamguk' }),
+    Q('c2_med', '지중해 언덕 만들기', st => !!st.dex.land.med, 'shop', { sow: 'lavender' }),
+    Q('c2_sub', '아열대 정원 만들기', st => !!st.dex.land.subtropic, 'shop', { sow: 'jasmine' }),
+    Q('c2_trop', '열대 만들기', st => !!st.dex.land.tropical, 'shop', { sow: 'hibiscus' }),
+    Q('c2_edge', '경계 땅 하나 찾기', st => ['mossy', 'wetland', 'dryfield'].some(k => st.dex.land[k]), 'garden'),
+  ] },
+  { key: 'c3', no: 3, name: '물가의 여름', title: 't_water', quests: [
+    Q('c3_root', '연꽃 연근 들이기', st => !!(st.dex.form || {}).lotus, 'shop', { sow: 'lotus' }),
+    Q('c3_bloom', '연꽃 피우기', st => !!st.dex.flower.lotus, 'garden', { bloom: 'lotus' }),
+    Q('c3_pond', '연못 만들기', st => !!st.dex.land.pond, 'garden'),
+    Q('c3_wet', '습지 만들기', st => !!st.dex.land.wetland, 'garden'),
+    Q('c3_sell', '연꽃차 팔기', st => st.dex.tea.lotus != null, 'cab', 'cafe'),
+  ] },
+  { key: 'c4', no: 4, name: '블렌드 연구', title: 't_blend', quests: [
+    Q('c4_spring', '봄 들판 만들기', st => st.dex.blend.springfield != null, 'tearoom'),
+    Q('c4_sleep', '잠드는 밤 만들기', st => st.dex.blend.sleepnight != null, 'tearoom'),
+    Q('c4_violet', '보랏빛 저녁 만들기', st => st.dex.blend.violetdusk != null, 'tearoom'),
+    Q('c4_five', '이름 있는 블렌드 5가지', st => n0(st.dex.blend) >= 5, 'tearoom'),
+    Q('c4_bag', '블렌드 티백 만들기', st => n0(st.dex.bagBlend) > 0, 'tearoom'),
+  ] },
+  { key: 'c5', no: 5, name: '겨울 찻집', title: 't_cafe', quests: [
+    Q('c5_guest', '손님이 사 간 첫 찻잔', st => S(st, 'autoCups') > 0, 'cab', 'cafe'),
+    Q('c5_warm', '갓 우린 차 팔기', st => S(st, 'warmCups') > 0, 'cab', 'cafe'),
+    Q('c5_hat', '햇차 팔기', st => S(st, 'hatCups') > 0, 'cab', 'cafe'),
+    Q('c5_blend', '블렌드 차 팔기', st => S(st, 'blendCups') > 0, 'cab', 'cafe'),
+    Q('c5_five', '차 도감 5칸', st => n0(st.dex.tea) >= 5, 'cab', 'cafe'),
+  ] },
+  { key: 'c6', no: 6, name: '나무의 해', title: 't_tree', quests: [
+    Q('c6_dongbaek', '동백 피우기', st => !!st.dex.flower.dongbaek, 'garden', { bloom: 'dongbaek' }),
+    Q('c6_maehwa', '매화 피우기', st => !!st.dex.flower.maehwa, 'garden', { bloom: 'maehwa' }),
+    Q('c6_napmae', '납매 피우기', st => !!st.dex.flower.napmae, 'garden', { bloom: 'napmae' }),
+    Q('c6_plum', '겨울 매화향 만들기', st => st.dex.blend.plumwinter != null, 'tearoom'),
+  ] },
+];
+const QUESTS = CHAPTERS.flatMap(c => c.quests.map(q => Object.assign(q, { chapter: c.key })));
+// 칭호: 등급 s 새싹 · f 꽃 · g 정원 (P19-05-03). 장 칭호는 그 장을 마치면, 숨은 칭호는 test로
+const TITLES = {
+  t_first: { name: '새싹 정원사', tier: 's', chapter: 'c1' },
+  t_land: { name: '땅을 읽는 사람', tier: 'f', chapter: 'c2' },
+  t_water: { name: '물가의 정원사', tier: 'f', chapter: 'c3' },
+  t_blend: { name: '블렌드 연구가', tier: 'f', chapter: 'c4' },
+  t_cafe: { name: '겨울 찻집 주인', tier: 'f', chapter: 'c5' },
+  t_tree: { name: '나무를 기다린 사람', tier: 'g', chapter: 'c6' },
+  t_sleep: { name: '꽃잠에 온 손님', tier: 's', cond: '꽃잠(일요일)에 처음 시작', hint: '모두 잠든 정원에 처음 온 사람', test: st => !!st.startedInSleep },
+  t_record: { name: '한 해의 기록자', tier: 's', cond: '한 해 정원을 기록 (쉼달)', hint: '한 해를 끝까지 지켜본 사람', test: st => st.records.length > 0 },
+  t_hat: { name: '햇차 장인', tier: 'f', cond: '햇차 5잔 팔기', hint: '가장 좋은 잎만 골라 우린 사람', test: st => S(st, 'hatCups') >= 5 },
+  t_regular: { name: '찻집의 단골', tier: 'f', cond: '찻잔 100잔 팔기', hint: '손님이 이름을 기억하는 가게', test: st => S(st, 'cups') >= 100 },
+  t_lands: { name: '열 가지 땅', tier: 'g', cond: '땅 도감 10칸', hint: '정원의 모든 흙을 밟아 본 사람', test: st => LAND_KEYS.every(k => st.dex.land[k]) },
+  t_miracle: { name: '한 포기의 기적', tier: 'g', cond: '품질 100% 꽃 피우기', hint: '흠 하나 없는 꽃', test: st => st.flowers.some(f => !f.withered && f.stage === 'bloom' && pct(f.q) >= 100) },
+  t_spring4: { name: '네 번째 봄', tier: 'g', cond: '4년차 3월을 맞기', hint: '봄을 네 번 맞은 정원', test: st => yearOf(st, calendar(st.virtual)) >= 4 },
+  t_complete: { name: '도감을 채운 정원사', tier: 'g', cond: '도감 모든 칸', hint: '빈칸이 하나도 없는 책', test: st => dexCount(st) >= dexTotal(st) },
+};
+const TITLE_KEYS = Object.keys(TITLES);
+const chapterQuests = key => CHAPTERS.find(c => c.key === key).quests;
+const chapterDone = (st, key) => chapterQuests(key).every(q => st.journal.done[q.key] != null);
+// P19-03 장이 열리는 순서: 1장은 첫걸음을 마치면(1장 퀘스트를 이미 했거나 2년차여도), 2~5장은 1장을 마치면, 6장은 2년차 3월부터
+function chapterOpen(st, key) {
+  const yr = yearOf(st, calendar(st.virtual));
+  if (key === 'c1') return !!(st.guide && st.guide.celebrated) || yr >= 2 || chapterQuests('c1').some(q => q.test(st));
+  if (key === 'c6') return yr >= 2;
+  return chapterDone(st, 'c1');
+}
+function giveTitle(st, k, cal, ctx, silent) {
+  if (st.titles[k] != null) return false;
+  st.titles[k] = cal.abs;
+  if (!silent) {
+    addLog(st, 9, `🏅 새 칭호: ${TITLES[k].name}`, ctx);
+    (st._newTitles = st._newTitles || []).push(k);                       // 화면이 얻는 연출을 띄움 (P19-05-06)
+    const hb = ALL_BLEND_KEYS.find(b => BLENDS[b].hidden === k);
+    if (hb) addLog(st, 9, `📖 숨은 레시피가 열렸어요: ${BLENDS[hb].name}`, ctx);
+  }
+  return true;
+}
+// 지금 상태로 퀘스트 · 칭호를 판정. 예전 저장(도감일지 전)은 처음 한 번 조용히 소급하고 한 줄만 남김 (P19-07-03)
+function checkJournal(st, ctx) {
+  const migrate = !st.journal;
+  if (migrate) st.journal = { done: {} };
+  st.titles = st.titles || {}; st.stats = st.stats || {}; if (st.titleOn === undefined) st.titleOn = null;
+  const cal = calendar(st.virtual);
+  let nq = 0, nt = 0;
+  for (let pass = 0; pass < 2; pass++) {                                // 칭호로 열리는 것이 있어 두 번
+    for (const c of CHAPTERS) {
+      if (!chapterOpen(st, c.key)) continue;
+      for (const q of c.quests) {
+        if (st.journal.done[q.key] != null || !q.test(st)) continue;
+        st.journal.done[q.key] = cal.abs; nq++;
+        if (!migrate) addLog(st, 9, `📜 퀘스트: ${q.name} 완료`, ctx);
+      }
+      if (chapterDone(st, c.key) && giveTitle(st, c.title, cal, ctx, migrate)) nt++;
+    }
+    for (const k of TITLE_KEYS) if (TITLES[k].test && TITLES[k].test(st) && giveTitle(st, k, cal, ctx, migrate)) nt++;
+  }
+  if (migrate && (nq || nt)) addLog(st, 11, `📔 도감일지에 지난 기록 ${nq}개 · 칭호 ${nt}개를 옮겨 적었어요`, ctx);
+}
+function setTitleOn(st, k) {
+  if (k != null && st.titles[k] == null) return no('아직 얻지 못한 칭호예요');
+  st.titleOn = k;
+  return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
+}
+
 const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
