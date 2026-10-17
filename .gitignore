@@ -3,3 +3,5 @@
 node_modules/
 # 개인 설정
 .claude/settings.local.json
+# 배포본 (flower-land/tools/build-site.js)
+_site/

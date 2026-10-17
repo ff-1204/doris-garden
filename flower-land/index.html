@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="꽃을 심으면 땅이 그 꽃의 땅으로 바뀌는 느린 정원 놀이. 현실 1주가 정원의 1년이에요.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22 shape-rendering=%22crispEdges%22%3E%3Crect x=%227%22 y=%224%22 width=%222%22 height=%226%22 fill=%22%234f9a3a%22/%3E%3Crect x=%223%22 y=%223%22 width=%224%22 height=%222%22 fill=%22%238fd16a%22/%3E%3Crect x=%229%22 y=%222%22 width=%224%22 height=%222%22 fill=%22%238fd16a%22/%3E%3Crect x=%223%22 y=%2210%22 width=%2210%22 height=%224%22 fill=%22%23b5653a%22/%3E%3C/svg%3E">
 <title>도리의 정원</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -928,7 +935,11 @@ input.tog:checked::before { transform: translateX(17px); }
 .switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
 .danger { color: var(--warn); }
+body { margin: 0; }
+[hidden] { display: none !important; }   /* 예전엔 serve.js가 씌우던 문서 틀의 기본 스타일 (10-17 Pages 배포용으로 옮김) */
 </style>
+</head>
+<body>
 
 <div class="app">
   <header class="topbar">
@@ -1001,3 +1012,5 @@ input.tog:checked::before { transform: translateX(17px); }
 <script src="sprites.js"></script>
 <script src="titles.js"></script>
 <script src="app.js"></script>
+</body>
+</html>
