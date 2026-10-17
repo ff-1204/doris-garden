@@ -1671,8 +1671,7 @@ function renderSettings() {
       + `<div class="set-sub ${s.sleep.on ? '' : 'off'}" id="sleepSub"><div class="row sleeprow"><select id="sleepFrom" class="plantsel" ${s.sleep.on ? '' : 'disabled'}>${hours.map(h => opt(h, s.sleep.from)).join('')}</select><span class="muted">부터</span><select id="sleepTo" class="plantsel" ${s.sleep.on ? '' : 'disabled'}>${hours.map(h => opt(h, s.sleep.to)).join('')}</select><span class="muted">까지</span></div>${sleepBar()}</div>`)}
     ${group('⏩', '시간', '테스트용 · 한 해의 흐름을 빨리 볼 수 있어요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
-      + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>')
-      + row('🧪', '제다실·찻집 채워 보기', '테스트용 · 꽃잎, 꽃방(말리는 중 · 말린 꽃잎), 차를 몇 개씩 넣어요', '<button type="button" class="btn small" id="fillCab">채움</button>'))}
+      + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>'))}
     ${group('🌱', '정원', '되돌릴 수 없어요',
       row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
@@ -1688,15 +1687,6 @@ function renderSettings() {
   $('#sleepTo').addEventListener('change', e => { s.sleep.to = +e.target.value; save(); renderSettings(); });
   root.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { st.speed = +b.dataset.speed; save(); renderTop(); root.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
-  $('#fillCab').addEventListener('click', () => {   // 테스트: 찻집의 모든 줄을 볼 수 있게 몇 개씩 넣음 (도감에는 등록하지 않음)
-    const cal = E.calendar(st.virtual), sk = E.seasonKey(st, cal), id = () => st.nextId++;
-    [['chamomile', 0.9], ['rose', 0.72], ['rose', 0.72], ['lavender', 0.85], ['hibiscus', 0.6], ['bpea', 0.15]].forEach(([type, q]) => st.petals.push({ id: id(), type, q, seasonKey: sk }));
-    [['jasmine', 0.8, 0.5], ['gamguk', 0.66, 0.2]].forEach(([type, q, done]) => st.drying.push({ id: id(), type, q, leftH: E.DRY_H * (1 - done) }));
-    [['chamomile', 0.8], ['rose', 0.9], ['lavender', 0.75], ['bpea', 0.7], ['lotus', 0.85], ['jasmine', 0.6], ['hibiscus', 0.65]].forEach(([type, q]) => st.dried.push({ id: id(), type, q }));
-    [['chamomile', 0.8, sk], ['lotus', 0.95, sk], ['lotus', 0.95, sk], ['rose', 0.55, -1], ['maehwa', 0.7, -1]].forEach(([type, q, k]) => st.teas.push({ id: id(), type, q, seasonKey: k, hat: E.isHat(q) }));
-    st.teas.push({ id: id(), type: 'rose', q: 0.75, seasonKey: sk, hat: false, raw: true });   // 생차 하나
-    save(); renderAll(true); feedback('제다실에 생화 6 · 꽃방 9, 찻집에 티백 5 · 생화 티백 1을 넣었어요');
-  });
   $('#resetBtn').addEventListener('click', e => {
     if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워져요'; return; }
     const keep = st.settings; st = E.create(Date.now()); st.settings = keep; st.onboarded = true;
