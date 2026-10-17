@@ -281,11 +281,14 @@ function feedback(msg, warn, action) {
 const GUIDE_BASE = [['bought', '💐 화원에서 제철 꽃 사기'], ['planted', '🌰 빈 칸에 심기'], ['watered', '💧 목마른 꽃에 물 주기'], ['harvested', '🧺 꽃이 피면 수확하기'], ['sold', '🍵 차를 만들어 팔기']];
 // P04-04: 꽃잠에 시작한 사람은 제다실 · 찻집부터 (시작 선물로 블렌딩 → 판매), 그다음 화원 · 정원
 const GUIDE_GIFT = [['blended', '🫖 제다실에서 블렌딩'], ['sold', '🍵 찻집에서 판매'], ['bought', '💐 화원에서 제철 꽃 사기'], ['planted', '🌰 빈 칸에 심기'], ['watered', '💧 목마른 꽃에 물 주기'], ['harvested', '🧺 꽃이 피면 수확하기']];
-const guideList = () => st.starterGift ? GUIDE_GIFT : GUIDE_BASE;
+// P04-05: 꽃잠에 시작한 사람은 화원이 닫혀 있으니 예약부터 (10-17)
+const GUIDE_SLEEP = [['reserved', '🗓️ 화원에서 새해 꽃 예약하기'], ...GUIDE_BASE.slice(1)];
+const guideList = () => st.starterGift ? GUIDE_GIFT : st.startedInSleep ? GUIDE_SLEEP : GUIDE_BASE;
 function guideState() {
   const g0 = st.guide = st.guide || {};
   if (st.flowers.length) { g0.bought = true; g0.planted = true; }
   if (st.items.length) g0.bought = true;
+  if (st.reservations.length || g0.bought) g0.reserved = true;   // 예약을 건너뛰고 월요일에 바로 사도 됨
   if (Object.keys(st.dex.petal || {}).length || Object.keys(st.dex.tea).length || (!st.starterGift && (st.petals.length || st.teas.length))) g0.harvested = true;   // 시작 선물 꽃잎은 수확으로 치지 않음
   return g0;
 }
@@ -296,6 +299,8 @@ function guideSub(k, need) {
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
   if (k === 'sold') return sub('블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요');
   if (k === 'bought' && E.calendar(st.virtual).frozen) return sub('월요일 아침 6시에 정원이 깨어나면 화원에서 살 수 있어요');
+  if (k === 'planted' && E.calendar(st.virtual).frozen) return sub(st.reservations.some(r => !r.done) ? '월요일 아침 6시부터 예약한 꽃이 심을 때에 맞춰 창고로 와요' : '월요일 아침 6시에 정원이 깨어나면 심을 수 있어요');
+  if (k === 'reserved') return sub(E.calendar(st.virtual).frozen ? '꽃잠엔 새해 꽃을 10% 싸게 미리 사 둬요 · 심을 때가 되면 창고로 와요' : '화원에서 제철 꽃을 사도 돼요');
   return '';
 }
 function track(kind) { if (kind) guideState()[kind] = true; }
@@ -1074,7 +1079,7 @@ function openReserveConfirm() {                                                 
     <div class="rc-notes"><span>📦 특수 포장이라 심는 기간이 시작될 때까지 품질이 그대로예요</span><span class="rc-warn">⚠️ 예약은 취소할 수 없어요</span></div></div>`;
   openModal('🗓️ 예약 확인', body, [
     { label: '취소', act: () => closeModal() },
-    { label: `예약 · ${won(total)}`, primary: true, act: () => { if (short) return; const r = E.reserve(st, cart); if (r.ok) ui.cart = {}; closeModal(); after(r); } },
+    { label: `예약 · ${won(total)}`, primary: true, act: () => { if (short) return; const r = E.reserve(st, cart); if (r.ok) ui.cart = {}; closeModal(); after(r, 'reserved'); } },
   ]);
   if (short) $('#modalRoot [data-mb="1"]').disabled = true;
 }
@@ -1620,7 +1625,7 @@ function logHTML(log, kind) {
   let out = '', last = '';
   for (const l of list) {
     const k = l.y + '|' + l.m;
-    if (k !== last) { out += `<div class="sep"><span>${l.y}년차 ${monthName(l.m)}</span></div>`; last = k; }   // 달이 바뀌는 구분선
+    if (k !== last) { out += `<div class="sep"><span>${l.y < 1 ? '첫 해 전' : `${l.y}년차`} ${monthName(l.m)}</span></div>`; last = k; }   // 0년차 = 꽃잠에 시작한 준비 기간 (P04-05)   // 달이 바뀌는 구분선
     out += `<div class="line k-${LOG_KIND[l.type] || 'etc'}"><span class="li">${LOG_IC[l.type] || '·'}</span><span class="lt">${esc(l.text)}</span><span class="d">${l.d}일</span></div>`;
   }
   return out;
@@ -1709,7 +1714,7 @@ function onboarding() {
       <dt>일요일</dt><dd>꽃잠. 정원의 시간이 멈추고, 다음 해 꽃을 예약해요</dd>
       <dt>돌보기</dt><dd>💧 물과 🌿 잡초는 하루에 한 번이면 충분해요</dd>
     </dl>
-    <p class="note">${cal.frozen && st.starterGift ? '지금은 꽃잠이라 정원이 쉬고 있어요. 🎁 <b>시작 선물</b>로 꽃잎 3장과 말린 꽃잎 4장을 🌿 제다실에 드렸어요. 블렌딩해서 🏷️ 티백으로 만들고, 🍵 찻집에서 우려 팔아 보세요. 월요일 아침 6시에 정원이 깨어나면 💐 화원에서 꽃을 사서 심어요.' : cal.frozen ? '지금은 꽃잠이에요. 화원에서 다음 해 꽃을 예약하거나, ⚙️ 설정의 테스트 배속으로 시간을 빠르게 돌려 보세요.' : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
+    <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">꽃은 시들지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
     [{ label: '시작', primary: true, act: () => { st.onboarded = true; save(); closeModal(); } }]);
 }

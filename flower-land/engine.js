@@ -268,15 +268,15 @@ const blendValue = b => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS
 function create(now, rng) {
   rng = rng || Math.random;
   const cal = calendar(now);
-  const st0 = _create(now, rng, cal);
-  // P04-04 시작 선물은 없앰 (10-06). starterGift 함수는 예전 저장의 첫걸음 순서를 위해 남겨 둠
-  return st0;
+  // P04-04 시작 선물은 없앰 (10-06). 예전 저장의 st.starterGift 표시는 app.js 첫걸음 순서에서만 씀
+  return _create(now, rng, cal);
 }
 function _create(now, rng, cal) {
   const tiles = [];
   for (let i = 0; i < W * H; i++) tiles.push({ t: BASE_T + (rng() - 0.5) * 1.5, m: BASE_M + (rng() - 0.5) * 4, life: 0 });
   return {
-    v: 3, firstWeek: cal.week, virtual: now, lastReal: now, lastAbs: cal.abs, speed: 1,
+    // P04-05: 꽃잠에 시작하면 그 꽃잠은 0년차(준비), 1년차는 다음 월요일 3월부터 (10-17)
+    v: 3, firstWeek: cal.frozen ? cal.week + 1 : cal.week, startedInSleep: cal.frozen, virtual: now, lastReal: now, lastAbs: cal.abs, speed: 1,
     money: 15000,                                                         // P17-06
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [],                         // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔
@@ -288,15 +288,6 @@ function _create(now, rng, cal) {
   };
 }
 const nid = st => st.nextId++;
-// P04-04 시작 선물: 꽃잠(일요일)에 처음 시작하면 제다실 · 찻집부터 해 볼 수 있게
-// 말린 꽃잎 4장 (블렌드 두 가지: 봄 들판 · 보랏빛 저녁) + 꽃잎 3장 (생차 · 건조 연습)
-function starterGift(st, cal) {
-  const sk = seasonKey(st, cal);
-  for (const [type, q] of [['chamomile', 0.85], ['rose', 0.85], ['lavender', 0.85], ['bpea', 0.8]]) st.dried.push({ id: nid(st), type, q });
-  for (const [type, q] of [['chamomile', 0.9], ['chamomile', 0.9], ['rose', 0.85]]) st.petals.push({ id: nid(st), type, q, seasonKey: sk });
-  st.starterGift = true;
-  addLog(st, 11, '🎁 시작 선물: 제다실에 꽃잎 3장과 말린 꽃잎 4장이 있어요', null);
-}
 
 // ---------------------------------------------------------------- 알림 (P11)
 const TOAST_TYPES = [3, 8, 9];                   // P11-02-01-a
