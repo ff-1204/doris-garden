@@ -230,6 +230,7 @@ function load() {
         for (const k of [...Object.keys(s.dex.tea), ...s.petals.map(p => p.type), ...s.teas.map(t => t.type)]) s.dex.petal[k] = true;
       }
       s.dex.blend = s.dex.blend || {};
+      if (!s.gardenId) s.gardenId = E.newGardenId();   // P20 정원 이름표 (이 기능 전 저장)
       s.dex.bagBlend = s.dex.bagBlend || {};
       for (const b of [...(s.blends || []), ...(s.cups || []).filter(c => c.kind === 'blend')]) { const r = E.blendRecipe(b.parts, s); if (r !== (b.recipe || null)) { b.recipe = r; b.name = r ? E.BLENDS[r].name : `${b.parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`; } }   // 10-06 레시피가 바뀌어도 이름이 맞게
       if (!s.dex.teabag) { s.dex.teabag = {}; for (const k of [...Object.keys(s.dex.tea), ...s.teas.map(t => t.type)]) s.dex.teabag[k] = true; }   // 티백 도감 전: 만든 적 있는 차는 티백으로도 등록
@@ -254,13 +255,93 @@ const ctx = {
 };
 
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주, 그 이상은 건너뜀)
-(function catchUp() {
+function catchUp() {
+  ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
   const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = 21 * 24 * HOUR;
   if (gap > CAP) { E.advance(st, st.virtual + CAP, ctx); st.virtual += gap - CAP; st.lastAbs = E.calendar(st.virtual).abs; }
   else E.advance(st, st.virtual + gap, ctx);
   st.lastReal = now;
   ctx.live = true;
-})();
+}
+catchUp();
+
+// ---------------------------------------------------------------- 파일 저장하기 · 불러오기 (P20-02 · 03, 10-17)
+const UNDO_KEY = KEY + '-undo';                                        // 불러오기 직전 정원 (되돌리기 칸 1개)
+const pad2 = n => String(n).padStart(2, '0');
+const yearWord = y => y < 1 ? '첫 해 전' : `${y}년차`;
+function whenText(ms) {
+  const d = new Date(ms), now = new Date();
+  return d.toDateString() === now.toDateString() ? `오늘 ${pad2(d.getHours())}:${pad2(d.getMinutes())}` : `${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+const exportStale = () => st.lastExport && Date.now() - st.lastExport > 7 * 24 * HOUR;   // 7일 넘게 저장하지 않음 (P20-02, 알림 창은 없음)
+function saveFile() {
+  const now = Date.now();
+  st.lastExport = now; save();
+  const d = E.makeSave(st, now), sm = d.summary, t = new Date(now);
+  const name = `도리의정원_${yearWord(sm.year).replace(/ /g, '')}-${monthName(sm.month)}_${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}.json`;
+  return { name, sm, file: new File([JSON.stringify(d)], name, { type: 'application/json' }) };
+}
+function downloadSave() {
+  const { name, sm, file } = saveFile(), url = URL.createObjectURL(file), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  feedback(`💾 저장했어요 · ${yearWord(sm.year)} ${monthName(sm.month)}`);
+  renderSettings();
+}
+// 휴대폰: 공유 시트로 파일 보내기 (되는 브라우저에서만 단추가 보임)
+const canShareFile = (() => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'a.json', { type: 'application/json' })] })); } catch (e) { return false; } })();
+async function shareSave() {
+  const { name, sm, file } = saveFile();
+  try { await navigator.share({ files: [file], title: name }); feedback(`💾 보냈어요 · ${yearWord(sm.year)} ${monthName(sm.month)}`); }
+  catch (e) { if (e && e.name !== 'AbortError') feedback('보내지 못했어요. 저장 단추로 내려받아 주세요', true); }
+  renderSettings();
+}
+// 요약 한 칸: 대표 칭호 문장 · 년차 달 · 돈 · 도감 · 칭호 · 저장한 때
+function summaryCol(label, sm, when) {
+  return `<div class="imp-col"><small class="imp-l">${label}</small>${sm.titleOn && E.TITLES[sm.titleOn] ? titleImg(sm.titleOn, 44, false) : '<span class="imp-ph">🌱</span>'}
+    <b>${yearWord(sm.year)} ${monthName(sm.month)}</b>
+    <dl class="kv"><dt>돈</dt><dd class="data">${won(sm.money)}</dd><dt>도감</dt><dd class="data">${sm.dex} / ${sm.dexTotal}</dd><dt>칭호</dt><dd class="data">${sm.titles}개</dd><dt>저장한 때</dt><dd>${when}</dd></dl></div>`;
+}
+function readImport(file) {
+  if (!file) return;
+  file.text().then(text => {
+    const r = E.parseSave(text);
+    if (!r.ok) return feedback(r.msg, true);
+    const d = r.data, sm = E.saveSummary(d.game);                        // 요약은 파일에 적힌 값 대신 정원에서 다시 셈
+    openModal('📂 불러오기', `<div class="stack" style="gap:10px">
+      <div class="imp-cmp">${summaryCol('지금 정원', E.saveSummary(st), '이 브라우저')}<span class="imp-arrow" aria-hidden="true">›</span>${summaryCol('불러올 정원', sm, d.savedAt ? whenText(d.savedAt) : '알 수 없음')}</div>
+      <label class="imp-opt"><input type="checkbox" id="impSettings"> 설정도 불러오기 <small class="muted">(알림 · 수면 시간)</small></label>
+      <p class="note">지금 정원은 ↩︎ 되돌리기 칸에 한 번 보관돼요. 저장한 뒤 흐른 시간은 최대 3주까지 따라잡아요.</p></div>`,
+      [{ label: '취소', act: closeModal }, { label: '불러오기', primary: true, act: () => applyImport(d.game, $('#impSettings').checked) }]);
+  }).catch(() => feedback('파일을 읽지 못했어요', true));
+}
+// 정원 바꾸기: 지금 정원을 되돌리기 칸에 → 새 정원을 저장소에 쓰고 열 때와 같은 검사 · 소급 · 따라잡기
+function swapGarden(game, msg) {
+  try { localStorage.setItem(KEY, JSON.stringify(game)); } catch (e) { return feedback('저장소에 쓸 수 없어서 바꾸지 못했어요', true); }
+  const s2 = load();
+  if (!s2) { save(); return feedback('정원을 열지 못했어요. 지금 정원은 그대로예요', true); }
+  st = s2;
+  if (!st.gardenId) st.gardenId = E.newGardenId();
+  ui.selected = null; ui.cart = {}; ui.sigs = {};
+  catchUp(); E.checkJournal(st, ctx);
+  closeModal(); save(); setTab('garden');
+  const sm = E.saveSummary(st);
+  feedback(`${msg} · ${yearWord(sm.year)} ${monthName(sm.month)}`);
+}
+function applyImport(game, withSettings) {
+  try { localStorage.setItem(UNDO_KEY, JSON.stringify(st)); } catch (e) { /* 보관 못 해도 불러오기는 함 */ }
+  if (!withSettings) game.settings = st.settings;
+  swapGarden(game, '📂 불러왔어요');
+}
+function undoImport() {
+  let g = null;
+  try { g = JSON.parse(localStorage.getItem(UNDO_KEY)); } catch (e) { /* 없음 */ }
+  if (!g) return feedback('되돌릴 정원이 없어요', true);
+  try { localStorage.removeItem(UNDO_KEY); } catch (e) { /* 무시 */ }
+  swapGarden(g, '↩︎ 불러오기 전으로 되돌렸어요');
+}
+const undoSummary = () => { try { const g = JSON.parse(localStorage.getItem(UNDO_KEY)); return g && g.tiles ? E.saveSummary(g) : null; } catch (e) { return null; } };
+
 
 // ---------------------------------------------------------------- 화면 상태
 const ui = { tab: 'garden', tool: 'look', plantType: null, moveFrom: null, selected: null, mode: 'path', detailsOpen: false,
@@ -1838,14 +1919,24 @@ function renderSettings() {
     ${group('⏩', '시간', '테스트용 · 한 해의 흐름을 빨리 볼 수 있어요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>'))}
+    ${(() => { const us = undoSummary(); return group('💾', '저장', '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요',
+      row('💾', '저장하기', `파일로 내려받아요 · ${st.lastExport ? `마지막 저장 ${whenText(st.lastExport)}` : '아직 저장한 적이 없어요'}${exportStale() ? ' · <b class="val-down">한동안 저장하지 않았어요</b>' : ''}`, `<span class="row" style="gap:6px"><button type="button" class="btn small" id="exportBtn">저장</button>${canShareFile ? '<button type="button" class="btn small" id="shareBtn">보내기</button>' : ''}</span>`)
+      + row('📂', '불러오기', '저장한 파일로 정원을 바꿔요. 바꾸기 전에 요약을 보여 줘요', '<button type="button" class="btn small" id="importBtn">불러오기</button><input type="file" id="importFile" accept=".json,application/json" hidden>')
+      + (us ? row('↩︎', '불러오기 전으로 되돌리기', `보관한 정원: ${yearWord(us.year)} ${monthName(us.month)} · 도감 ${us.dex} / ${us.dexTotal} · 칭호 ${us.titles}개`, '<button type="button" class="btn small" id="undoBtn">되돌리기</button>') : ''));
+    })()}
     ${group('🌱', '정원', '되돌릴 수 없어요',
       row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
-      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '프로토타입 · 진행은 이 브라우저에 자동 저장돼요', '')
+      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '프로토타입 · 진행은 이 브라우저에 자동 저장돼요 (💾 파일로 옮길 수 있어요)', '')
       + row('🔤', '글꼴', '주아 · 고운바탕 · IBM Plex (모두 SIL 오픈 폰트 라이선스)', ''))}
   </div>`;
   resetArmed = false;
   const root = $('#p-settings');
+  $('#exportBtn').addEventListener('click', downloadSave);
+  if ($('#shareBtn')) $('#shareBtn').addEventListener('click', shareSave);
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', e => { readImport(e.target.files[0]); e.target.value = ''; });
+  if ($('#undoBtn')) $('#undoBtn').addEventListener('click', undoImport);
   root.querySelectorAll('[data-toast]').forEach(i => i.addEventListener('change', () => { s.toast[i.dataset.toast] = i.checked; save(); }));
   // 수면 시간은 바꾸면 막대와 선택 칸을 다시 그림
   $('#sleepOn').addEventListener('change', e => { s.sleep.on = e.target.checked; save(); renderSettings(); });

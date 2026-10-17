@@ -292,7 +292,7 @@ function _create(now, rng, cal) {
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
-    journal: { done: {} }, titles: {}, titleOn: null, stats: {},           // P19 도감일지 · 칭호 · 퀘스트용 셈
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null,   // P20 정원 이름표 · 마지막 파일 저장           // P19 도감일지 · 칭호 · 퀘스트용 셈
   };
 }
 const nid = st => st.nextId++;
@@ -997,13 +997,45 @@ function setTitleOn(st, k) {
   return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
 }
 
+// ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
+// 파일과 (나중의) 구글 드라이브가 같은 형식을 씀. check는 깨짐 확인용 해시일 뿐 치트 방지가 아님
+const SAVE_APP = 'doris-garden', SAVE_FORMAT = 1;
+function hashText(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0');
+}
+// 정원마다 붙는 이름표: 여러 기기에서 같은 정원인지 가릴 때 씀 (P20-06). 시드 rng를 쓰지 않아 땅 생성 · 시뮬레이션에 영향 없음
+const newGardenId = () => Date.now().toString(36) + '-' + Math.floor(Math.random() * 36 ** 6).toString(36);
+// 불러오기 전에 보여 줄 요약 (JSON에서 막 읽은 정원에도 씀)
+function saveSummary(st) {
+  const cal = calendar(st.virtual);
+  return { year: yearOf(st, cal), month: cal.month, money: st.money, dex: dexCount(st), dexTotal: dexTotal(st), titles: n0(st.titles), titleOn: st.titleOn || null };
+}
+function makeSave(st, now) {
+  const game = JSON.parse(JSON.stringify(st));
+  delete game._newTitles;                                                // 얻는 연출 대기열은 이 기기에서만
+  return { app: SAVE_APP, format: SAVE_FORMAT, gardenId: st.gardenId || null, savedAt: now, summary: saveSummary(st), check: hashText(JSON.stringify(game)), game };
+}
+// 검사(P20-03-01): 앱 · 형식 · 깨짐 · 땅 칸 수. 통과하면 { ok, data }
+function parseSave(text) {
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return no('도리의 정원 저장 파일이 아니에요'); }
+  if (!d || d.app !== SAVE_APP || !d.game || typeof d.game !== 'object') return no('도리의 정원 저장 파일이 아니에요');
+  if (!(d.format <= SAVE_FORMAT)) return no('더 새로운 버전에서 저장한 파일이에요');
+  if (hashText(JSON.stringify(d.game)) !== d.check) return no('파일이 손상됐어요');
+  const g = d.game;
+  if (g.v !== 3 || !Array.isArray(g.tiles) || g.tiles.length !== W * H || !g.dex) return no('파일이 손상됐어요');
+  return ok('', { data: d });
+}
+
 const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

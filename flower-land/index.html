@@ -373,6 +373,15 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .ttl-pop small { color: var(--muted); font-size: 12.5px; }
 .ttl-anim { width: 132px; height: 132px; image-rendering: pixelated; }
 .jguide .btn.small { white-space: nowrap; }
+/* 불러오기 확인 창 (P20-03): 지금 정원 ↔ 불러올 정원 */
+.imp-cmp { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.imp-col { display: grid; justify-items: center; gap: 6px; padding: 10px; background: var(--sunk); text-align: center; }
+.imp-col .kv { width: 100%; font-size: 12.5px; }
+.imp-col .imp-l { color: var(--muted); font-size: 12px; }
+.imp-col > b { font-family: var(--font-display); font-size: 15px; }
+.imp-ph { width: 44px; height: 44px; display: grid; place-items: center; background: var(--panel); font-size: 20px; }
+.imp-arrow { align-self: center; font-size: 22px; color: var(--muted); }
+.imp-opt { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 /* 접기 상자 (10-17): 못 모은 도감 칸 · 닫힌 장 · 못 얻은 칭호 */
 .fold { margin-top: 8px; }
 .fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 13px; color: var(--muted); border: 1px dashed var(--line); background: var(--panel); }
