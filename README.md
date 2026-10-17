@@ -72,4 +72,8 @@ node flower-land/tools/sim-economy.js 4 7
 
 ## 라이선스
 
-LICENSE 파일을 두지 않아 기본적으로 모든 권리는 운영자에게 있어요 ([이용약관](flower-land/terms.html) 7번). 글꼴은 SIL OFL 1.1 (주아 · 고운바탕 · IBM Plex).
+**오픈소스가 아니에요.** 코드 · 기획 · 글 · 도트 그림의 모든 권리는 운영자에게 있어요 ([LICENSE](LICENSE), [이용약관](flower-land/terms.html) 7번). 소스를 공개한 건 열람과 플레이를 위해서예요.
+
+- 허락 없이 복제 · 수정 · 재배포 · 호스팅(포크 · 클론해서 운영) · 상업적 이용 · 파생물 제작을 할 수 없어요
+- **AI · 기계학습 모델의 학습 · 평가 · 검색 증강 데이터로 쓸 수 없어요.** 배포본의 `robots.txt`와 `<meta name="robots" content="noai, noimageai">`로도 거절 의사를 밝혀요 (존중하는 수집기만 막혀요 — 법적 근거는 LICENSE)
+- 글꼴(주아 · 고운바탕 · IBM Plex)만 SIL OFL 1.1. 사용 허락 문의: dorimhan@kakao.com
