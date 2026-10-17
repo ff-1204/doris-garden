@@ -4,7 +4,7 @@ Claude Code가 이 저장소에서 작업할 때 따르는 규칙. 상위 `C:\Us
 
 ## 먼저 볼 것
 
-- [README.md](README.md): 폴더 · 실행 · 테스트 · 배포
+- [docs/개발.md](docs/개발.md): 폴더 · 실행 · 테스트 · 배포. [README.md](README.md)는 플레이어용 안내라 개발 내용을 넣지 않는다
 - [체크리스트.md](체크리스트.md): 기획과 결정 기록. **맨 아래 "다음 작업"부터** 읽는다. 항목 번호(P01~P20)는 코드 주석에도 쓴다 (`// P19-05-06`)
 - 배포 주소: https://ff-1204.github.io/doris-garden/ (공개 저장소 ff-1204/doris-garden, main push = 자동 배포)
 
