@@ -399,6 +399,7 @@ setInterval(() => {   // 👑 정원 칭호: 반짝이가 번갈아 (보이는 �
 const absText = abs => { const y = Math.floor(abs / 14) - st.firstWeek + 1; return `${y < 1 ? '첫 해 전' : `${y}년차`} ${monthName(MONTHS[abs % 14])}`; };
 // 퀘스트 그림: 그 꽃 · 땅 색 칸 · 찻잔
 const QART = {
+  c0_visit: ['form', 'chamomile'],
   c1_bloom: ['flower', 'chamomile'], c1_petal: ['petal', 'chamomile'], c1_dry: ['dried', 'chamomile'], c1_bag: ['teabag', 'chamomile'], c1_land: ['land', 'grassland'], c1_sell: ['tea', 'chamomile'],
   c2_foothill: ['land', 'foothill'], c2_med: ['land', 'med'], c2_sub: ['land', 'subtropic'], c2_trop: ['land', 'tropical'], c2_edge: ['land', 'mossy'],
   c3_root: ['form', 'lotus'], c3_bloom: ['flower', 'lotus'], c3_pond: ['land', 'pond'], c3_wet: ['land', 'wetland'], c3_sell: ['tea', 'lotus'],
@@ -1869,7 +1870,7 @@ function onboarding() {
     <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
     <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">꽃은 시들지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
-    [{ label: '시작', primary: true, act: () => { st.onboarded = true; save(); closeModal(); } }]);
+    [{ label: '시작', primary: true, act: () => { st.onboarded = true; closeModal(); E.checkJournal(st, ctx); save(); renderAll(true); } }]);   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }
 
 // ---------------------------------------------------------------- 오늘의 정원 · 땅 안내 · 빈 정원

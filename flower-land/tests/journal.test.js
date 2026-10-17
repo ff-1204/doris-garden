@@ -4,9 +4,17 @@ let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') +
 const H = E.HOUR, MON = new Date(2026, 9, 5, 6, 0, 0).getTime(), ctx = { live: false, rng: () => 0.5 };
 
 console.log('[구성]');
-check(E.QUESTS.length === 30 && E.CHAPTERS.length === 6, '퀘스트 6장 30개');
-check(E.TITLE_KEYS.length === 14 && E.TITLE_KEYS.filter(k => E.TITLES[k].chapter).length === 6, '칭호 14개 (장 칭호 6 · 숨은 칭호 8)');
-check(['s', 'f', 'g'].map(t => E.TITLE_KEYS.filter(k => E.TITLES[k].tier === t).length).join() === '3,6,5', '등급 새싹 3 · 꽃 6 · 정원 5');
+check(E.QUESTS.length === 31 && E.CHAPTERS.length === 7, '퀘스트 0~6장 31개');
+check(E.TITLE_KEYS.length === 15 && E.TITLE_KEYS.filter(k => E.TITLES[k].chapter).length === 7, '칭호 15개 (장 칭호 7 · 숨은 칭호 8)');
+check(['s', 'f', 'g'].map(t => E.TITLE_KEYS.filter(k => E.TITLES[k].tier === t).length).join() === '4,6,5', '등급 새싹 4 · 꽃 6 · 정원 5');
+
+console.log('[0장 첫 방문]');
+const first = E.create(MON + H, () => 0.5);
+E.checkJournal(first, ctx);
+check(E.chapterOpen(first, 'c0') && first.titles.t_visit == null, '0장은 처음부터 열려 있고, 첫 안내 창 전엔 칭호 없음');
+first.onboarded = true;   // 첫 안내 창의 '시작'
+E.checkJournal(first, ctx);
+check(first.journal.done.c0_visit != null && first.titles.t_visit != null && first._newTitles.includes('t_visit'), "'시작'을 누르면 퀘스트 완료 · 칭호 「정원 문을 연 사람」");
 check(E.DEX_TOTAL === 93 && E.BLEND_KEYS.length === 9, '숨은 레시피는 기본 도감 93칸에 들지 않음');
 
 console.log('[장이 열리는 순서]');

@@ -6,7 +6,7 @@ const SEAS = ['#e39ab3', '#64a653', '#cc8636', '#86abc3'];
 const LANDC = ['#9fae8f', '#88bd5c', '#4788b5', '#d8c08c', '#5aa553', '#2a8549', '#5e8a6c', '#5b9c80', '#c8bc82', '#a39b8e'];
 // 칭호 → [문장 이름, 안쪽 바탕색]
 const ART = {
-  t_first: ['sprout', '#2b2a22'], t_land: ['compass', '#262b26'], t_water: ['lotus', '#1f2a33'], t_blend: ['pot', '#2a2533'],
+  t_visit: ['gate', '#23291f'], t_first: ['sprout', '#2b2a22'], t_land: ['compass', '#262b26'], t_water: ['lotus', '#1f2a33'], t_blend: ['pot', '#2a2533'],
   t_cafe: ['cup', '#1e2438'], t_tree: ['plum', '#2a2628'], t_sleep: ['moon', '#24203a'], t_record: ['book', '#2b2722'],
   t_hat: ['leaf', '#22301f'], t_regular: ['stack', '#2c2620'], t_lands: ['mosaic', '#232723'], t_miracle: ['miracle', '#2e2a1c'],
   t_spring4: ['spring4', '#2e2228'], t_complete: ['wreath', '#2a2a22'],
@@ -15,6 +15,15 @@ function emblem(name, P, R) {
   const ring = (cx, cy, r, c, w) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d <= r && d > r - w) P(x, y, c); } };
   const disc = (fn) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) fn(x, y); };
   switch (name) {
+    case 'gate':     // 활짝 열린 나무 대문과 안으로 이어지는 꽃길 (첫 방문)
+      R(6, 9, 4, 7, '#d9c9a3'); R(7, 6, 2, 3, '#d9c9a3'); P(7, 12, '#bfae86'); P(8, 14, '#bfae86');   // 꽃길(징검돌)
+      R(0, 13, 6, 3, '#4f9a3a'); R(10, 13, 6, 3, '#4f9a3a'); R(4, 6, 3, 7, '#3f7f35'); R(9, 6, 3, 7, '#3f7f35');      // 길가 풀 · 안쪽 산울타리
+      [[1, 12, '#e39ab3'], [4, 14, '#f2c624'], [11, 14, '#e39ab3'], [14, 12, '#f2c624'], [5, 7, '#f0a3c0'], [10, 8, '#f2c624']].forEach(([x, y, c]) => P(x, y, c));
+      R(2, 3, 2, 13, '#a0703f'); R(12, 3, 2, 13, '#a0703f'); P(3, 3, '#6e4a28'); P(12, 3, '#6e4a28');               // 기둥
+      R(1, 1, 14, 2, '#6e4a28'); R(2, 1, 12, 1, '#a0703f'); P(7, 0, '#a0703f'); P(8, 0, '#a0703f');                   // 아치 들보
+      R(0, 5, 2, 8, '#c08a52'); R(0, 6, 2, 1, '#6e4a28'); R(0, 11, 2, 1, '#6e4a28');                                  // 왼쪽 문짝(바깥으로 열림)
+      R(14, 5, 2, 8, '#c08a52'); R(14, 6, 2, 1, '#6e4a28'); R(14, 11, 2, 1, '#6e4a28');                               // 오른쪽 문짝
+      break;
     case 'sprout':   // 토분에 돋은 떡잎 두 장
       R(7, 3, 2, 6, '#4f9a3a'); R(3, 3, 4, 2, '#8fd16a'); P(2, 4, '#8fd16a'); R(4, 5, 3, 1, '#5fae45'); R(9, 2, 4, 2, '#8fd16a'); P(13, 3, '#8fd16a'); R(9, 4, 3, 1, '#5fae45');
       R(4, 9, 8, 1, '#5a3a22'); R(3, 10, 10, 2, '#c4733f'); R(3, 11, 10, 1, '#a35a2e'); R(4, 12, 8, 2, '#b5653a'); R(5, 14, 6, 1, '#8f4a26'); P(5, 12, '#d98b55'); break;

@@ -883,6 +883,9 @@ const S = (st, k) => (st.stats || {})[k] || 0;
 // 퀘스트: 키 · 이름 · 판정 · 할 곳(탭) · 언제 할 수 있는지 힌트 ({ sow: 꽃 } 화원에 들어오는 달 · { bloom: 꽃 } 피는 달 · 'cafe' 찻집 여는 달)
 const Q = (key, name, test, go, when) => ({ key, name, test, go, when: when || null });
 const CHAPTERS = [
+  { key: 'c0', no: 0, name: '첫 방문', title: 't_visit', quests: [   // 첫 안내 창에서 '시작'을 누르면 바로 (10-17)
+    Q('c0_visit', '도리의 정원에 처음 오기', st => !!st.onboarded, 'garden'),
+  ] },
   { key: 'c1', no: 1, name: '첫 꽃밭', title: 't_first', quests: [
     Q('c1_bloom', '캐모마일 피우기', st => !!st.dex.flower.chamomile, 'garden', { bloom: 'chamomile' }),
     Q('c1_petal', '캐모마일 꽃잎 거두기', st => !!(st.dex.petal || {}).chamomile, 'garden', { bloom: 'chamomile' }),
@@ -929,6 +932,7 @@ const CHAPTERS = [
 const QUESTS = CHAPTERS.flatMap(c => c.quests.map(q => Object.assign(q, { chapter: c.key })));
 // 칭호: 등급 s 새싹 · f 꽃 · g 정원 (P19-05-03). 장 칭호는 그 장을 마치면, 숨은 칭호는 test로
 const TITLES = {
+  t_visit: { name: '정원 문을 연 사람', tier: 's', chapter: 'c0' },
   t_first: { name: '새싹 정원사', tier: 's', chapter: 'c1' },
   t_land: { name: '땅을 읽는 사람', tier: 'f', chapter: 'c2' },
   t_water: { name: '물가의 정원사', tier: 'f', chapter: 'c3' },
@@ -947,9 +951,10 @@ const TITLES = {
 const TITLE_KEYS = Object.keys(TITLES);
 const chapterQuests = key => CHAPTERS.find(c => c.key === key).quests;
 const chapterDone = (st, key) => chapterQuests(key).every(q => st.journal.done[q.key] != null);
-// P19-03 장이 열리는 순서: 1장은 첫걸음을 마치면(1장 퀘스트를 이미 했거나 2년차여도), 2~5장은 1장을 마치면, 6장은 2년차 3월부터
+// P19-03 장이 열리는 순서: 0장은 처음부터, 1장은 첫걸음을 마치면(1장 퀘스트를 이미 했거나 2년차여도), 2~5장은 1장을 마치면, 6장은 2년차 3월부터
 function chapterOpen(st, key) {
   const yr = yearOf(st, calendar(st.virtual));
+  if (key === 'c0') return true;                                       // 0장 첫 방문은 처음부터
   if (key === 'c1') return !!(st.guide && st.guide.celebrated) || yr >= 2 || chapterQuests('c1').some(q => q.test(st));
   if (key === 'c6') return yr >= 2;
   return chapterDone(st, 'c1');
