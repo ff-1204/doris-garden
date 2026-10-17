@@ -264,7 +264,7 @@ const ctx = {
 
 // ---------------------------------------------------------------- 화면 상태
 const ui = { tab: 'garden', tool: 'look', plantType: null, moveFrom: null, selected: null, mode: 'path', detailsOpen: false,
-  shopQty: {}, cart: {}, shopFilter: true, selTile: null, storeSort: 'flower', dexTab: 'dex', sigs: {}, sheetOpen: false };
+  shopQty: {}, cart: {}, shopFilter: true, selTile: null, storeSort: 'flower', dexTab: 'journal', fold: {}, sigs: {}, sheetOpen: false };
 let feedbackTimer;
 function feedback(msg, warn, action) {
   const snack = $('#snack'), top = $('#feedbackTop');
@@ -429,7 +429,9 @@ function journalHTML() {
   const cal = E.calendar(st.virtual), done = st.journal.done, got = E.TITLE_KEYS.filter(k => st.titles[k] != null).length;
   const seg = `<span class="seg" id="jTabs"><button type="button" data-jt="quest" aria-pressed="${ui.jTab !== 'title'}">📜 퀘스트</button><button type="button" data-jt="title" aria-pressed="${ui.jTab === 'title'}">🏅 칭호 <span class="data">${got} / ${E.TITLE_KEYS.length}</span></button></span>`;
   if (ui.jTab === 'title') return seg + titlesHTML();
-  return seg + E.CHAPTERS.map(c => {
+  // 열린 장은 펼쳐 두고, 닫힌 장은 아래에 접어 둠 (10-17)
+  const chs = E.CHAPTERS.map(c => ({ c, open: E.chapterOpen(st, c.key) })), closed = chs.filter(x => !x.open);
+  const card = c => {
     const open = E.chapterOpen(st, c.key), n = c.quests.filter(q => done[q.key] != null).length, tk = c.title, has = st.titles[tk] != null, hb = hiddenBlendOf(tk);
     const lockMsg = c.key === 'c1' ? '🌱 첫걸음을 마치면 열려요' : c.key === 'c6' ? '🌳 나무는 오래 걸려서 2년차 3월에 열려요 · 첫해에 심어 두세요' : '1장 첫 꽃밭을 마치면 열려요';
     const rows = open ? c.quests.map(q => {
@@ -441,14 +443,36 @@ function journalHTML() {
       <div class="jch-head">${titleImg(tk, 44, !has)}<div class="jch-t"><small>${c.no}장</small><b>${c.name}</b><span class="jch-stamps" aria-label="${n} / ${c.quests.length}">${c.quests.map(q => `<i class="${done[q.key] != null ? 'on' : ''}"></i>`).join('')}</span></div><span class="data jch-n">${n} / ${c.quests.length}</span></div>
       ${open ? `<div class="q-list">${rows}</div>` : `<p class="note">${lockMsg}</p>`}
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
-  }).join('');
+  };
+  const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
+  return seg + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
+    + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
 }
 function titlesHTML() {
-  return `<p class="note">칭호를 하나 골라 대표로 걸면 위 막대에 보여요. 숨은 칭호는 수수께끼를 풀어 보세요.</p><div class="ttl-grid">${E.TITLE_KEYS.map(k => {
-    const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;
-    const sub = has ? `${hidden ? `${T.cond} · ` : ''}${absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
-    return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
-  }).join('')}</div>`;
+  // 얻은 칭호는 펼쳐 두고, 못 얻은 칭호는 접어 둠 (10-17)
+  const has = E.TITLE_KEYS.filter(k => st.titles[k] != null), not = E.TITLE_KEYS.filter(k => st.titles[k] == null);
+  return `<p class="note">칭호를 하나 골라 대표로 걸면 위 막대에 보여요. 숨은 칭호는 수수께끼를 풀어 보세요.</p>`
+    + (has.length ? `<div class="ttl-grid">${has.map(titleCard).join('')}</div>` : '<p class="note">아직 얻은 칭호가 없어요. 📜 퀘스트의 장을 마치면 얻어요.</p>')
+    + (not.length ? foldBox('t-locked', `아직 얻지 못한 칭호 ${not.length}개`, `<div class="ttl-grid">${not.map(titleCard).join('')}</div>`) : '');
+}
+// 접기 상자: 펼친 상태는 다시 그려도 유지 (ui.fold)
+const foldBox = (key, label, inner) => `<details class="fold" data-fold="${key}"${ui.fold[key] ? ' open' : ''}><summary>${label}</summary>${inner}</details>`;
+// 도감 칸 묶음: 모은 칸은 그대로, 못 모은 칸(.locked)은 접기 상자로
+function foldGrid(key, gridHTML) {   // 티백 · 차처럼 그리드가 여럿(꽃 + 블렌드)이어도 그리드마다 나눔
+  const t = document.createElement('template'); t.innerHTML = gridHTML.trim();
+  let shown = '', folded = '', n = 0;
+  for (const el of [...t.content.children]) {
+    const off = el.classList.contains('dexgrid') ? [...el.children].filter(c => c.classList.contains('locked')) : [];
+    off.forEach(c => c.remove()); n += off.length;
+    if (!off.length || el.children.length) shown += el.outerHTML;
+    if (off.length) folded += `<div class="${el.className}">${off.map(c => c.outerHTML).join('')}</div>`;
+  }
+  return n ? shown + foldBox(key, `아직 못 모은 ${n}칸`, `<div class="stack" style="gap:8px">${folded}</div>`) : gridHTML;
+}
+function titleCard(k) {
+  const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;
+  const sub = has ? `${hidden ? `${T.cond} · ` : ''}${absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
+  return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
 }
 // 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
 function showNewTitles() {
@@ -1639,11 +1663,12 @@ function cabClick(e) {
 
 // ---------------------------------------------------------------- 📖 도감·기록 (P08, P04-02)
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.jTab, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot]);
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.jTab, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot]);
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
-  const tabs = `<span class="seg" id="dexTabs"><button type="button" data-dt="dex" aria-pressed="${ui.dexTab === 'dex'}">도감</button><button type="button" data-dt="rec" aria-pressed="${ui.dexTab === 'rec'}">기록</button><button type="button" data-dt="journal" aria-pressed="${ui.dexTab === 'journal'}">📔 도감일지</button></span>`;
+  const tab = (k, label) => `<button type="button" data-dt="${k}" aria-pressed="${ui.dexTab === k}">${label}</button>`;
+  const tabs = `<span class="seg" id="dexTabs">${tab('journal', '📔 도감일지')}${tab('rec', '기록')}${tab('dex', '도감')}</span>`;   // 순서: 도감일지 > 기록 > 도감 (10-17)
   let body;
   if (ui.dexTab === 'dex') {
     // 모은 카드는 작은 설명, 못 모은 카드는 "어떻게 모으는지" 힌트
@@ -1665,7 +1690,7 @@ function renderDex(force) {
     const cat = cats.some(c => c.key === ui.dexCat) ? ui.dexCat : 'all';
     const chip = (key, label, got, total) => `<button type="button" class="dexchip ${got >= total ? 'done' : ''}" data-dc="${key}" aria-pressed="${cat === key}"><span>${label}</span><span class="data">${got} / ${total}</span><i style="--p:${Math.round(got / total * 100)}%"></i></button>`;
     body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '전체', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
-      ${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${c.grid}`).join('')}`;
+      ${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${foldGrid('dex-' + c.key, c.grid)}`).join('')}`;   // 못 모은 칸은 접어 둠 (10-17)
   } else if (ui.dexTab === 'journal') {
     body = journalHTML();
   } else {
@@ -1690,6 +1715,7 @@ function renderDex(force) {
 }
 $('#p-dex').addEventListener('click', e => {
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
+  const fd = e.target.closest('details.fold > summary'); if (fd) { const d = fd.parentElement; ui.fold[d.dataset.fold] = !d.open; return; }   // 펼침 상태 기억
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
   const jt = e.target.closest('[data-jt]'); if (jt) { ui.jTab = jt.dataset.jt; return renderDex(true); }
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
