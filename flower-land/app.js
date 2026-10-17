@@ -338,6 +338,45 @@ toastEl.addEventListener('click', () => { toastEl.classList.remove('show'); open
 // ---------------------------------------------------------------- 위 막대
 const SEASON_IC = ['🌸', '☀️', '🍁', '❄️', '🌙'];
 const monthIc = m => SEASON_IC[m >= 3 && m <= 5 ? 0 : m >= 6 && m <= 8 ? 1 : m >= 9 && m <= 11 ? 2 : 3];   // 심는 달의 계절 이모지
+
+// ---------------------------------------------------------------- 픽셀 설명 (글로 쓰던 설명을 도트 그림으로, 10-17)
+const seasonOfIdx = i => Math.min(4, Math.floor(i / 3));
+// 달 띠: 3월부터 꽃샘달까지 14칸. rows = [[아이콘, 이름, 달 배열, 색]], 빈 줄은 뺌. 지금 달은 테두리
+function monthStrip(rows, nowIdx) {
+  rows = rows.filter(r => r[2].length);
+  const cell = (i, cls, c) => `<i class="${cls}${i === nowIdx ? ' now' : ''}" style="--c:${c}"></i>`;
+  return `<div class="mstrip" role="img" aria-label="${rows.map(r => `${r[1]} ${monthsText(r[2])}`).join(', ')}"><span></span>`
+    + MONTHS.map((m, i) => `<i class="ms-h${i === nowIdx ? ' now' : ''}" style="--c:${SEASON_COLOR[seasonOfIdx(i)]}">${MONTH_SHORT(m)}</i>`).join('')
+    + rows.map(([ic, nm, arr, c]) => `<span class="ms-l">${ic}<small>${nm}</small></span>${MONTHS.map((m, i) => cell(i, arr.includes(m) ? 'on' : '', c)).join('')}`).join('')
+    + '</div>';
+}
+const flowerStrip = (F, nowIdx) => monthStrip([['🌰', '심기', F.sow, 'var(--seed)'], ['🌸', '개화', F.bloom, F.petal], ['🌱', '번식', F.prop === '채종' ? [] : F.propMonths, 'var(--good)'], ['💤', '휴면', F.dormant, 'var(--muted)']], nowIdx);
+// 온도·습도 막대: 20칸, 원하는 범위(±3)는 색칸, 지금 값은 ▲
+function envGauge(ic, name, want, now, lo, hi, unit, c) {
+  const N = 20, at = v => Math.max(0, Math.min(N - 1, Math.floor((v - lo) / (hi - lo) * N)));
+  const a = at(want - 3), b = at(want + 3), n = now == null ? -1 : at(now), ok = now != null && Math.abs(now - want) <= 3;
+  const fmt = v => unit === '°C' ? v.toFixed(1) : Math.round(v);
+  return `<div class="gauge" role="img" aria-label="${name}: 원하는 ${want}${unit}${now != null ? `, 지금 ${fmt(now)}${unit}` : ''}"><span class="g-l">${ic} ${name}</span>`
+    + `<span class="g-bar" style="--c:${c}">${Array.from({ length: N }, (_, i) => `<i class="${i >= a && i <= b ? 'band' : ''}${i === n ? ' here' : ''}"></i>`).join('')}</span>`
+    + `<span class="g-v data">${now != null ? `<b class="${ok ? 'val-up' : 'val-down'}">${fmt(now)}</b> / ` : ''}${want}${unit}</span></div>`;
+}
+const envGauges = (F, tl) => envGauge('🌡️', '온도', F.t, tl ? tl.t : null, 0, 35, '°C', '#d9823b') + envGauge('💧', '습도', F.m, tl ? tl.m : null, 0, 100, '%', '#4788b5');
+// 첫 안내: 한 주 = 한 해. 요일마다 낮(06–18시) · 밤(18–06시) 두 칸, 칸 색은 계절
+function weekPixel(cal) {
+  return `<div class="wkpx" role="img" aria-label="월요일 오전 6시 3월부터 일요일 꽃잠까지, 반나절마다 한 달"><span></span>${WEEKDAY.map((d, i) => `<b class="${i === 6 ? 'rest' : ''}">${d}</b>`).join('')}`
+    + ['☀️', '🌙'].map((ic, half) => `<span class="wk-l">${ic}</span>${WEEKDAY.map((_, d) => { const i = d * 2 + half; return `<i class="${i === cal.idx ? 'now' : ''}" style="--c:${SEASON_COLOR[seasonOfIdx(i)]}">${MONTH_SHORT(MONTHS[i])}</i>`; }).join('')}`).join('')
+    + '</div>';
+}
+// 첫 안내: 꽃 한 포기가 둘레 땅을 바꿈 (7×7, 가운데 캐모마일, 2칸 안은 초원)
+function landPixel() {
+  const F = FLOWERS.chamomile, L = LANDS[homeLand(F)];
+  let html = '';
+  for (let y = -3; y <= 3; y++) for (let x = -3; x <= 3; x++) {
+    const d = Math.max(Math.abs(x), Math.abs(y));
+    html += `<i style="background:${d <= 2 ? L.color : LANDS.barren.color};opacity:${d <= 2 ? 1 - d * 0.15 : 1}">${!x && !y ? spriteImg('chamomile', 'flower', 32, false, F.name) : ''}</i>`;
+  }
+  return `<div class="landpx" role="img" aria-label="${F.name} 둘레 2칸이 ${L.name}으로 바뀐 모습">${html}</div>`;
+}
 // 상태창 "오늘의 한 마디" (게임을 위해 새로 쓴 문장)
 const GARDEN_WORDS = [
   '꽃은 서두르지 않아요. 그래도 늘 제때 피어요.',
@@ -827,16 +866,17 @@ function renderStatus(force) {
       <dl class="kv">
         <dt>지금 땅</dt><dd><span class="sw" style="background:${LANDS[land].color}"></span> ${LANDS[land].name}</dd>
         <dt>원하는 땅</dt><dd>${LANDS[home].name} · ${rel}</dd>
-        <dt>온도와 습도</dt><dd class="data">${tl.t.toFixed(1)}°C · 습도 ${Math.round(tl.m)}%</dd>
-        <dt>원하는 환경</dt><dd class="data">${F.t}°C · ${F.m}% (±3)</dd>
+      </dl>
+      <div class="gauges" title="색칸이 이 꽃이 원하는 범위(±3), ▲가 지금 이 칸">${envGauges(F, tl)}</div>
+      <dl class="kv">
         <dt>바꾸는 범위</dt><dd>${Math.max(0, E.stageRadius(f))}칸 (다 자라면 ${E.qualityRadius(f)}칸)</dd>
         ${blk.length ? `<dt>밀리는 중</dt><dd>옆의 ${josa(FLOWERS[blk[0].type].name, '이/가')} 만든 땅에 밀리고 있어요</dd>` : ''}
       </dl>
       <h3 style="margin:10px 0 4px;font-size:14px">일정</h3>
+      ${flowerStrip(F, cal.idx)}
       <dl class="kv">
-        <dt>개화·수확</dt><dd>${monthsText(F.bloom)}${f.stage === 'bloom' ? (f.harvestKey === cal.abs ? ' · 이번 달은 수확했어요' : ' · 지금 수확할 수 있어요') : ''}</dd>
-        <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : `${F.prop} · ${monthsText(F.propMonths)}`}</dd>
-        <dt>휴면</dt><dd>${F.dormant.length ? monthsText(F.dormant) : '없음'}</dd>
+        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === cal.abs ? '이번 달은 수확했어요' : '지금 수확할 수 있어요'}</dd>` : ''}
+        <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
         <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 기간이나 휴면기에'}</dd>
       </dl>
       <h3 style="margin:10px 0 4px;font-size:14px">출신</h3>
@@ -1566,11 +1606,13 @@ function openDexDetail(kind, k) {
   if (kind === 'blend') {                              // 🫖 블렌드: 재료와 가장 좋았던 품질
     const B = E.BLENDS[k], q = st.dex.blend[k];
     return openModal(B.name, `<div class="stack">
-      <div class="dexart"><div class="row" style="gap:12px">${spriteImg(B.parts[0], 'tea', 96, false, B.name)}${B.parts.map(p => spriteImg(p, 'dried', 48, false, FLOWERS[p].name)).join('')}</div></div>
+      <div class="dexart"><div class="beq" role="img" aria-label="${B.parts.map(p => `말린 ${FLOWERS[p].name} 꽃잎`).join(' 더하기 ')}은 ${B.name}">
+        ${B.parts.map(p => `<span class="beq-i">${spriteImg(p, 'dried', 48, false, '')}<small>말린 ${FLOWERS[p].name}</small></span>`).join('<span class="beq-op">+</span>')}
+        <span class="beq-op">=</span><span class="beq-i out">${spriteImg(B.parts[0], 'tea', 64, false, '')}<small>${B.name}</small><em class="beq-x">×1.5</em></span>
+      </div></div>
       <div class="row"><b>${B.name}</b><span class="chip">블렌드</span>${q != null ? `<span class="stars">${starStr(q)}</span>` : ''}</div>
-      <p class="note">재료: ${B.parts.map(p => `말린 ${FLOWERS[p].name} 꽃잎`).join(' + ')}</p>
       ${B.story ? `<p class="note">${B.original ? '🌱' : '🍵'} ${B.story}</p>` : ''}
-      <p class="note">🌿 제다실의 🫖 블렌딩에서 만들어요 (언제든). 레시피대로 만들어서 값은 재료로 따로 만든 차 값을 더한 것의 <b class="val-up">1.5배</b>예요 (레시피에 없는 블렌드는 1.2배).</p></div>`, [{ label: '닫기', act: closeModal }]);
+      <p class="note">🌿 제다실 🫖 블렌딩에서 언제든 만들어요. 값은 재료 차 값을 더한 것의 <b class="val-up">×1.5</b> (레시피에 없는 블렌드는 ×1.2)</p></div>`, [{ label: '닫기', act: closeModal }]);
   }
   if (kind === 'land') {
     const L = LANDS[k], makers = FLOWER_KEYS.filter(f => homeLand(FLOWERS[f]) === k).map(f => FLOWERS[f].name);
@@ -1587,9 +1629,10 @@ function openDexDetail(kind, k) {
     <div class="dex-chain">${steps.map(([kd, nm, on], i) => `${i ? '<span class="dc-arrow">›</span>' : ''}<button type="button" class="dc-step ${kd === cur[0] ? 'on' : ''} ${on ? '' : 'locked'}" ${on ? `data-dk="${kd}"` : 'disabled'} title="${on ? nm : '아직 몰라요'}">${spriteImg(k, kd, 36, !on, on ? nm : '')}<small>${on ? ['씨앗·묘목', '꽃', '꽃잎', '티백', '차'][i] : '???'}</small></button>`).join('')}</div>
     <div class="row"><b>${F.name}</b><span class="chip">${LIFE[F.life]}</span><span class="chip">${FORM[F.form].name}</span></div>
     <p style="margin:0">${F.story}</p>
+    ${flowerStrip(F, E.calendar(st.virtual).idx)}
+    <div class="gauges">${envGauges(F, null)}</div>
     <dl class="kv">
-      <dt>심는 기간</dt><dd>${sowText(F)}</dd><dt>개화·수확</dt><dd>${monthsText(F.bloom)}</dd>
-      <dt>다 자라기까지</dt><dd>${F.mature}달</dd><dt>원하는 환경</dt><dd class="data">${F.t}°C · 습도 ${F.m}% (±3)</dd>
+      <dt>다 자라기까지</dt><dd>${F.mature}달</dd>
       <dt>만드는 땅</dt><dd>${LANDS[homeLand(F)].name}</dd><dt>번식</dt><dd>${F.prop}</dd>
       ${best != null ? `<dt>가장 좋은 ${F.tea}</dt><dd>${qLabel(best)}</dd>` : ''}
     </dl></div>`, [{ label: '닫기', act: closeModal }]);
@@ -1697,13 +1740,11 @@ function renderSettings() {
 function onboarding() {
   const cal = E.calendar(st.virtual);
   openModal('도리의 정원', `<div class="stack" style="gap:10px">
-    <p style="margin:0">꽃을 심으면 땅이 그 꽃이 좋아하는 땅으로 바뀌어요. 처음엔 모든 땅이 황무지예요.</p>
-    <dl class="kv">
-      <dt>한 해</dt><dd>현실의 일주일. 월요일 오전 6시에 3월이 시작돼요</dd>
-      <dt>한 달</dt><dd>오전 6시와 오후 6시에 바뀌어요 (현실 12시간)</dd>
-      <dt>일요일</dt><dd>꽃잠. 정원의 시간이 멈추고, 다음 해 꽃을 예약해요</dd>
-      <dt>돌보기</dt><dd>💧 물과 🌿 잡초는 하루에 한 번이면 충분해요</dd>
-    </dl>
+    <div class="ob-vis">
+      <figure>${landPixel()}<figcaption><b>꽃이 땅을 바꿔요</b>처음엔 모두 황무지. 심은 꽃 둘레가 그 꽃이 좋아하는 땅이 돼요</figcaption></figure>
+      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요)</figcaption></figure>
+    </div>
+    <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
     <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">꽃은 시들지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
     [{ label: '시작', primary: true, act: () => { st.onboarded = true; save(); closeModal(); } }]);

@@ -293,6 +293,44 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; font-size: 13px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; text-align: right; }
+/* 픽셀 설명 (10-17): 글 대신 도트 칸으로 — 모서리 없는 네모 칸, 2px 틈 */
+.mstrip { display: grid; grid-template-columns: auto repeat(14, minmax(0, 1fr)); gap: 2px; align-items: center; margin: 6px 0 8px; font-family: var(--font-data); }
+.mstrip i { display: block; height: 11px; background: var(--sunk); font-style: normal; }
+.mstrip i.on { background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.mstrip i.ms-h { height: auto; padding: 1px 0; font-size: 9.5px; line-height: 1.2; text-align: center; color: var(--ink); background: color-mix(in srgb, var(--c) 45%, var(--panel)); }
+.mstrip i.now { outline: 2px solid var(--ink); outline-offset: -1px; position: relative; z-index: 1; }
+.mstrip .ms-l { display: flex; align-items: center; gap: 3px; padding-right: 4px; font-size: 11px; white-space: nowrap; }
+.mstrip .ms-l small { font-family: var(--font-body); color: var(--muted); font-size: 11px; }
+.gauges { display: grid; gap: 4px; margin: 6px 0 8px; }
+.gauge { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12px; }
+.gauge .g-l { color: var(--muted); white-space: nowrap; }
+.gauge .g-bar { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; padding-bottom: 7px; }
+.gauge .g-bar i { height: 10px; background: var(--sunk); position: relative; }
+.gauge .g-bar i.band { background: var(--c); }
+.gauge .g-bar i.here::after { content: ""; position: absolute; left: 50%; top: 11px; transform: translateX(-50%); border: 4px solid transparent; border-top: 0; border-bottom: 5px solid var(--ink); }
+.gauge .g-v { font-size: 11.5px; white-space: nowrap; text-align: right; min-width: 5.5em; }
+.ob-vis { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; align-items: center; }
+.ob-vis figure { display: contents; margin: 0; }
+.ob-vis figcaption { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.ob-vis figcaption b { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 1px; }
+.landpx { display: grid; grid-template-columns: repeat(7, 16px); grid-auto-rows: 16px; gap: 1px; justify-self: center; }
+.landpx i { display: grid; place-items: center; overflow: visible; }
+.landpx i img { position: relative; z-index: 1; }
+.wkpx { display: grid; grid-template-columns: auto repeat(7, 22px); gap: 2px; font-family: var(--font-data); justify-self: center; }
+.wkpx b { font-family: var(--font-body); font-size: 11px; font-weight: 500; text-align: center; color: var(--muted); }
+.wkpx b.rest { color: var(--rest); }
+.wkpx .wk-l { font-size: 11px; padding-right: 2px; align-self: center; }
+.wkpx i { height: 20px; display: grid; place-items: center; font-style: normal; font-size: 10px; color: #1f2a22; background: var(--c); }
+.wkpx i.now { outline: 2px solid var(--ink); outline-offset: -1px; }
+.ob-care { margin: 0; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.ob-care span { display: inline-grid; place-items: center; width: 24px; height: 24px; background: var(--sunk); }
+.beq { display: flex; align-items: flex-end; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.beq-i { display: grid; justify-items: center; gap: 4px; position: relative; }
+.beq-i small { font-size: 11.5px; color: var(--muted); }
+.beq-i.out small { color: var(--ink); font-weight: 600; }
+.beq-op { font-family: var(--font-data); font-size: 20px; font-weight: 500; color: var(--muted); align-self: center; padding-bottom: 18px; }
+.beq-x { position: absolute; top: -6px; right: -14px; font-style: normal; font-family: var(--font-data); font-size: 11px; font-weight: 600; padding: 1px 5px; background: var(--good); color: var(--accent-ink); }
+@media (max-width: 420px) { .ob-vis { grid-template-columns: 1fr; justify-items: center; } .ob-vis figcaption { text-align: center; } }
 details > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .actions { display: grid; gap: 6px; padding-top: 2px; }
 .actions .act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; }
