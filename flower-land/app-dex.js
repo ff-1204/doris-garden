@@ -123,7 +123,10 @@ function openModal(title, html, buttons) {
   const first = root.querySelector('[data-mb]:last-child') || root.querySelector('[data-close]');
   if (first) first.focus();
 }
-function closeModal() { $('#modalRoot').innerHTML = ''; }
+function closeModal() {
+  if (ui.gearShow) ui.gearShow.until = performance.now() + 3000;   // P27 장치 범위는 창을 닫은 뒤 3초
+  $('#modalRoot').innerHTML = '';
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalRoot').innerHTML) closeModal(); });
 
 // 📜 이벤트 로그 (P11-02-04)

@@ -16,7 +16,7 @@ const gl = E.buyDeco(st, 'growlight').deco, hm = E.buyDeco(st, 'heatmat').deco;
 
 console.log('[둘레 · 배율]');
 E.placeDeco(st, gl.id, 5, 5); E.placeDeco(st, hm.id, 20, 5); E.placeDeco(st, gh.deco.id, 10, 15);
-const a = fl(st, 'rose', 6, 6), far = fl(st, 'rose', 8, 5), s1 = fl(st, 'chamomile', 21, 5, 'sprout'), s2 = fl(st, 'rose', 21, 6, 'young'), g2 = fl(st, 'maehwa', 12, 13);
+const a = fl(st, 'rose', 6, 6), far = fl(st, 'rose', 8, 5), s1 = fl(st, 'chamomile', 21, 5, 'sprout'), s2 = fl(st, 'rose', 21, 6, 'young'), s2l = (s2.lifeH = 40), g2 = fl(st, 'maehwa', 12, 13);
 check(E.growRate(st, a) === 1.5 && E.growRate(st, far) === 1, '생장등: 바로 옆 1.5배, 2칸 밖은 그대로');
 check(E.growRate(st, s1) === 2 && E.growRate(st, s2) === 1, '온상 매트: 싹 · 새싹만 2배 (자라는 중이면 그대로)');
 check(E.growRate(st, g2) === 2, '유리 온실: 둘레 2칸 2배');
@@ -50,4 +50,8 @@ console.log('[QA 12회차]');
   E.advance(s, s.virtual + 10 * H, { live: false, rng: () => 0.5 }); check(Math.abs((f.ageH - 1) / (f.lifeH - 1) - 2) < 0.05, '자란 시간(ageH)은 2배 · 흐른 시간(lifeH)은 그대로'); }
 { const s = E.create(at(c => c.month === 4), () => 0.5); s.dex.letter = { florist: true, newcomer: true }; check(E.letterLeftFor(s, 'bouquet'), '꽃다발 편지를 다 받아도 공통 편지가 남으면 편지가 옴');
   for (const k of E.LETTER_KEYS) if (!E.LETTERS[k].gift) s.dex.letter[k] = true; check(!E.letterLeftFor(s, 'bouquet') && E.letterLeftFor(s, 'party'), '꽃다발 · 공통 편지를 다 받으면 꽃다발엔 고맙다는 답장 (잔치엔 아직 편지)'); }
+console.log('[온상 매트 첫 달]');
+{ const s = E.create(at(c => c.month === 3 && !c.frozen), () => 0.5); s.money = 1e6; const m = E.buyDeco(s, 'heatmat').deco; E.placeDeco(s, m.id, 10, 10);
+  const young = fl(s, 'rose', 11, 10, 'young'); young.lifeH = 3; const old = fl(s, 'rose', 9, 10, 'young'); old.lifeH = 40;
+  check(E.growRate(s, young) === 2 && E.growRate(s, old) === 1, '묘목 · 모종도 심은 첫 달엔 2배, 그 뒤엔 그대로'); }
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
