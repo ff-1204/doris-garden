@@ -336,6 +336,7 @@ function advance(st, target, ctx) {
     if (nc.abs !== st.lastAbs) { st.lastAbs = nc.abs; onSlot(st, nc, ctx); }
   }
   flushPending(st, ctx);
+  { const c = calendar(st.virtual); if (teaShopOpen(c) && (!st.orders || st.orders.abs !== c.abs)) makeOrders(st, c); }   // P23-01 찻집이 열린 채로 시작 · 열어도 그 달 쪽지 (QA 5회차)
   checkLands(st, ctx);
   checkHelp(st, calendar(st.virtual), ctx);
   checkJournal(st, ctx);
@@ -458,8 +459,8 @@ const DAILY_GIFT = 500;                          // P17-13 (10-06)
 function onSlot(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); const nb = barrelTick(st); if (nb) addLog(st, 14, `🪣 빗물 통이 꽃 ${nb}포기에 물을 줬어요`, ctx); }
-  if (teaShopOpen(cal)) { makeOrders(st, cal); addLog(st, 13, '💌 찻집에 새 주문 쪽지 3장이 왔어요', ctx); }   // P23-01
+  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); const nb = barrelTick(st); if (nb) addLog(st, 16, `빗물 통이 꽃 ${nb}포기에 물을 줬어요`, ctx); }
+  if (teaShopOpen(cal)) { makeOrders(st, cal); addLog(st, 15, '찻집에 새 주문 쪽지가 왔어요', ctx); }   // P23-01
   else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
   st.flowers = st.flowers.filter(f => { if (f.withered && cal.abs > f.witherAbs) { addFert(st, 1); return false; } return true; });
@@ -1090,29 +1091,32 @@ function makeOrders(st, cal) {
   // 차 주문은 만든 적 있는 티백 꽃 중에서 (없으면 이웃의 화분 꽃)
   const known = FLOWER_KEYS.filter(k => (st.dex.teabag || {})[k] || st.teas.some(x => x.type === k));
   const pool = known.length ? known : [firstFlower(st)];
-  const kinds = ['tea', 'tea', 'recipe', 'hat'];
+  const kinds = ['tea', 'recipe', 'hat'];
   if (Object.keys(st.dex.honey || {}).length) kinds.push('honey');
-  const out = [];
-  for (let i = 0; i < 3; i++) {
+  const out = [], key = o => o.kind === 'tea' ? `tea|${o.type}` : o.kind;   // 같은 꽃 차 · 같은 종류는 한 장만 (QA 5회차)
+  for (let i = 0, tries = 0; out.length < 3 && tries < 40; tries++) {
     const kind = i === 0 ? 'tea' : kinds[Math.floor(rnd() * kinds.length)];
-    out.push(kind === 'tea' ? { kind, type: pool[Math.floor(rnd() * pool.length)], stars: 3 + Math.floor(rnd() * 2), done: false } : { kind, done: false });
+    const o = kind === 'tea' ? { kind, type: pool[Math.floor(rnd() * pool.length)], stars: 3 + Math.floor(rnd() * 2), done: false } : { kind, done: false };
+    if (out.some(x => key(x) === key(o))) continue;
+    out.push(o); i++;
   }
   st.orders = { abs: cal.abs, list: out };
 }
 function fillOrder(st, c) {
   const os = st.orders && st.orders.list; if (!os) return null;
-  const o = os.find(x => orderMatch(x, c)); if (!o) return null;
+  const hard = x => x.kind === 'tea' ? 10 + x.stars : x.kind === 'honey' ? 5 : x.kind === 'recipe' ? 4 : 3;   // 까다로운 쪽지부터 (QA 5회차)
+  const o = os.filter(x => orderMatch(x, c)).sort((a, b) => hard(b) - hard(a))[0]; if (!o) return null;
   o.done = true; bump(st, 'orders');
   st.dex.memento = st.dex.memento || {};
   const left = MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
   let gift = null;
   if (left.length) { const rnd = mineRng(hashStr(`${st.gardenId || 'g'}|memento|${S(st, 'orders')}`)); gift = left[Math.floor(rnd() * left.length)]; st.dex.memento[gift] = true; }
-  addLog(st, 13, gift ? `💌 ${orderText(o)} 주문을 받은 손님이 ${josa(MEMENTOS[gift].name, '을/를')} 두고 갔어요` : `💌 ${orderText(o)} 주문을 받은 손님이 고맙다고 했어요`);
+  addLog(st, 15, gift ? `${orderText(o)} 주문을 받은 손님이 ${josa(MEMENTOS[gift].name, '을/를')} 두고 갔어요` : `${orderText(o)} 주문을 받은 손님이 고맙다고 했어요`);
   return { order: o, gift };
 }
 
 // ---------------------------------------------------------------- 🏅 한 해 정원 평가 (P23-02, 10-24)
-// 쉼달 기록 때 점수 — 땅 가짓수 ×10 · 사는 꽃(80까지) · 그해 늘어난 도감 칸 ×2 · 정원에 놓은 장식(20까지) ×3 · 그해 손님 주문 ×5. 남과 겨루지 않고 내 기록과만
+// 쉼달 기록 때 점수 — 땅 가짓수 ×10 · 살아 있는 꽃(80까지) · 그해 늘어난 도감 칸 ×2 · 정원에 놓은 장식(20까지) ×3 · 그해 손님 주문 ×5. 남과 겨루지 않고 내 기록과만
 function yearScore(st) {
   const counts = landCounts(st), lands = LAND_KEYS.filter(k => k !== 'barren' && counts[k] > 0).length;
   const alive = Math.min(80, st.flowers.filter(f => !f.withered).length);
@@ -1366,7 +1370,7 @@ function hiveTick(st, ctx) {
     d.honey = d.honey || [];
     const add = Math.min(h.jars, HIVE_MAX - d.honey.length); if (add <= 0) continue;
     for (let i = 0; i < add; i++) d.honey.push(h.type);
-    addLog(st, 14, `🐝 벌통에 ${honeyName(h.type)} ${add}병이 모였어요`, ctx);
+    addLog(st, 14, `벌통에 ${honeyName(h.type)} ${add}병이 모였어요`, ctx);
   }
 }
 function takeHoney(st, id, ctx) {                 // 벌통의 꿀을 거둬 찻집 꿀 선반으로 (P18-05: 도구 없이)

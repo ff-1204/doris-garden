@@ -38,6 +38,6 @@ const b = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); b.money = 1e
 const bd = E.buyDeco(b, 'barrel').deco; E.placeDeco(b, bd.id, 4, 4);
 b.flowers.push({ id: 900, type: 'lavender', x: 4, y: 5, q: 0.7, startQ: 0.7, stage: 'young', withered: false, ageH: 200, waterH: 0, weedH: 99, pruneH: 0, fertH: 0, thirstH: 3, adaptH: 0, harvestKey: -1, bloomKey: -1 });
 E.advance(b, E.calendar(b.virtual).slotEnd + 0.2 * H, { live: false, rng: () => 0.5 });
-check(b.log.some(l => l.text.startsWith('🪣 빗물 통이 꽃 1포기에 물을 줬어요')), '일지에 "🪣 빗물 통이 꽃 1포기에 물을 줬어요"');
+check(b.log.some(l => l.type === 16 && l.text === '빗물 통이 꽃 1포기에 물을 줬어요'), '일지에 🪣 "빗물 통이 꽃 1포기에 물을 줬어요"');
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

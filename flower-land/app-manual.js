@@ -56,7 +56,7 @@ function renderManual(force) {
         '꽃방에 넌 꽃잎은 꽃잠 동안 마르지 않아요 · 일요일에 처음 왔다면 그 꽃잠은 <b>0년차</b>, 1년차는 월요일 아침 6시부터')),
     sec('deco', '꾸미기와 꿀', '돈은 보는 즐거움으로',
       fig(`<div class="mn-flow">${item(decoImg('bench', 2), '이달의 장식', '화원 · 달마다 하나')}${arrow()}${item(ico('📦'), '창고', '🪴 놓기')}${arrow()}${item(decoImg('stonelamp', 2), '정원에', '꽃 없는 칸')}</div>`,
-        '화원 장식은 그 달에만 들어오고 내년에 다시 와요 · 돌 장식은 ⛏️ 광산에서 언제든 만들어요 · 땅 · 꽃 · 값에는 영향이 없어요 · 칭호를 얻으면 그 <b>문장 장식</b>을 받아요')
+        '화원 장식은 그 달에만 들어오고 내년에 다시 와요 · 돌 장식은 ⛏️ 광산에서 언제든 만들어요 · 보통 장식은 땅 · 꽃 · 값에 영향이 없어요 · 칭호를 얻으면 그 <b>문장 장식</b>을 받아요')
       + fig(`<div class="mn-flow">${item(decoImg('hive', 2), '벌통', '6–8월 · 하나만')}${arrow()}${item(spriteImg('lavender', 'flower', 32, false, ''), '둘레 2칸', '핀 꽃')}${arrow()}${item(honeyImg('lavender', 2), '라벤더꿀', '달이 끝날 때')}${arrow()}${item(spriteImg('chamomile', 'tea', 32, false, ''), '🍯 꿀차', '찻잔에 한 숟갈')}</div>`,
         '꽃이 피는 달마다 모여요 · 가장 많이 핀 꽃을 따라 꿀 종류가 정해지고, 여러 꽃이 섞여 절반을 넘는 꽃이 없으면 <b>들꽃꿀</b> · 꽃잠엔 벌도 쉬어요 · 꿀은 팔지 않아요')
       + fig(`<div class="mn-flow">${item(decoImg('barrel', 2), '빗물 통', '6–7월 · 25,000원')}${arrow()}${item(ico('💧'), '바로 옆 8칸', '달마다 저절로 물')}</div>`, '하루쯤 비워도 둘레 꽃이 목마르지 않아요 · 잡초 · 수확은 그대로 직접 해요')
@@ -69,8 +69,8 @@ function renderManual(force) {
     sec('guest', '손님 주문과 한 해 평가', '오래 하는 정원사에게',
       fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '찻집이 열린 달마다')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '12가지 · 도감')}</div>`,
         '손으로 팔든 손님이 사 가든 맞으면 돼요 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
-      + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 가짓수', '×10')}${item(ico('🌸'), '사는 꽃', '80까지')}${item(ico('📖'), '늘어난 도감', '×2')}${item(ico('🪴'), '놓은 장식', '×3')}${item(ico('💌'), '들어준 주문', '×5')}</div>`,
-        '쉼달 기록 때 🏅 정원 점수 · 남과 겨루지 않고 내 최고 기록과만 · 250점을 넘으면 숨은 칭호')),
+      + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 가짓수', '×10')}${item(ico('🌸'), '정원의 꽃', '80포기까지')}${item(ico('📖'), '늘어난 도감', '×2')}${item(ico('🪴'), '놓은 장식', '×3')}${item(ico('💌'), '들어준 주문', '×5')}</div>`,
+        '쉼달 기록 때 🏅 정원 점수 · 남과 겨루지 않고 내 최고 기록과만 · 250점이 되면 숨은 칭호')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
         `칭호 ${E.TITLE_KEYS.length}개 · ${Object.keys(st.titles).length}개 얻음 · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요`)

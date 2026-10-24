@@ -80,10 +80,11 @@ while (st.virtual < end) {
   if (st.helpYear !== help0) { add(yr, '막힘 방지', 5000); help0 = st.helpYear; }
   lastIdx = c.idx;
   add(yr, '_기타', st.money - m0);
+  if (st.records[0] && st.records[0].score != null && !(ledger[st.records[0].year] || {})['점수']) (ledger[st.records[0].year] = ledger[st.records[0].year] || {})['점수'] = st.records[0].score;   // P23-02 쉼달 정원 점수
   ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
 }
 // 표
-const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃'];
+const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];

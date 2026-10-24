@@ -248,7 +248,7 @@ function renderCab(force) {
   const cupCards = cupGroups.map(g => { const isB = g.kind === 'blend', key = isB ? g.parts[0] : g.type, nm = isB ? `${g.recipe ? '✨ ' : ''}${g.name}` : FLOWERS[g.type].tea; return `<div class="shopcard cabcard teacard cupcard ${g.cold ? 'cold' : ''}" style="--pc:${SPR.tea[key] || FLOWERS[key].petal}">
       <div class="sc-art"><span class="cup-steam">${spriteImg(key, 'tea', 64, false, nm)}</span><span class="chip sc-form">${g.cold ? '🧊 식은 차' : '☕ 갓 우림'}</span><span class="sc-count">×${g.ids.length}</span>${shopOpen && st.cups[0] && g.ids.includes(st.cups[0].id) ? '<span class="sc-next-up">다음 차례</span>' : ''}</div>
       <div class="cc-name"><b>${g.honey ? '🍯 꿀 ' : ''}${nm}</b><span class="stars">${starStr(g.q)}</span></div>
-      <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}</div>
+      <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}${st.orders && st.orders.list.some(o => E.orderMatch(o, g)) ? ' <span class="chip order-chip">💌 주문에 맞아요</span>' : ''}</div>
       ${!g.honey && honeyLeft ? `<button type="button" class="btn small honey-btn" data-honeycup="${g.ids.join(',')}">🍯 꿀 한 숟갈</button>` : ''}
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>💰 판매</button></div>`; }).join('');
   // P18 🍯 꿀 선반: 거둔 꿀을 종류마다 병으로

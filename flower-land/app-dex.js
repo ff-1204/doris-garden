@@ -49,7 +49,7 @@ function renderDex(force) {
         <div class="rec-art">${r.snapshot ? `<img src="${r.snapshot}" alt="${r.year}년차 쉼달 아침의 정원">` : '<div class="rec-noimg"><span>🖼️</span>이 해는 정원 그림이 없어요</div>'}</div>
         <div class="stack" style="gap:10px">
           <div class="rec-head"><h3>${r.year}년차 정원</h3><span class="muted">땅 ${land}가지</span></div>
-          ${r.score != null ? `<div class="rec-score" title="땅 ${r.scoreParts.lands} · 꽃 ${r.scoreParts.flowers} · 도감 ${r.scoreParts.dex} · 장식 ${r.scoreParts.decos} · 주문 ${r.scoreParts.orders}"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small></div>` : ''}
+          ${r.score != null ? `<div class="rec-score" title="땅 ${r.scoreParts.lands} · 꽃 ${r.scoreParts.flowers} · 도감 ${r.scoreParts.dex} · 장식 ${r.scoreParts.decos} · 주문 ${r.scoreParts.orders}"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">땅 ${r.scoreParts.lands} · 꽃 ${r.scoreParts.flowers} · 도감 ${r.scoreParts.dex} · 장식 ${r.scoreParts.decos} · 주문 ${r.scoreParts.orders}</small></div>` : ''}
           <div class="rec-chips">
             <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
             ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
@@ -125,9 +125,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalR
 
 // 📜 이벤트 로그 (P11-02-04)
 // 일지 한 줄마다 알림 종류 아이콘 (P11-01 번호)
-const LOG_IC = { 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯' };
+const LOG_IC = { 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯', 15: '💌', 16: '🪣' };
 // 일지 묶음 (거르기 단추와 아이콘 바탕색): 꽃 · 배송 · 도감 · 그 밖
-const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom' };
+const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom', 15: 'etc', 16: 'etc' };
 const LOG_KINDS = [['all', '전체'], ['bloom', '🌸 개화·수확'], ['ship', '📦 배송·예약'], ['book', '📖 도감·기록'], ['etc', '🌱 그 밖']];
 function logHTML(log, kind) {
   const list = kind && kind !== 'all' ? log.filter(l => (LOG_KIND[l.type] || 'etc') === kind) : log;

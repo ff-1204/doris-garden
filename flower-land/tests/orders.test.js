@@ -25,7 +25,7 @@ st.cups = [{ id: 502, kind: 'tea', type: 'lavender', q: 0.99, brewAbs: cal.abs, 
 const money = st.money; E.sellCups(st, [502]);
 const memo = Object.keys(st.dex.memento || {});
 check(o.done && memo.length === 1 && (st.stats.orders || 0) === 1, '맞으면 ✓ · 기념품 하나 · 주문 수');
-check(st.log.some(l => l.text.startsWith('💌') && l.text.includes('두고 갔어요')), '일지에 기념품');
+check(st.log.some(l => l.type === 15 && l.text.includes('두고 갔어요')), '일지에 기념품');
 check(E.cupValue({}, { kind: 'tea', type: 'lavender', q: 0.99, brewAbs: cal.abs, hat: true }, cal) === st.money - money, '돈은 찻잔 값만 (주문 보상 없음)');
 st.cups = [{ id: 503, kind: 'blend', parts: ['chamomile', 'rose'], recipe: 'spring', name: '봄 들판', q: 0.8, brewAbs: cal.abs }];
 const before = os.filter(x => x.done).length; st.cupTimerH = 0; E.advance(st, st.virtual + 1.05 * H, { live: false });
@@ -57,4 +57,10 @@ const old = JSON.parse(JSON.stringify(E.create(at(c => c.month === 3), () => 0.5
 const m = E.migrateSave(old);
 check(m.orders === null && m.bestScore === 0 && m.dex.memento && m.mig === E.MIGRATIONS.length, '주문 · 점수 · 기념품 칸이 생김');
 
+console.log('[QA 5회차]');
+{ let dup = 0; for (let i = 0; i < 300; i++) { const s = E.create(at(c => c.month === 12), () => 0.5); s.gardenId = 'd' + i; s.dex.teabag = { lavender: true }; E.makeOrders(s, E.calendar(s.virtual)); const ks = s.orders.list.map(o => o.kind === 'tea' ? 'tea' + o.type : o.kind); if (new Set(ks).size < ks.length) dup++; } check(dup === 0, '쪽지 3장은 서로 다름 (300판)'); }
+{ const s = E.create(at(c => c.month === 12 && !c.frozen), () => 0.5); E.advance(s, s.virtual + 0.1 * H); check(s.orders && s.orders.list.length === 3, '찻집이 열린 달에 시작해도 바로 쪽지'); }
+{ const s = E.create(at(c => c.month === 12), () => 0.5); s.orders = { abs: E.calendar(s.virtual).abs, list: [{ kind: 'hat', done: false }, { kind: 'tea', type: 'rose', stars: 3, done: false }] };
+  const cal2 = E.calendar(s.virtual); s.cups = [{ id: 1, kind: 'tea', type: 'rose', q: 1, hat: true, brewAbs: cal2.abs }]; E.sellCups(s, [1]);
+  check(s.orders.list[1].done && !s.orders.list[0].done, '한 잔이 여러 쪽지에 맞으면 까다로운 쪽지(장미차)부터'); }
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

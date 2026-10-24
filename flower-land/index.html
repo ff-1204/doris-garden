@@ -549,7 +549,11 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .shop-news > .rv-badge + *::before { content: none; }
 /* P23 손님 주문 · 정원 평가 (10-24) */
 .orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; }
-.order { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: center; padding: 8px 10px; background: #fbf6e9; color: #4a3a28; border: 1px dashed #c9b48a; border-radius: 6px; font-size: 13px; }
+.order { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: center; padding: 8px 10px; background: #fbf6e9; color: #4a3a28; border: 1px dashed #c9b48a; border-radius: 6px; font-size: 13px; word-break: keep-all; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .order { background: #3a3326; color: #f0e4c8; border-color: #6e5e3e; } }
+:root[data-theme="dark"] .order { background: #3a3326; color: #f0e4c8; border-color: #6e5e3e; }
+.order-chip { background: #f6dde4; color: #8a3a52; }
+.rec-parts { flex-basis: 100%; font-size: 11.5px; }
 .order span { display: flex; align-items: center; gap: 6px; }
 .order.done { opacity: .6; text-decoration: line-through; }
 .dc-memo { display: grid; place-items: center; width: 48px; height: 48px; font-size: 28px; }
