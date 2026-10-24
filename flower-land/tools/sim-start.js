@@ -1,16 +1,16 @@
 // 첫 방문 시뮬레이션 (P22, 10-24): 요일 · 시각마다 처음 시작한 정원사가 언제 무엇을 처음 하게 되는지
-// node flower-land/tools/sim-start.js [씨앗] — 14달(월 06시 3월 ~ 일 18시 꽃샘달) 시작마다 한 줄
+// node flower-land/tools/sim-start.js [씨앗] [--no-gift] (--no-gift: 이웃의 화분 P22-02 없이, 10-24 조사 때와 같게) — 14달(월 06시 3월 ~ 일 18시 꽃샘달) 시작마다 한 줄
 // 정원사: 1시간마다 들어와 화원의 제철 꽃(싼 것부터, 캐모마일 먼저)을 사서 심고, 돌보고, 거두고, 꽃방에 말리고, 티백 · 우림 · 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const SEED = +(process.argv[2] || 7), H = E.HOUR;
+const SEED = +(process.argv.slice(2).find(a => !a.startsWith('--')) || 7), H = E.HOUR, GIFT = !process.argv.includes('--no-gift');
 const weekStart = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 2000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
 const DAY = '월화수목금토일';
 const fmt = h => h == null ? '—' : h < 24 ? `${Math.round(h)}시간` : `${(h / 24).toFixed(1)}일`;
 function run(startT) {
   let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const st = E.create(startT, rng), ctx = { live: false, rng };
-  st.onboarded = true;
+  st.onboarded = true; if (GIFT) E.giftPot(st, ctx);
   const first = {}, mark = (k, t) => { if (first[k] == null) first[k] = (t - startT) / H; };
   let idle = 0, steps = 0;
   const spots = []; for (let y = 2; y < E.H - 1; y += 3) for (let x = 2; x < E.W - 1; x += 3) spots.push([x, y]);

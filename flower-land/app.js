@@ -420,7 +420,7 @@ const GUIDE_SLEEP = [['reserved', '🗓️ 화원에서 새해 꽃 예약하기'
 const guideList = () => st.starterGift ? GUIDE_GIFT : st.startedInSleep ? GUIDE_SLEEP : GUIDE_BASE;
 function guideState() {
   const g0 = st.guide = st.guide || {};
-  if (st.flowers.length) { g0.bought = true; g0.planted = true; }
+  if (st.flowers.some(f => f.origin !== '이웃')) { g0.bought = true; g0.planted = true; }   // 이웃의 화분(P22-02)은 산 것 · 심은 것으로 치지 않음
   if (st.items.length) g0.bought = true;
   if (st.reservations.length || g0.bought) g0.reserved = true;   // 예약을 건너뛰고 월요일에 바로 사도 됨
   if (Object.keys(st.dex.petal || {}).length || Object.keys(st.dex.tea).length || (!st.starterGift && (st.petals.length || st.teas.length))) g0.harvested = true;   // 시작 선물 꽃잎은 수확으로 치지 않음
@@ -431,7 +431,7 @@ function guideSub(k, need) {
   if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 누르고 꽃 둘레의 💧를 눌러요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
   if (k === 'harvested' && !need.harvest) return sub('꽃이 피면 노란 점이 생겨요');
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
-  if (k === 'sold') return sub('블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요');
+  if (k === 'sold') return sub(st.starterGift ? '블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요' : `꽃잎을 말려 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)에 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);   // P22-04
   if (k === 'bought' && E.calendar(st.virtual).frozen) return sub('월요일 아침 6시에 정원이 깨어나면 화원에서 살 수 있어요');
   if (k === 'planted' && E.calendar(st.virtual).frozen) return sub(st.reservations.some(r => !r.done) ? '월요일 아침 6시부터 예약한 꽃이 심을 때에 맞춰 창고로 와요' : '월요일 아침 6시에 정원이 깨어나면 심을 수 있어요');
   if (k === 'reserved') return sub(E.calendar(st.virtual).frozen ? '꽃잠엔 새해 꽃을 10% 싸게 미리 사 둬요 · 심을 때가 되면 창고로 와요' : '화원에서 제철 꽃을 사도 돼요');

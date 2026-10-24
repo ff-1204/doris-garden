@@ -67,10 +67,11 @@ const QART = {
   c5_guest: ['tea', 'rose'], c5_warm: ['tea', 'jasmine'], c5_hat: ['tea', 'lotus'], c5_blend: ['tea', 'hibiscus'], c5_five: ['tea', 'gamguk'],
   c6_dongbaek: ['flower', 'dongbaek'], c6_maehwa: ['flower', 'maehwa'], c6_napmae: ['flower', 'napmae'], c6_plum: ['tea', 'maehwa'],
 };
-const questArt = q => { const [k, v] = QART[q.key]; return k === 'land' ? `<span class="q-land" style="background:${LANDS[v].color}"></span>` : spriteImg(v, k, 32, false, ''); };
+const questArt = q => { const ff = E.firstFlower(st), c1 = { c1_bloom: ['flower', ff], c1_petal: ['petal', ff], c1_dry: ['dried', ff], c1_bag: ['teabag', ff], c1_land: ['land', homeLand(FLOWERS[ff])], c1_sell: ['tea', ff] };   // P22-01 1장은 첫 꽃
+  const [k, v] = c1[q.key] || QART[q.key]; return k === 'land' ? `<span class="q-land" style="background:${LANDS[v].color}"></span>` : spriteImg(v, k, 32, false, ''); };
 // 언제 할 수 있는지 (P19-04-03): 화원에 들어오는 달 · 심어 둔 꽃이 피는 달 · 찻집 여는 달
 function questWhen(q, cal) {
-  const w = q.when;
+  const w = E.questWhenOf(q, st);
   if (!w) return { now: true };
   if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: `${SEASON_IC[3]} 12월부터` };
   const F = FLOWERS[w.sow || w.bloom];
@@ -99,7 +100,7 @@ function journalHTML() {
     const rows = open ? c.quests.map(q => {
       const d = done[q.key], w = d != null ? null : questWhen(q, cal);
       const state = d != null ? `<span class="q-st">🔖 ${absText(d)}</span>` : w.now ? '<span class="q-st">지금 할 수 있어요</span>' : `<span class="q-st">${w.label || '때가 되면'}</span>`;
-      return `<button type="button" class="q-row ${d != null ? 'done' : w.now ? 'now' : 'later'}" data-qgo="${q.go}"><span class="q-art">${questArt(q)}</span><span class="q-name">${q.name}</span>${state}</button>`;
+      return `<button type="button" class="q-row ${d != null ? 'done' : w.now ? 'now' : 'later'}" data-qgo="${q.go}"><span class="q-art">${questArt(q)}</span><span class="q-name">${E.questName(q, st)}</span>${state}</button>`;
     }).join('') : '';
     return `<div class="card jch ${open ? '' : 'closed'} ${has ? 'cleared' : ''}">
       <div class="jch-head">${titleImg(tk, 44, !has)}<div class="jch-t"><small>${c.no}장</small><b>${c.name}</b><span class="jch-stamps" aria-label="${n} / ${c.quests.length}">${c.quests.map(q => `<i class="${done[q.key] != null ? 'on' : ''}"></i>`).join('')}</span></div><span class="data jch-n">${n} / ${c.quests.length}</span></div>

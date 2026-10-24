@@ -131,10 +131,16 @@ function renderSettings() {
   $('#resetBtn').addEventListener('click', e => {
     if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워져요'; return; }
     const keep = st.settings; st = E.create(Date.now()); st.settings = keep; st.onboarded = true;
-    ui.selected = null; ui.cart = {}; ui.sigs = {}; save(); setTab('garden'); feedback('빈 황무지에서 새 정원을 시작했어요');
+    ui.selected = null; ui.cart = {}; ui.sigs = {}; giveGift(); save(); setTab('garden'); feedback('빈 황무지에서 새 정원을 시작했어요 · 이웃의 화분이 정원 가운데에 있어요');
   });
 }
 
+// P22-02 이웃의 화분: 첫 방문 · 처음부터 다시 시작할 때 한 번
+function giveGift() {
+  const r = E.giftPot(st, ctx);
+  if (r.ok && r.flower) { ui.selected = r.flower.id; ui.sheetOpen = true; }
+  return r;
+}
 function onboarding() {
   const cal = E.calendar(st.virtual);
   openModal('도리의 정원', `<div class="stack" style="gap:10px">
@@ -143,7 +149,8 @@ function onboarding() {
       <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요)</figcaption></figure>
     </div>
     <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
+    ${st.gift == null ? `<p class="ob-care">${spriteImg(E.GIFT_BY_MONTH[cal.month], 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요</p>` : ''}
     <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">돌보지 않아도 꽃은 죽지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
-    [{ label: '시작', primary: true, act: () => { st.onboarded = true; closeModal(); E.checkJournal(st, ctx); save(); renderAll(true); } }]);   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
+    [{ label: '시작', primary: true, act: () => { st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); } }]);   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }

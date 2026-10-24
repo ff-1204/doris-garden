@@ -292,7 +292,8 @@ function _create(now, rng, cal) {
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
-    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length, shop: newShop(), decos: [], honey: {},   // shop: P17-15 찻집 가꾸기   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null,   // P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -930,17 +931,22 @@ const n0 = o => Object.keys(o || {}).length;
 const S = (st, k) => (st.stats || {})[k] || 0;
 // 퀘스트: 키 · 이름 · 판정 · 할 곳(탭) · 언제 할 수 있는지 힌트 ({ sow: 꽃 } 화원에 들어오는 달 · { bloom: 꽃 } 피는 달 · 'cafe' 찻집 여는 달)
 const Q = (key, name, test, go, when) => ({ key, name, test, go, when: when || null });
+// P22-01 (10-24): 1장은 "첫 꽃" — 첫 방문에 받은 이웃의 화분(P22-02). 예전 정원 · 화분을 받기 전엔 캐모마일
+const firstFlower = st => st && st.firstFlower && FLOWERS[st.firstFlower] ? st.firstFlower : 'chamomile';
+const firstLand = st => { const F = FLOWERS[firstFlower(st)]; return classify(F.t, F.m); };
+const questName = (q, st) => typeof q.name === 'function' ? q.name(st) : q.name;
+const questWhenOf = (q, st) => typeof q.when === 'function' ? q.when(st) : q.when;
 const CHAPTERS = [
   { key: 'c0', no: 0, name: '첫 방문', title: 't_visit', quests: [   // 첫 안내 창에서 '시작'을 누르면 바로 (10-17)
     Q('c0_visit', '도리의 정원에 처음 오기', st => !!st.onboarded, 'garden'),
   ] },
   { key: 'c1', no: 1, name: '첫 꽃밭', title: 't_first', quests: [
-    Q('c1_bloom', '캐모마일 피우기', st => !!st.dex.flower.chamomile, 'garden', { bloom: 'chamomile' }),
-    Q('c1_petal', '캐모마일 꽃잎 거두기', st => !!(st.dex.petal || {}).chamomile, 'garden', { bloom: 'chamomile' }),
+    Q('c1_bloom', st => `${FLOWERS[firstFlower(st)].name} 피우기`, st => !!st.dex.flower[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
+    Q('c1_petal', st => `${FLOWERS[firstFlower(st)].name} 꽃잎 거두기`, st => !!(st.dex.petal || {})[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom'),
-    Q('c1_bag', '캐모마일 티백 만들기', st => !!(st.dex.teabag || {}).chamomile, 'tearoom'),
-    Q('c1_land', '초원 만들기', st => !!st.dex.land.grassland, 'garden'),
-    Q('c1_sell', '캐모마일차 팔기', st => st.dex.tea.chamomile != null, 'cab', 'cafe'),
+    Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom'),
+    Q('c1_land', st => `${LANDS[firstLand(st)].name} 만들기`, st => !!st.dex.land[firstLand(st)], 'garden'),
+    Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', 'cafe'),
   ] },
   { key: 'c2', no: 2, name: '땅 바꾸기', title: 't_land', quests: [
     Q('c2_foothill', '산기슭 만들기', st => !!st.dex.land.foothill, 'shop', { sow: 'gamguk' }),
@@ -1032,7 +1038,7 @@ function checkJournal(st, ctx) {
       for (const q of c.quests) {
         if (st.journal.done[q.key] != null || !q.test(st)) continue;
         st.journal.done[q.key] = cal.abs; nq++;
-        if (!migrate) addLog(st, 9, `📜 퀘스트: ${q.name} 완료`, ctx);
+        if (!migrate) addLog(st, 9, `📜 퀘스트: ${questName(q, st)} 완료`, ctx);
       }
       if (chapterDone(st, c.key) && giveTitle(st, c.title, cal, ctx, migrate)) nt++;
     }
@@ -1044,6 +1050,34 @@ function setTitleOn(st, k) {
   if (k != null && st.titles[k] == null) return no('아직 얻지 못한 칭호예요');
   st.titleOn = k;
   return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
+}
+
+// ---------------------------------------------------------------- 이웃의 화분 (P22-02, 10-24)
+// 첫 방문(첫 안내 창의 '시작')에 그 달에 피어 있거나 다음 달에 피는 여러해살이 · 나무 하나를 다 자란 채로 심어 줌. 돈은 주지 않음
+// 어느 요일에 시작해도 첫날 꽃 · 수확을 보고, 1장 퀘스트(P22-01)를 그 꽃으로 함
+const GIFT_BY_MONTH = { 3: 'maehwa', 4: 'rose', 5: 'rose', 6: 'lavender', 7: 'lotus', 8: 'jasmine', 9: 'gamguk', 10: 'gamguk', 11: 'gamguk', 12: 'dongbaek', 1: 'napmae', 2: 'maehwa', 13: 'maehwa', 14: 'maehwa' };
+function giftPot(st, ctx) {
+  if (st.gift != null) return no('이웃의 화분은 한 번만 와요');
+  const cal = calendar(st.virtual), type = GIFT_BY_MONTH[cal.month], F = FLOWERS[type];
+  // 정원 가운데에서 가까운 빈 칸
+  let spot = null;
+  for (let r = 0; r < Math.max(W, H) && !spot; r++) for (let dy = -r; dy <= r && !spot; dy++) for (let dx = -r; dx <= r && !spot; dx++) {
+    const x = Math.floor(W / 2) + dx, y = Math.floor(H / 2) + dy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) === r && inGarden(x, y) && !flowerAt(st, x, y) && !decoAt(st, x, y)) spot = [x, y];
+  }
+  if (!spot) return no('화분을 둘 빈 칸이 없어요');
+  const f = {
+    id: nid(st), type, x: spot[0], y: spot[1], q: 0.8, startQ: 0.8, origin: '이웃', parent: null,
+    ageH: F.mature * MONTH_H + 1, stage: 'young', bloomed: false, withered: false,
+    waterH: 2 * MONTH_H, weedH: 2 * MONTH_H, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 24,   // 물 · 잡초는 막 돌본 채로
+    harvestKey: -1, bloomKey: -1, propYear: null, plantedYear: yearOf(st, cal),
+  };
+  f.stage = computeStage(f, cal.month);
+  st.flowers.push(f);
+  st.gift = cal.abs; st.firstFlower = type;
+  st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
+  addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요`, ctx);
+  return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요`, { flower: f });
 }
 
 // ---------------------------------------------------------------- 정원 장식 (P17-16, 10-24)
@@ -1233,6 +1267,7 @@ const MIGRATIONS = [
     for (const k of Object.keys(s.titles || {})) if (TITLES[k] && !s.dex.deco['t:' + k]) addDeco(s, 't:' + k);
   }],
   ['꿀 선반 · 꿀 도감 (P18, 10-24)', s => { s.honey = s.honey || {}; s.dex.honey = s.dex.honey || {}; }],
+  ['이웃의 화분 · 첫 꽃 (P22, 10-24): 이미 시작한 정원은 화분을 받지 않고 1장은 캐모마일 그대로', s => { if (s.gift === undefined) s.gift = s.onboarded ? -1 : null; if (s.firstFlower === undefined) s.firstFlower = null; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1259,7 +1294,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
