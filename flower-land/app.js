@@ -236,6 +236,18 @@ function honeyURL(k) {
   return (honeyCache[k] = c.toDataURL());
 }
 const honeyImg = (k, scale) => `<img class="px" src="${honeyURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.honeyName(k))}">`;
+// P24 광산 그림: 광물은 한 모양을 광물 빛깔로, 나머지는 decos.js MINE_ART 그대로
+const mineCache = {};
+function mineURL(k) {
+  if (mineCache[k]) return mineCache[k];
+  const A = window.MINE_ART, c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+  let grid, pal;
+  if (E.ORES[k]) { const col = E.ORES[k].color; grid = A.gem; pal = { g: col, G: mixHex(col, '#ffffff', 0.55), d: mixHex(col, '#000000', 0.45) }; }
+  else { const a = E.FOSSILS[k] ? A.fossil : A[k]; if (!a) return ''; grid = a.grid; pal = a.pal; }
+  grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return (mineCache[k] = c.toDataURL());
+}
+const mineImg = (k, scale) => `<img class="px" src="${mineURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.mineName(k))}">`;
 function decoBitmap(key) {                         // 지도에 그릴 그림 (불러오기가 끝난 뒤부터)
   let im = decoBitmaps[key];
   if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[key] = im; }

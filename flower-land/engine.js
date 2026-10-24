@@ -288,12 +288,12 @@ function _create(now, rng, cal) {
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [],                         // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔
     fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, weedCount: 0, pruneCount: 0, // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
-    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {} }, // P08-01-04, P08-02, P08-03
+    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {} }, // P08-01-04, P08-02, P08-03
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null,   // P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(),   // P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -330,6 +330,7 @@ function advance(st, target, ctx) {
     const dtH = (next - st.virtual) / HOUR;
     if (!cal.frozen && dtH > 0) step(st, dtH, cal, ctx);
     if (dtH > 0) autoSell(st, cal, dtH, ctx);                          // P17-11 카운터 찻잔은 꽃잠에도 팔림
+    if (dtH > 0) mineRegen(st, dtH);                                   // P24 광산 기력 (꽃잠에도)
     st.virtual = next;
     const nc = calendar(st.virtual);
     if (nc.abs !== st.lastAbs) { st.lastAbs = nc.abs; onSlot(st, nc, ctx); }
@@ -1052,6 +1053,118 @@ function setTitleOn(st, k) {
   return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
 }
 
+// ---------------------------------------------------------------- ⛏️ 정원 뒤 광산 (P24, 10-24)
+// 기다리는 시간에 조금씩: 기력 10칸, 30분(현실 = 게임 시간)마다 1칸 — 꺼 둔 동안에도 참(열 때 따라잡음), 꽃잠에도 팜
+// 층마다 8×6칸, 한 칸 파는 데 기력 1. 계단을 찾으면 아래층. 나온 것은 팔지 않고 만들기 · 도감에만 (돈이 더 남지 않게, P24-04)
+const MINE_W = 8, MINE_H = 6, MINE_MAX_E = 10, MINE_REGEN_H = 0.5, MINE_DEEPEST = 20;
+const ORES = {
+  quartz: { name: '석영', from: 1, color: '#e9e4f2' },
+  feldspar: { name: '장석', from: 1, color: '#e6b8a0' },
+  mica: { name: '운모', from: 3, color: '#c9c2a8' },
+  amethyst: { name: '자수정', from: 6, color: '#9a6ac8' },
+  jade: { name: '비취', from: 9, color: '#5fae84' },
+  amber: { name: '호박', from: 12, color: '#e0a03a' },
+};
+const FOSSILS = {
+  shell: { name: '조개 화석', from: 4 },
+  fern: { name: '고사리 화석', from: 6 },
+  leaf: { name: '잎 화석', from: 8 },
+  bone: { name: '작은 뼈 화석', from: 11 },
+};
+const ORE_KEYS = Object.keys(ORES), FOSSIL_KEYS = Object.keys(FOSSILS);
+const MINE_DEX_KEYS = [...ORE_KEYS, ...FOSSIL_KEYS, 'oldseed'];       // 광산 도감 11칸 (도감 93칸과 따로)
+const mineName = k => ORES[k] ? ORES[k].name : FOSSILS[k] ? FOSSILS[k].name : k === 'oldseed' ? '옛 씨앗' : k === 'stone' ? '돌' : k === 'dirt' ? '흙' : k;
+// 층 판은 정원 이름표 · 층 · 몇 번째 판으로 정해지는 난수 (Math.random을 쓰지 않음 — 시뮬레이션이 흔들리지 않게)
+function mineRng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+function hashStr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
+function newBoard(st, depth) {
+  const m = st.mine, rnd = mineRng(hashStr(`${st.gardenId || 'g'}|${depth}|${m.boards || 0}`));
+  const ores = ORE_KEYS.filter(k => ORES[k].from <= depth), fos = FOSSIL_KEYS.filter(k => FOSSILS[k].from <= depth);
+  const cells = [];
+  for (let i = 0; i < MINE_W * MINE_H; i++) {
+    const x = rnd();
+    let k;
+    if (depth >= 8 && x < 0.006) k = 'oldseed';
+    else if (fos.length && x < 0.03) k = fos[Math.floor(rnd() * fos.length)];
+    else if (x < 0.03 + 0.10 + depth * 0.004) k = ores[Math.floor(rnd() * ores.length)];
+    else if (x < 0.45) k = 'stone';
+    else k = 'dirt';
+    cells.push({ k, dug: false });
+  }
+  cells[Math.floor(rnd() * cells.length)].stairs = true;             // 계단은 한 칸 (그 칸에서 나온 것도 받음)
+  m.boards = (m.boards || 0) + 1;
+  return { depth, cells };
+}
+const newMine = () => ({ energy: MINE_MAX_E, regenH: 0, depth: 1, deepest: 1, boards: 0, board: null, bag: {} });
+function mineOf(st) {
+  if (!st.mine) st.mine = newMine();
+  if (!st.mine.board) st.mine.board = newBoard(st, st.mine.depth);
+  return st.mine;
+}
+function mineRegen(st, dtH) {                     // advance에서 (꽃잠에도)
+  const m = st.mine; if (!m || m.energy >= MINE_MAX_E) { if (m) m.regenH = 0; return; }
+  m.regenH += dtH;
+  while (m.regenH >= MINE_REGEN_H && m.energy < MINE_MAX_E) { m.regenH -= MINE_REGEN_H; m.energy++; }
+  if (m.energy >= MINE_MAX_E) m.regenH = 0;
+}
+function dig(st, i, ctx) {
+  const m = mineOf(st), c = m.board.cells[i];
+  if (!Number.isInteger(i) || !c) return no('그런 칸이 없어요');
+  if (c.dug) return no('이미 판 칸이에요');
+  if (m.energy < 1) return no('기력이 없어요 · 30분마다 한 칸씩 차요');
+  m.energy--; c.dug = true;
+  m.bag[c.k] = (m.bag[c.k] || 0) + 1;
+  st.dex.mine = st.dex.mine || {};
+  let first = false;
+  if (MINE_DEX_KEYS.includes(c.k) && !st.dex.mine[c.k]) { st.dex.mine[c.k] = true; first = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(c.k)}`, ctx); }
+  st.stats = st.stats || {}; st.stats.dug = (st.stats.dug || 0) + 1;
+  return ok(`${c.k === 'oldseed' ? '🌰 ' : ''}${mineName(c.k)}${c.stairs ? ' · 아래로 내려가는 계단을 찾았어요' : ''}`, { cell: c, first, stairs: !!c.stairs });
+}
+function descend(st) {
+  const m = mineOf(st);
+  if (!m.board.cells.some(c => c.dug && c.stairs)) return no('먼저 계단을 찾아요');
+  if (m.depth >= MINE_DEEPEST) return no('가장 깊은 층이에요');
+  m.depth++; m.deepest = Math.max(m.deepest, m.depth); m.board = newBoard(st, m.depth);
+  return ok(`지하 ${m.depth}층으로 내려왔어요`);
+}
+function mineUp(st) {                            // 1층으로 돌아가기 (새 판)
+  const m = mineOf(st);
+  if (m.depth === 1) return no('이미 1층이에요');
+  m.depth = 1; m.board = newBoard(st, 1);
+  return ok('1층으로 올라왔어요');
+}
+function freshBoard(st) {                        // 지금 층을 새 판으로 (다 팠을 때)
+  const m = mineOf(st);
+  if (m.board.cells.some(c => !c.dug)) return no('아직 안 판 칸이 있어요');
+  m.board = newBoard(st, m.depth);
+  return ok('새 굴을 팠어요');
+}
+// 만들기 (P24-03): 돌 → 장식, 흙 → 비료, 광물 → 찻잔 유약 (P17-15 세트를 돈 대신)
+const CRAFTS = {
+  fert: { name: '비료', need: { dirt: 5 }, desc: '흙 5 → 🌱 비료 1' },
+  stepstone: { name: '징검돌', need: { stone: 4 }, deco: 'stepstone' },
+  basin: { name: '돌 물확', need: { stone: 8 }, deco: 'basin' },
+  stonelamp: { name: '석등', need: { stone: 12, quartz: 1 }, deco: 'stonelamp' },
+  cheongja: { name: '청자 찻잔', need: { jade: 3 }, cup: 'cheongja' },
+  buncheong: { name: '분청 찻잔', need: { feldspar: 4, mica: 2 }, cup: 'buncheong' },
+  kkot: { name: '꽃무늬 찻잔', need: { amethyst: 2, quartz: 4 }, cup: 'kkot' },
+};
+const CRAFT_KEYS = Object.keys(CRAFTS);
+const canCraft = (st, k) => { const C = CRAFTS[k], bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
+function craft(st, k, ctx) {
+  const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null;
+  if (!C) return no('만들 수 없는 것이에요');
+  if (C.cup && shopOf(st).cups.includes(C.cup)) return no('이미 있는 찻잔이에요');
+  if (!canCraft(st, k)) return no('재료가 모자라요');
+  const bag = st.mine.bag;
+  for (const [n, q] of Object.entries(C.need)) bag[n] -= q;
+  if (C.deco) { const first = !(st.dex.deco || {})[C.deco]; addDeco(st, C.deco); if (first) addLog(st, 9, `도감에 등록: 🪴 ${DECOS[C.deco].name}`, ctx); return ok(`${josa(C.name, '을/를')} 만들었어요 · 창고에 있어요`); }
+  if (C.cup) { shopOf(st).cups.push(C.cup); return ok(`${josa(C.name, '을/를')} 구웠어요 · 찻집 가꾸기에서 고를 수 있어요`); }
+  addFert(st, 1); st._fertNew = Math.max(0, st._fertNew - 1);
+  return ok('흙으로 비료 1개를 만들었어요');
+}
+const mineCount = st => Object.keys((st.dex && st.dex.mine) || {}).filter(k => MINE_DEX_KEYS.includes(k)).length;
+
 // ---------------------------------------------------------------- 이웃의 화분 (P22-02, 10-24)
 // 첫 방문(첫 안내 창의 '시작')에 그 달에 피어 있거나 다음 달에 피는 여러해살이 · 나무 하나를 다 자란 채로 심어 줌. 돈은 주지 않음
 // 어느 요일에 시작해도 첫날 꽃 · 수확을 보고, 1장 퀘스트(P22-01)를 그 꽃으로 함
@@ -1268,6 +1381,7 @@ const MIGRATIONS = [
   }],
   ['꿀 선반 · 꿀 도감 (P18, 10-24)', s => { s.honey = s.honey || {}; s.dex.honey = s.dex.honey || {}; }],
   ['이웃의 화분 · 첫 꽃 (P22, 10-24): 이미 시작한 정원은 화분을 받지 않고 1장은 캐모마일 그대로', s => { if (s.gift === undefined) s.gift = s.onboarded ? -1 : null; if (s.firstFlower === undefined) s.firstFlower = null; }],
+  ['⛏️ 광산 · 광산 도감 (P24, 10-24)', s => { if (!s.mine) s.mine = newMine(); s.dex.mine = s.dex.mine || {}; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1294,7 +1408,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

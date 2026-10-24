@@ -1,7 +1,7 @@
 // 도리의 정원 — 화면: 📘 매뉴얼 (app.js 다음에 순서대로 불림, 이름은 app.js 첫머리 참고)
 'use strict';
 // ---------------------------------------------------------------- 📘 매뉴얼 (P21, 10-17): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄
-const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['journal', '📜 도감일지'], ['save', '💾 저장']];
+const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['journal', '📜 도감일지'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
   const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length]);
@@ -60,6 +60,11 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(decoImg('hive', 2), '벌통', '6–8월 · 하나만')}${arrow()}${item(spriteImg('lavender', 'flower', 32, false, ''), '둘레 2칸', '핀 꽃')}${arrow()}${item(honeyImg('lavender', 2), '라벤더꿀', '달이 끝날 때')}${arrow()}${item(spriteImg('chamomile', 'tea', 32, false, ''), '🍯 꿀차', '찻잔에 한 숟갈')}</div>`,
         '꽃이 피는 달마다 모여요 · 가장 많이 핀 꽃을 따라 꿀 종류가 정해지고, 여러 꽃이 섞여 절반을 넘는 꽃이 없으면 <b>들꽃꿀</b> · 꽃잠엔 벌도 쉬어요 · 꿀은 팔지 않아요')
       + `<div class="mn-icons">${item(ico('🪑'), '손님 자리', '1시간에 더 많이')}${item(ico('☕'), '찻잔 세트', '보기만')}${item(ico('🪧'), '간판', '보기만')}</div><p class="note" style="text-align:center">🍵 찻집 › 🪑 찻집 가꾸기에서 바꿔요</p>`),
+    sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',
+      fig(`<div class="mn-flow">${item(ico('⛏️'), '기력 10', '30분마다 1칸')}${arrow()}${item(mineImg('stone', 2), '파기', '한 칸에 1')}${arrow()}${item(mineImg('stairs', 2), '계단', '아래층으로')}${arrow()}${item(mineImg('amber', 2), '깊을수록', '드문 광물')}</div>`,
+        '정원 위 ⛏️ 숫자를 눌러 들어가요 · 꺼 둔 동안에도 기력이 차고 꽃잠에도 팔 수 있어요')
+      + fig(`<div class="mn-flow">${item(mineImg('dirt', 2), '흙 5', '🌱 비료')}${item(mineImg('stone', 2), '돌', '징검돌 · 물확 · 석등')}${item(mineImg('jade', 2), '비취 3', '청자 찻잔')}${item(mineImg('fossil', 2), '화석', '광산 도감')}</div>`,
+        '광산에서 나온 것은 팔지 않아요 · 🔨 만들기로 장식과 찻잔을 돈 없이 만들어요')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
         `칭호 ${E.TITLE_KEYS.length}개 · ${Object.keys(st.titles).length}개 얻음 · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요`)
