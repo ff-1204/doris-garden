@@ -88,12 +88,19 @@ function renderShop(force) {
       ${cart.length ? `<span class="rv-bar-sum"><b class="data">${won(cartTotal)}</b>${short ? '<small class="rv-warn">돈이 모자라요</small>' : '<small>10% 할인</small>'}</span><button type="button" class="btn" data-act="clearCart">초기화</button>` : ''}
       <button type="button" class="btn primary" data-act="reserve" ${cart.length && !short ? '' : 'disabled'}>예약</button></div>`;
   // P17-16 🪴 이달의 장식: 달마다 하나, 그 달에만 (꽃잠에도)
-  const decoNow = E.decoOffer(cal), decoNext = E.DECO_KEYS.find(k => E.DECOS[k].month === MONTHS[(cal.idx + 1) % MONTHS.length]);
+  const decoNow = E.decoOffer(cal).filter(k => !E.DECOS[k].gear), decoNext = E.DECO_KEYS.find(k => E.DECOS[k].month === MONTHS[(cal.idx + 1) % MONTHS.length]);
   const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">달마다 바뀌어요 · 정원에 놓아 꾸며요</span></div>
     <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
+  // P27 🔆 정원 장치: 늘 팖 · 다 자라기까지 걸리는 시간만 줄임
+  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear);
+  const gearSection = `<div class="cab-head"><span class="sb-title">🔆 정원 장치</span><span class="muted">다 자라기까지만 빨라져요 · 피는 달 · 품질 · 땅은 그대로</span></div>
+    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
+      return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
   // P26 💐 이웃에게 선물: 종류마다 한 해에 한 번, 다음 달 답장 편지
   const gs = E.giftsOf(st);
   const lc = E.letterCount(st), allL = lc >= E.LETTER_KEYS.length;
@@ -103,7 +110,7 @@ function renderShop(force) {
         <span class="dk-main"><b>${G.name}</b><small>${G.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(G.price)}</span>${sent ? '<span class="muted">✓ 올해 보냈어요</span>' : `<button type="button" class="btn primary" data-gift="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '보내기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${decoSection}${giftSection}</div>`;
+    ${cal.frozen ? rvView : saleView}${decoSection}${gearSection}${giftSection}</div>`;
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });

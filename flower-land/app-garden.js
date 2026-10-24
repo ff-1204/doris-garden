@@ -479,7 +479,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
       <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${flowH(f.ageH)}`}</div></div>
+        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${flowH(f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' ? ` · 🔆 ${E.growRate(st, f)}배로 자라는 중` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
