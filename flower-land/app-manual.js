@@ -47,7 +47,7 @@ function renderManual(force) {
     sec('tea', '찻집', '겨울부터 꽃잠까지 열어요',
       fig(monthStrip([['🍵', '찻집', [12, 1, 2, 13, 14], 'var(--accent)'], ['🗓️', '예약', [13, 14], 'var(--rest)']], cal.idx), '금요일 저녁 6시(12월)에 문을 열고 일요일 꽃잠까지 · 그 전엔 🌿 제다실에서 티백을 만들어 두세요')
       + fig(`<div class="mn-flow">${item(spriteImg(mf, 'teabag', 44, false, ''), '티백', '품질 그대로')}${arrow()}${item(ico('🫖'), '우림', '찻집에서')}${arrow()}${item(spriteImg(mf, 'tea', 52, false, ''), '☕ 갓 우림', '100%')}${arrow()}${item(ico('🧊'), '식은 차', '다음 달 −50%')}${arrow()}${item(ico('💰'), '판매', '1시간마다 손님')}</div>`,
-        '🍃 <b>햇차</b>(★5) +10% · 🌸 생화로 바로 만든 티백 −10% · 찻잔은 꽃잠에도 팔려요')),
+        '🍃 <b>햇차</b>(★5) +10% · 🌸 생화로 바로 만든 티백 −10% · 찻잔은 꽃잠에도 팔려요 · 손님은 먼저 우린 잔부터 사 가요(식은 잔도) — 팔 만큼만 우려요')),
     sec('blend', '블렌드', '말린 꽃잎 2~3장을 섞어요',
       fig(`<div class="mn-blends">${blendKeys.map(k => { const B = E.BLENDS[k]; return `<span class="mn-blend"><span class="eq">${B.parts.map(p => spriteImg(p, 'dried', 24, false, '말린 ' + FLOWERS[p].name)).join('<b>+</b>')}<b>=</b>${spriteImg(B.parts[0], 'tea', 28, false, B.name)}</span><span class="nm">${B.name}</span></span>`; }).join('')}${hiddenBlends.map(() => `<span class="mn-blend locked"><span class="eq">${spriteImg('chamomile', 'dried', 24, true, '')}<b>+</b>${spriteImg('chamomile', 'dried', 24, true, '')}<b>=</b>${spriteImg('chamomile', 'tea', 28, true, '')}</span><span class="nm">숨은 레시피</span></span>`).join('')}</div>`,
         '레시피대로면 두 차 값을 더한 것의 <b>×1.5</b> · 다른 짝은 ×1.2 · 숨은 레시피는 칭호를 얻으면 열려요 · 제다실 레시피를 누르면 재료가 바로 담겨요')),
@@ -128,7 +128,7 @@ function renderSettings() {
   if ($('#shareBtn')) $('#shareBtn').addEventListener('click', shareSave);
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
   $('#importFile').addEventListener('change', e => { readImport(e.target.files[0]); e.target.value = ''; });
-  if ($('#undoBtn')) $('#undoBtn').addEventListener('click', undoImport);
+  if ($('#undoBtn')) $('#undoBtn').addEventListener('click', () => undoImport());
   if ($('#brokenDl')) $('#brokenDl').addEventListener('click', downloadBroken);
   if ($('#brokenDel')) $('#brokenDel').addEventListener('click', () => openModal('🧰 보관본 지우기', '<p>열지 못한 예전 정원을 지울까요? 되돌릴 수 없어요</p>', [{ label: '취소', act: () => closeModal() }, { label: '지우기', primary: true, act: () => { try { localStorage.removeItem(BROKEN_KEY); } catch (e) { /* 무시 */ } closeModal(); renderAll(true); } }]));
   if ($('#copyAddrBtn')) $('#copyAddrBtn').addEventListener('click', copyAddress);

@@ -791,7 +791,7 @@ function blend(st, ids, ctx) {
   for (const p of list) st.dried.splice(st.dried.indexOf(p), 1);
   const q = list.reduce((a, p) => a + p.q, 0) / list.length, recipe = blendRecipe(parts, st);
   const name = recipe ? BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
-  const b = { id: nid(st), parts, q, recipe, name };
+  const b = { id: nid(st), parts, q, recipe, name, hat: list.every(p => isHat(p.q)) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
   st.blends.push(b);
   if (recipe) {
     if (!st.dex.blend[recipe]) addLog(st, 9, `도감에 등록: ${name}`, ctx);
@@ -799,6 +799,7 @@ function blend(st, ids, ctx) {
   }
   return ok(`${josa(name, '을/를')} 만들었어요`, { blend: b });
 }
+// 예전 규칙(P17-01: 우리지 않고 바로 팔기)의 판매 함수 — 화면은 찻잔(sellCups)만 씀. 예전 테스트 · 도구를 위해 남겨 둠
 function sellBlends(st, ids) {
   if (!teaShopOpen(calendar(st.virtual))) return no('찻집은 겨울(12월)부터 열어요');
   const list = st.blends.filter(b => ids.includes(b.id));
