@@ -777,6 +777,8 @@ img.px { image-rendering: pixelated; }
 .sell-r .data { font-weight: 600; font-size: 13px; }
 /* 값에 좋은 것은 진한 초록, 나쁜 것은 연한 빨강 (10-06) */
 :root { --val-up: #2e7d3c; --val-down: #e07a72; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --val-up: #7fcf8e; } :root:not([data-theme="light"]) .needs .nd.on b { color: color-mix(in srgb, var(--k) 55%, #ffffff); } }   /* 다크 모드 대비 (QA 8회차) */
+:root[data-theme="dark"] { --val-up: #7fcf8e; } :root[data-theme="dark"] .needs .nd.on b { color: color-mix(in srgb, var(--k) 55%, #ffffff); }
 .val-up { color: var(--val-up); font-weight: 700; }
 .val-down { color: var(--val-down); font-weight: 700; }
 .hat-chip { color: var(--val-up); background: color-mix(in srgb, var(--val-up) 12%, var(--panel)); font-size: 10.5px; padding: 0 6px; border-radius: 999px; }

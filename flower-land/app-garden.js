@@ -69,7 +69,8 @@ $('#needs').addEventListener('click', e => {
   if (e.target.closest('[data-mine]')) return openMine();
   if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom);
     const old = $('.zoom-hint'); if (old) old.remove();
-    if (ui.zoom && !ui.zoomHinted) { ui.zoomHinted = true; const h = document.createElement('span'); h.className = 'zoom-hint'; h.textContent = '← 밀어서 보기 →'; $('.mapwrap').prepend(h); setTimeout(() => h.remove(), 3500); } renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
+    let hinted = ui.zoomHinted; try { hinted = hinted || localStorage.getItem(KEY + '-zoomhint') === '1'; } catch (e) { /* 무시 */ }
+    if (ui.zoom && !hinted) { ui.zoomHinted = true; try { localStorage.setItem(KEY + '-zoomhint', '1'); } catch (e) { /* 무시 */ } const h = document.createElement('span'); h.className = 'zoom-hint'; h.textContent = '← 밀어서 보기 →'; $('.mapwrap').prepend(h); setTimeout(() => h.remove(), 3500); } renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];
   if (!careNeed(E.calendar(st.virtual))[t]) return feedback(`지금은 ${nm}이 없어요`);

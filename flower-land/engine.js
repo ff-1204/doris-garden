@@ -1032,7 +1032,8 @@ const chapterDone = (st, key) => chapterQuests(key).every(q => st.journal.done[q
 function chapterOpen(st, key) {
   const yr = yearOf(st, calendar(st.virtual));
   if (key === 'c0') return true;                                       // 0장 첫 방문은 처음부터
-  if (key === 'c1') return !!(st.guide && st.guide.celebrated) || yr >= 2 || chapterQuests('c1').some(q => q.test(st));
+  if (key === 'c1') return !!(st.guide && (st.guide.celebrated || st.guide.hidden)) ||   // 첫걸음을 닫아도 1장 (QA 8회차)
+    yr >= 2 || chapterQuests('c1').some(q => q.test(st));
   if (key === 'c6') return yr >= 2;
   return chapterDone(st, 'c1');
 }

@@ -44,4 +44,6 @@ console.log('[QA 7회차]');
 { const old = JSON.parse(JSON.stringify(E.create(at(c => c.month === 12), () => 0.5))); delete old.yearSeen; old.mig = 16;
   old.log = [{ y: 1, m: 5, d: 1, type: 8, text: '장미 3포기가 피었어요. 수확할 수 있어요' }, { y: 1, m: 6, d: 2, type: 8, text: '라벤더가 피었어요. 수확할 수 있어요' }, { y: 1, m: 6, d: 2, type: 9, text: '도감에 등록: 라벤더' }];
   const m = E.migrateSave(old); check(m.yearSeen.bloom.rose && m.yearSeen.bloom.lavender && Object.keys(m.yearSeen.bloom).length === 2, '업데이트한 해: 올해 일지의 "피었어요"로 핀 꽃을 채움'); }
+console.log('[QA 8회차]');
+{ const s = E.create(at(c => c.month === 5 && !c.frozen), () => 0.5); s.onboarded = true; E.giftPot(s); check(!E.chapterOpen(s, 'c1'), '첫걸음 중엔 1장이 아직'); s.guide = { hidden: true }; check(E.chapterOpen(s, 'c1'), '첫걸음을 닫으면 1장이 열림'); }
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
