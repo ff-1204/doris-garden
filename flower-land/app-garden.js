@@ -205,7 +205,10 @@ function draw() {
   for (const f of st.flowers) drawFlower(f, cal);
   // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만)
   g.imageSmoothingEnabled = false;
-  for (const d of st.decos || []) if (d.x != null) { const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); }
+  for (const d of st.decos || []) if (d.x != null) {
+    const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92);
+    if (d.honey && d.honey.length) { g.fillStyle = '#f2b632'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(d.x * cell + cell * 0.82, d.y * cell + cell * 0.2, Math.max(2.5, cell * 0.14), 0, 7); g.fill(); g.stroke(); }   // 🍯 거둘 꿀이 있음
+  }
   const dm = ui.tool === 'deco' && decoById(ui.decoId);
   if (dm && dm.x != null) { g.save(); g.strokeStyle = '#ffd84a'; g.lineWidth = 2.5; g.setLineDash([4, 3]); g.strokeRect(dm.x * cell + 1, dm.y * cell + 1, cell - 2, cell - 2); g.restore(); }
   if (ui.flash) {                                  // 숫자를 누른 돌봄이 필요한 꽃들 반짝이기
@@ -325,10 +328,20 @@ function onTiles(tiles) {
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
 function openDecoTile(d) {
   const info = E.decoInfo(d.key);
-  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p></div>`, [
+  let extra = '';
+  if (d.key === 'hive') {                          // P18 벌통: 모인 꿀 · 둘레의 핀 꽃 · 다음에 모일 꿀
+    const hn = d.honey || [], by = {}; for (const k of hn) by[k] = (by[k] || 0) + 1;
+    const bl = E.hiveBlooms(st, d), h = E.honeyOf(bl), frozen = E.calendar(st.virtual).frozen;
+    extra = `<div class="hive-info"><div class="hive-jars">${hn.length ? Object.entries(by).map(([k, n]) => `<span class="hj">${honeyImg(k, 2)}<small>${E.honeyName(k)} ×${n}</small></span>`).join('') : '<span class="muted">아직 모인 꿀이 없어요</span>'}</div>
+      <small class="muted">둘레 ${E.HONEY_R}칸에 핀 꽃 ${bl.length}포기 · ${frozen ? '🌙 꽃잠에는 벌도 쉬어요' : h ? `이 달이 끝나면 ${E.honeyName(h.type)} ${h.jars}병` : '꽃이 피면 꿀이 모여요'} · 벌통엔 ${E.HIVE_MAX}병까지</small>
+      ${hn.length ? '<button type="button" class="btn primary" data-takehoney="1">🍯 거두기</button>' : ''}</div>`;
+  }
+  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${extra}</div>`, [
     { label: '📦 창고에', act: () => { closeModal(); after(E.storeDeco(st, d.id)); } },
     { label: '↔ 옮기기', primary: true, act: () => { closeModal(); ui.tool = 'deco'; ui.decoId = d.id; renderToolbar(true); } },
   ]);
+  const tb = $('#modalRoot [data-takehoney]');
+  if (tb) tb.onclick = () => { closeModal(); after(E.takeHoney(st, d.id, ctx), null, { label: '🍵 찻집', fn: () => setTab('cab') }); };
 }
 function select(id) { ui.selected = id; ui.selTile = null; ui.sheetOpen = true; renderStatus(true); }
 function plantAt(type, x, y) {

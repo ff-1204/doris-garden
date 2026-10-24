@@ -226,6 +226,16 @@ function decoURL(key) {
 }
 // 화면에 띄우는 크기는 원본의 정수배로 (장식 16 · 칭호 문장 22, P16-14)
 const decoImg = (key, scale) => { const info = E.decoInfo(key), px = (info && info.title ? 22 : 16) * (scale || 3); return `<img class="px" src="${decoURL(key)}" width="${px}" height="${px}" alt="${esc(info ? info.name : '')}">`; };
+// P18 꿀병 그림: 꿀 빛깔은 그 꽃의 꽃잎 색을 꿀색과 섞음 (들꽃꿀은 호박색)
+const honeyCache = {};
+function honeyURL(k) {
+  if (honeyCache[k]) return honeyCache[k];
+  const J = window.HONEY_JAR, hc = k === 'wild' ? '#d99a2b' : mixHex(FLOWERS[k].petal, '#d99a2b', 0.55);
+  const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+  J.grid.forEach((row, j) => [...row].forEach((ch, i) => { const col = ch === 'h' ? hc : J.pal[ch]; if (ch !== '.' && col) { x.fillStyle = col; x.fillRect(i, j, 1, 1); } }));
+  return (honeyCache[k] = c.toDataURL());
+}
+const honeyImg = (k, scale) => `<img class="px" src="${honeyURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.honeyName(k))}">`;
 function decoBitmap(key) {                         // 지도에 그릴 그림 (불러오기가 끝난 뒤부터)
   let im = decoBitmaps[key];
   if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[key] = im; }

@@ -546,6 +546,15 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .shop-news button:hover { text-decoration: underline; }
 .rv-badge { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 12.5px; margin-right: 4px; }
 .shop-news > .rv-badge + *::before { content: none; }
+/* P18 꿀 (10-24) */
+.honeyshelf, .hive-jars, .honeypick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.honeyshelf { justify-content: flex-start; padding: 8px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }
+.hj { display: inline-grid; justify-items: center; gap: 2px; font-size: 12px; }
+.hive-info { display: grid; gap: 8px; justify-items: center; width: 100%; padding-top: 8px; border-top: 1px solid var(--line); }
+.honey-chip { background: #f6e3b4; color: #6b4a12; }
+.honey-btn { justify-self: stretch; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .honey-chip { background: #4a3a18; color: #f3d48a; } }
+:root[data-theme="dark"] .honey-chip { background: #4a3a18; color: #f3d48a; }
 /* P17-16 정원 장식 (10-24) */
 .decoshop { display: grid; gap: 8px; }
 .decocard { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }

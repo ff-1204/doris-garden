@@ -171,7 +171,7 @@ function renderCab(force) {
   const dried = groupType(st.dried, p => p.type);
   ui.blendSel = (ui.blendSel || []).filter(id => st.dried.some(p => p.id === id));
   const sig = JSON.stringify([st.money, cal.frozen, cal.idx >= 10, E.teaShopOpen(cal) ? 0 : realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1)), petals.map(p => [p.type, E.pct(p.q), p.ids.length]), teas.map(t => [t.type, E.pct(t.q), t.fresh, t.ids.length]),
-    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal)]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab]);
+    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal), c.honey]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab, st.honey]);
   if (!force && ui.sigs.cab === sig) return;
   ui.sigs.cab = sig;
   const shopOpen = E.teaShopOpen(cal);   // P17-09 찻집은 겨울(12월)부터 꽃잠까지
@@ -241,13 +241,19 @@ function renderCab(force) {
       <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${b.name}</b><span class="stars">${starStr(b.q)}</span></div>
       <button type="button" class="btn primary" data-bagblend="${b.id}">🏷️ 티백</button></div>`).join('');
   // ☕ 찻잔 (P17-10): 우린 차. 같은 꽃·꼬리표·식음이 같으면 한 장
-  const cupKey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal)].join('|');
+  const cupKey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal), c.honey || ''].join('|');
+  const honeyLeft = Object.values(st.honey || {}).reduce((a, n) => a + n, 0);
   const cupGroups = groupType(st.cups || [], cupKey).map(g => ({ ...g, fresh: g.kind === 'tea' && E.isFresh(st, g, cal), cold: E.cupCold(g, cal) }));
   const cupCards = cupGroups.map(g => { const isB = g.kind === 'blend', key = isB ? g.parts[0] : g.type, nm = isB ? `${g.recipe ? '✨ ' : ''}${g.name}` : FLOWERS[g.type].tea; return `<div class="shopcard cabcard teacard cupcard ${g.cold ? 'cold' : ''}" style="--pc:${SPR.tea[key] || FLOWERS[key].petal}">
       <div class="sc-art"><span class="cup-steam">${spriteImg(key, 'tea', 64, false, nm)}</span><span class="chip sc-form">${g.cold ? '🧊 식은 차' : '☕ 갓 우림'}</span><span class="sc-count">×${g.ids.length}</span>${shopOpen && st.cups[0] && g.ids.includes(st.cups[0].id) ? '<span class="sc-next-up">다음 차례</span>' : ''}</div>
       <div class="cc-name"><b>${nm}</b><span class="stars">${starStr(g.q)}</span></div>
-      <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}</div>
+      <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}</div>
+      ${!g.honey && honeyLeft ? `<button type="button" class="btn small honey-btn" data-honeycup="${g.ids.join(',')}">🍯 꿀 한 숟갈</button>` : ''}
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>💰 판매</button></div>`; }).join('');
+  // P18 🍯 꿀 선반: 거둔 꿀을 종류마다 병으로
+  const honeyKinds = E.HONEY_KEYS.filter(k => (st.honey || {})[k] > 0);
+  const honeyShelf = honeyKinds.length ? `<div class="cab-head"><span class="sb-title">🍯 꿀 선반 <span class="sh-n">${honeyLeft}</span></span><span class="muted">찻잔에 한 숟갈 넣으면 꿀차가 돼요 · 값은 그대로</span></div>
+    <div class="honeyshelf">${honeyKinds.map(k => `<span class="hj">${honeyImg(k, 2)}<small>${E.honeyName(k)} <b class="data">×${st.honey[k]}</b></small></span>`).join('')}</div>` : '';
   // ☕ 카운터: 우린 찻잔을 나무빛 상자 안에 (티백 선반과 구분)
   const cupSection = (st.cups || []).length ? `<section class="counter"><div class="cab-head"><span class="sb-title">☕ 찻잔 <span class="sh-n">${st.cups.length}</span></span><span class="muted">${shopOpen ? `${seatText()} · 다음 손님 <b>${realH(Math.max(0, E.cupSellH(st) - (st.cupTimerH || 0)) / (st.speed || 1))}</b> 뒤` : `찻집이 열리면 ${seatText()}`}</span>${st.cups.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-sellcup="all" ${shopOpen ? '' : 'disabled'}>💰 전체 판매</button></span>` : ''}</div>${shopOpen ? `<div class="cust-bar" title="다음 손님까지"><i style="width:${Math.round(Math.min(1, (st.cupTimerH || 0) / E.cupSellH(st)) * 100)}%"></i></div>` : ''}<div class="shopgrid cabgrid">${cupCards}</div></section>` : (shopOpen ? '<section class="counter empty"><span>☕</span><div class="muted">카운터가 비어 있어요 · 아래 🏷️ 티백에서 "🫖 우림"을 누르면 찻잔이 여기에 놓여요</div></section>' : '<section class="counter empty closed"><span>🔒</span><div class="muted">카운터는 겨울(12월)부터 열려요</div></section>');
   $('#p-cab').innerHTML = `<div class="stack">
@@ -256,6 +262,7 @@ function renderCab(force) {
       <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`} · 🏷️ 티백은 품질이 그대로예요</small></span>
 </div><span class="news-side">${wallet()}<button type="button" class="btn small" data-act="shopUp">🪑 찻집 가꾸기</button></span></div>
     ${cupSection}
+    ${honeyShelf}
     <div class="cab-head"><span class="sb-title">🏷️ 티백${st.teas.length + bagged.length ? ` <span class="sh-n">${st.teas.length + bagged.length}</span>` : ''}</span><span class="muted">우려서 찻잔으로</span>${st.teas.length + bagged.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-brew="all" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 전체 우림' : '🔒 준비 중'}</button></span>` : ''}</div>
     ${teaCards ? `<div class="shopgrid cabgrid">${teaCards}</div>` : '<div class="cab-empty"><span>🏷️</span><div><b>티백이 없어요</b> <span class="muted">🌿 제다실에서 생화 · 말린 꽃잎 · 블렌드를 티백으로 만들면 여기로 와요</span></div></div>'}</div>`;
   // 🌿 제다실: 생화 · 꽃방 · 말린 꽃잎 · 블렌딩 · 블렌드 → 모두 🏷️ 티백으로 (10-06)
@@ -301,8 +308,16 @@ function cupPreview(set) {                     // 찻잔 세트 미리보기 (�
   SPR.cup.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
   return c.toDataURL();
 }
+// P18 찻잔에 꿀 한 숟갈: 가진 꿀 고르기 → 그 줄의 찻잔 하나에
+function openHoneyPick(ids) {
+  const kinds = E.HONEY_KEYS.filter(k => (st.honey || {})[k] > 0), c = st.cups.find(x => ids.includes(x.id) && !x.honey);
+  if (!c || !kinds.length) return;
+  openModal('🍯 꿀 한 숟갈', `<div class="honeypick">${kinds.map(k => `<button type="button" class="up-tile" data-hk="${k}">${honeyImg(k, 3)}<b>${E.honeyName(k)}</b><small>×${st.honey[k]}</small></button>`).join('')}</div><p class="muted" style="margin-top:8px">찻잔 하나에 넣어요 · 꿀차는 손님이 좋아하지만 값은 그대로예요</p>`, [{ label: '닫기', act: () => closeModal() }]);
+  $('#modalRoot').querySelectorAll('[data-hk]').forEach(b => b.onclick = () => { closeModal(); after(E.honeyCup(st, c.id, b.dataset.hk)); });
+}
 function cabClick(e) {
   if (e.target.closest('[data-act="shopUp"]')) return openShopUp();
+  const hc = e.target.closest('[data-honeycup]'); if (hc) return openHoneyPick(hc.dataset.honeycup.split(',').map(Number));
   const jp = e.target.closest('[data-jump]'); if (jp) { const t = document.getElementById(jp.dataset.jump); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70); return; }
   const tb = e.target.closest('[data-drt]'); if (tb) { ui.dryTab = tb.dataset.drt; return renderCab(true); }
   const b = e.target.closest('button'); if (!b || b.disabled) return;
