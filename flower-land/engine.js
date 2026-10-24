@@ -1173,7 +1173,7 @@ function deliverLetters(st, cal, ctx) {           // onSlot: 때가 된 답장
     if (!GIFTS[p.gift]) continue;                 // 모르는 선물(손댄 파일)은 건너뜀 (QA 9회차)
     const left0 = LETTER_KEYS.filter(k => !st.dex.letter[k]);
     // 보낸 선물에 맞는 편지 → 어느 선물에나 맞는 편지 → 남은 아무 편지 (QA 9회차: 꽃다발에 차 이야기가 오던 것)
-    const left = [left0.filter(k => LETTERS[k].gift === p.gift), left0.filter(k => !LETTERS[k].gift), left0].find(a => a.length) || [];
+    const left = [left0.filter(k => LETTERS[k].gift === p.gift), left0.filter(k => !LETTERS[k].gift)].find(a => a.length) || [];   // 다른 선물 전용 편지는 주지 않음 (QA 10회차)
     if (left.length) {
       const k = left[Math.floor(mineRng(hashStr(`${st.gardenId || 'g'}|letter|${S(st, 'gifts')}|${p.gift}`))() * left.length)];
       st.dex.letter[k] = true;
@@ -1192,7 +1192,7 @@ function yearScore(st) {
   const prev = st.records[0], ys = st.yearSeen || {};
   const decos = Math.min(20, (st.decos || []).filter(d => d.x != null).length);
   const orders = S(st, 'orders') - ((prev && prev.orders) || 0);
-  const gifts = Math.min(3, S(st, 'gifts') - ((prev && prev.giftsTotal) || 0));   // 꽃잠에 보낸 것도 다음 기록에 (QA 9회차)
+  const gifts = Math.min(6, S(st, 'gifts') - ((prev && prev.giftsTotal) || 0));   // 기록 사이(꽃잠 + 새해)에 최대 6번 (QA 10회차)   // 꽃잠에 보낸 것도 다음 기록에 (QA 9회차)
   const parts = { lands: lands * 10, flowers: alive, bloom: n0(ys.bloom) * 4, blend: n0(ys.blend) * 3, honey: n0(ys.honey) * 2, decos: decos * 3, orders: orders * 5, gifts: gifts * 10 };   // gifts: P26-03
   return { total: Object.values(parts).reduce((a, b) => a + b, 0), parts, orders: S(st, 'orders'), giftsTotal: S(st, 'gifts') };
 }
