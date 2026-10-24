@@ -264,8 +264,11 @@ function tileAt(e) {
 }
 const tipEl = $('#tip');
 // 위 막대 · 안내 줄이 나타나거나 사라지면 지도가 위아래로 밀림 → 그 직후 누름은 무시 (QA 16회차 메모: 연달아 누르면 다른 칸이 눌림)
-{ let lastTop = null; new ResizeObserver(() => { const top = canvas.getBoundingClientRect().top; if (lastTop != null && Math.abs(top - lastTop) > 4) ui.mapShiftAt = performance.now(); lastTop = top; }).observe($('#today')); }
-for (const id of ['#tray', '#hint']) new MutationObserver(() => { ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'] });
+// 지도 위 칸들의 크기가 바뀔 때 지도가 실제로 움직였을 때만 (QA 17회차: 다시 그리기만 해도 막던 것 고침)
+{ let lastTop = null; const ro = new ResizeObserver(() => { const top = canvas.getBoundingClientRect().top + window.scrollY; if (lastTop != null && Math.abs(top - lastTop) > 4) ui.mapShiftAt = performance.now(); lastTop = top; });
+  for (const id of ['#today', '#tray', '.hintbar']) ro.observe($(id)); }
+// 위 막대 · 안내 줄이 실제로 나타나거나 사라질 때만 (같은 값으로 다시 넣는 것은 빼고 — QA 17회차)
+for (const id of ['#tray', '#hint']) new MutationObserver(ms => { if (ms.some(m => (m.oldValue !== null) !== m.target.hidden)) ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
 function tipHTML([x, y]) {
   const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y);
   if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(dc.key).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
