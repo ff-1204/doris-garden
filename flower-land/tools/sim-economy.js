@@ -1,9 +1,11 @@
-// 경제 시뮬레이션: 부지런한 정원사가 몇 해 동안 어떻게 벌고 쓰는지 (node flower-land/tools/sim-economy.js [해 수] [씨앗])
+// 경제 시뮬레이션: 부지런한 정원사가 몇 해 동안 어떻게 벌고 쓰는지 (node flower-land/tools/sim-economy.js [해 수] [씨앗] [--no-spend])
+// --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const YEARS = +(process.argv[2] || 4), SEED = +(process.argv[3] || 7);
+const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend');
+const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
 const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 1000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
@@ -20,10 +22,10 @@ function act() {
   for (const [k, n] of Object.entries(KEEP)) while ((st[k] || 0) < n && st.money >= E.SUPPLIES[k].price + 500) spend('용품', () => E.buySupply(st, k, 1));
   // 찻집 가꾸기 (P17-15): 돈이 넉넉하면(값 + 20,000원 남음) 손님 자리 → 찻잔 세트 → 간판 순서로
   const sh = E.shopOf(st), nx = E.SEATS[sh.seats + 1];
-  if (nx && st.money >= nx.price + 20000) spend('찻집 가꾸기', () => E.addSeat(st));
-  for (const [kind, list] of [['cup', E.CUP_SETS], ['sign', E.SIGNS]]) for (const [k, it] of Object.entries(list)) if (!(kind === 'cup' ? sh.cups : sh.signs).includes(k) && st.money >= it.price + 20000) spend('찻집 가꾸기', () => E.buyDecor(st, kind, k));
+  if (!NO_SPEND && nx && st.money >= nx.price + 20000) spend('찻집 가꾸기', () => E.addSeat(st));
+  for (const [kind, list] of [['cup', E.CUP_SETS], ['sign', E.SIGNS]]) for (const [k, it] of Object.entries(list)) if (!NO_SPEND && !(kind === 'cup' ? sh.cups : sh.signs).includes(k) && st.money >= it.price + 20000) spend('찻집 가꾸기', () => E.buyDecor(st, kind, k));
   // 정원 장식 (P17-16): 이달 장식을 아직 없고 돈이 넉넉하면(값 + 20,000원 남음) 하나
-  for (const k of E.decoOffer(cal)) if (!(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
+  for (const k of E.decoOffer(cal)) if (!NO_SPEND && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
   if (!cal.frozen) {
     // 꽃 사기 (꽃마다 정원 + 창고 3포기까지, 돈은 2,000원 남김)
     for (const k of E.FLOWER_KEYS) {
