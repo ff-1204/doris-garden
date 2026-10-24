@@ -263,6 +263,9 @@ function tileAt(e) {
   return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null;
 }
 const tipEl = $('#tip');
+// 위 막대 · 안내 줄이 나타나거나 사라지면 지도가 위아래로 밀림 → 그 직후 누름은 무시 (QA 16회차 메모: 연달아 누르면 다른 칸이 눌림)
+{ let lastTop = null; new ResizeObserver(() => { const top = canvas.getBoundingClientRect().top; if (lastTop != null && Math.abs(top - lastTop) > 4) ui.mapShiftAt = performance.now(); lastTop = top; }).observe($('#today')); }
+for (const id of ['#tray', '#hint']) new MutationObserver(() => { ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'] });
 function tipHTML([x, y]) {
   const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y);
   if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(dc.key).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
@@ -280,7 +283,7 @@ canvas.addEventListener('pointerdown', e => {
   tipEl.hidden = true;
   const t = tileAt(e); if (!t) return;
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 일부 환경에서는 지원하지 않음 */ }
-  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY };
+  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY, top: canvas.getBoundingClientRect().top, early: performance.now() - (ui.mapShiftAt || 0) < 600 };   // 지도가 막 움직였으면 (QA 16회차 메모)
 });
 canvas.addEventListener('pointermove', e => {
   const t = tileAt(e); hover = t;
@@ -298,7 +301,7 @@ canvas.addEventListener('pointermove', e => {
 canvas.addEventListener('pointerup', e => {
   ui.lastPointer = e.pointerType;                 // 터치면 장치를 놓기 전에 범위를 먼저 (QA 14회차)
   if (!drag) return;
-  const t = drag.start, moved = drag.moved;
+  const t = drag.start, moved = drag.moved || drag.early || Math.abs(canvas.getBoundingClientRect().top - drag.top) > 4;   // 지도가 밀린 뒤 곧바로 누른 것은 누름으로 치지 않음
   drag = null;
   if (!moved) onTiles([t]);
 });
