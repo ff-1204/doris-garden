@@ -139,6 +139,8 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 @media (prefers-reduced-motion: reduce) { .ring-btn { animation: none; } }
 .mapframe { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #a39b8e; box-shadow: 0 6px 18px rgba(40, 30, 20, .10); }
 canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair; }
+.mapwrap.zoom canvas#map { touch-action: pan-x pan-y; }   /* 확대했을 땐 손가락으로 밀어 봄 (QA 7회차) */
+.zoom-hint { position: sticky; left: 8px; top: 8px; z-index: 3; display: inline-block; margin: 6px 0 -28px 8px; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; pointer-events: none; }
 .feedback { min-height: 22px; font-size: 13px; color: var(--muted); }
 .feedback.warn { color: var(--warn); }
 .topfb { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px 7px 14px; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;

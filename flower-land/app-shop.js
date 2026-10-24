@@ -239,7 +239,7 @@ function openCompost(ids, n) {
   const it = list[0], F = FLOWERS[it.type]; n = Math.max(1, Math.min(list.length, n || list.length));
   const body = `<div class="rc">
     <div class="rc-item tc-item" style="--pc:${F.petal}"><span class="rc-art tc-pair">${spriteImg(it.type, 'form', 34, false, F.name)}<span class="sc-to">›</span><span class="cp-fert">🌱</span></span>
-      <span class="rc-main"><b>${F.name} ${FORM[F.form].name} → 비료</b><small>품질 ${E.pct(it.q)}% · 받은 지 10달이 넘었어요 · ${list.length}개 중</small></span>
+      <span class="rc-main"><b>${F.name} ${FORM[F.form].name} → 비료</b><small>품질 ${E.pct(it.q)}% · 품질 5% 이하라 비료가 돼요 · ${list.length}개 중</small></span>
       <span class="stepper"><button type="button" data-cq="-" ${n <= 1 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-cq="+" ${n >= list.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>
     <div class="rc-pay"><div><span class="muted">가진 비료</span><span class="data">${st.fert || 0}개</span></div><div><span class="muted">만든 뒤</span><b class="data">${(st.fert || 0) + n}개</b></div></div>
     <div class="rc-notes"><span>🌱 품질 5% 이하로 떨어진 씨앗·묘목은 1개가 비료 1개가 돼요</span></div></div>`;

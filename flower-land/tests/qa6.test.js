@@ -34,4 +34,14 @@ cp.items.push({ id: 50, type: 'rose', q: 0, origin: '번식', ageH: 5, got: 0 })
 check(!E.compostable(cp.items[0]) && E.compostable(cp.items[0], true), '품질 0% 묘목은 10달 전이라도 손으로 비료');
 const f0 = cp.fert; check(E.compostItems(cp, [50]).ok && cp.fert === f0 + 1, '창고에서 바로 비료로');
 
+console.log('[QA 7회차]');
+{ const s = E.create(at(c => c.month === 13), () => 0.5); s.onboarded = true; const r = E.giftPot(s); E.advance(s, s.virtual + 0.05 * H);
+  check(r.msg.includes('티백 2개') && s.teas.length === 2 && s.teas.every(x => x.type === s.firstFlower), '꽃잠에 처음 오면 화분 꽃 티백 2개도');
+  const l = s.orders.list; E.brew(s, s.teas.map(x => x.id), []); E.sellCups(s, s.cups.map(c => c.id));
+  check(l.every(o => o.done), `꽃잠 첫 쪽지를 모두 들어줄 수 있음 (${l.map(E.orderText).join(' · ')})`); }
+{ const s = E.create(at(c => c.month === 1 && !c.frozen), () => 0.5); s.onboarded = true; const f = E.giftPot(s).flower; E.advance(s, s.virtual + 0.1 * H, { live: false, rng: () => 0.5 });
+  check(E.care(s, 'harvest', [[f.x, f.y]], { live: false }).msg.includes('꽃잎 2장'), '화분 첫 수확 알림은 "꽃잎 2장"'); }
+{ const old = JSON.parse(JSON.stringify(E.create(at(c => c.month === 12), () => 0.5))); delete old.yearSeen; old.mig = 16;
+  old.log = [{ y: 1, m: 5, d: 1, type: 8, text: '장미 3포기가 피었어요. 수확할 수 있어요' }, { y: 1, m: 6, d: 2, type: 8, text: '라벤더가 피었어요. 수확할 수 있어요' }, { y: 1, m: 6, d: 2, type: 9, text: '도감에 등록: 라벤더' }];
+  const m = E.migrateSave(old); check(m.yearSeen.bloom.rose && m.yearSeen.bloom.lavender && Object.keys(m.yearSeen.bloom).length === 2, '업데이트한 해: 올해 일지의 "피었어요"로 핀 꽃을 채움'); }
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

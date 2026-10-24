@@ -38,7 +38,8 @@ function openDryConfirm(ids, counts) {
   const cal = E.calendar(st.virtual), src = st.petals.filter(p => ids.includes(p.id));
   if (!src.length) return;
   const groups = groupType(src, p => p.type);
-  counts = counts || Object.fromEntries(groups.map(g => [g.type, g.ids.length]));
+  const giftHalf = st.gift != null && st.gift >= 0 && !st.guide?.sold && groups.length === 1 && groups[0].type === st.firstFlower && groups[0].ids.length === 2;   // 화분 첫 수확: 하나는 꽃방 · 하나는 티백 (QA 7회차)
+  counts = counts || Object.fromEntries(groups.map(g => [g.type, giftHalf ? 1 : g.ids.length]));
   const pick = groups.flatMap(g => src.filter(p => g.ids.includes(p.id)).sort((x, y) => y.q - x.q).slice(0, counts[g.type]).map(p => p.id));
   const body = `<div class="rc">
     <div class="rc-list">${groups.map(g => { const F = FLOWERS[g.type], n = counts[g.type]; return `<div class="rc-item tc-item ${n ? '' : 'off'}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">

@@ -696,7 +696,8 @@ function care(st, tool, tiles, ctx) {            // P13
     }
   }
   flushPending(st, ctx);
-  const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: '꽃잎을 거둬 제다실로 보냈어요' }[tool];
+  const two = tool === 'harvest' && targets.length === 1 && targets[0].origin === '이웃' && st.petals.filter(p => p.type === targets[0].type).length >= 2 && targets[0].harvestKey === cal.abs;
+  const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: two ? '꽃잎 2장을 거둬 제다실로 보냈어요' : '꽃잎을 거둬 제다실로 보냈어요' }[tool];
   return ok(`${targets.length}${unitOf(targets)}에 ${word}`, { count: targets.length });
 }
 
@@ -1285,10 +1286,14 @@ function giftPot(st, ctx, want) {                // want: 안내 창에서 보�
   const tl = st.tiles[f.y * W + f.x]; tl.t = F.t; tl.m = F.m;          // 화분 흙째 옮겨 심음
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
+  if (cal.frozen) {                               // 꽃잠엔 거둘 수 없으니 티백 2개도 (QA 7회차: 첫 쪽지를 들어줄 수 있게)
+    for (let i = 0; i < 2; i++) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false });
+    st.dex.teabag = st.dex.teabag || {}; st.dex.teabag[type] = true;
+  }
   if (teaShopOpen(cal)) makeOrders(st, cal);      // 쪽지는 화분 꽃을 알고 나서 다시 (QA 6회차 높음)
   st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
-  addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요`, ctx);
-  return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요`, { flower: f });
+  addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께` : ''}`, ctx);
+  return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께 받았어요` : ''}`, { flower: f });
 }
 
 // ---------------------------------------------------------------- 정원 장식 (P17-16, 10-24)
@@ -1496,7 +1501,11 @@ const MIGRATIONS = [
   ['⛏️ 광산 · 광산 도감 (P24, 10-24)', s => { if (!s.mine) s.mine = newMine(); s.dex.mine = s.dex.mine || {}; }],
   ['💌 손님 주문 · 기념품 도감 · 🏅 정원 점수 (P23, 10-24)', s => { if (s.orders === undefined) s.orders = null; s.dex.memento = s.dex.memento || {}; if (s.bestScore === undefined) s.bestScore = 0; }],
   ['직접 피운 꽃 (QA 4회차, 10-24): 지금까지 핀 꽃은 화분 꽃만 빼고 직접 피운 것으로', s => { if (!s.ownBloom) { s.ownBloom = {}; for (const k of Object.keys(s.dex.flower || {})) if (!(s.gift != null && s.gift >= 0 && s.firstFlower === k)) s.ownBloom[k] = true; } }],
-  ['올해 본 것 (정원 점수, QA 6회차)', s => { if (!s.yearSeen) s.yearSeen = { bloom: {}, blend: {}, honey: {} }; }],
+  ['올해 본 것 (정원 점수, QA 6회차) — 올해 일지의 "피었어요"로 핀 꽃을 채움 (QA 7회차)', s => {
+    if (s.yearSeen) return;
+    s.yearSeen = { bloom: {}, blend: {}, honey: {} };
+    for (const l of s.log || []) if (l.type === 8) { const k = FLOWER_KEYS.find(f => l.text.startsWith(FLOWERS[f].name)); if (k) s.yearSeen.bloom[k] = true; }
+  }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {

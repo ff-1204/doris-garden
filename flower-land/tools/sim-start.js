@@ -9,7 +9,7 @@ const DAY = '월화수목금토일';
 const fmt = h => h == null ? '—' : h < 24 ? `${Math.round(h)}시간` : `${(h / 24).toFixed(1)}일`;
 function run(startT) {
   let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const st = E.create(startT, rng), ctx = { live: false, rng };
+  const st = E.create(startT, rng), ctx = { live: false, rng }; st.gardenId = `start-${SEED}`;   // 매번 같은 값
   st.onboarded = true; if (GIFT) E.giftPot(st, ctx);
   const first = {}, mark = (k, t) => { if (first[k] == null) first[k] = (t - startT) / H; };
   let idle = 0, steps = 0;

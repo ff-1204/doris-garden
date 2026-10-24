@@ -67,7 +67,9 @@ function renderToolbar(force) {
 }
 $('#needs').addEventListener('click', e => {
   if (e.target.closest('[data-mine]')) return openMine();
-  if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom); renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
+  if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom);
+    const old = $('.zoom-hint'); if (old) old.remove();
+    if (ui.zoom && !ui.zoomHinted) { ui.zoomHinted = true; const h = document.createElement('span'); h.className = 'zoom-hint'; h.textContent = '← 밀어서 보기 →'; $('.mapwrap').prepend(h); setTimeout(() => h.remove(), 3500); } renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];
   if (!careNeed(E.calendar(st.virtual))[t]) return feedback(`지금은 ${nm}이 없어요`);
@@ -270,12 +272,13 @@ canvas.addEventListener('pointerdown', e => {
   tipEl.hidden = true;
   const t = tileAt(e); if (!t) return;
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 일부 환경에서는 지원하지 않음 */ }
-  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false };
+  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY };
 });
 canvas.addEventListener('pointermove', e => {
   const t = tileAt(e); hover = t;
   if (drag) {
     tipEl.hidden = true;
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) drag.moved = true;   // 밀어 본 것이면 누름이 아님 (확대 · QA 7회차)
     return;                                       // 드래그로 여러 칸 고르기는 지금은 꺼 둠
   }
   if (e.pointerType === 'mouse' && t) {
@@ -286,9 +289,9 @@ canvas.addEventListener('pointermove', e => {
 });
 canvas.addEventListener('pointerup', () => {
   if (!drag) return;
-  const t = drag.start;
+  const t = drag.start, moved = drag.moved;
   drag = null;
-  onTiles([t]);
+  if (!moved) onTiles([t]);
 });
 canvas.addEventListener('pointercancel', () => { drag = null; });
 canvas.addEventListener('pointerleave', () => { hover = null; tipEl.hidden = true; });

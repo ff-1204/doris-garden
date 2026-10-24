@@ -6,7 +6,7 @@ function renderToday(force) {
   const cal = E.calendar(st.virtual), gd = guideState();
   const need = careNeed(cal);
   const showGuide = !gd.hidden && guideList().some(([k]) => !gd[k]);
-  const nq = !showGuide && st.journal && !st.journal.hidden && guideList().every(([k]) => gd[k]) ? nextQuest(cal) : null;
+  const nq = !showGuide && st.journal && !st.journal.hidden && (gd.hidden || guideList().every(([k]) => gd[k])) ? nextQuest(cal) : null;   // 첫걸음을 닫아도 퀘스트 띠 (QA 7회차)
   const sig = JSON.stringify([need, cal.frozen, showGuide && guideList().map(([k]) => !!gd[k]), nq && [nq.q.key, nq.w.now, nq.w.label]]);
   if (!force && ui.sigs.today === sig) return;
   ui.sigs.today = sig;
