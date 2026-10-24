@@ -292,7 +292,7 @@ function _create(now, rng, cal) {
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
-    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null,   // P20 정원 이름표 · 마지막 파일 저장           // P19 도감일지 · 칭호 · 퀘스트용 셈
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
   };
 }
 const nid = st => st.nextId++;
@@ -1029,13 +1029,63 @@ function parseSave(text) {
   return ok('', { data: d });
 }
 
+// ---------------------------------------------------------------- 예전 저장 보정 (10-24, app.js load()에서 옮김)
+// 저장 형식(st)에 필드를 더하면 여기 맨 끝에 한 줄 더함. 순서대로 한 번씩 돌고 st.mig에 몇 번째까지 했는지 적음.
+// 지금 있는 보정은 모두 여러 번 돌아도 같은 결과라서, mig가 없는 예전 저장은 처음부터 다 돌려도 됨
+const MIGRATIONS = [
+  ['물병 · 가위 · 호미 · 바구니 (10-05)', s => {
+    if (s.water == null) s.water = 10;
+    if (s.shears == null) s.shears = 5;
+    if (s.hoe == null) s.hoe = 10;
+    if (s.basket == null) s.basket = 10;
+  }],
+  ['꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10)', s => { s.drying = s.drying || []; s.dried = s.dried || []; s.blends = s.blends || []; s.cups = s.cups || []; }],
+  ['가게 → 화원 (10-05)', s => { for (const x of [...(s.items || []), ...(s.flowers || [])]) if (x.origin === '가게') x.origin = '화원'; }],
+  ['꽃잎 도감: 이미 거둔 꽃(차 · 꽃잎이 있는 꽃) 등록', s => {
+    if (s.dex.petal) return;
+    s.dex.petal = {};
+    for (const k of [...Object.keys(s.dex.tea), ...s.petals.map(p => p.type), ...s.teas.map(t => t.type)]) s.dex.petal[k] = true;
+  }],
+  ['블렌드 도감', s => { s.dex.blend = s.dex.blend || {}; }],
+  ['정원 이름표 gardenId (P20)', s => { if (!s.gardenId) s.gardenId = newGardenId(); }],
+  ['블렌드 티백 도감', s => { s.dex.bagBlend = s.dex.bagBlend || {}; }],
+  ['티백 도감: 만든 적 있는 차는 티백으로도 등록', s => {
+    if (s.dex.teabag) return;
+    s.dex.teabag = {};
+    for (const k of [...Object.keys(s.dex.tea), ...s.teas.map(t => t.type)]) s.dex.teabag[k] = true;
+  }],
+  ['씨앗 · 묘목 도감: 가진 적 있는 것(창고 · 심은 꽃 · 핀 적 있는 꽃) 등록', s => {
+    if (s.dex.form) return;
+    s.dex.form = {};
+    for (const x of [...s.items, ...s.flowers]) s.dex.form[x.type] = true;
+    for (const k of Object.keys(s.dex.flower)) s.dex.form[k] = true;
+  }],
+];
+// 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
+function onOpen(s) {
+  s._fertNew = 0; s._bloomNew = {};
+  for (const b of [...s.blends, ...s.cups.filter(c => c.kind === 'blend')]) {   // 10-06 레시피가 바뀌어도 이름이 맞게
+    const r = blendRecipe(b.parts, s);
+    if (r !== (b.recipe || null)) { b.recipe = r; b.name = r ? BLENDS[r].name : `${b.parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`; }
+  }
+  autoCompost(s);                                  // 0%로 시든 씨앗 · 묘목은 열 때도 바로 비료로 (꽃잠엔 시간이 안 흘러서)
+}
+// 저장소 · 파일에서 막 읽은 정원을 지금 형식으로. 쓸 수 없는 정원이면 null
+function migrateSave(s) {
+  if (!s || s.v !== 3 || !Array.isArray(s.tiles) || s.tiles.length !== W * H || !s.dex) return null;
+  for (let i = s.mig || 0; i < MIGRATIONS.length; i++) MIGRATIONS[i][1](s);
+  s.mig = MIGRATIONS.length;
+  onOpen(s);
+  return s;
+}
+
 const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
