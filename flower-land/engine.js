@@ -493,7 +493,7 @@ function recordYear(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
   const sc = yearScore(st), prevBest = st.bestScore || 0;   // P23-02 한 해 정원 평가
-  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, prevBest };
+  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, giftsTotal: sc.giftsTotal, prevBest };
   st.bestScore = Math.max(prevBest, sc.total);
   st.yearSeen = { bloom: {}, blend: {}, honey: {} };   // 새해에 다시
   st.records.unshift(rec);
@@ -1137,18 +1137,18 @@ const GIFTS = {
 };
 const GIFT_KEYS = Object.keys(GIFTS);
 const LETTERS = {
-  florist: { from: '꽃집 할머니', text: '꽃다발 고마워요. 식탁에 두니 아침이 환해졌어요. 다음 봄에도 좋은 씨앗을 골라 둘게요.' },
+  florist: { from: '꽃집 할머니', gift: 'bouquet', text: '꽃다발 고마워요. 식탁에 두니 아침이 환해졌어요. 다음 봄에도 좋은 씨앗을 골라 둘게요.' },
   postman: { from: '우체부 아저씨', text: '배달 길에 정원을 지나는 게 하루의 즐거움이에요. 덕분에 저도 화분 하나를 들였어요.' },
-  kid: { from: '옆집 아이 하나', text: '선물 고마워요! 저도 커서 정원사가 될래요. 꽃 그림을 그려서 넣었어요.' },
-  regular: { from: '찻집 단골 할아버지', text: '보내 준 차를 우려 아내와 마셨어요. 오래전 함께 걷던 꽃길 이야기를 했답니다.' },
+  kid: { from: '옆집 꼬마', gift: null, text: '선물 고마워요! 저도 커서 정원사가 될래요. 꽃 그림을 그려서 넣었어요.' },
+  regular: { from: '찻집 단골 할아버지', gift: 'teabox', text: '보내 준 차를 우려 아내와 마셨어요. 오래전 함께 걷던 꽃길 이야기를 나눴어요.' },
   librarian: { from: '도서관 사서', text: '책 사이에 꽃잎을 끼워 두었어요. 펼칠 때마다 정원 냄새가 날 거예요.' },
   beekeeper: { from: '양봉가 이웃', text: '벌들이 요즘 정원 쪽으로 자주 가요. 좋은 꽃이 많다는 뜻이겠지요.' },
-  baker: { from: '빵집 사장님', text: '나눠 준 차에 맞춰 꽃잎 쿠키를 구워 봤어요. 다음엔 제가 들고 갈게요.' },
+  baker: { from: '빵집 사장님', gift: 'teabox', text: '나눠 준 차에 맞춰 꽃잎 쿠키를 구워 봤어요. 다음엔 제가 들고 갈게요.' },
   bori: { from: '강아지 보리네', text: '보리가 정원 앞에서 늘 멈춰요. 꽃 냄새 맡는 게 제일 좋은가 봐요.' },
-  newcomer: { from: '이사 온 새 이웃', text: '처음 받은 선물이 꽃이라 이 동네가 금방 좋아졌어요. 고마워요.' },
+  newcomer: { from: '이사 온 새 이웃', gift: 'bouquet', text: '처음 받은 선물이 꽃이라 이 동네가 금방 좋아졌어요. 고마워요.' },
   teacher: { from: '학교 선생님', text: '아이들과 정원 이야기를 나눴어요. 꽃이 땅을 바꾼다는 말에 다들 눈이 반짝였어요.' },
-  photo: { from: '사진관 주인', text: '잔치 때 찍은 사진을 한 장 넣었어요. 모두 웃고 있네요.' },
-  faraway: { from: '바다 건너 친구', text: '멀리서도 정원 소식이 반가워요. 여기도 매화가 피기 시작했어요.' },
+  photo: { from: '사진관 주인', gift: 'party', text: '잔치 때 찍은 사진을 한 장 넣었어요. 모두 웃고 있네요.' },
+  faraway: { from: '바다 건너 친구', gift: null, text: '멀리서도 정원 소식이 반가워요. 저도 창가에 작은 화분을 하나 두었어요.' },
 };
 const LETTER_KEYS = Object.keys(LETTERS);
 const letterCount = st => Object.keys((st.dex && st.dex.letter) || {}).filter(k => LETTERS[k]).length;
@@ -1158,7 +1158,7 @@ function sendGift(st, k, ctx) {
   if (!G) return no('없는 선물이에요');
   const g = giftsOf(st);
   if (g.sent[k]) return no(`${josa(G.name, '은/는')} 올해 이미 보냈어요 · 내년에 다시`);
-  if (st.money < G.price) return no('돈이 모자라요');
+  if (!(st.money >= G.price)) return no('돈이 모자라요');
   st.money -= G.price; g.sent[k] = true;
   bump(st, 'gifts');
   (st.letterPending = st.letterPending || []).push({ gift: k, due: calendar(st.virtual).abs + 1 });
@@ -1170,7 +1170,10 @@ function deliverLetters(st, cal, ctx) {           // onSlot: 때가 된 답장
   st.letterPending = st.letterPending.filter(p => cal.abs < p.due);
   st.dex.letter = st.dex.letter || {};
   for (const p of due) {
-    const left = LETTER_KEYS.filter(k => !st.dex.letter[k]);
+    if (!GIFTS[p.gift]) continue;                 // 모르는 선물(손댄 파일)은 건너뜀 (QA 9회차)
+    const left0 = LETTER_KEYS.filter(k => !st.dex.letter[k]);
+    // 보낸 선물에 맞는 편지 → 어느 선물에나 맞는 편지 → 남은 아무 편지 (QA 9회차: 꽃다발에 차 이야기가 오던 것)
+    const left = [left0.filter(k => LETTERS[k].gift === p.gift), left0.filter(k => !LETTERS[k].gift), left0].find(a => a.length) || [];
     if (left.length) {
       const k = left[Math.floor(mineRng(hashStr(`${st.gardenId || 'g'}|letter|${S(st, 'gifts')}|${p.gift}`))() * left.length)];
       st.dex.letter[k] = true;
@@ -1189,9 +1192,9 @@ function yearScore(st) {
   const prev = st.records[0], ys = st.yearSeen || {};
   const decos = Math.min(20, (st.decos || []).filter(d => d.x != null).length);
   const orders = S(st, 'orders') - ((prev && prev.orders) || 0);
-  const gifts = st.gifts && st.gifts.year === yearOf(st, calendar(st.virtual)) ? n0(st.gifts.sent) : 0;
+  const gifts = Math.min(3, S(st, 'gifts') - ((prev && prev.giftsTotal) || 0));   // 꽃잠에 보낸 것도 다음 기록에 (QA 9회차)
   const parts = { lands: lands * 10, flowers: alive, bloom: n0(ys.bloom) * 4, blend: n0(ys.blend) * 3, honey: n0(ys.honey) * 2, decos: decos * 3, orders: orders * 5, gifts: gifts * 10 };   // gifts: P26-03
-  return { total: Object.values(parts).reduce((a, b) => a + b, 0), parts, orders: S(st, 'orders') };
+  return { total: Object.values(parts).reduce((a, b) => a + b, 0), parts, orders: S(st, 'orders'), giftsTotal: S(st, 'gifts') };
 }
 
 // ---------------------------------------------------------------- ⛏️ 정원 뒤 광산 (P24, 10-24)

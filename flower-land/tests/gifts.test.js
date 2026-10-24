@@ -34,6 +34,16 @@ st.dex.letter = Object.fromEntries(E.LETTER_KEYS.map(k => [k, true])); E.sendGif
 E.advance(st, E.calendar(st.virtual).slotEnd + 0.1 * H, { live: false });
 check(E.letterCount(st) === 12 && st.log.some(l => l.type === 17 && l.text.includes('고맙다는 답장')), '다 모은 뒤엔 고맙다는 답장 한 줄');
 
+console.log('[QA 9회차]');
+{ const s = E.create(at(c => c.month === 4 && !c.frozen), () => 0.5); s.money = 1e5; E.sendGift(s, 'bouquet'); E.advance(s, E.calendar(s.virtual).slotEnd + 0.1 * H, { live: false });
+  const k = Object.keys(s.dex.letter)[0]; check(E.LETTERS[k].gift === 'bouquet', '꽃다발엔 꽃다발 답장부터 (' + E.LETTERS[k].from + ')'); }
+{ const s = E.create(at(c => c.month === 4 && !c.frozen), () => 0.5); s.money = 1e5; E.sendGift(s, 'party'); E.advance(s, E.calendar(s.virtual).slotEnd + 0.1 * H, { live: false });
+  check(E.LETTERS[Object.keys(s.dex.letter)[0]].gift === 'party', '잔치엔 잔치 답장부터'); }
+{ const s = E.create(at(c => c.month === 13), () => 0.5); s.money = 1e5; s.records = [{ year: 1, dex: 0, orders: 0, giftsTotal: 0 }]; E.sendGift(s, 'party');
+  check(E.yearScore(s).parts.gifts === 10, '꽃잠(쉼달)에 보낸 선물도 다음 기록 점수에'); }
+{ const s = E.create(at(c => c.month === 4), () => 0.5); s.dex.letter = Object.fromEntries(E.LETTER_KEYS.map(k => [k, true])); s.letterPending = [{ gift: 'nope', due: 0 }];
+  let okk = true; try { E.advance(s, s.virtual + 13 * H); } catch (e) { okk = false; } check(okk, '모르는 선물이 기다리는 깨진 저장도 시간이 흐름'); }
+{ const s = E.create(at(c => c.month === 4), () => 0.5); s.money = NaN; check(!E.sendGift(s, 'teabox').ok, '돈이 NaN이면 못 보냄'); }
 console.log('[예전 저장]');
 const old = JSON.parse(JSON.stringify(E.create(at(c => c.month === 3), () => 0.5))); delete old.gifts; delete old.letterPending; delete old.dex.letter; old.mig = 17;
 const m = E.migrateSave(old);
