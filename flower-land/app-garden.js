@@ -363,6 +363,8 @@ function openMine(tab) {
   root.querySelectorAll('[data-craft]').forEach(x => x.onclick = () => { const r = E.craft(st, x.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openMine('craft'); });
 }
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
+// 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
+const ageText = h => { const m = Math.floor(h / E.MONTH_H); return m >= 14 ? `${Math.floor(m / 14)}년 ${m % 14 ? `${m % 14}달` : ''}`.trim() : flowH(h); };
 function openDecoTile(d) {
   const info = E.decoInfo(d.key);
   let extra = '';
@@ -479,7 +481,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
       <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${flowH(f.lifeH != null ? f.lifeH : f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' ? ` · 🔆 ${E.growRate(st, f)}배로 자라는 중` : ''}</div></div>
+        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H ? ` · 🔆 ${E.growRate(st, f)}배로 자라는 중` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
