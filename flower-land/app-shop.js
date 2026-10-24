@@ -171,7 +171,7 @@ function renderStore(force) {
   const qbar = q => `<span class="qbar"><i style="width:${Math.round(q * 100)}%"></i></span>`;
   const card = gr => {
     const F = FLOWERS[gr.type], now = !cal.frozen && F.sow.includes(cal.month) && gr.g > 0;
-    const comp = gr.ids.filter(id => E.compostable(st.items.find(it => it.id === id)));   // 곧 시들고 품질 5% 이하 → 비료로
+    const comp = gr.ids.filter(id => E.compostable(st.items.find(it => it.id === id), true));   // 곧 시들고 품질 5% 이하 → 비료로
     const exp = gr.ageH < 12 * E.MONTH_H ? E.calendarAfterFlow(st.virtual, 12 * E.MONTH_H - gr.ageH) : null;
     const soon = !gr.packaged && gr.g > 0 && gr.ageH >= 10 * E.MONTH_H;          // 싹 트는 힘이 곧 줄기 시작함
     const expTxt = gr.packaged ? '📦 심을 때까지 그대로' : exp ? `<span title="이때까지 싱싱해요 (그 뒤엔 싹 트는 힘이 줄어요)">🌿 ${relYear(E.yearOf(st, exp))} ${monthName(exp.month)}까지</span>` : `${FORM[F.form].rate} ${Math.round(gr.g * 100)}%`;
@@ -234,7 +234,7 @@ function decoStoreHTML() {
 }
 // 비료로 만들기 확인 창 (P06-16): 씨앗·묘목 › 비료, 몇 개 바꿀지 −/+
 function openCompost(ids, n) {
-  const list = st.items.filter(it => ids.includes(it.id) && E.compostable(it));
+  const list = st.items.filter(it => ids.includes(it.id) && E.compostable(it, true));
   if (!list.length) return;
   const it = list[0], F = FLOWERS[it.type]; n = Math.max(1, Math.min(list.length, n || list.length));
   const body = `<div class="rc">

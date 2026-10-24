@@ -39,12 +39,12 @@ const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.s
 const NEEDS = [['water', '💧', '목마른 꽃'], ['weed', '🌿', '잡초 난 꽃'], ['prune', '✂️', '가지 칠 수 있는 꽃'], ['fert', '🌱', '비료 줄 수 있는 꽃'], ['harvest', '🧺', '꽃이 핀 꽃']];
 function renderToolbar(force) {
   const pl = plantable(), cal = E.calendar(st.virtual), need = careNeed(cal);
-  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy]);
+  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy, !!ui.zoom]);
   if (!force && ui.sigs.toolbar === sig) return;
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>`;   // P24 광산 입구
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -67,6 +67,7 @@ function renderToolbar(force) {
 }
 $('#needs').addEventListener('click', e => {
   if (e.target.closest('[data-mine]')) return openMine();
+  if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom); renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];
   if (!careNeed(E.calendar(st.virtual))[t]) return feedback(`지금은 ${nm}이 없어요`);
@@ -480,7 +481,7 @@ function renderStatus(force) {
     ${stagePath}
     <div class="sx-stats">
       <div title="${qualityWord(f.q, f.stage === 'bloom')}"><span class="lbl">품질</span><b>${E.pct(f.q)}%</b><span class="mini"><i style="width:${E.pct(f.q)}%;background:#d39b12"></i></span><span class="sub">다음 달 ${nextArrow} ${E.pct(next)}%</span></div>
-      <div title="${vigorWord(v, f.thirstH > 0)}"><span class="lbl">기운</span><b style="color:${vCol}">${Math.round(v)}%</b><span class="mini"><i style="width:${Math.round(v)}%;background:${vCol}"></i></span><span class="sub">${vigorWord(v, f.thirstH > 0)}</span></div>
+      <div title="${vigorWord(v, f.thirstH > 0, f.waterH > 18)}"><span class="lbl">기운</span><b style="color:${vCol}">${Math.round(v)}%</b><span class="mini"><i style="width:${Math.round(v)}%;background:${vCol}"></i></span><span class="sub">${vigorWord(v, f.thirstH > 0, f.waterH > 18)}</span></div>
       <div title="꽃이 바꾸는 땅의 범위"><span class="lbl">땅</span><b>${E.qualityRadius(f)}칸</b><span class="mini land"><i style="background:${LANDS[land].color}"></i></span><span class="sub">${LANDS[land].name}</span></div>
     </div>
     ${note ? `<div class="sx-note">💬 ${note}</div>` : ''}

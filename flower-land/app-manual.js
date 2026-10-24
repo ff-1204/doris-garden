@@ -148,7 +148,7 @@ function renderSettings() {
 
 // P22-02 이웃의 화분: 첫 방문 · 처음부터 다시 시작할 때 한 번
 function giveGift() {
-  const r = E.giftPot(st, ctx, ui.giftWant); ui.giftWant = null;
+  const r = E.giftPot(st, ctx, ui.giftWant); ui.giftWant = null; ui.titleHold = performance.now() + 2600;
   if (r.ok && r.flower) { ui.selected = r.flower.id; ui.sheetOpen = true; }
   return r;
 }
@@ -157,7 +157,7 @@ function onboarding() {
   openModal('도리의 정원', `<div class="stack" style="gap:10px">
     <div class="ob-vis">
       <figure>${landPixel()}<figcaption><b>꽃이 땅을 바꿔요</b>처음엔 모두 황무지. 심은 꽃 둘레가 그 꽃이 좋아하는 땅이 돼요</figcaption></figure>
-      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요)</figcaption></figure>
+      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요) · 쉼 · 샘 = 쉼달 · 꽃샘달</figcaption></figure>
     </div>
     <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
     ${st.gift == null ? `<p class="ob-care">${spriteImg((ui.giftWant = E.GIFT_BY_MONTH[cal.month]), 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요</p>` : ''}

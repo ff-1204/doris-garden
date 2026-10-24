@@ -25,7 +25,7 @@ const realH = h => {
   const min = Math.max(1, Math.round(h * 60)), d = Math.floor(min / 1440), hh = Math.floor(min % 1440 / 60), mm = min % 60;
   return d ? `${d}일 ${hh}시간` : hh ? `${hh}시간 ${mm}분` : `${mm}분`;
 };
-const vigorWord = (v, thirsty) => v >= 80 ? '생생해요' : v >= 50 ? '괜찮아요' : thirsty ? '조금 목말라 보여요' : '기운이 조금 없어 보여요';       // P14-08-02-a (10-24: 목마를 때만 "목말라")
+const vigorWord = (v, thirsty, watered) => v >= 80 ? '생생해요' : v >= 50 ? '괜찮아요' : thirsty ? '조금 목말라 보여요' : watered ? '물을 마셨어요 · 기운이 차차 올라요' : '기운이 조금 없어 보여요';       // P14-08-02-a (10-24: 목마를 때만 "목말라")
 const qualityWord = (q, bloom) => ['돌봄이 필요해 보여요', '돌봄이 필요해 보여요', '조금 지쳐 보여요', '잘 자라고 있어요', '곱게 자랐어요', bloom ? '아주 곱게 피었어요' : '아주 곱게 자랐어요'][E.stars(q)];
 const homeLand = F => E.classify(F.t, F.m);
 const SPR = window.FLOWER_SPRITES, spriteCache = {};
@@ -436,7 +436,7 @@ function feedback(msg, warn, action) {
   clearTimeout(feedbackTimer);
   for (const el of [snack, top]) { el.hidden = true; el.innerHTML = ''; }
   if (!msg) return;
-  const el = ui.tab === 'garden' ? snack : top;               // 정원은 지도 위 풍선, 다른 탭은 위쪽 줄
+  const el = ui.tab === 'garden' && !ui.zoom ? snack : top;               // 정원은 지도 위 풍선, 다른 탭은 위쪽 줄
   el.innerHTML = `<span>${warn ? '⚠️' : '✓'} ${esc(msg)}</span>${action ? `<button type="button">${esc(action.label)}</button>` : ''}`;
   el.classList.toggle('warn', !!warn); el.hidden = false;
   const b = el.querySelector('button'); if (b) b.onclick = () => { el.hidden = true; action.fn(); };
@@ -462,6 +462,7 @@ function guideSub(k, need) {
   if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 누르고 꽃 둘레의 💧를 눌러요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
   if (k === 'harvested' && !need.harvest) return sub('꽃이 피면 노란 점이 생겨요');
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
+  if (k === 'sold' && st.gift != null && st.gift >= 0 && st.petals.length >= 2) return sub('꽃잎 하나는 🌾 꽃방에 널고, 하나는 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)부터 꽃잠까지');
   if (k === 'sold') return sub(st.starterGift ? '블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요' : `꽃잎을 말려 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)에 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);   // P22-04
   if (k === 'bought' && E.calendar(st.virtual).frozen) return sub('월요일 아침 6시에 정원이 깨어나면 화원에서 살 수 있어요');
   if (k === 'planted' && E.calendar(st.virtual).frozen) return sub(st.reservations.some(r => !r.done) ? '월요일 아침 6시부터 예약한 꽃이 심을 때에 맞춰 창고로 와요' : '월요일 아침 6시에 정원이 깨어나면 심을 수 있어요');

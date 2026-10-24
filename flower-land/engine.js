@@ -390,7 +390,8 @@ function step(st, dtH, cal, ctx) {
       f.bloomKey = cal.abs;
       st._bloomNew[f.type] = (st._bloomNew[f.type] || 0) + 1;
       if (!st.dex.flower[f.type]) { st.dex.flower[f.type] = true; addLog(st, 9, `도감에 등록: ${F.name}`, ctx); }
-      if (f.origin !== '이웃') (st.ownBloom = st.ownBloom || {})[f.type] = true;   // 직접 심어 피운 꽃 (QA 4회차: 화분 꽃과 6장 퀘스트가 겹치지 않게)
+      if (f.origin !== '이웃') (st.ownBloom = st.ownBloom || {})[f.type] = true;
+      seeYear(st, 'bloom', f.type);   // 직접 심어 피운 꽃 (QA 4회차: 화분 꽃과 6장 퀘스트가 겹치지 않게)
     }
     const { pos, neg } = monthlyChange(st, f);
     f.q = Math.min(1, f.q + pos / 100 * dtH / MONTH_H);
@@ -493,6 +494,7 @@ function recordYear(st, cal, ctx) {
   const sc = yearScore(st), prevBest = st.bestScore || 0;   // P23-02 한 해 정원 평가
   const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, prevBest };
   st.bestScore = Math.max(prevBest, sc.total);
+  st.yearSeen = { bloom: {}, blend: {}, honey: {} };   // 새해에 다시
   st.records.unshift(rec);
   st.records = st.records.slice(0, 10);
   if (ctx && ctx.onRecord) ctx.onRecord(rec);
@@ -572,7 +574,7 @@ function buySupply(st, kind, n) {
 
 // P06-16: 곧 시드는(받은 지 10달 넘은) 씨앗·묘목 중 품질 5% 이하는 비료로 (1개 → 비료 1개)
 const COMPOST_Q = 0.05;
-const compostable = it => !it.packaged && it.ageH >= 10 * MONTH_H && it.q <= COMPOST_Q + 1e-9;
+const compostable = (it, byHand) => !it.packaged && (byHand || it.ageH >= 10 * MONTH_H) && it.q <= COMPOST_Q + 1e-9;
 // P06-16-03: "곧 시들어요" 중 품질 0%(반올림)는 저절로 비료가 됨. 정원 일지에 한 줄
 function autoCompost(st, ctx) {
   const list = st.items.filter(it => compostable(it) && pct(it.q) === 0);
@@ -584,7 +586,7 @@ function autoCompost(st, ctx) {
   return list.length;
 }
 function compostItems(st, ids) {
-  const list = st.items.filter(it => ids.includes(it.id) && compostable(it));
+  const list = st.items.filter(it => ids.includes(it.id) && compostable(it, true));
   if (!list.length) return no('비료로 만들 수 있는 게 없어요');
   for (const it of list) st.items.splice(st.items.indexOf(it), 1);
   addFert(st, list.length);
@@ -689,6 +691,7 @@ function care(st, tool, tiles, ctx) {            // P13
     if (tool === 'harvest') {                                                    // P12-05
       f.harvestKey = cal.abs; st.basket--;
       st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) });
+      if (f.origin === '이웃' && !f.giftPicked) { f.giftPicked = true; st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) }); }   // 화분 첫 수확은 2장 (QA 6회차)
       if (!st.dex.petal[f.type]) { st.dex.petal[f.type] = true; addLog(st, 9, `도감에 등록: ${FLOWERS[f.type].name} 꽃잎`, ctx); } // P08-02-02
     }
   }
@@ -791,6 +794,7 @@ function blend(st, ids, ctx) {
   for (const p of list) st.dried.splice(st.dried.indexOf(p), 1);
   const q = list.reduce((a, p) => a + p.q, 0) / list.length, recipe = blendRecipe(parts, st);
   const name = recipe ? BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
+  seeYear(st, 'blend', recipe || parts.slice().sort().join('+'));
   const b = { id: nid(st), parts, q, recipe, name, hat: list.every(p => isHat(p.q)) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
   st.blends.push(b);
   if (recipe) {
@@ -956,9 +960,9 @@ const CHAPTERS = [
   { key: 'c1', no: 1, name: '첫 꽃밭', title: 't_first', quests: [
     Q('c1_bloom', st => `${FLOWERS[firstFlower(st)].name} 피우기`, st => !!st.dex.flower[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_petal', st => `${FLOWERS[firstFlower(st)].name} 꽃잎 거두기`, st => !!(st.dex.petal || {})[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
-    Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom'),
+    Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom', { need: 'petal' }),
     Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom'),
-    Q('c1_land', st => st.gift != null && st.gift >= 0 ? '첫 땅 만들기' : '초원 만들기', st => st.gift != null && st.gift >= 0 ? LAND_KEYS.some(k => k !== 'barren' && st.dex.land[k]) : !!st.dex.land.grassland, 'garden'),   // 화분을 받은 정원은 어떤 땅이든 (QA 4회차)
+    Q('c1_land', st => st.gift != null && st.gift >= 0 ? '첫 땅 만들기' : '초원 만들기', st => st.gift != null && st.gift >= 0 ? LAND_KEYS.some(k => k !== 'barren' && st.dex.land[k]) : !!st.dex.land.grassland, 'garden', { need: 'land' }),   // 화분을 받은 정원은 어떤 땅이든 (QA 4회차)
     Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', 'cafe'),
   ] },
   { key: 'c2', no: 2, name: '땅 바꾸기', title: 't_land', quests: [
@@ -1079,12 +1083,13 @@ const MEMENTOS = {
 };
 const MEMENTO_KEYS = Object.keys(MEMENTOS);
 const mementoCount = st => Object.keys((st.dex && st.dex.memento) || {}).filter(k => MEMENTOS[k]).length;
-const orderText = o => o.kind === 'tea' ? `★${o.stars} 이상 ${FLOWERS[o.type].tea}` : o.kind === 'recipe' ? '레시피 블렌드 아무거나' : o.kind === 'honey' ? '꿀 넣은 차 아무거나' : '🍃 햇차 아무거나';
+const orderText = o => o.kind === 'tea' ? `★${o.stars} 이상 ${FLOWERS[o.type].tea}` : o.kind === 'recipe' ? '레시피 블렌드 아무거나' : o.kind === 'honey' ? '꿀 넣은 차 아무거나' : o.kind === 'any' ? '차 아무거나 한 잔' : '🍃 햇차 아무거나';
 function orderMatch(o, c) {
   if (o.done) return false;
   if (o.kind === 'tea') return c.kind === 'tea' && c.type === o.type && stars(c.q) >= o.stars;
   if (o.kind === 'recipe') return c.kind === 'blend' && !!c.recipe;
   if (o.kind === 'honey') return !!c.honey;
+  if (o.kind === 'any') return true;              // 아무 차 한 잔 (QA 6회차: 처음 온 사람도 들어줄 수 있게)
   return !!c.hat;
 }
 function makeOrders(st, cal) {
@@ -1092,7 +1097,10 @@ function makeOrders(st, cal) {
   // 차 주문은 만든 적 있는 티백 꽃 중에서 (없으면 이웃의 화분 꽃)
   const known = FLOWER_KEYS.filter(k => (st.dex.teabag || {})[k] || st.teas.some(x => x.type === k));
   const pool = known.length ? known : [firstFlower(st)];
-  const kinds = ['tea', 'recipe', 'hat'];
+  // 처음엔 들어줄 수 있는 것만 (QA 6회차): 레시피는 블렌드를 만든 적이 있으면, 햇차는 ★5를 본 적이 있으면, 꿀은 거둔 적이 있으면
+  const kinds = ['tea', 'any'];
+  if (Object.keys(st.dex.blend || {}).length) kinds.push('recipe');
+  if (S(st, 'hatCups') > 0 || st.teas.some(x => x.hat) || st.dried.some(p => isHat(p.q)) || st.petals.some(p => isHat(p.q))) kinds.push('hat');
   if (Object.keys(st.dex.honey || {}).length) kinds.push('honey');
   const out = [], key = o => o.kind === 'tea' ? `tea|${o.type}` : o.kind;   // 같은 꽃 차 · 같은 종류는 한 장만 (QA 5회차)
   for (let i = 0, tries = 0; out.length < 3 && tries < 40; tries++) {
@@ -1105,26 +1113,29 @@ function makeOrders(st, cal) {
 }
 function fillOrder(st, c) {
   const os = st.orders && st.orders.list; if (!os) return null;
-  const hard = x => x.kind === 'tea' ? 10 + x.stars : x.kind === 'honey' ? 5 : x.kind === 'recipe' ? 4 : 3;   // 까다로운 쪽지부터 (QA 5회차)
+  const hard = x => x.kind === 'tea' ? 10 + x.stars : x.kind === 'honey' ? 5 : x.kind === 'recipe' ? 4 : x.kind === 'hat' ? 3 : 1;   // 까다로운 쪽지부터 (QA 5회차)
   const o = os.filter(x => orderMatch(x, c)).sort((a, b) => hard(b) - hard(a))[0]; if (!o) return null;
   o.done = true; bump(st, 'orders');
   st.dex.memento = st.dex.memento || {};
   const left = MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
   let gift = null;
   if (left.length) { const rnd = mineRng(hashStr(`${st.gardenId || 'g'}|memento|${S(st, 'orders')}`)); gift = left[Math.floor(rnd() * left.length)]; st.dex.memento[gift] = true; }
-  addLog(st, 15, gift ? `${orderText(o)} 주문을 받은 손님이 ${josa(MEMENTOS[gift].name, '을/를')} 두고 갔어요` : `${orderText(o)} 주문을 받은 손님이 고맙다고 했어요`);
+  else addFert(st, 1);                            // 기념품을 다 모은 뒤엔 손님이 비료 한 줌 (QA 6회차)
+  addLog(st, 15, gift ? `${orderText(o)} 주문을 받은 손님이 ${josa(MEMENTOS[gift].name, '을/를')} 두고 갔어요` : `${orderText(o)} 주문을 받은 손님이 고맙다며 비료 한 줌을 두고 갔어요`);
   return { order: o, gift };
 }
 
 // ---------------------------------------------------------------- 🏅 한 해 정원 평가 (P23-02, 10-24)
-// 쉼달 기록 때 점수 — 땅 가짓수 ×10 · 살아 있는 꽃(80까지) · 그해 늘어난 도감 칸 ×2 · 정원에 놓은 장식(20까지) ×3 · 그해 손님 주문 ×5. 남과 겨루지 않고 내 기록과만
+// 쉼달 기록 때 점수 — 땅 가짓수 ×10 · 살아 있는 꽃(80까지) · 올해 핀 꽃 가짓수 ×4 · 만든 블렌드 가짓수 ×3 · 거둔 꿀 가짓수 ×2 · 정원에 놓은 장식(20까지) ×3 · 올해 손님 주문 ×5. 남과 겨루지 않고 내 기록과만
+// 해마다 다시 채우는 것 (QA 6회차: 도감 늘어난 칸은 오래 할수록 0이라 점수가 해마다 떨어졌음) — 올해 핀 꽃 · 만든 블렌드 · 거둔 꿀 가짓수
+function seeYear(st, k, v) { const y = st.yearSeen = st.yearSeen || { bloom: {}, blend: {}, honey: {} }; (y[k] = y[k] || {})[v] = true; }
 function yearScore(st) {
   const counts = landCounts(st), lands = LAND_KEYS.filter(k => k !== 'barren' && counts[k] > 0).length;
   const alive = Math.min(80, st.flowers.filter(f => !f.withered).length);
-  const prev = st.records[0], dexGain = Math.max(0, dexCount(st) - (prev ? prev.dex : 0));
+  const prev = st.records[0], ys = st.yearSeen || {};
   const decos = Math.min(20, (st.decos || []).filter(d => d.x != null).length);
   const orders = S(st, 'orders') - ((prev && prev.orders) || 0);
-  const parts = { lands: lands * 10, flowers: alive, dex: dexGain * 2, decos: decos * 3, orders: orders * 5 };
+  const parts = { lands: lands * 10, flowers: alive, bloom: n0(ys.bloom) * 4, blend: n0(ys.blend) * 3, honey: n0(ys.honey) * 2, decos: decos * 3, orders: orders * 5 };
   return { total: Object.values(parts).reduce((a, b) => a + b, 0), parts, orders: S(st, 'orders') };
 }
 
@@ -1227,6 +1238,9 @@ const CRAFTS = {
   stepstone: { name: '징검돌', need: { stone: 8 }, deco: 'stepstone' },            // 10-24 밸런스(QA 4회차): 돌 값을 2~2.5배로
   basin: { name: '돌 물확', need: { stone: 20 }, deco: 'basin' },
   stonelamp: { name: '석등', need: { stone: 30, quartz: 2 }, deco: 'stonelamp' },
+  fossilcase: { name: '화석 진열장', need: { shell: 1, fern: 1, leaf: 1, bone: 1, stone: 10 }, deco: 'fossilcase' },
+  amberlamp: { name: '호박 등', need: { amber: 3, stone: 15 }, deco: 'amberlamp' },
+  oldpot: { name: '옛 씨앗 화분', need: { oldseed: 2, dirt: 10 }, deco: 'oldpot' },
   cheongja: { name: '청자 찻잔', need: { jade: 2 }, cup: 'cheongja' },               // 비취는 9층부터라 2개로
   buncheong: { name: '분청 찻잔', need: { feldspar: 4, mica: 2 }, cup: 'buncheong' },
   kkot: { name: '꽃무늬 찻잔', need: { amethyst: 2, quartz: 4 }, cup: 'kkot' },
@@ -1271,6 +1285,7 @@ function giftPot(st, ctx, want) {                // want: 안내 창에서 보�
   const tl = st.tiles[f.y * W + f.x]; tl.t = F.t; tl.m = F.m;          // 화분 흙째 옮겨 심음
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
+  if (teaShopOpen(cal)) makeOrders(st, cal);      // 쪽지는 화분 꽃을 알고 나서 다시 (QA 6회차 높음)
   st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
   addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요`, ctx);
   return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요`, { flower: f });
@@ -1295,6 +1310,9 @@ const DECOS = {
   moonlamp: { name: '달 초롱', month: 13, price: 6000, desc: '꽃잠 밤을 지키는 초롱' },
   pavilion: { name: '정자', month: 14, price: 60000, desc: '정원을 내려다보는 쉼터' },
   hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, func: true, desc: '둘레 2칸에 핀 꽃에서 달마다 꿀을 모아요' },   // P18 여름의 꿀 채집 (10-24)
+  fossilcase: { name: '화석 진열장', month: 0, months: [], craft: true, desc: '광산에서 찾은 화석 네 가지' },   // 10-24 QA 6회차: 광산 재료 쓸 곳
+  amberlamp: { name: '호박 등', month: 0, months: [], craft: true, desc: '호박빛이 은은한 등' },
+  oldpot: { name: '옛 씨앗 화분', month: 0, months: [], craft: true, desc: '무엇이 필지 모르는 오래된 씨앗' },
   barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, func: true, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
 };
 const DECO_KEYS = Object.keys(DECOS);
@@ -1380,7 +1398,7 @@ function takeHoney(st, id, ctx) {                 // 벌통의 꿀을 거둬 찻
   st.honey = st.honey || {}; st.dex.honey = st.dex.honey || {};
   const n = d.honey.length;
   for (const k of d.honey) {
-    st.honey[k] = (st.honey[k] || 0) + 1;
+    st.honey[k] = (st.honey[k] || 0) + 1; seeYear(st, 'honey', k);
     if (!st.dex.honey[k]) { st.dex.honey[k] = true; addLog(st, 9, `도감에 등록: 🍯 ${honeyName(k)}`, ctx); }
   }
   d.honey = [];
@@ -1478,6 +1496,7 @@ const MIGRATIONS = [
   ['⛏️ 광산 · 광산 도감 (P24, 10-24)', s => { if (!s.mine) s.mine = newMine(); s.dex.mine = s.dex.mine || {}; }],
   ['💌 손님 주문 · 기념품 도감 · 🏅 정원 점수 (P23, 10-24)', s => { if (s.orders === undefined) s.orders = null; s.dex.memento = s.dex.memento || {}; if (s.bestScore === undefined) s.bestScore = 0; }],
   ['직접 피운 꽃 (QA 4회차, 10-24): 지금까지 핀 꽃은 화분 꽃만 빼고 직접 피운 것으로', s => { if (!s.ownBloom) { s.ownBloom = {}; for (const k of Object.keys(s.dex.flower || {})) if (!(s.gift != null && s.gift >= 0 && s.firstFlower === k)) s.ownBloom[k] = true; } }],
+  ['올해 본 것 (정원 점수, QA 6회차)', s => { if (!s.yearSeen) s.yearSeen = { bloom: {}, blend: {}, honey: {} }; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {

@@ -74,6 +74,8 @@ function questWhen(q, cal) {
   const w = E.questWhenOf(q, st);
   if (!w) return { now: true };
   if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: `${SEASON_IC[3]} 12월부터` };
+  if (w.need === 'petal') return st.petals.length || st.drying.length ? { now: true } : { now: false, label: '꽃잎을 거두면' };   // QA 6회차: 정확한 "지금"
+  if (w.need === 'land') return { now: false, label: '꽃 둘레 땅이 바뀌면 (2달쯤)' };
   const F = FLOWERS[w.sow || w.bloom];
   const next = test => { const n = E.untilMonth(st.virtual, c => !c.frozen && test(c)); return n ? `${monthIc(n.cal.month)} ${monthName(n.cal.month)}부터` : ''; };
   if (w.bloom && st.flowers.some(f => f.type === F.key && !f.withered)) return F.bloom.includes(cal.month) && !cal.frozen ? { now: true } : { now: false, label: next(c => F.bloom.includes(c.month)).replace('부터', '에 펴요') };
@@ -142,9 +144,10 @@ function titleCard(k) {
 // 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
 function showNewTitles() {
   if (!st._newTitles || !st._newTitles.length || $('#modalRoot').innerHTML) return;
+  if (ui.titleHold && performance.now() < ui.titleHold) return;   // 첫 화분을 먼저 보고 (QA 6회차)
   const k = st._newTitles.shift(), T = E.TITLES[k], ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), hb = hiddenBlendOf(k);
   openModal('🏅 새 칭호', `<div class="ttl-pop t-${T.tier}"><canvas width="22" height="22" id="ttlAnim" class="ttl-anim" role="img" aria-label="${esc(T.name)} 칭호 문장"></canvas>
-    <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? `${ch.no}장 ${ch.name}을 마쳤어요` : T.cond}</small>
+    <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? (ch.no === 0 ? '도리의 정원에 처음 왔어요' : `${ch.no}장 ${ch.name}을 마쳤어요`) : T.cond}</small>
     ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}<p class="note">🪴 「${T.name} 문장」 장식이 📦 창고에 들어왔어요</p></div>`,
     [{ label: '닫기', act: () => { closeModal(); save(); showNewTitles(); } }, { label: '대표로 걸기', primary: true, act: () => { E.setTitleOn(st, k); closeModal(); save(); renderAll(true); } }]);
   const x = $('#ttlAnim').getContext('2d'); let r = 0;

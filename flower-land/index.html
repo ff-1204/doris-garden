@@ -547,6 +547,11 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .shop-news button:hover { text-decoration: underline; }
 .rv-badge { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 12.5px; margin-right: 4px; }
 .shop-news > .rv-badge + *::before { content: none; }
+/* QA 6회차: 모바일 정원 확대 — 두 배로 넓혀 옆으로 밀어 봄 */
+.zoom-chip { --k: #6a7f8f; display: none; }
+@media (max-width: 640px) { .zoom-chip { display: inline-flex; } }
+.mapwrap.zoom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.mapwrap.zoom .mapframe { width: 200%; }
 /* P23 손님 주문 · 정원 평가 (10-24) */
 .orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; }
 .order { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: center; padding: 8px 10px; background: #fbf6e9; color: #4a3a28; border: 1px dashed #c9b48a; border-radius: 6px; font-size: 13px; word-break: keep-all; }

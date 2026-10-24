@@ -22,11 +22,26 @@ function renderToday(force) {
   } else if (nq) {
     const n = nq.c.quests.filter(q => st.journal.done[q.key] != null).length;
     html += `<div class="guide jguide"><span class="gd-t">📜 ${nq.c.no}장 ${nq.c.name} <span class="data">${n} / ${nq.c.quests.length}</span></span>
-      <span class="gd-now"><b>${E.questName(nq.q, st)}</b><small>${nq.w.now ? '지금 할 수 있어요' : nq.w.label || '때가 되면'}</small></span>
+      <span class="gd-now"><b>${E.questName(nq.q, st)}</b><small>${nq.w.now ? '지금 할 수 있어요' : nq.w.label || '때가 되면'}${nextReason()}</small></span>
       <button type="button" class="btn small" data-do="journal">📔 도감일지</button>
       <button type="button" class="x" data-do="hideJournal" aria-label="퀘스트 안내 닫기" title="안내 닫기 (도감일지에서는 계속 보여요)">✕</button></div>`;
   }
   $('#today').innerHTML = html;
+}
+// "다음에 올 이유" (QA 6회차): 곧 필 꽃 · 광산 기력이 다 차는 때
+function nextReason() {
+  const out = [], cal = E.calendar(st.virtual);
+  let best = null;
+  for (const f of st.flowers) {
+    if (f.withered || f.stage === 'bloom') continue;
+    const F = FLOWERS[f.type], n = E.untilMonth(st.virtual, c => !c.frozen && F.bloom.includes(c.month));
+    if (n && f.ageH + n.hours >= F.mature * E.MONTH_H && (!best || n.hours < best.h)) best = { F, h: n.hours, m: n.cal.month };
+  }
+  if (best && best.h < 72) out.push(`🌸 ${josa(best.F.name, '이/가')} ${monthName(best.m)}(${realH(best.h / (st.speed || 1))} 뒤)에 펴요`);
+  const m = E.mineOf(st);
+  if (m.energy < E.MINE_MAX_E) out.push(`⛏️ 기력 ${realH(((E.MINE_MAX_E - m.energy) * E.MINE_REGEN_H - m.regenH) / (st.speed || 1))} 뒤 가득`);
+  else out.push('⛏️ 광산 기력이 가득해요');
+  return out.length && !cal.frozen ? ` · 다음: ${out.join(' · ')}` : (out.length ? ` · ${out.join(' · ')}` : '');
 }
 $('#today').addEventListener('click', e => {
   const b = e.target.closest('[data-do]'); if (!b) return;
