@@ -62,7 +62,7 @@ function openSellConfirm(cupIds, counts) {   // 판매는 ☕ 찻잔에서만 (P
   const cal = E.calendar(st.virtual), cups = (st.cups || []).filter(c => cupIds.includes(c.id));
   if (!cups.length) return;
   const val = c => E.cupValue(st, c, cal);
-  const ckey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal)].join('|');
+  const ckey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal), c.honey || ''].join('|');
   const groups = groupType(cups, ckey).map(g => ({ ...g, k: ckey(g), fresh: g.kind === 'tea' && E.isFresh(st, g, cal), cold: E.cupCold(g, cal) })).sort((a, b) => a.cold - b.cold);
   // 줄마다 몇 잔 팔지 (기본은 전부). 고른 수만큼 품질 좋은 찻잔부터
   counts = counts || Object.fromEntries(groups.map(g => [g.k, g.ids.length]));
@@ -73,7 +73,7 @@ function openSellConfirm(cupIds, counts) {   // 판매는 ☕ 찻잔에서만 (P
   const body = `<div class="rc">
     <div class="rc-list sell-list">${groups.map(g => { const c = g, vs = cups.filter(x => g.ids.includes(x.id)).map(val), sum = best(g).reduce((a, x) => a + val(x), 0);
       return `<div class="rc-item sell-item ${counts[g.k] ? '' : 'off'}"><span class="rc-art">${spriteImg(c.kind === 'blend' ? c.parts[0] : c.type, 'tea', 40, false, '')}</span>
-        <span class="rc-main"><b>${c.kind === 'blend' ? `${c.recipe ? '✨ ' : ''}${c.name}` : FLOWERS[c.type].tea}${c.kind === 'blend' ? ' <span class="chip fresh-chip blend-chip">🫖 블렌드</span>' : teaTags(g, true)}${g.cold ? ' <span class="chip cold-chip">🧊 식은 차 −50%</span>' : ''}</b><small><span class="stars">${starStr(g.q)}</span> · 한 잔 ${wonRange(Math.min(...vs), Math.max(...vs))} · ${g.ids.length}잔 중</small></span>
+        <span class="rc-main"><b>${c.honey ? '🍯 꿀 ' : ''}${c.kind === 'blend' ? `${c.recipe ? '✨ ' : ''}${c.name}` : FLOWERS[c.type].tea}${c.kind === 'blend' ? ' <span class="chip fresh-chip blend-chip">🫖 블렌드</span>' : teaTags(g, true)}${g.cold ? ' <span class="chip cold-chip">🧊 식은 차 −50%</span>' : ''}</b><small><span class="stars">${starStr(g.q)}</span> · 한 잔 ${wonRange(Math.min(...vs), Math.max(...vs))} · ${g.ids.length}잔 중</small></span>
         <span class="sell-r">${step(g)}<span class="data">${won(sum)}</span></span></div>`; }).join('')}</div>
     <div class="rc-total"><div class="rc-sum"><b>받을 돈</b><b class="data good">+${won(total)}</b></div></div>
     <div class="rc-pay"><div><span class="muted">가진 돈</span><span class="data">${won(st.money)}</span></div><div><span class="muted">판 뒤</span><b class="data">${won(st.money + total)}</b></div></div></div>`;

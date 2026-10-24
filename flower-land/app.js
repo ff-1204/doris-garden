@@ -251,7 +251,7 @@ function load() {
   if (!raw) return null;
   try { const s = E.migrateSave(JSON.parse(raw)); if (s) return s; } catch (e) { /* 아래에서 보관 */ }
   // 열 수 없는 저장(10-24): 지우지 않고 따로 보관 → 새 정원으로 시작해도 원본은 남음, 설정에서 내려받을 수 있음
-  try { localStorage.setItem(KEY + '-broken', raw); } catch (e) { /* 보관도 못 하면 어쩔 수 없음 */ }
+  try { if (!localStorage.getItem(KEY + '-broken')) localStorage.setItem(KEY + '-broken', raw); } catch (e) { /* 보관도 못 하면 어쩔 수 없음 */ }   // 먼저 보관한 것을 덮어쓰지 않음
   window.__brokenSave = true;
   return null;
 }
@@ -380,6 +380,18 @@ function undoImport() {
   if (!g) return feedback('되돌릴 정원이 없어요', true);
   try { localStorage.removeItem(UNDO_KEY); } catch (e) { /* 무시 */ }
   swapGarden(g, '↩︎ 불러오기 전으로 되돌렸어요');
+}
+// 열지 못한 예전 정원 (10-24): 알림 창 · 설정에서 파일로 내려받기 · 지우기
+const BROKEN_KEY = KEY + '-broken';
+const brokenRaw = () => { try { return localStorage.getItem(BROKEN_KEY); } catch (e) { return null; } };
+function downloadBroken() {
+  const raw = brokenRaw(); if (!raw) return;
+  const a = document.createElement('a'), url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
+  a.href = url; a.download = '도리의정원_열지못한정원.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function brokenNotice(then) {
+  openModal('🧰 예전 정원을 열지 못했어요', `<p>저장된 정원을 여는 중에 문제가 생겨 새 정원으로 시작했어요.</p><p class="muted">예전 정원은 지우지 않고 따로 보관했어요. 파일로 내려받아 운영자(dorimhan@kakao.com)에게 보내 주시면 살펴볼게요 · ⚙️ 설정 › 💾 저장에서도 받을 수 있어요</p>`,
+    [{ label: '닫기', act: () => { closeModal(); if (then) then(); } }, { label: '💾 내려받기', primary: true, act: () => { downloadBroken(); closeModal(); if (then) then(); } }]);
 }
 const undoSummary = () => { try { const g = JSON.parse(localStorage.getItem(UNDO_KEY)); return g && g.tiles ? E.saveSummary(g) : null; } catch (e) { return null; } };
 

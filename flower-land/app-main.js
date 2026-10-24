@@ -101,5 +101,6 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.addEventListener('pagehide', save);
 
 resize(); renderAll(true);
-if (!st.onboarded) onboarding();
+if (window.__brokenSave) brokenNotice(() => { if (!st.onboarded) onboarding(); });
+else if (!st.onboarded) onboarding();
 requestAnimationFrame(frame);

@@ -89,10 +89,10 @@ function renderShop(force) {
       <button type="button" class="btn primary" data-act="reserve" ${cart.length && !short ? '' : 'disabled'}>예약</button></div>`;
   // P17-16 🪴 이달의 장식: 달마다 하나, 그 달에만 (꽃잠에도)
   const decoNow = E.decoOffer(cal), decoNext = E.DECO_KEYS.find(k => E.DECOS[k].month === MONTHS[(cal.idx + 1) % MONTHS.length]);
-  const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">${monthName(cal.month)}에만 들어와요 · 정원에 놓아 꾸며요</span></div>
+  const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">달마다 바뀌어요 · 정원에 놓아 꾸며요</span></div>
     <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">땅 · 꽃에는 영향이 없어요${decoNext ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요 · 땅 · 꽃에는 영향이 없어요${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   $('#p-shop').innerHTML = `<div class="stack">
     ${cal.frozen ? rvView : saleView}${decoSection}</div>`;

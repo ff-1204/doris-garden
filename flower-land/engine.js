@@ -858,13 +858,14 @@ function buyDecor(st, kind, key) {                // kind: 'cup' | 'sign' — �
   if (kind !== 'cup' && kind !== 'sign') return no('없는 물건이에요');
   const sh = shopOf(st), list = kind === 'cup' ? CUP_SETS : SIGNS, own = kind === 'cup' ? sh.cups : sh.signs, it = list[key];
   if (!it || !Object.prototype.hasOwnProperty.call(list, key)) return no('없는 물건이에요');
-  if (!own.includes(key)) {
+  const bought = !own.includes(key);
+  if (bought) {
     if (st.money < it.price) return no('돈이 모자라요');
     st.money -= it.price; own.push(key);
   }
   sh[kind] = key;
   const nm = kind === 'cup' ? `${it.name} 찻잔` : it.name;
-  return ok(`${josa(nm, '으로/로')} 바꿨어요`);
+  return ok(bought ? `${josa(nm, '을/를')} 사서 바꿨어요` : `${josa(nm, '으로/로')} 바꿨어요`);
 }
 function autoSell(st, cal, dtH, ctx) {
   st.cups = st.cups || [];
