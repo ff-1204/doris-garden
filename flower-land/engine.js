@@ -965,7 +965,7 @@ const CHAPTERS = [
     Q('c1_bloom', st => `${FLOWERS[firstFlower(st)].name} 피우기`, st => !!st.dex.flower[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_petal', st => `${FLOWERS[firstFlower(st)].name} 꽃잎 거두기`, st => !!(st.dex.petal || {})[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom', { need: 'petal' }),
-    Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom'),
+    Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom', { need: 'petal' }),
     Q('c1_land', st => st.gift != null && st.gift >= 0 ? '첫 땅 만들기' : '초원 만들기', st => st.gift != null && st.gift >= 0 ? LAND_KEYS.some(k => k !== 'barren' && st.dex.land[k]) : !!st.dex.land.grassland, 'garden', { need: 'land' }),   // 화분을 받은 정원은 어떤 땅이든 (QA 4회차)
     Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', 'cafe'),
   ] },
@@ -1134,7 +1134,7 @@ function fillOrder(st, c) {
 // 오래 하면 남는 돈을 해마다 되풀이해 쓰는 곳. 종류마다 한 해에 한 번, 다음 달에 답장 편지(12통 도감). 돈만 씀 — 수입 · 값 영향 없음
 const GIFTS = {
   bouquet: { name: '꽃다발', ic: '💐', price: 8000, desc: '이웃집 식탁에 놓을 꽃다발' },
-  teabox: { name: '차 한 상자', ic: '🍵', price: 15000, desc: '정원에서 만든 차를 곱게 담아' },
+  teabox: { name: '차 한 상자', ic: '🍵', price: 15000, desc: '고운 차 상자를 사서 보내요' },
   party: { name: '정원 잔치', ic: '🎉', price: 40000, desc: '이웃을 불러 차와 과자를 나눠요' },
 };
 const GIFT_KEYS = Object.keys(GIFTS);

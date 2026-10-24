@@ -111,23 +111,25 @@ function openDexDetail(kind, k) {
 
 // ---------------------------------------------------------------- 창
 function openModal(title, html, buttons) {
+  ui.onDismiss = null;                            // 닫기(✕ · 바깥 · Esc)에 할 일은 창마다 새로 (QA 15회차)
   $('#modalRoot').innerHTML = `<div class="overlay" data-close="1"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
     <header><h2>${esc(title)}</h2><button type="button" class="iconbtn" data-close="1" aria-label="닫기">✕</button></header>
     <div class="content">${html}</div>
     <footer>${(buttons || []).map((b, i) => `<button type="button" class="btn ${b.primary ? 'primary' : ''}" data-mb="${i}">${esc(b.label)}</button>`).join('')}</footer></div></div>`;
   const root = $('#modalRoot');
   root.onclick = e => {
-    if (e.target.dataset.close) return closeModal();
+    if (e.target.dataset.close) return dismissModal();
     const b = e.target.closest('[data-mb]'); if (b) buttons[+b.dataset.mb].act();
   };
   const first = root.querySelector('[data-mb]:last-child') || root.querySelector('[data-close]');
   if (first) first.focus();
 }
+function dismissModal() { const f = ui.onDismiss; ui.onDismiss = null; closeModal(); if (f) f(); }
 function closeModal() {
   if (ui.gearShow) ui.gearShow.until = performance.now() + 3000;   // P27 장치 범위는 창을 닫은 뒤 3초
   $('#modalRoot').innerHTML = '';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalRoot').innerHTML) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalRoot').innerHTML) dismissModal(); });
 
 // 📜 이벤트 로그 (P11-02-04)
 // 일지 한 줄마다 알림 종류 아이콘 (P11-01 번호)

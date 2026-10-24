@@ -68,7 +68,7 @@ function renderEmpty(force) {
   const sig = [live, cal.frozen, pl, ui.tool].join('|');
   if (!force && ui.sigs.empty === sig) return;
   ui.sigs.empty = sig;
-  if (live || ui.tool === 'plant') { el.hidden = true; el.innerHTML = ''; return; }
+  if (live || ui.tool === 'plant' || ui.tool === 'deco') { el.hidden = true; el.innerHTML = ''; return; }   // 장식 · 장치를 놓는 중에도 숨김 (QA 15회차)
   el.hidden = false;
   const text = cal.frozen ? '정원은 쉬고 있어요. 다음 해에 심을 꽃을 예약해 보세요.'
     : pl ? '창고에 심을 것이 있어요. 심기를 골라 빈 칸을 눌러 보세요.'

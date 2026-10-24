@@ -155,6 +155,7 @@ function giveGift() {
   if (r.ok && r.flower) { ui.selected = r.flower.id; ui.sheetOpen = true; }
   return r;
 }
+function startGarden() { ui.onDismiss = null; if (st.onboarded) return closeModal(); st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); }
 function onboarding() {
   const cal = E.calendar(st.virtual);
   openModal('도리의 정원', `<div class="stack" style="gap:10px">
@@ -166,5 +167,6 @@ function onboarding() {
     ${st.gift == null ? `<p class="ob-care">${spriteImg((ui.giftWant = E.GIFT_BY_MONTH[cal.month]), 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요</p>` : ''}
     <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">돌보지 않아도 꽃은 죽지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
-    [{ label: '시작', primary: true, act: () => { st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); } }]);   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
+    [{ label: '시작', primary: true, act: startGarden }]);
+  ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }
