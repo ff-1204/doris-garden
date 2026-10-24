@@ -389,6 +389,7 @@ function step(st, dtH, cal, ctx) {
       f.bloomKey = cal.abs;
       st._bloomNew[f.type] = (st._bloomNew[f.type] || 0) + 1;
       if (!st.dex.flower[f.type]) { st.dex.flower[f.type] = true; addLog(st, 9, `도감에 등록: ${F.name}`, ctx); }
+      if (f.origin !== '이웃') (st.ownBloom = st.ownBloom || {})[f.type] = true;   // 직접 심어 피운 꽃 (QA 4회차: 화분 꽃과 6장 퀘스트가 겹치지 않게)
     }
     const { pos, neg } = monthlyChange(st, f);
     f.q = Math.min(1, f.q + pos / 100 * dtH / MONTH_H);
@@ -457,7 +458,7 @@ const DAILY_GIFT = 500;                          // P17-13 (10-06)
 function onSlot(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); barrelTick(st); }
+  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); const nb = barrelTick(st); if (nb) addLog(st, 14, `🪣 빗물 통이 꽃 ${nb}포기에 물을 줬어요`, ctx); }
   if (teaShopOpen(cal)) { makeOrders(st, cal); addLog(st, 13, '💌 찻집에 새 주문 쪽지 3장이 왔어요', ctx); }   // P23-01
   else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
@@ -940,6 +941,10 @@ const Q = (key, name, test, go, when) => ({ key, name, test, go, when: when || n
 // P22-01 (10-24): 1장은 "첫 꽃" — 첫 방문에 받은 이웃의 화분(P22-02). 예전 정원 · 화분을 받기 전엔 캐모마일
 const firstFlower = st => st && st.firstFlower && FLOWERS[st.firstFlower] ? st.firstFlower : 'chamomile';
 const firstLand = st => { const F = FLOWERS[firstFlower(st)]; return classify(F.t, F.m); };
+// 화분으로 받은 꽃과 같은 6장 나무 퀘스트는 "직접 심은 ○○" (QA 4회차)
+const giftedSame = (st, k) => st && st.gift != null && st.gift >= 0 && st.firstFlower === k;
+const ownName = (st, k) => `${giftedSame(st, k) ? '직접 심은 ' : ''}${FLOWERS[k].name} 피우기`;
+const ownTest = (st, k) => giftedSame(st, k) ? !!(st.ownBloom || {})[k] : !!st.dex.flower[k];
 const questName = (q, st) => typeof q.name === 'function' ? q.name(st) : q.name;
 const questWhenOf = (q, st) => typeof q.when === 'function' ? q.when(st) : q.when;
 const CHAPTERS = [
@@ -951,7 +956,7 @@ const CHAPTERS = [
     Q('c1_petal', st => `${FLOWERS[firstFlower(st)].name} 꽃잎 거두기`, st => !!(st.dex.petal || {})[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom'),
     Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom'),
-    Q('c1_land', st => `${LANDS[firstLand(st)].name} 만들기`, st => !!st.dex.land[firstLand(st)], 'garden'),
+    Q('c1_land', st => st.gift != null && st.gift >= 0 ? '첫 땅 만들기' : '초원 만들기', st => st.gift != null && st.gift >= 0 ? LAND_KEYS.some(k => k !== 'barren' && st.dex.land[k]) : !!st.dex.land.grassland, 'garden'),   // 화분을 받은 정원은 어떤 땅이든 (QA 4회차)
     Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', 'cafe'),
   ] },
   { key: 'c2', no: 2, name: '땅 바꾸기', title: 't_land', quests: [
@@ -983,9 +988,9 @@ const CHAPTERS = [
     Q('c5_five', '차 도감 5칸', st => n0(st.dex.tea) >= 5, 'cab', 'cafe'),
   ] },
   { key: 'c6', no: 6, name: '나무의 해', title: 't_tree', quests: [
-    Q('c6_dongbaek', '동백 피우기', st => !!st.dex.flower.dongbaek, 'garden', { bloom: 'dongbaek' }),
-    Q('c6_maehwa', '매화 피우기', st => !!st.dex.flower.maehwa, 'garden', { bloom: 'maehwa' }),
-    Q('c6_napmae', '납매 피우기', st => !!st.dex.flower.napmae, 'garden', { bloom: 'napmae' }),
+    Q('c6_dongbaek', st => ownName(st, 'dongbaek'), st => ownTest(st, 'dongbaek'), 'garden', { bloom: 'dongbaek' }),
+    Q('c6_maehwa', st => ownName(st, 'maehwa'), st => ownTest(st, 'maehwa'), 'garden', { bloom: 'maehwa' }),
+    Q('c6_napmae', st => ownName(st, 'napmae'), st => ownTest(st, 'napmae'), 'garden', { bloom: 'napmae' }),
     Q('c6_plum', '겨울 매화향 만들기', st => st.dex.blend.plumwinter != null, 'tearoom'),
   ] },
 ];
@@ -1121,7 +1126,7 @@ function yearScore(st) {
 // ---------------------------------------------------------------- ⛏️ 정원 뒤 광산 (P24, 10-24)
 // 기다리는 시간에 조금씩: 기력 10칸, 30분(현실 = 게임 시간)마다 1칸 — 꺼 둔 동안에도 참(열 때 따라잡음), 꽃잠에도 팜
 // 층마다 8×6칸, 한 칸 파는 데 기력 1. 계단을 찾으면 아래층. 나온 것은 팔지 않고 만들기 · 도감에만 (돈이 더 남지 않게, P24-04)
-const MINE_W = 8, MINE_H = 6, MINE_MAX_E = 10, MINE_REGEN_H = 0.5, MINE_DEEPEST = 20;
+const MINE_W = 8, MINE_H = 6, MINE_MAX_E = 12, MINE_REGEN_H = 0.5, MINE_DEEPEST = 20;
 const ORES = {
   quartz: { name: '석영', from: 1, color: '#e9e4f2' },
   feldspar: { name: '장석', from: 1, color: '#e6b8a0' },
@@ -1131,7 +1136,7 @@ const ORES = {
   amber: { name: '호박', from: 12, color: '#e0a03a' },
 };
 const FOSSILS = {
-  shell: { name: '조개 화석', from: 4 },
+  shell: { name: '조개 화석', from: 2 },
   fern: { name: '고사리 화석', from: 6 },
   leaf: { name: '잎 화석', from: 8 },
   bone: { name: '작은 뼈 화석', from: 11 },
@@ -1152,7 +1157,7 @@ function newBoard(st, depth) {
     if (depth >= 8 && x < 0.006) k = 'oldseed';
     else if (fos.length && x < 0.03) k = fos[Math.floor(rnd() * fos.length)];
     else if (x < 0.03 + 0.10 + depth * 0.004) k = ores[Math.floor(rnd() * ores.length)];
-    else if (x < 0.45) k = 'stone';
+    else if (x < 0.52) k = 'stone';
     else k = 'dirt';
     cells.push({ k, dug: false });
   }
@@ -1183,7 +1188,7 @@ function dig(st, i, ctx) {
   let first = false;
   if (MINE_DEX_KEYS.includes(c.k) && !st.dex.mine[c.k]) { st.dex.mine[c.k] = true; first = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(c.k)}`, ctx); }
   st.stats = st.stats || {}; st.stats.dug = (st.stats.dug || 0) + 1;
-  return ok(`${c.k === 'oldseed' ? '🌰 ' : ''}${mineName(c.k)}${c.stairs ? ' · 아래로 내려가는 계단을 찾았어요' : ''}`, { cell: c, first, stairs: !!c.stairs });
+  return ok(`${c.k === 'oldseed' ? '🌰 ' : ''}${mineName(c.k)}${c.stairs ? (m.depth >= MINE_DEEPEST ? ' · 가장 깊은 곳이에요' : ' · 아래로 내려가는 계단을 찾았어요') : ''}`, { cell: c, first, stairs: !!c.stairs && m.depth < MINE_DEEPEST });
 }
 function descend(st) {
   const m = mineOf(st);
@@ -1198,6 +1203,13 @@ function mineUp(st) {                            // 1층으로 돌아가기 (새
   m.depth = 1; m.board = newBoard(st, 1);
   return ok('1층으로 올라왔어요');
 }
+function toDeepest(st) {                          // 가장 깊이 내려간 층으로 돌아가기: 기력 3 (QA 4회차)
+  const m = mineOf(st);
+  if (m.depth >= m.deepest) return no('이미 가장 깊은 층이에요');
+  if (m.energy < 3) return no('기력 3이 필요해요');
+  m.energy -= 3; m.depth = m.deepest; m.board = newBoard(st, m.depth);
+  return ok(`지하 ${m.depth}층으로 다시 내려왔어요`);
+}
 function freshBoard(st) {                        // 지금 층을 새 판으로 (다 팠을 때)
   const m = mineOf(st);
   if (m.board.cells.some(c => !c.dug)) return no('아직 안 판 칸이 있어요');
@@ -1207,15 +1219,15 @@ function freshBoard(st) {                        // 지금 층을 새 판으로 
 // 만들기 (P24-03): 돌 → 장식, 흙 → 비료, 광물 → 찻잔 유약 (P17-15 세트를 돈 대신)
 const CRAFTS = {
   fert: { name: '비료', need: { dirt: 5 }, desc: '흙 5 → 🌱 비료 1' },
-  stepstone: { name: '징검돌', need: { stone: 4 }, deco: 'stepstone' },
-  basin: { name: '돌 물확', need: { stone: 8 }, deco: 'basin' },
-  stonelamp: { name: '석등', need: { stone: 12, quartz: 1 }, deco: 'stonelamp' },
-  cheongja: { name: '청자 찻잔', need: { jade: 3 }, cup: 'cheongja' },
+  stepstone: { name: '징검돌', need: { stone: 8 }, deco: 'stepstone' },            // 10-24 밸런스(QA 4회차): 돌 값을 2~2.5배로
+  basin: { name: '돌 물확', need: { stone: 20 }, deco: 'basin' },
+  stonelamp: { name: '석등', need: { stone: 30, quartz: 2 }, deco: 'stonelamp' },
+  cheongja: { name: '청자 찻잔', need: { jade: 2 }, cup: 'cheongja' },               // 비취는 9층부터라 2개로
   buncheong: { name: '분청 찻잔', need: { feldspar: 4, mica: 2 }, cup: 'buncheong' },
   kkot: { name: '꽃무늬 찻잔', need: { amethyst: 2, quartz: 4 }, cup: 'kkot' },
 };
 const CRAFT_KEYS = Object.keys(CRAFTS);
-const canCraft = (st, k) => { const C = CRAFTS[k], bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
+const canCraft = (st, k) => { const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null, bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
 function craft(st, k, ctx) {
   const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null;
   if (!C) return no('만들 수 없는 것이에요');
@@ -1233,10 +1245,10 @@ const mineCount = st => Object.keys((st.dex && st.dex.mine) || {}).filter(k => M
 // ---------------------------------------------------------------- 이웃의 화분 (P22-02, 10-24)
 // 첫 방문(첫 안내 창의 '시작')에 그 달에 피어 있거나 다음 달에 피는 여러해살이 · 나무 하나를 다 자란 채로 심어 줌. 돈은 주지 않음
 // 어느 요일에 시작해도 첫날 꽃 · 수확을 보고, 1장 퀘스트(P22-01)를 그 꽃으로 함
-const GIFT_BY_MONTH = { 3: 'maehwa', 4: 'rose', 5: 'rose', 6: 'lavender', 7: 'lotus', 8: 'jasmine', 9: 'gamguk', 10: 'gamguk', 11: 'gamguk', 12: 'dongbaek', 1: 'napmae', 2: 'maehwa', 13: 'maehwa', 14: 'maehwa' };
-function giftPot(st, ctx) {
+const GIFT_BY_MONTH = { 3: 'maehwa', 4: 'rose', 5: 'rose', 6: 'lavender', 7: 'jasmine', 8: 'jasmine', 9: 'gamguk', 10: 'gamguk', 11: 'gamguk', 12: 'dongbaek', 1: 'napmae', 2: 'maehwa', 13: 'maehwa', 14: 'maehwa' };
+function giftPot(st, ctx, want) {                // want: 안내 창에서 보여 준 꽃 (창을 연 채 달이 바뀌어도 같은 꽃)
   if (st.gift != null) return no('이웃의 화분은 한 번만 와요');
-  const cal = calendar(st.virtual), type = GIFT_BY_MONTH[cal.month], F = FLOWERS[type];
+  const cal = calendar(st.virtual), type = want && Object.values(GIFT_BY_MONTH).includes(want) ? want : GIFT_BY_MONTH[cal.month], F = FLOWERS[type];
   // 정원 가운데에서 가까운 빈 칸
   let spot = null;
   for (let r = 0; r < Math.max(W, H) && !spot; r++) for (let dy = -r; dy <= r && !spot; dy++) for (let dx = -r; dx <= r && !spot; dx++) {
@@ -1251,6 +1263,7 @@ function giftPot(st, ctx) {
     harvestKey: -1, bloomKey: -1, propYear: null, plantedYear: yearOf(st, cal),
   };
   f.stage = computeStage(f, cal.month);
+  const tl = st.tiles[f.y * W + f.x]; tl.t = F.t; tl.m = F.m;          // 화분 흙째 옮겨 심음
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
   st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
@@ -1276,8 +1289,8 @@ const DECOS = {
   bonsai: { name: '매화 분재', month: 2, price: 25000, desc: '작은 화분에 핀 매화' },
   moonlamp: { name: '달 초롱', month: 13, price: 6000, desc: '꽃잠 밤을 지키는 초롱' },
   pavilion: { name: '정자', month: 14, price: 60000, desc: '정원을 내려다보는 쉼터' },
-  hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, desc: '둘레 2칸에 핀 꽃에서 달마다 꿀을 모아요' },   // P18 여름의 꿀 채집 (10-24)
-  barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
+  hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, func: true, desc: '둘레 2칸에 핀 꽃에서 달마다 꿀을 모아요' },   // P18 여름의 꿀 채집 (10-24)
+  barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, func: true, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
 };
 const DECO_KEYS = Object.keys(DECOS);
 const decoInfo = key => {
@@ -1459,6 +1472,7 @@ const MIGRATIONS = [
   ['이웃의 화분 · 첫 꽃 (P22, 10-24): 이미 시작한 정원은 화분을 받지 않고 1장은 캐모마일 그대로', s => { if (s.gift === undefined) s.gift = s.onboarded ? -1 : null; if (s.firstFlower === undefined) s.firstFlower = null; }],
   ['⛏️ 광산 · 광산 도감 (P24, 10-24)', s => { if (!s.mine) s.mine = newMine(); s.dex.mine = s.dex.mine || {}; }],
   ['💌 손님 주문 · 기념품 도감 · 🏅 정원 점수 (P23, 10-24)', s => { if (s.orders === undefined) s.orders = null; s.dex.memento = s.dex.memento || {}; if (s.bestScore === undefined) s.bestScore = 0; }],
+  ['직접 피운 꽃 (QA 4회차, 10-24): 지금까지 핀 꽃은 화분 꽃만 빼고 직접 피운 것으로', s => { if (!s.ownBloom) { s.ownBloom = {}; for (const k of Object.keys(s.dex.flower || {})) if (!(s.gift != null && s.gift >= 0 && s.firstFlower === k)) s.ownBloom[k] = true; } }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1485,7 +1499,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

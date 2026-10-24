@@ -7,7 +7,7 @@ const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 600
 console.log('[판 · 기력]');
 const st = E.create(at(c => c.month === 3 && !c.frozen), () => 0.5); st.gardenId = 'test-garden';   // 판이 늘 같게
 const m = E.mineOf(st);
-check(m.energy === E.MINE_MAX_E && m.depth === 1 && m.board.cells.length === E.MINE_W * E.MINE_H, '처음: 기력 10 · 1층 · 8×6칸');
+check(m.energy === E.MINE_MAX_E && m.depth === 1 && m.board.cells.length === E.MINE_W * E.MINE_H, '처음: 기력 12 · 1층 · 8×6칸');
 check(m.board.cells.filter(c => c.stairs).length === 1, '계단은 한 칸');
 check(m.board.cells.every(c => ['dirt', 'stone', 'quartz', 'feldspar'].includes(c.k)), '1층엔 흙 · 돌 · 석영 · 장석만');
 const st2 = E.create(at(c => c.month === 3 && !c.frozen), () => 0.5); st2.gardenId = st.gardenId;
@@ -15,11 +15,11 @@ check(JSON.stringify(E.mineOf(st2).board) === JSON.stringify(m.board), '같은 �
 
 console.log('[파기]');
 const r = E.dig(st, 0);
-check(r.ok && m.energy === 9 && m.board.cells[0].dug && m.bag[m.board.cells[0].k] === 1, '파면 기력 1 · 나온 것은 광산 가방에');
-check(!E.dig(st, 0).ok && m.energy === 9, '판 칸은 다시 못 팜');
+check(r.ok && m.energy === 11 && m.board.cells[0].dug && m.bag[m.board.cells[0].k] === 1, '파면 기력 1 · 나온 것은 광산 가방에');
+check(!E.dig(st, 0).ok && m.energy === 11, '판 칸은 다시 못 팜');
 check(!E.dig(st, 999).ok && !E.dig(st, 1.5).ok && !E.dig(st, '2').ok, '없는 칸 거절');
 const stairsAt = m.board.cells.findIndex(c => c.stairs);
-for (let i = 1, n = 0; n < 9; i++) if (i !== stairsAt) { E.dig(st, i); n++; }   // 계단 칸은 남겨 둠
+for (let i = 1, n = 0; n < 11; i++) if (i !== stairsAt) { E.dig(st, i); n++; }   // 계단 칸은 남겨 둠
 check(m.energy === 0 && !E.dig(st, 20).ok, '기력이 없으면 못 팜');
 
 console.log('[기력은 30분마다 · 꺼 둔 동안에도 · 꽃잠에도]');
@@ -50,12 +50,12 @@ check(['amber', 'jade', 'amethyst'].every(k => seen.has(k)) && E.FOSSIL_KEYS.som
 
 console.log('[만들기]');
 const cs = E.create(at(c => c.month === 3 && !c.frozen), () => 0.5); const cm = E.mineOf(cs);
-cm.bag = { dirt: 11, stone: 13, quartz: 1, jade: 3 };
+cm.bag = { dirt: 11, stone: 31, quartz: 2, jade: 2 };
 const f0 = cs.fert;
 check(E.craft(cs, 'fert').ok && cs.fert === f0 + 1 && cm.bag.dirt === 6, '흙 5 → 비료 1');
-check(E.craft(cs, 'stonelamp').ok && cm.bag.stone === 1 && cm.bag.quartz === 0 && cs.decos.some(x => x.key === 'stonelamp') && cs.dex.deco.stonelamp, '돌 12 + 석영 1 → 석등 (창고 · 꾸밈 도감)');
+check(E.craft(cs, 'stonelamp').ok && cm.bag.stone === 1 && cm.bag.quartz === 0 && cs.decos.some(x => x.key === 'stonelamp') && cs.dex.deco.stonelamp, '돌 30 + 석영 2 → 석등 (창고 · 꾸밈 도감)');
 check(!E.craft(cs, 'stepstone').ok, '재료가 모자라면 못 만듦');
-check(E.craft(cs, 'cheongja').ok && E.shopOf(cs).cups.includes('cheongja') && cm.bag.jade === 0, '비취 3 → 청자 찻잔 (돈 없이)');
+check(E.craft(cs, 'cheongja').ok && E.shopOf(cs).cups.includes('cheongja') && cm.bag.jade === 0, '비취 2 → 청자 찻잔 (돈 없이)');
 cm.bag.jade = 3;
 check(!E.craft(cs, 'cheongja').ok && cm.bag.jade === 3, '이미 있는 찻잔은 다시 안 구움');
 check(!E.craft(cs, 'toString').ok, '없는 만들기 거절');

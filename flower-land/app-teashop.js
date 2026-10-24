@@ -303,7 +303,7 @@ function openShopUp() {
     <div class="up-sec"><div class="up-h">🪑 손님 자리 <span class="muted">자리만큼 한 시간에 여러 잔이 팔려요 · 값은 그대로</span></div>
       <div class="up-seats">${[1, 2, 3].map(n => `<span class="seat ${n <= sh.seats ? 'on' : ''}" aria-hidden="true">🪑</span>`).join('')}<span class="muted">지금 ${sh.seats}자리 · 1시간에 ${sh.seats}잔</span>
         ${next ? `<button type="button" class="btn small primary" data-up="seat" ${st.money < next.price ? 'disabled' : ''}>🪑 ${sh.seats + 1}자리 · ${won(next.price)}</button>` : '<span class="muted">✓ 다 늘렸어요</span>'}</div></div>
-    <div class="up-sec"><div class="up-h">☕ 찻잔 세트 <span class="muted">보기만 바뀌어요</span></div><div class="up-grid">${Object.entries(E.CUP_SETS).map(([k, it]) => tile('cup', k, it)).join('')}</div></div>
+    <div class="up-sec"><div class="up-h">☕ 찻잔 세트 <span class="muted">보기만 바뀌어요 · ⛏️ 광산에서 구울 수도 있어요</span></div><div class="up-grid">${Object.entries(E.CUP_SETS).map(([k, it]) => tile('cup', k, it)).join('')}</div></div>
     <div class="up-sec"><div class="up-h">🪧 간판 <span class="muted">보기만 바뀌어요</span></div><div class="up-grid">${Object.entries(E.SIGNS).map(([k, it]) => tile('sign', k, it)).join('')}</div></div>
     <div class="up-wallet"><span class="muted">💰 가진 돈</span><b class="data">${won(st.money)}</b></div></div>`;
   openModal('🪑 찻집 가꾸기', body, [{ label: '닫기', act: () => closeModal() }]);

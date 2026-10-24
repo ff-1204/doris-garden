@@ -331,25 +331,29 @@ function openMine(tab) {
   const m = E.mineOf(st), b = m.board; ui.mineTab = tab || ui.mineTab || 'bag';
   const nextE = m.energy >= E.MINE_MAX_E ? '가득 찼어요' : `다음 기력 ${realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1))} 뒤`;
   const stairsFound = b.cells.some(c => c.dug && c.stairs), allDug = b.cells.every(c => c.dug);
-  const cell = (c, i) => c.dug ? `<span class="mc dug" title="${E.mineName(c.k)}">${c.stairs ? mineImg('stairs', 2) : c.k === 'dirt' ? '' : mineImg(c.k, 2)}</span>`
-    : `<button type="button" class="mc" data-dig="${i}" aria-label="파기" ${m.energy < 1 ? 'disabled' : ''}></button>`;
+  const cell = (c, i) => c.dug ? `<span class="mc dug" title="${E.mineName(c.k)}${c.stairs ? ' · 계단' : ''}">${c.k === 'dirt' ? '' : mineImg(c.k, 2)}${c.stairs ? `<span class="mc-st">${mineImg('stairs', 1)}</span>` : ''}</span>`
+    : `<button type="button" class="mc" data-dig="${i}" aria-label="${Math.floor(i / E.MINE_W) + 1}번째 줄 ${i % E.MINE_W + 1}번째 칸 파기" ${m.energy < 1 ? 'disabled' : ''}></button>`;
   const bagKeys = ['dirt', 'stone', ...E.ORE_KEYS, ...E.FOSSIL_KEYS, 'oldseed'].filter(k => m.bag[k] > 0);
   const bag = bagKeys.length ? `<div class="mine-bag">${bagKeys.map(k => `<span class="hj">${mineImg(k, 2)}<small>${E.mineName(k)} <b class="data">×${m.bag[k]}</b></small></span>`).join('')}</div>` : '<p class="muted">아직 판 게 없어요 · 칸을 눌러 파 보세요</p>';
   const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
-    const art = C.deco ? decoImg(C.deco, 2) : C.cup ? '<span class="mn-ico">☕</span>' : '<span class="mn-ico">🌱</span>';
-    return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
+    const art = C.deco ? decoImg(C.deco, 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
+    return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
   const body = `<div class="mine-pop">
     <div class="mine-head"><b>지하 ${m.depth}층</b><span class="muted">가장 깊이 ${m.deepest}층</span></div>
     <div class="mine-energy" title="${nextE}"><span>⛏️ 기력</span><span class="me-bar">${Array.from({ length: E.MINE_MAX_E }, (_, i) => `<i class="${i < m.energy ? 'on' : ''}"></i>`).join('')}</span><small class="muted">${m.energy} / ${E.MINE_MAX_E} · ${nextE}</small></div>
     <div class="mine-grid" style="--mw:${E.MINE_W}">${b.cells.map(cell).join('')}</div>
-    <div class="mine-acts">${stairsFound && m.depth < E.MINE_DEEPEST ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${allDug ? '<button type="button" class="btn small" data-mact="fresh">🔄 새 굴</button>' : ''}</div>
+    <div class="mine-acts">${stairsFound && m.depth < E.MINE_DEEPEST ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${m.depth < m.deepest ? `<button type="button" class="btn small" data-mact="deep" ${m.energy < 3 ? 'disabled' : ''}>🪜 지하 ${m.deepest}층으로 · 기력 3</button>` : ''}${allDug ? '<button type="button" class="btn small" data-mact="fresh">🔄 새 굴</button>' : ''}</div>
     <div class="seg" role="group"><button type="button" data-mtab="bag" aria-pressed="${ui.mineTab === 'bag'}">🎒 가방</button><button type="button" data-mtab="craft" aria-pressed="${ui.mineTab === 'craft'}">🔨 만들기</button></div>
     ${ui.mineTab === 'craft' ? crafts : bag}
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
   openModal('⛏️ 정원 뒤 광산', body, [{ label: '닫기', act: () => { closeModal(); renderToolbar(true); } }]);
   const root = $('#modalRoot');
   root.querySelectorAll('[data-dig]').forEach(x => x.onclick = () => { const r = E.dig(st, +x.dataset.dig, ctx); if (!r.ok) return feedback(r.msg, true); save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg); openMine(); });
-  root.querySelectorAll('[data-mact]').forEach(x => x.onclick = () => { const a = x.dataset.mact, r = a === 'down' ? E.descend(st) : a === 'up' ? E.mineUp(st) : E.freshBoard(st); feedback(r.msg, !r.ok); save(); openMine(); });
+  root.querySelectorAll('[data-mact]').forEach(x => x.onclick = () => {
+    const a = x.dataset.mact, go = () => { const r = a === 'down' ? E.descend(st) : a === 'up' ? E.mineUp(st) : a === 'deep' ? E.toDeepest(st) : E.freshBoard(st); feedback(r.msg, !r.ok); save(); openMine(); };
+    if (a !== 'up') return go();
+    openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => openMine() }, { label: '올라가기', primary: true, act: go }]);
+  });
   root.querySelectorAll('[data-mtab]').forEach(x => x.onclick = () => openMine(x.dataset.mtab));
   root.querySelectorAll('[data-craft]').forEach(x => x.onclick = () => { const r = E.craft(st, x.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openMine('craft'); });
 }
@@ -470,7 +474,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
       <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · 심은 지 ${flowH(f.ageH)}</div></div>
+        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${flowH(f.ageH)}`}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}

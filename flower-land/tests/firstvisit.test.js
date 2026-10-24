@@ -22,7 +22,7 @@ check(st.flowers[0].stage === 'bloom' && st.flowers[0].type === 'lavender', '6�
 
 console.log('[1장은 첫 꽃]');
 const c1 = E.CHAPTERS.find(c => c.key === 'c1');
-check(c1.quests.map(q => E.questName(q, st)).join(',') === '라벤더 피우기,라벤더 꽃잎 거두기,꽃방에 꽃잎 널기,라벤더 티백 만들기,' + E.LANDS[E.classify(E.FLOWERS.lavender.t, E.FLOWERS.lavender.m)].name + ' 만들기,라벤더차 팔기', '퀘스트 이름이 라벤더로');
+check(c1.quests.map(q => E.questName(q, st)).join(',') === '라벤더 피우기,라벤더 꽃잎 거두기,꽃방에 꽃잎 널기,라벤더 티백 만들기,첫 땅 만들기,라벤더차 팔기', '퀘스트 이름이 라벤더로');
 check(JSON.stringify(E.questWhenOf(c1.quests[0], st)) === '{"bloom":"lavender"}', '언제 힌트도 라벤더');
 E.advance(st, st.virtual + 2 * H, { live: false, rng: () => 0.5 });
 E.checkJournal(st, { live: false });
