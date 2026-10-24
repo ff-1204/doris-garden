@@ -29,7 +29,8 @@ function act() {
     for (const it of st.items.slice()) {
       if (!E.FLOWERS[it.type].sow.includes(cal.month) || E.germOf(it) <= 0) continue;
       const sp = spots.find(([x, y]) => !E.flowerAt(st, x, y)); if (!sp) break;
-      E.plant(st, it.id, sp[0], sp[1], rng);
+      const r = E.plant(st, it.id, sp[0], sp[1], rng);
+      if (r.ok && r.flower) add(yr, '심은 꽃', 1);   // 싹이 터서 정원에 자리 잡은 것만 (안 튼 씨앗은 비료)
     }
     // 돌보기
     const tiles = st.flowers.map(f => [f.x, f.y]);
@@ -71,12 +72,13 @@ while (st.virtual < end) {
   if (st.helpYear !== help0) { add(yr, '막힘 방지', 5000); help0 = st.helpYear; }
   lastIdx = c.idx;
   add(yr, '_기타', st.money - m0);
+  ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
 }
 // 표
-const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '잔 수', '제철 잔', '식은 잔'];
-console.log(['해', ...keys, '연말 돈', '심은 꽃'].join('\t'));
+const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃'];
+console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
-  console.log([yr, ...keys.map(k => Math.round(L[k] || 0)), '', ''].join('\t'));
+  console.log([yr, ...keys.map(k => Math.round(L[k] || 0))].join('\t'));
 }
 console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL}`);
