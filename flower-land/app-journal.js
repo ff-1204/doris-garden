@@ -235,5 +235,5 @@ function setTab(t, keepTool) {
   ui.sigs = {};
   $('#feedbackTop').hidden = true; $('#snack').hidden = true; $('#tip').hidden = true;
   renderAll(true);
-  if (t === 'garden') resize();
+  if (t === 'garden') { resize(); ui.noShiftUntil = performance.now() + 800; }   // 탭을 바꿔 지도가 새로 보일 땐 밀림으로 치지 않음 (QA 18회차)
 }
