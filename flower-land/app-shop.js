@@ -22,7 +22,7 @@ function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.i
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);
-  const sig = JSON.stringify([cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
+  const sig = JSON.stringify([cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
   if (!force && ui.sigs.shop === sig) { updateCountdowns(); return; }
   ui.sigs.shop = sig;
   const onSale = FLOWER_KEYS.filter(k => !cal.frozen && FLOWERS[k].sow.includes(cal.month));
@@ -87,8 +87,15 @@ function renderShop(force) {
       <span class="rv-bar-main">${cart.length ? `<b>담은 예약 ${cartN}개</b><small>${[...new Set(cart.map(c => FLOWERS[c.type].name))].join(' · ')}</small>` : '<b>담은 예약이 없어요</b><small>꽃 카드에서 + 를 눌러 담아요</small>'}</span>
       ${cart.length ? `<span class="rv-bar-sum"><b class="data">${won(cartTotal)}</b>${short ? '<small class="rv-warn">돈이 모자라요</small>' : '<small>10% 할인</small>'}</span><button type="button" class="btn" data-act="clearCart">초기화</button>` : ''}
       <button type="button" class="btn primary" data-act="reserve" ${cart.length && !short ? '' : 'disabled'}>예약</button></div>`;
+  // P17-16 🪴 이달의 장식: 달마다 하나, 그 달에만 (꽃잠에도)
+  const decoNow = E.decoOffer(cal), decoNext = E.DECO_KEYS.find(k => E.DECOS[k].month === MONTHS[(cal.idx + 1) % MONTHS.length]);
+  const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">${monthName(cal.month)}에만 들어와요 · 정원에 놓아 꾸며요</span></div>
+    <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
+      return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">땅 · 꽃에는 영향이 없어요${decoNext ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span><button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button></span></div>`; }).join('')}</div>` : '';
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}</div>`;
+    ${cal.frozen ? rvView : saleView}${decoSection}</div>`;
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
@@ -99,6 +106,7 @@ $('#p-shop').addEventListener('click', e => {
   const k = b.dataset.key;
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
+  if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
   if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1; ui.shopQty[key] = 1; return after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = null; setTab('garden', true); } }); }
   if (b.dataset.cart) {
     const w = +b.dataset.win; ui.cart[k] = ui.cart[k] || {};
@@ -148,7 +156,7 @@ function renderStore(force) {
   const cal = E.calendar(st.virtual), yr0 = E.yearOf(st, cal);
   const relYear = y => y <= yr0 ? '올해' : y === yr0 + 1 ? '내년' : `${y - yr0}년 뒤`;   // 10-06: ○년차 대신
   const groups = groupItems();
-  const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx]);
+  const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx, (st.decos || []).map(d => [d.id, d.x])]);
   if (!force && ui.sigs.store === sig) return;
   ui.sigs.store = sig;
   const nextSow = F => { const n = E.untilMonth(st.virtual, c => !c.frozen && F.sow.includes(c.month)); return n ? n.hours : 999; };
@@ -197,6 +205,7 @@ function renderStore(force) {
       const n = st[k] || 0, low = n <= (S.per > 1 ? S.per / 2 : 3);   // 얼마 안 남으면 주황
       return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
     }).join('')}</div>
+    ${decoStoreHTML()}
     ${pend || resv ? `<div class="cab-head"><span class="sb-title">🚚 도착할 것</span><span class="muted">때가 되면 창고로 들어와요</span></div><div class="argrid">${pend}${resv}</div>` : ''}
     ${rows ? `
     <div class="cab-head"><span class="sb-title">🌰 지금 심을 수 있어요 <span class="sh-n">${nowN}</span></span>
@@ -210,9 +219,19 @@ $('#p-store').addEventListener('change', e => { if (e.target.id === 'storeSort')
 $('#p-store').addEventListener('click', e => {
   const s = e.target.closest('[data-sup]'); if (s) return openSupply(s.dataset.sup);
   const c = e.target.closest('[data-compost]'); if (c) return openCompost(c.dataset.compost.split(',').map(Number));
+  const dp = e.target.closest('[data-decoplace]'); if (dp) { ui.tool = 'deco'; ui.decoId = +dp.dataset.decoplace; return setTab('garden', true); }
   const b = e.target.closest('[data-plant]'); if (!b) return;
   ui.tool = 'plant'; ui.plantType = b.dataset.plant; setTab('garden', true);
 });
+// P17-16 창고의 🪴 장식: 종류마다 한 칸 · 창고에 있는 것 / 정원에 놓은 것
+function decoStoreHTML() {
+  const ds = st.decos || []; if (!ds.length) return '';
+  const keys = [...new Set(ds.map(d => d.key))];
+  const tiles = keys.map(k => { const all = ds.filter(d => d.key === k), inStore = all.filter(d => d.x == null), out = all.length - inStore.length;
+    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : ''].filter(Boolean).join(' · ')}</small>
+      ${inStore.length ? `<button type="button" class="btn small primary" data-decoplace="${inStore[0].id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}</div>`; }).join('');
+  return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div><div class="decotiles">${tiles}</div>`;
+}
 // 비료로 만들기 확인 창 (P06-16): 씨앗·묘목 › 비료, 몇 개 바꿀지 −/+
 function openCompost(ids, n) {
   const list = st.items.filter(it => ids.includes(it.id) && E.compostable(it));

@@ -17,6 +17,7 @@ const HINT = {
   prop: '다 자란 꽃을 눌러 번식해요. 꽃마다 할 수 있는 달이 정해져 있고, 한 해에 한 번이에요.',
   move: '옮길 꽃을 누른 다음, 빈 칸을 누르세요. 심는 기간이나 휴면기에 할 수 있어요.',
 };
+const decoById = id => (st.decos || []).find(d => d.id === id);
 function plantable() {
   const cal = E.calendar(st.virtual), by = {};
   if (cal.frozen) return by;
@@ -38,7 +39,7 @@ const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.s
 const NEEDS = [['water', '💧', '목마른 꽃'], ['weed', '🌿', '잡초 난 꽃'], ['prune', '✂️', '가지 칠 수 있는 꽃'], ['fert', '🌱', '비료 줄 수 있는 꽃'], ['harvest', '🧺', '꽃이 핀 꽃']];
 function renderToolbar(force) {
   const pl = plantable(), cal = E.calendar(st.virtual), need = careNeed(cal);
-  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, st.fert, pl, cal.frozen, need]);
+  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need]);
   if (!force && ui.sigs.toolbar === sig) return;
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
@@ -53,6 +54,11 @@ function renderToolbar(force) {
       return `<button type="button" class="seedchip" data-seed="${k}" aria-pressed="${ui.plantType === k}"><span class="dot" style="background:${F.petal}"></span>${F.name} ${FORM[F.form].name} <span class="data">×${pl[k]}</span> <span class="stars" style="font-size:11px">★${E.stars(best)}</span></button>`;
     }).join('') + '<button type="button" class="btn small" data-act="endMode">✓ 심기 끝</button>'
       : `<span class="muted" style="font-size:13px">${cal.frozen ? '꽃잠에는 심을 수 없어요.' : '지금 심을 수 있는 게 창고에 없어요.'}</span> <button type="button" class="btn small primary" data-go="shop">💐 화원</button> <button type="button" class="btn small" data-act="endMode">닫기</button>`;
+  } else if (ui.tool === 'deco') {                // P17-16 장식 놓기 · 옮기기
+    const d = decoById(ui.decoId);
+    if (!d) { ui.tool = 'look'; ui.decoId = null; tray.hidden = true; tray.innerHTML = ''; return renderHint(); }
+    tray.hidden = false;
+    tray.innerHTML = `<span class="muted deco-tray">${decoImg(d.key, 1)} 🪴 ${d.x == null ? '놓는' : '옮기는'} 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>`;
   } else if (ui.tool === 'move') {
     tray.hidden = false;
     tray.innerHTML = '<span class="muted" style="font-size:13px">↔ 옮겨 심는 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>';
@@ -70,12 +76,13 @@ function renderHint() {
   let msg = '';
   if (E.calendar(st.virtual).frozen) msg = '';      // 꽃잠은 지도 가운데 팝업이 알려 줌
   else if (ui.tool === 'plant') msg = ui.plantType ? `${josa(FLOWERS[ui.plantType].name, '을/를')} 심을 빈 칸을 누르세요` : HINT.plant;
+  else if (ui.tool === 'deco') { const d = decoById(ui.decoId); msg = d ? `${josa(E.decoInfo(d.key).name, '을/를')} 놓을 빈 칸을 누르세요` : ''; }
   else if (ui.tool === 'move') { const f = ui.moveFrom && st.flowers.find(x => x.id === ui.moveFrom); msg = f ? `${josa(FLOWERS[f.type].name, '을/를')} 옮길 빈 칸을 누르세요` : HINT.move; }
   $('#hint').textContent = msg;
   $('#hint').hidden = !msg;
 }
 $('#tray').addEventListener('click', e => {
-  if (e.target.closest('[data-act="endMode"]')) { ui.tool = 'look'; ui.moveFrom = null; renderToolbar(true); renderEmpty(true); return; }
+  if (e.target.closest('[data-act="endMode"]')) { ui.tool = 'look'; ui.moveFrom = null; ui.decoId = null; renderToolbar(true); renderEmpty(true); return; }
   const b = e.target.closest('[data-seed]'); if (!b) return;
   ui.plantType = b.dataset.seed && b.dataset.seed !== ui.plantType ? b.dataset.seed : null; renderToolbar(true);   // 다시 누르면 선택 풀기
 });
@@ -196,6 +203,11 @@ function draw() {
     if (night > 0) { g.fillStyle = `rgba(14,22,52,${0.18 * night})`; g.fillRect(0, 0, W * cell, H * cell); }
   }
   for (const f of st.flowers) drawFlower(f, cal);
+  // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만)
+  g.imageSmoothingEnabled = false;
+  for (const d of st.decos || []) if (d.x != null) { const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); }
+  const dm = ui.tool === 'deco' && decoById(ui.decoId);
+  if (dm && dm.x != null) { g.save(); g.strokeStyle = '#ffd84a'; g.lineWidth = 2.5; g.setLineDash([4, 3]); g.strokeRect(dm.x * cell + 1, dm.y * cell + 1, cell - 2, cell - 2); g.restore(); }
   if (ui.flash) {                                  // 숫자를 누른 돌봄이 필요한 꽃들 반짝이기
     const now = performance.now(), left = ui.flash.until - now;
     if (left <= 0) ui.flash = null;
@@ -237,7 +249,8 @@ function tileAt(e) {
 }
 const tipEl = $('#tip');
 function tipHTML([x, y]) {
-  const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name;
+  const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y);
+  if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(dc.key).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
   if (!f) return `<b>${land}</b><br><span class="muted">${tl.t.toFixed(1)}°C · 습도 ${Math.round(tl.m)}%</span>`;
   const F = FLOWERS[f.type], cal = E.calendar(st.virtual), v = Math.round(E.vigorOf(st, f));
   const needs = [];
@@ -283,6 +296,14 @@ function onTiles(tiles) {
     if (tiles.length === 1 && f) select(f.id);
     return after(r, ui.tool === 'water' ? 'watered' : ui.tool === 'harvest' ? 'harvested' : null, ui.tool === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null);
   }
+  if (ui.tool === 'deco') {
+    if (f) return feedback('꽃이 있는 칸에는 놓을 수 없어요', true);
+    const r = E.placeDeco(st, ui.decoId, x, y);
+    if (r.ok) { ui.tool = 'look'; ui.decoId = null; }
+    return after(r);
+  }
+  const dc = !f && E.decoAt(st, x, y);
+  if (dc && ui.tool === 'look') return openDecoTile(dc);
   if (ui.tool === 'look') {
     if (f) select(f.id);
     else { ui.selected = null; ui.selTile = [x, y]; ui.sheetOpen = true; }   // 빈 칸: 상태창에서 심기
@@ -300,6 +321,14 @@ function onTiles(tiles) {
     if (r.ok) { ui.moveFrom = null; ui.tool = 'look'; }                     // 옮긴 뒤에는 관찰로 돌아감
     return after(r);
   }
+}
+// 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
+function openDecoTile(d) {
+  const info = E.decoInfo(d.key);
+  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p></div>`, [
+    { label: '📦 창고에', act: () => { closeModal(); after(E.storeDeco(st, d.id)); } },
+    { label: '↔ 옮기기', primary: true, act: () => { closeModal(); ui.tool = 'deco'; ui.decoId = d.id; renderToolbar(true); } },
+  ]);
 }
 function select(id) { ui.selected = id; ui.selTile = null; ui.sheetOpen = true; renderStatus(true); }
 function plantAt(type, x, y) {

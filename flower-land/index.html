@@ -546,6 +546,21 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .shop-news button:hover { text-decoration: underline; }
 .rv-badge { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 12.5px; margin-right: 4px; }
 .shop-news > .rv-badge + *::before { content: none; }
+/* P17-16 정원 장식 (10-24) */
+.decoshop { display: grid; gap: 8px; }
+.decocard { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }
+.decocard .dk-art, .decotile .dk-art { position: relative; display: grid; place-items: center; }
+.decocard .dk-main { display: grid; gap: 2px; min-width: 0; }
+.decocard .dk-main small { font-size: 12px; line-height: 1.4; }
+.decocard .dk-buy { display: grid; gap: 6px; justify-items: end; }
+.decotiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.decotile { display: grid; justify-items: center; gap: 4px; padding: 10px 8px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; text-align: center; }
+.decotile small, .decotile .dk-hint { font-size: 11.5px; color: var(--muted); }
+.deco-pop { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.deco-tray img.px { vertical-align: middle; }
+img.px { image-rendering: pixelated; }
+.dc-q { display: grid; place-items: center; width: 48px; height: 48px; color: var(--muted); font-size: 20px; border: 1px dashed var(--line); }
+@media (max-width: 520px) { .decocard { grid-template-columns: auto 1fr; } .decocard .dk-buy { grid-column: 1 / -1; grid-template-columns: 1fr auto; align-items: center; justify-items: stretch; } }
 /* P17-15 찻집 가꾸기 (10-06 → 10-24) */
 .news-side { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
 .up-pop { display: grid; gap: 14px; }
@@ -1099,6 +1114,7 @@ body { margin: 0; }
 
 <script src="engine.js"></script>
 <script src="sprites.js"></script>
+<script src="decos.js"></script>
 <script src="titles.js"></script>
 <script src="app.js"></script>
 <script src="app-journal.js"></script>

@@ -2,7 +2,7 @@
 // node flower-land/tools/build-site.js [출력 폴더] — GitHub Actions(.github/workflows/pages.yml)와 로컬 확인이 같은 목록을 씀
 const fs = require('fs'), path = require('path');
 const src = path.join(__dirname, '..'), out = path.resolve(process.argv[2] || path.join(src, '..', '_site'));
-const FILES = ['index.html', 'engine.js', 'sprites.js', 'titles.js', 'app.js', 'app-journal.js', 'app-garden.js', 'app-shop.js', 'app-teashop.js', 'app-dex.js', 'app-manual.js', 'app-main.js', 'privacy.html', 'terms.html', 'policy.css', 'og.png', 'robots.txt'];   // og.png: 링크 미리보기 이미지 (tools/make-og.js) · robots.txt: AI 수집기 거절 (LICENSE)
+const FILES = ['index.html', 'engine.js', 'sprites.js', 'decos.js', 'titles.js', 'app.js', 'app-journal.js', 'app-garden.js', 'app-shop.js', 'app-teashop.js', 'app-dex.js', 'app-manual.js', 'app-main.js', 'privacy.html', 'terms.html', 'policy.css', 'og.png', 'robots.txt'];   // og.png: 링크 미리보기 이미지 (tools/make-og.js) · robots.txt: AI 수집기 거절 (LICENSE)
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 for (const f of FILES) fs.copyFileSync(path.join(src, f), path.join(out, f));

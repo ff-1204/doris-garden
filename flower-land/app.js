@@ -213,6 +213,24 @@ function spriteURL(key, kind, locked) {
 }
 // 화원·창고 카드 그림: 파는 모양(씨앗 봉투·묘목…) → 피면 이런 꽃 (작게)
 const formArt = (key, size) => { const F = FLOWERS[key]; return `<span class="sc-pair">${spriteImg(key, 'form', size, false, `${F.name} ${FORM[F.form].name}`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom" title="피면 ${F.name}">${spriteImg(key, 'flower', Math.round(size * 0.5), false, F.name)}</span></span>`; };
+// P17-16 정원 장식 그림: decos.js의 16×16 도트, 칭호 문장은 칭호 그림(22×22, titleURL)
+const decoCache = {}, decoBitmaps = {};
+function decoURL(key) {
+  if (decoCache[key]) return decoCache[key];
+  const info = E.decoInfo(key); if (!info) return '';
+  if (info.title) return (decoCache[key] = titleURL(info.title, false, 0));
+  const S = window.DECO_SPRITES[key], c = document.createElement('canvas'); c.width = c.height = 16;
+  const x = c.getContext('2d');
+  S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && S.pal[ch]) { x.fillStyle = S.pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return (decoCache[key] = c.toDataURL());
+}
+// 화면에 띄우는 크기는 원본의 정수배로 (장식 16 · 칭호 문장 22, P16-14)
+const decoImg = (key, scale) => { const info = E.decoInfo(key), px = (info && info.title ? 22 : 16) * (scale || 3); return `<img class="px" src="${decoURL(key)}" width="${px}" height="${px}" alt="${esc(info ? info.name : '')}">`; };
+function decoBitmap(key) {                         // 지도에 그릴 그림 (불러오기가 끝난 뒤부터)
+  let im = decoBitmaps[key];
+  if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[key] = im; }
+  return im.complete && im.naturalWidth ? im : null;
+}
 const spriteImg = (key, kind, size, locked, alt) => `<img class="px" src="${spriteURL(key, kind, locked)}" width="${size}" height="${size}" alt="${esc(alt || '')}">`;
 
 // ---------------------------------------------------------------- 저장

@@ -288,11 +288,11 @@ function _create(now, rng, cal) {
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [],                         // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔
     fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, weedCount: 0, pruneCount: 0, // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
-    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {} }, // P08-01-04, P08-02, P08-03
+    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {} }, // P08-01-04, P08-02, P08-03
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
-    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length, shop: newShop(),   // shop: P17-15 찻집 가꾸기   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length, shop: newShop(), decos: [],   // shop: P17-15 찻집 가꾸기   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
   };
 }
 const nid = st => st.nextId++;
@@ -618,6 +618,7 @@ function plant(st, itemId, x, y, rng) {          // P06-01-05, P06-07-07-f
   if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
   if (!F.sow.includes(cal.month)) return no(`${josa(F.name, '은/는')} ${F.sow.map(monthName).join('·')}에 심을 수 있어요`);
   if (flowerAt(st, x, y)) return no('이 자리에는 이미 꽃이 있어요');
+  if (decoAt(st, x, y)) return no('이 자리에는 장식이 있어요');
   const g = germOf(it);
   if (g <= 0) return no(`${josa(FORM[F.form].rate, '이/가')} 0%라 심을 수 없어요`);
   st.items.splice(st.items.indexOf(it), 1);
@@ -709,6 +710,7 @@ function move(st, flowerId, x, y) {              // P13-03
   if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
   if (!(F.sow.includes(cal.month) || f.stage === 'dormant')) return no('심는 기간이나 휴면기에 옮길 수 있어요');
   if (flowerAt(st, x, y)) return no('그 자리에는 이미 꽃이 있어요');
+  if (decoAt(st, x, y)) return no('그 자리에는 장식이 있어요');
   f.x = x; f.y = y; f.adaptH = 24;
   return ok(`${josa(F.name, '을/를')} 옮겨 심었어요. 2달 동안 새 자리에 적응해요`);
 }
@@ -998,6 +1000,7 @@ function chapterOpen(st, key) {
 function giveTitle(st, k, cal, ctx, silent) {
   if (st.titles[k] != null) return false;
   st.titles[k] = cal.abs;
+  if (!(st.dex.deco && st.dex.deco['t:' + k])) addDeco(st, 't:' + k);   // P17-16-06 칭호 문장 장식
   if (!silent) {
     addLog(st, 9, `🏅 새 칭호: ${TITLES[k].name}`, ctx);
     (st._newTitles = st._newTitles || []).push(k);                       // 화면이 얻는 연출을 띄움 (P19-05-06)
@@ -1031,6 +1034,69 @@ function setTitleOn(st, k) {
   if (k != null && st.titles[k] == null) return no('아직 얻지 못한 칭호예요');
   st.titleOn = k;
   return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
+}
+
+// ---------------------------------------------------------------- 정원 장식 (P17-16, 10-24)
+// 돈 쓸 곳: 달마다 화원에 장식 하나가 들어옴 (그 달에만, 다음 해에 다시 옴). 꽃이 없는 칸에 놓고, 땅 · 꽃 · 값에는 영향이 없음
+// 칭호를 얻으면 그 칭호 문장 장식("t:칭호키")을 하나 받음 (사지 못함, P19-08-04)
+const DECOS = {
+  stepstone: { name: '징검돌', month: 3, price: 1500, desc: '꽃 사이를 걷는 납작한 돌' },
+  birdhouse: { name: '새집', month: 4, price: 8000, desc: '봄 새가 쉬어 가는 작은 집' },
+  bench: { name: '나무 벤치', month: 5, price: 12000, desc: '꽃을 보며 앉는 자리' },
+  basin: { name: '돌 물확', month: 6, price: 9000, desc: '빗물이 고이는 돌그릇' },
+  chime: { name: '풍경', month: 7, price: 5000, desc: '바람이 불면 맑게 울려요' },
+  pond: { name: '작은 연못', month: 8, price: 40000, desc: '연잎이 떠 있는 물웅덩이' },
+  stonelamp: { name: '석등', month: 9, price: 15000, desc: '가을밤을 밝히는 돌 등' },
+  pumpkin: { name: '호박 바구니', month: 10, price: 3000, desc: '잘 익은 호박 한 덩이' },
+  fence: { name: '나무 울타리', month: 11, price: 2000, desc: '정원 가장자리를 두르는 울' },
+  snowman: { name: '눈사람', month: 12, price: 4000, desc: '첫눈으로 만든 친구' },
+  jars: { name: '장독대', month: 1, price: 20000, desc: '겨울 볕을 쬐는 항아리' },
+  bonsai: { name: '매화 분재', month: 2, price: 25000, desc: '작은 화분에 핀 매화' },
+  moonlamp: { name: '달 초롱', month: 13, price: 6000, desc: '꽃잠 밤을 지키는 초롱' },
+  pavilion: { name: '정자', month: 14, price: 60000, desc: '정원을 내려다보는 쉼터' },
+};
+const DECO_KEYS = Object.keys(DECOS);
+const decoInfo = key => {
+  if (DECOS[key] && Object.prototype.hasOwnProperty.call(DECOS, key)) return DECOS[key];
+  const tk = typeof key === 'string' && key.startsWith('t:') ? key.slice(2) : null;
+  return tk && TITLES[tk] ? { name: `${TITLES[tk].name} 문장`, title: tk, price: null, desc: '칭호를 얻은 기념 문장' } : null;
+};
+const decoTotal = () => DECO_KEYS.length + TITLE_KEYS.length;               // 꾸밈 도감 칸 (도감 93칸과 따로 셈, P17-16-05)
+const decoCount = st => Object.keys((st.dex && st.dex.deco) || {}).filter(k => decoInfo(k)).length;
+const decoOffer = cal => DECO_KEYS.filter(k => DECOS[k].month === cal.month);
+const decoAt = (st, x, y) => (st.decos || []).find(d => d.x === x && d.y === y);
+function addDeco(st, key) {
+  const d = { id: nid(st), key, x: null, y: null };
+  (st.decos = st.decos || []).push(d);
+  st.dex.deco = st.dex.deco || {}; st.dex.deco[key] = true;
+  return d;
+}
+function buyDeco(st, key, ctx) {
+  const it = DECOS[key], cal = calendar(st.virtual);
+  if (!it || !Object.prototype.hasOwnProperty.call(DECOS, key)) return no('없는 장식이에요');
+  if (it.month !== cal.month) return no(`${josa(it.name, '은/는')} ${monthName(it.month)}에만 들어와요`);
+  if (st.money < it.price) return no('돈이 모자라요');
+  st.money -= it.price;
+  const first = !st.dex.deco || !st.dex.deco[key];
+  const d = addDeco(st, key);
+  if (first) addLog(st, 9, `도감에 등록: 🪴 ${it.name}`, ctx);
+  return ok(`${josa(it.name, '을/를')} 샀어요 · 창고에서 정원에 놓을 수 있어요`, { deco: d });
+}
+function placeDeco(st, id, x, y) {
+  const d = (st.decos || []).find(z => z.id === id);
+  if (!d) return no('놓을 장식이 없어요');
+  if (!(x >= 0 && y >= 0 && x < W && y < H)) return no('정원 밖이에요');
+  if (flowerAt(st, x, y)) return no('꽃이 있는 칸에는 놓을 수 없어요');
+  const o = decoAt(st, x, y);
+  if (o && o !== d) return no('이 자리에는 이미 장식이 있어요');
+  d.x = x; d.y = y;
+  return ok(`${josa(decoInfo(d.key).name, '을/를')} 놓았어요`);
+}
+function storeDeco(st, id) {
+  const d = (st.decos || []).find(z => z.id === id);
+  if (!d) return no('거둘 장식이 없어요');
+  d.x = null; d.y = null;
+  return ok(`${josa(decoInfo(d.key).name, '을/를')} 창고에 넣었어요`);
 }
 
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
@@ -1097,6 +1163,10 @@ const MIGRATIONS = [
     for (const k of Object.keys(s.dex.flower)) s.dex.form[k] = true;
   }],
   ['찻집 가꾸기 (P17-15, 10-24)', s => { if (!s.shop) s.shop = newShop(); }],
+  ['정원 장식 · 꾸밈 도감 · 이미 얻은 칭호의 문장 장식 (P17-16, 10-24)', s => {
+    s.decos = s.decos || []; s.dex.deco = s.dex.deco || {};
+    for (const k of Object.keys(s.titles || {})) if (TITLES[k] && !s.dex.deco['t:' + k]) addDeco(s, 't:' + k);
+  }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1122,7 +1192,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
