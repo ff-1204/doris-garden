@@ -296,6 +296,9 @@ function _create(now, rng, cal) {
   };
 }
 const nid = st => st.nextId++;
+const inGarden = (x, y) => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0 && x < W && y < H;   // 정원의 한 칸 (10-24)
+const plantUnit = F => F.life === 'tree' || F.form === 'sapling' ? '그루' : '포기';   // P16-02-05 세는 말: 나무 · 묘목은 그루
+const unitOf = fs => fs.length && fs.every(f => plantUnit(FLOWERS[f.type]) === '그루') ? '그루' : '포기';
 
 // ---------------------------------------------------------------- 알림 (P11)
 const TOAST_TYPES = [3, 8, 9];                   // P11-02-01-a
@@ -312,7 +315,7 @@ function flushPending(st, ctx) {
   const b = st._bloomNew;
   for (const k in b) {
     const F = FLOWERS[k], n = b[k];
-    addLog(st, 8, n > 1 ? `${F.name} ${n}포기가 피었어요. 수확할 수 있어요` : `${josa(F.name, '이/가')} 피었어요. 수확할 수 있어요`, ctx);
+    addLog(st, 8, n > 1 ? `${F.name} ${n}${plantUnit(F)}가 피었어요. 수확할 수 있어요` : `${josa(F.name, '이/가')} 피었어요. 수확할 수 있어요`, ctx);
   }
   st._bloomNew = {};
 }
@@ -529,7 +532,9 @@ const flowerAt = (st, x, y) => st.flowers.find(f => f.x === x && f.y === y);
 
 function buy(st, type, n) {                      // P06-01-01
   const cal = calendar(st.virtual), F = FLOWERS[type];
-  n = n || 1;
+  n = n == null ? 1 : n;
+  if (!Number.isInteger(n) || n < 1 || n > 99) return no('살 개수가 맞지 않아요');
+  if (!F || !Object.prototype.hasOwnProperty.call(FLOWERS, type)) return no('팔지 않는 꽃이에요');
   if (cal.frozen) return no('꽃잠에는 일반 판매를 쉬어요. 예약은 할 수 있어요');
   if (!F.sow.includes(cal.month)) return no(`${josa(F.name, '은/는')} 심는 기간에만 팔아요`);
   const cost = F.price * n;
@@ -548,8 +553,9 @@ const SUPPLIES = {
   shears: { name: '가위', icon: '✂️', price: 500, per: 5, unit: '번', desc: '가위 1개로 가지치기를 5번 할 수 있어요' },
 };
 function buySupply(st, kind, n) {
-  const S = SUPPLIES[kind]; n = n || 1;
+  const S = Object.prototype.hasOwnProperty.call(SUPPLIES, kind) ? SUPPLIES[kind] : null; n = n == null ? 1 : n;
   if (!S) return no('팔지 않는 물건이에요');
+  if (!Number.isInteger(n) || n < 1 || n > 99) return no('살 개수가 맞지 않아요');
   const cost = S.price * n;
   if (st.money < cost) return no('돈이 모자라요');
   st.money -= cost; st[kind] = (st[kind] || 0) + S.per * n;
@@ -618,6 +624,7 @@ function plant(st, itemId, x, y, rng) {          // P06-01-05, P06-07-07-f
   const F = FLOWERS[it.type];
   if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
   if (!F.sow.includes(cal.month)) return no(`${josa(F.name, '은/는')} ${F.sow.map(monthName).join('·')}에 심을 수 있어요`);
+  if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('이 자리에는 이미 꽃이 있어요');
   if (decoAt(st, x, y)) return no('이 자리에는 장식이 있어요');
   const g = germOf(it);
@@ -679,7 +686,7 @@ function care(st, tool, tiles, ctx) {            // P13
   }
   flushPending(st, ctx);
   const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: '꽃잎을 거둬 제다실로 보냈어요' }[tool];
-  return ok(`${targets.length}포기에 ${word}`, { count: targets.length });
+  return ok(`${targets.length}${unitOf(targets)}에 ${word}`, { count: targets.length });
 }
 
 function propagate(st, flowerId, rng, ctx) {     // P06-02-05
@@ -710,6 +717,7 @@ function move(st, flowerId, x, y) {              // P13-03
   const F = FLOWERS[f.type];
   if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
   if (!(F.sow.includes(cal.month) || f.stage === 'dormant')) return no('심는 기간이나 휴면기에 옮길 수 있어요');
+  if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('그 자리에는 이미 꽃이 있어요');
   if (decoAt(st, x, y)) return no('그 자리에는 장식이 있어요');
   f.x = x; f.y = y; f.adaptH = 24;
@@ -983,7 +991,7 @@ const TITLES = {
   t_hat: { name: '햇차 장인', tier: 'f', cond: '햇차 5잔 팔기', hint: '가장 좋은 잎만 골라 우린 사람', test: st => S(st, 'hatCups') >= 5 },
   t_regular: { name: '찻집의 단골', tier: 'f', cond: '찻잔 100잔 팔기', hint: '손님이 이름을 기억하는 가게', test: st => S(st, 'cups') >= 100 },
   t_lands: { name: '열 가지 땅', tier: 'g', cond: '땅 도감 10칸', hint: '정원의 모든 흙을 밟아 본 사람', test: st => LAND_KEYS.every(k => st.dex.land[k]) },
-  t_miracle: { name: '한 포기의 기적', tier: 'g', cond: '품질 100% 꽃 피우기', hint: '흠 하나 없는 꽃', test: st => st.flowers.some(f => !f.withered && f.stage === 'bloom' && pct(f.q) >= 100) },
+  t_miracle: { name: '한 포기의 기적', tier: 'g', cond: '품질 80% 이하로 심은 꽃을 100%로 피우기', hint: '지친 꽃을 다시 흠 없이', test: st => st.flowers.some(f => !f.withered && f.stage === 'bloom' && pct(f.q) >= 100 && f.startQ != null && f.startQ <= 0.8) },   // 10-24: 화원 꽃은 100%로 와서 너무 쉬웠음 (QA 1회차)
   t_spring4: { name: '네 번째 봄', tier: 'g', cond: '4년차 3월을 맞기', hint: '봄을 네 번 맞은 정원', test: st => yearOf(st, calendar(st.virtual)) >= 4 },
   t_complete: { name: '도감을 채운 정원사', tier: 'g', cond: '도감 모든 칸', hint: '빈칸이 하나도 없는 책', test: st => dexCount(st) >= dexTotal(st) },
 };
@@ -1089,12 +1097,13 @@ function buyDeco(st, key, ctx) {
 function placeDeco(st, id, x, y) {
   const d = (st.decos || []).find(z => z.id === id);
   if (!d) return no('놓을 장식이 없어요');
-  if (!(x >= 0 && y >= 0 && x < W && y < H)) return no('정원 밖이에요');
+  if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('꽃이 있는 칸에는 놓을 수 없어요');
   const o = decoAt(st, x, y);
   if (o && o !== d) return no('이 자리에는 이미 장식이 있어요');
+  const moved = d.x != null && (d.x !== x || d.y !== y);
   d.x = x; d.y = y;
-  return ok(`${josa(decoInfo(d.key).name, '을/를')} 놓았어요`);
+  return ok(`${josa(decoInfo(d.key).name, '을/를')} ${moved ? '옮겼어요' : '놓았어요'}`);
 }
 // ---------------------------------------------------------------- 🍯 꿀 (P18, 10-24)
 // 놓인 벌통은 꽃잠이 아닌 달이 끝날 때마다 둘레 2칸(가로 · 세로 · 대각선)에 핀 꽃을 세어 꿀을 모음 (P18-03 · 04 · 09)
@@ -1147,8 +1156,10 @@ const honeyCount = st => Object.keys((st.dex && st.dex.honey) || {}).filter(k =>
 function storeDeco(st, id) {
   const d = (st.decos || []).find(z => z.id === id);
   if (!d) return no('거둘 장식이 없어요');
+  const hn = (d.honey || []).length;
+  if (hn) takeHoney(st, d.id);                   // 벌통에 모인 꿀은 함께 거둠 (QA 2회차)
   d.x = null; d.y = null;
-  return ok(`${josa(decoInfo(d.key).name, '을/를')} 창고에 넣었어요`);
+  return ok(`${josa(decoInfo(d.key).name, '을/를')} 창고에 넣었어요${hn ? ` · 꿀 ${hn}병은 찻집 꿀 선반으로` : ''}`);
 }
 
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
@@ -1176,7 +1187,8 @@ function parseSave(text) {
   let d;
   try { d = JSON.parse(text); } catch (e) { return no('도리의 정원 저장 파일이 아니에요'); }
   if (!d || d.app !== SAVE_APP || !d.game || typeof d.game !== 'object') return no('도리의 정원 저장 파일이 아니에요');
-  if (!(d.format <= SAVE_FORMAT)) return no('더 새로운 버전에서 저장한 파일이에요');
+  if (typeof d.format !== 'number') return no('파일이 손상됐어요');
+  if (d.format > SAVE_FORMAT) return no('더 새로운 버전에서 저장한 파일이에요');
   if (hashText(JSON.stringify(d.game)) !== d.check) return no('파일이 손상됐어요');
   const g = d.game;
   if (g.v !== 3 || !Array.isArray(g.tiles) || g.tiles.length !== W * H || !g.dex) return no('파일이 손상됐어요');
@@ -1224,6 +1236,7 @@ const MIGRATIONS = [
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
   s._fertNew = 0; s._bloomNew = {};
+  s.blends = s.blends || []; s.cups = s.cups || []; s.items = s.items || []; s.flowers = s.flowers || [];
   for (const b of [...s.blends, ...s.cups.filter(c => c.kind === 'blend')]) {   // 10-06 레시피가 바뀌어도 이름이 맞게
     const r = blendRecipe(b.parts, s);
     if (r !== (b.recipe || null)) { b.recipe = r; b.name = r ? BLENDS[r].name : `${b.parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`; }

@@ -141,7 +141,8 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair; }
 .feedback { min-height: 22px; font-size: 13px; color: var(--muted); }
 .feedback.warn { color: var(--warn); }
-.topfb { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px 7px 14px; margin-bottom: 12px; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.topfb { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px 7px 14px; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  position: fixed; z-index: 40; top: calc(env(safe-area-inset-top, 0px) + 64px); left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 32px)); box-shadow: 0 6px 18px rgba(0,0,0,.14); }   /* 10-24: 내용을 밀지 않게 떠 있음 (QA 1회차) */
 .topfb[hidden] { display: none; }
 .topfb.warn { color: var(--warn); }
 .topfb button, .snack button { border: 0; border-radius: 999px; padding: 3px 11px; font-size: 13px; font-weight: 600; }
@@ -476,7 +477,7 @@ details > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .shopcard > .btn { width: 100%; justify-content: center; }
 .sc-form.fresh { background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); }
 /* 🌾 꽃방 · 🫖 블렌딩 */
-.ic-pot { width: 1.25em; height: auto; vertical-align: -0.18em; image-rendering: pixelated; display: inline-block; }   /* 🫖 대신 쓰는 도트 찻주전자 (10-06) */
+.ic-pot { width: 16px; height: 16px; vertical-align: -0.18em; image-rendering: pixelated; display: inline-block; }   /* 🫖 대신 쓰는 도트 찻주전자 (10-06) */
 .cc-acts { display: flex; gap: 6px; }
 .cc-acts .btn { flex: 1; justify-content: center; padding-left: 6px; padding-right: 6px; }
 .cabcard.drying { border-style: dashed; }

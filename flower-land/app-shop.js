@@ -81,7 +81,7 @@ function renderShop(force) {
   const cartTotal = cart.reduce((a, c) => a + E.reservationPrice(FLOWERS[c.type]) * c.qty, 0);
   const cartN = cart.reduce((a, c) => a + c.qty, 0), short = cart.length && st.money < cartTotal;
   // 꽃잠 예약: 한 줄 안내 → 예약한 꽃 → 꽃 카드 → 아래에 붙는 예약 바구니
-  const rvView = `<div class="shop-news rv-intro"><span class="rv-badge">🗓️ 예약 기간</span><span>심는 달 첫날 아침 6시에 창고로 와요</span><span>꽃마다 3개까지 · 취소할 수 없어요</span></div>
+  const rvView = `<div class="shop-news rv-intro"><span class="rv-badge">🗓️ 예약 기간</span><span>심는 때가 오는 날 아침 6시에 창고로 와요</span><span>꽃마다 3개까지 · 취소할 수 없어요</span></div>
     <div class="shopgrid rv">${cards.join('')}</div>
     <div class="rv-bar ${cart.length ? 'on' : ''}"><span class="rv-bar-ic">🧺</span>
       <span class="rv-bar-main">${cart.length ? `<b>담은 예약 ${cartN}개</b><small>${[...new Set(cart.map(c => FLOWERS[c.type].name))].join(' · ')}</small>` : '<b>담은 예약이 없어요</b><small>꽃 카드에서 + 를 눌러 담아요</small>'}</span>
@@ -93,7 +93,7 @@ function renderShop(force) {
     <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">땅 · 꽃에는 영향이 없어요${decoNext ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span><button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button></span></div>`; }).join('')}</div>` : '';
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   $('#p-shop').innerHTML = `<div class="stack">
     ${cal.frozen ? rvView : saleView}${decoSection}</div>`;
 }
@@ -228,7 +228,7 @@ function decoStoreHTML() {
   const ds = st.decos || []; if (!ds.length) return '';
   const keys = [...new Set(ds.map(d => d.key))];
   const tiles = keys.map(k => { const all = ds.filter(d => d.key === k), inStore = all.filter(d => d.x == null), out = all.length - inStore.length;
-    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : ''].filter(Boolean).join(' · ')}</small>
+    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : '', all.some(d => (d.honey || []).length) ? '🍯 꿀이 있어요' : ''].filter(Boolean).join(' · ')}</small>
       ${inStore.length ? `<button type="button" class="btn small primary" data-decoplace="${inStore[0].id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}</div>`; }).join('');
   return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div><div class="decotiles">${tiles}</div>`;
 }

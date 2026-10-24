@@ -37,18 +37,18 @@ function renderManual(force) {
         ${ico('✂️')}<span class="nm">가지치기<small>가위 5번 · 500원 · 나무와 덤불만</small></span>${bar(1, '#a8652a', '1달 품질 ↑')}
         ${ico('🌱')}<span class="nm">비료 주기<small>비료 1개 · 150원</small></span>${bar(1, '#8a6a44', '1달 품질 ↑ · 땅 넓어짐')}
         ${ico('🧺')}<span class="nm">수확<small>바구니 10번 · 500원</small></span>${bar(1, '#f2c230', '개화 중 한 달에 한 번')}
-      </div><figcaption>꽃을 누르면 둘레에 단추가 떠요 · 도구가 없으면 흐린 단추를 눌러 바로 사요 · 꽃은 저절로 시들지 않아요</figcaption></div>`),
+      </div><figcaption>꽃을 누르면 둘레에 단추가 떠요 · 도구가 없으면 흐린 단추를 눌러 바로 사요 · 돌보지 않아도 꽃은 죽지 않아요</figcaption></div>`),
     sec('shop', '화원과 창고', '심는 달에만 팔아요',
       fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 44, false, ''), '씨앗', '봉지 · 발아율')}${item(spriteImg('lavender', 'form', 44, false, ''), '묘목', '그루 · 뿌리내림')}${item(spriteImg('gamguk', 'form', 44, false, ''), '모종', '포기 · 뿌리내림')}${item(spriteImg('lotus', 'form', 44, false, ''), '연근', '뿌리 · 뿌리내림')}${item(spriteImg('dongbaek', 'form', 44, false, ''), '나무', '그루 · 뿌리내림')}</div>`,
         '산 것은 📦 <b>창고</b>로 와요 · 창고에서도 품질이 한 달에 5%씩 떨어져요')
       + fig(`<div class="mn-flow"><span class="mn-item"><span class="mn-stars">★★★★☆</span><small><b>72%</b>★ 하나 = 20%</small></span>${bar(12, 'var(--good)', '유효기간 12달')}${bar(8, 'var(--good)', '발아율 ↓', 0)}${arrow('›')}${item(ico('🌱'), '비료 1개', '0%가 되면')}</div>`,
         '품질 0%여도 발아율이 남으면 심을 수 있어요 · 싹이 안 튼 씨앗도 🌱 비료가 돼요')
-      + `<div class="mn-icons">${item(ico('🗓️'), '예약', '꽃잠에 · 10% 할인')}${item(ico('📦'), '배송', '심는 달 첫날 6시')}${item(ico('3'), '한 종류 3개', '예약 한도')}${item(ico('↔️'), '옮겨심기', '심는 달 · 휴면기')}</div>`),
+      + `<div class="mn-icons">${item(ico('🗓️'), '예약', '꽃잠에 · 10% 할인')}${item(ico('📦'), '배송', '심는 날 아침 6시')}${item(ico('3'), '한 종류 3개', '예약 한도')}${item(ico('↔️'), '옮겨심기', '심는 달 · 휴면기')}</div>`),
     sec('tea', '찻집', '겨울부터 꽃잠까지 열어요',
       fig(monthStrip([['🍵', '찻집', [12, 1, 2, 13, 14], 'var(--accent)'], ['🗓️', '예약', [13, 14], 'var(--rest)']], cal.idx), '금요일 저녁 6시(12월)에 문을 열고 일요일 꽃잠까지 · 그 전엔 🌿 제다실에서 티백을 만들어 두세요')
       + fig(`<div class="mn-flow">${item(spriteImg(mf, 'teabag', 44, false, ''), '티백', '품질 그대로')}${arrow()}${item(ico('🫖'), '우림', '찻집에서')}${arrow()}${item(spriteImg(mf, 'tea', 52, false, ''), '☕ 갓 우림', '100%')}${arrow()}${item(ico('🧊'), '식은 차', '다음 달 −50%')}${arrow()}${item(ico('💰'), '판매', '1시간마다 손님')}</div>`,
         '🍃 <b>햇차</b>(★5) +10% · 🌸 생화로 바로 만든 티백 −10% · 찻잔은 꽃잠에도 팔려요')),
-    sec('blend', '블렌드', '말린 꽃잎 둘을 섞어요',
+    sec('blend', '블렌드', '말린 꽃잎 2~3장을 섞어요',
       fig(`<div class="mn-blends">${blendKeys.map(k => { const B = E.BLENDS[k]; return `<span class="mn-blend"><span class="eq">${B.parts.map(p => spriteImg(p, 'dried', 24, false, '말린 ' + FLOWERS[p].name)).join('<b>+</b>')}<b>=</b>${spriteImg(B.parts[0], 'tea', 28, false, B.name)}</span><span class="nm">${B.name}</span></span>`; }).join('')}${hiddenBlends.map(() => `<span class="mn-blend locked"><span class="eq">${spriteImg('chamomile', 'dried', 24, true, '')}<b>+</b>${spriteImg('chamomile', 'dried', 24, true, '')}<b>=</b>${spriteImg('chamomile', 'tea', 28, true, '')}</span><span class="nm">숨은 레시피</span></span>`).join('')}</div>`,
         '레시피대로면 두 차 값을 더한 것의 <b>×1.5</b> · 다른 짝은 ×1.2 · 숨은 레시피는 칭호를 얻으면 열려요 · 제다실 레시피를 누르면 재료가 바로 담겨요')),
     sec('sleep', '꽃잠', '일요일, 정원이 쉬어요',
@@ -58,7 +58,7 @@ function renderManual(force) {
       fig(`<div class="mn-flow">${item(decoImg('bench', 2), '이달의 장식', '화원 · 달마다 하나')}${arrow()}${item(ico('📦'), '창고', '🪴 놓기')}${arrow()}${item(decoImg('stonelamp', 2), '정원에', '꽃 없는 칸')}</div>`,
         '장식은 그 달에만 들어오고 내년에 다시 와요 · 땅 · 꽃 · 값에는 영향이 없어요 · 칭호를 얻으면 그 <b>문장 장식</b>을 받아요')
       + fig(`<div class="mn-flow">${item(decoImg('hive', 2), '벌통', '6–8월 · 하나만')}${arrow()}${item(spriteImg('lavender', 'flower', 32, false, ''), '둘레 2칸', '핀 꽃')}${arrow()}${item(honeyImg('lavender', 2), '라벤더꿀', '달이 끝날 때')}${arrow()}${item(spriteImg('chamomile', 'tea', 32, false, ''), '🍯 꿀차', '찻잔에 한 숟갈')}</div>`,
-        '많이 핀 꽃을 따라 꿀 종류가 정해지고 여러 꽃이 고루 피면 <b>들꽃꿀</b> · 꽃잠엔 벌도 쉬어요 · 꿀은 팔지 않아요')
+        '꽃이 피는 달마다 모여요 · 가장 많이 핀 꽃을 따라 꿀 종류가 정해지고, 여러 꽃이 섞여 절반을 넘는 꽃이 없으면 <b>들꽃꿀</b> · 꽃잠엔 벌도 쉬어요 · 꿀은 팔지 않아요')
       + `<div class="mn-icons">${item(ico('🪑'), '손님 자리', '1시간에 더 많이')}${item(ico('☕'), '찻잔 세트', '보기만')}${item(ico('🪧'), '간판', '보기만')}</div><p class="note" style="text-align:center">🍵 찻집 › 🪑 찻집 가꾸기에서 바꿔요</p>`),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
@@ -106,7 +106,7 @@ function renderSettings() {
     ${group('🌱', '정원', '되돌릴 수 없어요',
       row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
-      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '프로토타입 · 진행은 이 브라우저에 자동 저장돼요 (💾 파일로 옮길 수 있어요)', '')
+      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '진행은 이 브라우저에 자동 저장돼요 (💾 파일로 옮길 수 있어요)', '')
       + row('🔤', '글꼴', '주아 · 고운바탕 · IBM Plex (모두 SIL 오픈 폰트 라이선스)', '')
       + row('📜', '정책', '정원이 저장하는 곳과 약속', '<span class="row" style="gap:6px"><a class="btn small" href="privacy.html">개인정보처리방침</a><a class="btn small" href="terms.html">이용약관</a></span>'))}
   </div>`;

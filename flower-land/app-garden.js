@@ -313,7 +313,7 @@ function onTiles(tiles) {
     return renderStatus(true);
   }
   if (ui.tool === 'plant') {
-    if (f) { select(f.id); return feedback('이 자리에는 이미 꽃이 있어요', true); }
+    if (f) { ui.tool = 'look'; ui.plantType = null; renderToolbar(true); return select(f.id); }   // 10-24: 경고 대신 그 꽃 보기
     if (!ui.plantType) { $('#tray').classList.remove('nudge'); void $('#tray').offsetWidth; $('#tray').classList.add('nudge'); return feedback('먼저 위에서 심을 꽃을 골라 주세요', true); }
     return plantAt(ui.plantType, x, y);
   }
@@ -350,7 +350,9 @@ function plantAt(type, x, y) {
   if (!best) return feedback('창고에 심을 것이 없어요', true);
   const r = E.plant(st, best.id, x, y, ctx.rng);
   if (r.flower) select(r.flower.id);
+  if (ui.tool === 'plant' && !Object.keys(plantable()).length) { ui.tool = 'look'; ui.plantType = null; }   // 다 심으면 심기 모드를 끝냄 (10-24)
   after(r, 'planted');
+  renderToolbar(true);
 }
 
 // ---------------------------------------------------------------- 정원: 꽃 상태창 (P14)
@@ -439,14 +441,14 @@ function renderStatus(force) {
   el.innerHTML = `
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
-      <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q)}</span></div>
+      <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
         <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · 심은 지 ${flowH(f.ageH)}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
     <div class="sx-stats">
-      <div title="${qualityWord(f.q)}"><span class="lbl">품질</span><b>${E.pct(f.q)}%</b><span class="mini"><i style="width:${E.pct(f.q)}%;background:#d39b12"></i></span><span class="sub">다음 달 ${nextArrow} ${E.pct(next)}%</span></div>
-      <div title="${vigorWord(v)}"><span class="lbl">기운</span><b style="color:${vCol}">${Math.round(v)}%</b><span class="mini"><i style="width:${Math.round(v)}%;background:${vCol}"></i></span><span class="sub">${vigorWord(v)}</span></div>
+      <div title="${qualityWord(f.q, f.stage === 'bloom')}"><span class="lbl">품질</span><b>${E.pct(f.q)}%</b><span class="mini"><i style="width:${E.pct(f.q)}%;background:#d39b12"></i></span><span class="sub">다음 달 ${nextArrow} ${E.pct(next)}%</span></div>
+      <div title="${vigorWord(v, f.thirstH > 0)}"><span class="lbl">기운</span><b style="color:${vCol}">${Math.round(v)}%</b><span class="mini"><i style="width:${Math.round(v)}%;background:${vCol}"></i></span><span class="sub">${vigorWord(v, f.thirstH > 0)}</span></div>
       <div title="꽃이 바꾸는 땅의 범위"><span class="lbl">땅</span><b>${E.qualityRadius(f)}칸</b><span class="mini land"><i style="background:${LANDS[land].color}"></i></span><span class="sub">${LANDS[land].name}</span></div>
     </div>
     ${note ? `<div class="sx-note">💬 ${note}</div>` : ''}

@@ -25,8 +25,8 @@ const realH = h => {
   const min = Math.max(1, Math.round(h * 60)), d = Math.floor(min / 1440), hh = Math.floor(min % 1440 / 60), mm = min % 60;
   return d ? `${d}일 ${hh}시간` : hh ? `${hh}시간 ${mm}분` : `${mm}분`;
 };
-const vigorWord = v => v >= 80 ? '생생해요' : v >= 50 ? '괜찮아요' : '조금 목말라 보여요';       // P14-08-02-a
-const qualityWord = q => ['돌봄이 필요해 보여요', '돌봄이 필요해 보여요', '조금 지쳐 보여요', '잘 자라고 있어요', '곱게 자랐어요', '아주 곱게 피었어요'][E.stars(q)];
+const vigorWord = (v, thirsty) => v >= 80 ? '생생해요' : v >= 50 ? '괜찮아요' : thirsty ? '조금 목말라 보여요' : '기운이 조금 없어 보여요';       // P14-08-02-a (10-24: 목마를 때만 "목말라")
+const qualityWord = (q, bloom) => ['돌봄이 필요해 보여요', '돌봄이 필요해 보여요', '조금 지쳐 보여요', '잘 자라고 있어요', '곱게 자랐어요', bloom ? '아주 곱게 피었어요' : '아주 곱게 자랐어요'][E.stars(q)];
 const homeLand = F => E.classify(F.t, F.m);
 const SPR = window.FLOWER_SPRITES, spriteCache = {};
 // 꽃잎 한 장 (P08-02-04): 꽃잎 색 P, 그늘 p, 잎맥 h, 테두리 o, 꼭지 g. 말린 꽃잎은 빛이 바랜 색
@@ -241,12 +241,19 @@ function decoBitmap(key) {                         // 지도에 그릴 그림 (�
   if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[key] = im; }
   return im.complete && im.naturalWidth ? im : null;
 }
-const spriteImg = (key, kind, size, locked, alt) => `<img class="px" src="${spriteURL(key, kind, locked)}" width="${size}" height="${size}" alt="${esc(alt || '')}">`;
+const px16 = size => 16 * Math.max(1, size >= 48 ? Math.floor(size / 16 + 0.49) : Math.round(size / 16));   // 도트 그림은 16px의 정수배로만 (P16-14, 10-24)
+const spriteImg = (key, kind, size, locked, alt) => { const s = px16(size); return `<img class="px" src="${spriteURL(key, kind, locked)}" width="${s}" height="${s}" alt="${esc(alt || '')}">`; };
 
 // ---------------------------------------------------------------- 저장
 function load() {
-  try { return E.migrateSave(JSON.parse(localStorage.getItem(KEY))); }   // 예전 저장 보정은 엔진(MIGRATIONS)에서
-  catch (e) { return null; }                       // 저장소를 쓸 수 없으면 새로 시작
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { return null; }   // 저장소를 쓸 수 없으면 새로 시작
+  if (!raw) return null;
+  try { const s = E.migrateSave(JSON.parse(raw)); if (s) return s; } catch (e) { /* 아래에서 보관 */ }
+  // 열 수 없는 저장(10-24): 지우지 않고 따로 보관 → 새 정원으로 시작해도 원본은 남음, 설정에서 내려받을 수 있음
+  try { localStorage.setItem(KEY + '-broken', raw); } catch (e) { /* 보관도 못 하면 어쩔 수 없음 */ }
+  window.__brokenSave = true;
+  return null;
 }
 function save() { try { st.lastReal = Date.now(); localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* 무시 */ } }
 

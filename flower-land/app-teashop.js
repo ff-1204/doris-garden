@@ -45,7 +45,7 @@ function openDryConfirm(ids, counts) {
       <span class="rc-art tc-pair">${spriteImg(g.type, 'petal', 30, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'dried', 30, false, '')}</span>
       <span class="rc-main"><b>${F.name}</b><small><span class="stars">${starStr(g.q)}</span> · 꽃잎 ${g.ids.length}장 중</small></span>
       <span class="stepper"><button type="button" data-dq="${g.type}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-dq="${g.type}|+" ${n >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>`; }).join('')}</div>
-    <div class="rc-notes"><span>🌾 널어 두면 지금 품질 그대로 멈추고, 흐르는 시간 1달 뒤 다 말라요${cal.frozen ? ' (꽃잠 동안은 마르지 않아요)' : ''}</span><span>🫖 말린 꽃잎은 꽃잠에 블렌딩할 수 있어요 · 다시 꽃잎으로 되돌릴 수는 없어요</span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 있어요 · 좋은 꽃잎부터 널어요</span>` : ''}</div></div>`;
+    <div class="rc-notes"><span>🌾 널어 두면 지금 품질 그대로 멈추고, 흐르는 시간 1달 뒤 다 말라요${cal.frozen ? ' (꽃잠 동안은 마르지 않아요)' : ''}</span><span>🫖 말린 꽃잎은 언제든 블렌딩할 수 있어요 · 다시 꽃잎으로 되돌릴 수는 없어요</span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 있어요 · 좋은 꽃잎부터 널어요</span>` : ''}</div></div>`;
   openModal('🌾 건조', body, [
     { label: '취소', act: () => closeModal() },
     { label: pick.length ? `건조 · ${pick.length}장` : '선택 없음', primary: true, act: () => { if (!pick.length) return; closeModal(); after(E.dryPetals(st, pick)); } },
@@ -195,11 +195,12 @@ function renderCab(force) {
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(d.q)}</span></div>
       <div class="cc-q"><span class="qbar"><i style="width:${pr}%;background:#b49a74"></i></span><span class="data">${pr}%</span></div>
       <div class="cc-meta">${cal.frozen ? '꽃잠에는 쉬어요' : `${flowH(Math.max(0, d.leftH))} 뒤 다 말라요`}</div></div>`; }).join('');
+  const starRange = g => E.stars(g.qMin != null ? g.qMin : g.q) === E.stars(g.q) ? starStr(g.q) : `★${E.stars(g.qMin)}~${E.stars(g.q)}`;   // 묶음의 품질 범위 (10-24)
   const driedCards = dried.map(d => {
     const F = FLOWERS[d.type], selN = d.ids.filter(id => ui.blendSel.includes(id)).length, canSel = selN < d.ids.length && ui.blendSel.length < 3 && !ui.blendSel.some(id => st.dried.find(p => p.id === id).type === d.type);
     return `<div class="shopcard cabcard driedcard ${selN ? 'picked' : ''}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">
       <div class="sc-art">${spriteImg(d.type, 'dried', 52, false, F.name)}<span class="chip sc-form">말린 꽃잎</span><span class="sc-count">×${d.ids.length}</span></div>
-      <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(d.q)}</span></div>
+      <div class="cc-name"><b>${F.name}</b><span class="stars">${starRange(d)}</span></div>
       <div class="cc-acts"><button type="button" class="btn primary" data-bsel="${d.type}" ${canSel ? '' : 'disabled'}>${selN ? '✓ 블렌딩' : '🫖 블렌딩'}</button><button type="button" class="btn" data-makedried="${d.ids.join(',')}">🏷️ 티백</button></div></div>`;
   }).join('');
   // 🫖 블렌딩 (P12-08): 언제든 (10-06)
@@ -246,7 +247,7 @@ function renderCab(force) {
   const cupGroups = groupType(st.cups || [], cupKey).map(g => ({ ...g, fresh: g.kind === 'tea' && E.isFresh(st, g, cal), cold: E.cupCold(g, cal) }));
   const cupCards = cupGroups.map(g => { const isB = g.kind === 'blend', key = isB ? g.parts[0] : g.type, nm = isB ? `${g.recipe ? '✨ ' : ''}${g.name}` : FLOWERS[g.type].tea; return `<div class="shopcard cabcard teacard cupcard ${g.cold ? 'cold' : ''}" style="--pc:${SPR.tea[key] || FLOWERS[key].petal}">
       <div class="sc-art"><span class="cup-steam">${spriteImg(key, 'tea', 64, false, nm)}</span><span class="chip sc-form">${g.cold ? '🧊 식은 차' : '☕ 갓 우림'}</span><span class="sc-count">×${g.ids.length}</span>${shopOpen && st.cups[0] && g.ids.includes(st.cups[0].id) ? '<span class="sc-next-up">다음 차례</span>' : ''}</div>
-      <div class="cc-name"><b>${nm}</b><span class="stars">${starStr(g.q)}</span></div>
+      <div class="cc-name"><b>${g.honey ? '🍯 꿀 ' : ''}${nm}</b><span class="stars">${starStr(g.q)}</span></div>
       <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}</div>
       ${!g.honey && honeyLeft ? `<button type="button" class="btn small honey-btn" data-honeycup="${g.ids.join(',')}">🍯 꿀 한 숟갈</button>` : ''}
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>💰 판매</button></div>`; }).join('');
@@ -299,8 +300,11 @@ function openShopUp() {
     <div class="up-wallet"><span class="muted">💰 가진 돈</span><b class="data">${won(st.money)}</b></div></div>`;
   openModal('🪑 찻집 가꾸기', body, [{ label: '닫기', act: () => closeModal() }]);
   $('#modalRoot').querySelectorAll('[data-up]').forEach(b => b.onclick = () => {
-    const v = b.dataset.up, r = v === 'seat' ? E.addSeat(st) : E.buyDecor(st, ...v.split(':'));
-    feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openShopUp();
+    const v = b.dataset.up;
+    const go = () => { const r = v === 'seat' ? E.addSeat(st) : E.buyDecor(st, ...v.split(':')); feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openShopUp(); };
+    if (v !== 'seat') return go();
+    const nx = E.SEATS[E.shopOf(st).seats + 1];
+    openModal('🪑 손님 자리 늘리기', `<p>손님 자리를 ${E.shopOf(st).seats + 1}자리로 늘려요 · <b class="data">${won(nx.price)}</b></p><p class="muted">한 시간에 ${E.shopOf(st).seats + 1}잔씩 팔려요 · 되돌릴 수 없어요</p>`, [{ label: '취소', act: () => openShopUp() }, { label: `늘리기 · ${won(nx.price)}`, primary: true, act: go }]);
   });
 }
 function cupPreview(set) {                     // 찻잔 세트 미리보기 (빈 찻잔)
@@ -312,7 +316,7 @@ function cupPreview(set) {                     // 찻잔 세트 미리보기 (�
 function openHoneyPick(ids) {
   const kinds = E.HONEY_KEYS.filter(k => (st.honey || {})[k] > 0), c = st.cups.find(x => ids.includes(x.id) && !x.honey);
   if (!c || !kinds.length) return;
-  openModal('🍯 꿀 한 숟갈', `<div class="honeypick">${kinds.map(k => `<button type="button" class="up-tile" data-hk="${k}">${honeyImg(k, 3)}<b>${E.honeyName(k)}</b><small>×${st.honey[k]}</small></button>`).join('')}</div><p class="muted" style="margin-top:8px">찻잔 하나에 넣어요 · 꿀차는 손님이 좋아하지만 값은 그대로예요</p>`, [{ label: '닫기', act: () => closeModal() }]);
+  openModal('🍯 꿀 한 숟갈', `<div class="honeypick">${kinds.map(k => `<button type="button" class="up-tile" data-hk="${k}">${honeyImg(k, 3)}<b>${E.honeyName(k)}</b><small>×${st.honey[k]}</small></button>`).join('')}</div><p class="muted" style="margin-top:8px">찻잔 하나에 넣어요 · 꿀차가 돼요 · 값은 그대로예요</p>`, [{ label: '닫기', act: () => closeModal() }]);
   $('#modalRoot').querySelectorAll('[data-hk]').forEach(b => b.onclick = () => { closeModal(); after(E.honeyCup(st, c.id, b.dataset.hk)); });
 }
 function cabClick(e) {

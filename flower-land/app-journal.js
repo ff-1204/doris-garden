@@ -49,7 +49,7 @@ function titleURL(k, locked, frame) {
   return (titleCache[id] = c.toDataURL());
 }
 // 칭호 그림은 22px의 정수배로만 (P16-14)
-const titleImg = (k, size, locked) => `<img class="px ttl-img" data-ttl="${k}" data-locked="${locked ? 1 : 0}" src="${titleURL(k, locked, 0)}" width="${size}" height="${size}" alt="${locked ? '아직 얻지 못한 칭호' : esc(E.TITLES[k].name)}">`;
+const titleImg = (k, size, locked) => { size = 22 * Math.max(1, Math.round(size / 22)); return `<img class="px ttl-img" data-ttl="${k}" data-locked="${locked ? 1 : 0}" src="${titleURL(k, locked, 0)}" width="${size}" height="${size}" alt="${locked ? '아직 얻지 못한 칭호' : esc(E.TITLES[k].name)}">`; };
 let ttlFrame = 0;
 setInterval(() => {   // 👑 정원 칭호: 반짝이가 번갈아 (보이는 그림만 0.4초마다 바꿈)
   ttlFrame++;
@@ -144,7 +144,7 @@ function showNewTitles() {
   const k = st._newTitles.shift(), T = E.TITLES[k], ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), hb = hiddenBlendOf(k);
   openModal('🏅 새 칭호', `<div class="ttl-pop t-${T.tier}"><canvas width="22" height="22" id="ttlAnim" class="ttl-anim" role="img" aria-label="${esc(T.name)} 칭호 문장"></canvas>
     <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? `${ch.no}장 ${ch.name}을 마쳤어요` : T.cond}</small>
-    ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}</div>`,
+    ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}<p class="note">🪴 「${T.name} 문장」 장식이 📦 창고에 들어왔어요</p></div>`,
     [{ label: '닫기', act: () => { closeModal(); save(); showNewTitles(); } }, { label: '대표로 걸기', primary: true, act: () => { E.setTitleOn(st, k); closeModal(); save(); renderAll(true); } }]);
   const x = $('#ttlAnim').getContext('2d'); let r = 0;
   const tick = () => { if (!$('#ttlAnim')) return; TITLE_ART.draw(x, k, T.tier, { rows: r }); if (r++ < 16) setTimeout(tick, 38); };
