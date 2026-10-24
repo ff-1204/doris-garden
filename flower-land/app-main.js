@@ -97,12 +97,14 @@ function renderAll(force) {
   if (ui.tab === 'manual') renderManual(force);
   if (ui.tab === 'settings' && force) renderSettings();   // 입력 중에 다시 그려지지 않게, 들어올 때만
   showNewTitles();
+  if (awayInfo) showAway();                       // 칭호 창이 먼저면 그 뒤에 (QA 9회차 참고)
 }
 let lastUi = 0, lastSave = Date.now();
 // P25-01 "자리를 비운 동안" 창
 function showAway() {
-  const a = awayInfo; awayInfo = null;
-  if (!a || $('#modalRoot').innerHTML) return;
+  const a = awayInfo;
+  if (!a || $('#modalRoot').innerHTML) return;   // 다른 창(새 칭호 등)이 닫히면 그다음에 보여 줌 (frame에서 다시 부름)
+  awayInfo = null;
   const hh = a.h >= 48 ? `${Math.round(a.h / 24)}일` : `${Math.round(a.h)}시간`;
   const pick = a.lines.slice(-8).map(l => `<li><span>${LOG_IC[l.type] || '·'}</span>${esc(l.text)}</li>`).join('');
   const chips = [a.money ? `💰 ${a.money > 0 ? '+' : ''}${won(a.money)}` : '', a.thirsty ? `💧 목마른 꽃 ${a.thirsty}포기` : '🌿 목마른 꽃 없어요', `⛏️ 기력 ${a.gained > 0 ? `+${a.gained} · ` : ''}${a.energy >= E.MINE_MAX_E ? '가득' : `${a.energy} / ${E.MINE_MAX_E}`}`].filter(Boolean);

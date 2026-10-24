@@ -281,12 +281,15 @@ const ctx = {
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
 const AWAY_H = 3;
-const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, energy: st.mine ? st.mine.energy : 0 });
+const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0 });
 function awayDiff(b) {
   const h = (Date.now() - b.real) / HOUR;
   if (h < AWAY_H || !st.onboarded) return null;
-  let i = b.last ? st.log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, st.log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
-  const lines = st.log.slice(i).filter(l => [3, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지'));
+  // 비운 사이 쉼달 기록이 있었으면 일지가 그 기록으로 옮겨져 비워짐 → 기록의 일지 + 지금 일지를 이어 봄 (QA 9회차 참고)
+  const rec = st.records[0] && st.records[0] !== b.recTop ? st.records[0] : null;
+  const log = rec ? [...rec.log, ...st.log] : st.log;
+  let i = b.last ? log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
+  const lines = log.slice(i).filter(l => [3, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지'));
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
