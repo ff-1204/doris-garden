@@ -145,6 +145,9 @@ function titleCard(k) {
 function showNewTitles() {
   if (!st._newTitles || !st._newTitles.length || $('#modalRoot').innerHTML) return;
   if (ui.titleHold && performance.now() < ui.titleHold) return;   // 첫 화분을 먼저 보고 (QA 6회차)
+  if (st._newTitles[0] === 't_visit') {            // 첫 방문 칭호는 창 대신 알림 한 줄 — 첫 화면을 화분과 첫걸음에 (QA 15회차)
+    st._newTitles.shift(); queueToast('🏅 새 칭호 「정원 문을 연 사람」 · 문장 장식은 📦 창고에'); save(); return showNewTitles();
+  }
   const k = st._newTitles.shift(), T = E.TITLES[k], ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), hb = hiddenBlendOf(k);
   openModal('🏅 새 칭호', `<div class="ttl-pop t-${T.tier}"><canvas width="22" height="22" id="ttlAnim" class="ttl-anim" role="img" aria-label="${esc(T.name)} 칭호 문장"></canvas>
     <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? (ch.no === 0 ? '도리의 정원에 처음 왔어요' : `${ch.no}장 ${ch.name}을 마쳤어요`) : T.cond}</small>
