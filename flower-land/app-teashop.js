@@ -249,12 +249,12 @@ function renderCab(force) {
       <div class="cc-meta">${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? '' : teaTags(g)}</div>
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>💰 판매</button></div>`; }).join('');
   // ☕ 카운터: 우린 찻잔을 나무빛 상자 안에 (티백 선반과 구분)
-  const cupSection = (st.cups || []).length ? `<section class="counter"><div class="cab-head"><span class="sb-title">☕ 찻잔 <span class="sh-n">${st.cups.length}</span></span><span class="muted">${shopOpen ? `☕ 손님이 1시간마다 한 잔씩 사 가요 · 다음 손님 <b>${realH(Math.max(0, E.CUP_SELL_H - (st.cupTimerH || 0)) / (st.speed || 1))}</b> 뒤` : '찻집이 열리면 손님이 한 잔씩 사 가요'}</span>${st.cups.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-sellcup="all" ${shopOpen ? '' : 'disabled'}>💰 전체 판매</button></span>` : ''}</div>${shopOpen ? `<div class="cust-bar" title="다음 손님까지"><i style="width:${Math.round(Math.min(1, (st.cupTimerH || 0) / E.CUP_SELL_H) * 100)}%"></i></div>` : ''}<div class="shopgrid cabgrid">${cupCards}</div></section>` : (shopOpen ? '<section class="counter empty"><span>☕</span><div class="muted">카운터가 비어 있어요 · 아래 🏷️ 티백에서 "🫖 우림"을 누르면 찻잔이 여기에 놓여요</div></section>' : '<section class="counter empty closed"><span>🔒</span><div class="muted">카운터는 겨울(12월)부터 열려요</div></section>');
+  const cupSection = (st.cups || []).length ? `<section class="counter"><div class="cab-head"><span class="sb-title">☕ 찻잔 <span class="sh-n">${st.cups.length}</span></span><span class="muted">${shopOpen ? `${seatText()} · 다음 손님 <b>${realH(Math.max(0, E.cupSellH(st) - (st.cupTimerH || 0)) / (st.speed || 1))}</b> 뒤` : `찻집이 열리면 ${seatText()}`}</span>${st.cups.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-sellcup="all" ${shopOpen ? '' : 'disabled'}>💰 전체 판매</button></span>` : ''}</div>${shopOpen ? `<div class="cust-bar" title="다음 손님까지"><i style="width:${Math.round(Math.min(1, (st.cupTimerH || 0) / E.cupSellH(st)) * 100)}%"></i></div>` : ''}<div class="shopgrid cabgrid">${cupCards}</div></section>` : (shopOpen ? '<section class="counter empty"><span>☕</span><div class="muted">카운터가 비어 있어요 · 아래 🏷️ 티백에서 "🫖 우림"을 누르면 찻잔이 여기에 놓여요</div></section>' : '<section class="counter empty closed"><span>🔒</span><div class="muted">카운터는 겨울(12월)부터 열려요</div></section>');
   $('#p-cab').innerHTML = `<div class="stack">
-    <div class="news-row"><div class="shop-sign ${shopOpen ? 'open' : 'closed'}">
+    <div class="news-row"><div class="shop-sign ${shopOpen ? 'open' : 'closed'} sign-${E.shopOf(st).sign}">
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
       <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`} · 🏷️ 티백은 품질이 그대로예요</small></span>
-</div>${wallet()}</div>
+</div><span class="news-side">${wallet()}<button type="button" class="btn small" data-act="shopUp">🪑 찻집 가꾸기</button></span></div>
     ${cupSection}
     <div class="cab-head"><span class="sb-title">🏷️ 티백${st.teas.length + bagged.length ? ` <span class="sh-n">${st.teas.length + bagged.length}</span>` : ''}</span><span class="muted">우려서 찻잔으로</span>${st.teas.length + bagged.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-brew="all" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 전체 우림' : '🔒 준비 중'}</button></span>` : ''}</div>
     ${teaCards ? `<div class="shopgrid cabgrid">${teaCards}</div>` : '<div class="cab-empty"><span>🏷️</span><div><b>티백이 없어요</b> <span class="muted">🌿 제다실에서 생화 · 말린 꽃잎 · 블렌드를 티백으로 만들면 여기로 와요</span></div></div>'}</div>`;
@@ -274,7 +274,35 @@ ${blendBox}
 }
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('toggle', e => { if (e.target.matches('.bl-book')) ui.bookOpen = e.target.open; }, true));   // 레시피 펼침 기억
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('click', cabClick));
+// P17-15 찻집 가꾸기 창 (10-06 백업 → 10-24): 🪑 손님 자리 · ☕ 찻잔 세트 · 🪧 간판. 값은 여기(사는 곳)에서만
+function seatText() { const n = E.shopOf(st).seats; return n === 1 ? '☕ 손님이 1시간마다 한 잔씩 사 가요' : `☕ 손님 ${n}자리 · 1시간에 ${n}잔씩 사 가요`; }
+function openShopUp() {
+  const sh = E.shopOf(st), next = E.SEATS[sh.seats + 1];
+  const tile = (kind, key, it) => {
+    const own = (kind === 'cup' ? sh.cups : sh.signs).includes(key), on = sh[kind] === key, short = !own && st.money < it.price;
+    const art = kind === 'cup' ? `<img class="px" src="${cupPreview(key)}" width="48" height="48" alt="">` : `<span class="sgn-mini sign-${key}"><b>OPEN</b></span>`;
+    return `<button type="button" class="up-tile ${on ? 'on' : ''}" data-up="${kind}:${key}" ${on || short ? 'disabled' : ''} aria-pressed="${on}">${art}<b>${it.name}</b><small>${it.desc}</small><span class="up-price ${short ? 'bad' : ''}">${on ? '✓ 쓰는 중' : own ? '쓰기' : won(it.price)}</span></button>`;
+  };
+  const body = `<div class="up-pop">
+    <div class="up-sec"><div class="up-h">🪑 손님 자리 <span class="muted">자리만큼 한 시간에 여러 잔이 팔려요 · 값은 그대로</span></div>
+      <div class="up-seats">${[1, 2, 3].map(n => `<span class="seat ${n <= sh.seats ? 'on' : ''}" aria-hidden="true">🪑</span>`).join('')}<span class="muted">지금 ${sh.seats}자리 · 1시간에 ${sh.seats}잔</span>
+        ${next ? `<button type="button" class="btn small primary" data-up="seat" ${st.money < next.price ? 'disabled' : ''}>🪑 ${sh.seats + 1}자리 · ${won(next.price)}</button>` : '<span class="muted">✓ 다 늘렸어요</span>'}</div></div>
+    <div class="up-sec"><div class="up-h">☕ 찻잔 세트 <span class="muted">보기만 바뀌어요</span></div><div class="up-grid">${Object.entries(E.CUP_SETS).map(([k, it]) => tile('cup', k, it)).join('')}</div></div>
+    <div class="up-sec"><div class="up-h">🪧 간판 <span class="muted">보기만 바뀌어요</span></div><div class="up-grid">${Object.entries(E.SIGNS).map(([k, it]) => tile('sign', k, it)).join('')}</div></div>
+    <div class="up-wallet"><span class="muted">💰 가진 돈</span><b class="data">${won(st.money)}</b></div></div>`;
+  openModal('🪑 찻집 가꾸기', body, [{ label: '닫기', act: () => closeModal() }]);
+  $('#modalRoot').querySelectorAll('[data-up]').forEach(b => b.onclick = () => {
+    const v = b.dataset.up, r = v === 'seat' ? E.addSeat(st) : E.buyDecor(st, ...v.split(':'));
+    feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openShopUp();
+  });
+}
+function cupPreview(set) {                     // 찻잔 세트 미리보기 (빈 찻잔)
+  const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'), pal = Object.assign({}, SPR.cupPal, E.CUP_SETS[set].pal, { T: '#d9c79a', f: '#e3a3b3' });
+  SPR.cup.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return c.toDataURL();
+}
 function cabClick(e) {
+  if (e.target.closest('[data-act="shopUp"]')) return openShopUp();
   const jp = e.target.closest('[data-jump]'); if (jp) { const t = document.getElementById(jp.dataset.jump); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70); return; }
   const tb = e.target.closest('[data-drt]'); if (tb) { ui.dryTab = tb.dataset.drt; return renderCab(true); }
   const b = e.target.closest('button'); if (!b || b.disabled) return;

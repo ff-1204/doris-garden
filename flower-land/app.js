@@ -196,11 +196,12 @@ function swapPot(n) {
 new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') softPots(m.target); else m.addedNodes.forEach(softPots); } }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 document.addEventListener('DOMContentLoaded', () => softPots(document.body));
 function spriteURL(key, kind, locked) {
-  const id = [key, kind, locked ? 1 : 0].join('|');
+  const cupSet = kind === 'tea' ? (st.shop && E.CUP_SETS[st.shop.cup] ? st.shop.cup : 'baekja') : '';   // 찻잔 세트 (P17-15) — 그림은 st를 연 뒤에만 그림
+  const id = [key, kind, locked ? 1 : 0, cupSet].join('|');
   if (spriteCache[id]) return spriteCache[id];
   const isPetal = kind === 'petal' || kind === 'dried';
   const grid = kind === 'tea' ? SPR.cup : isPetal ? PETAL_GRID : kind === 'form' ? FORM_GRID[FLOWERS[key].life === 'tree' ? 'tree' : FLOWERS[key].form] : kind === 'teabag' ? TEABAG_GRID : SPR.flowers[key];
-  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : SPR.pal[key];
+  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, E.CUP_SETS[cupSet].pal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : SPR.pal[key];
   const c = document.createElement('canvas'); c.width = c.height = 16;
   const x = c.getContext('2d');
   grid.forEach((row, j) => [...row].forEach((ch, i) => {

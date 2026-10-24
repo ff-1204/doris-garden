@@ -292,7 +292,7 @@ function _create(now, rng, cal) {
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
-    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
+    journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length, shop: newShop(),   // shop: P17-15 찻집 가꾸기   // P20 정원 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)           // P19 도감일지 · 칭호 · 퀘스트용 셈
   };
 }
 const nid = st => st.nextId++;
@@ -820,12 +820,48 @@ function cupValue(st, c, cal) {
 }
 // P17-11 자동 판매: 찻집이 열려 있으면 카운터의 찻잔이 1시간(게임 시간 = 배속 1에서 현실 1시간)마다 한 잔씩, 먼저 우린 것부터 팔림
 const CUP_SELL_H = 1;
+// P17-15 찻집 가꾸기 (10-06 백업 → 10-24 되살림): 돈 쓸 곳. 손님 자리는 자동 판매를 빠르게(값은 그대로), 찻잔 세트 · 간판은 보기만 바뀜
+const SEATS = [null, { price: 0 }, { price: 30000 }, { price: 80000 }];        // 자리 1(처음) · 2 · 3
+const CUP_SETS = {
+  baekja: { name: '백자', price: 0, desc: '희고 맑은 기본 찻잔', pal: { c: '#8a7f72', w: '#fbf8f2', s: '#c9c4b8', D: '#e7e1d6', d: '#b9b0a2' } },
+  cheongja: { name: '청자', price: 8000, desc: '비취빛이 은은한 찻잔', pal: { c: '#5f7d6e', w: '#bcd6c4', s: '#8fb3a0', D: '#a8c8b5', d: '#7fa08e' } },
+  buncheong: { name: '분청', price: 12000, desc: '흙빛에 흰 분을 바른 찻잔', pal: { c: '#6e6253', w: '#ddd3c3', s: '#a99a86', D: '#cbbfac', d: '#998b78' } },
+  kkot: { name: '꽃무늬', price: 20000, desc: '분홍 꽃이 그려진 찻잔', pal: { c: '#8a7f72', w: '#fdf6f6', s: '#e3a3b3', D: '#f3d9df', d: '#d495a5' } },
+};
+const SIGNS = {
+  wood: { name: '나무 팻말', price: 0, desc: '처음 걸어 둔 팻말' },
+  flower: { name: '꽃 장식', price: 6000, desc: '팻말에 작은 꽃을 둘러요' },
+  lantern: { name: '등불', price: 10000, desc: '따뜻한 등불을 달아요' },
+};
+const newShop = () => ({ seats: 1, cups: ['baekja'], cup: 'baekja', signs: ['wood'], sign: 'wood' });
+const shopOf = st => (st.shop = st.shop || newShop());
+const cupSellH = st => CUP_SELL_H / shopOf(st).seats;                          // 손님 자리만큼 빨리 팔림
+function addSeat(st) {
+  const sh = shopOf(st), next = SEATS[sh.seats + 1];
+  if (!next) return no('손님 자리를 다 늘렸어요');
+  if (st.money < next.price) return no('돈이 모자라요');
+  st.money -= next.price; sh.seats++;
+  return ok(`손님 자리가 ${sh.seats}자리가 되었어요 · 이제 한 시간에 ${sh.seats}잔씩 팔려요`);
+}
+function buyDecor(st, kind, key) {                // kind: 'cup' | 'sign' — 가진 것은 고르기만, 없으면 사서 바로 씀
+  if (kind !== 'cup' && kind !== 'sign') return no('없는 물건이에요');
+  const sh = shopOf(st), list = kind === 'cup' ? CUP_SETS : SIGNS, own = kind === 'cup' ? sh.cups : sh.signs, it = list[key];
+  if (!it || !Object.prototype.hasOwnProperty.call(list, key)) return no('없는 물건이에요');
+  if (!own.includes(key)) {
+    if (st.money < it.price) return no('돈이 모자라요');
+    st.money -= it.price; own.push(key);
+  }
+  sh[kind] = key;
+  const nm = kind === 'cup' ? `${it.name} 찻잔` : it.name;
+  return ok(`${josa(nm, '으로/로')} 바꿨어요`);
+}
 function autoSell(st, cal, dtH, ctx) {
   st.cups = st.cups || [];
   if (!teaShopOpen(cal) || !st.cups.length) { st.cupTimerH = 0; return; }
   st.cupTimerH = (st.cupTimerH || 0) + dtH;
-  while (st.cupTimerH >= CUP_SELL_H && st.cups.length) {
-    st.cupTimerH -= CUP_SELL_H;
+  const every = cupSellH(st);
+  while (st.cupTimerH >= every && st.cups.length) {
+    st.cupTimerH -= every;
     const c = st.cups.shift(), v = cupValue(st, c, cal);
     st.money += v;
     countCup(st, c, cal, true);
@@ -1060,6 +1096,7 @@ const MIGRATIONS = [
     for (const x of [...s.items, ...s.flowers]) s.dex.form[x.type] = true;
     for (const k of Object.keys(s.dex.flower)) s.dex.form[k] = true;
   }],
+  ['찻집 가꾸기 (P17-15, 10-24)', s => { if (!s.shop) s.shop = newShop(); }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1083,7 +1120,7 @@ const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
-  teaShopOpen, hoursToShopOpen, CUP_SELL_H, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
+  teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };

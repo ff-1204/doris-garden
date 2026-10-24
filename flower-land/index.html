@@ -546,6 +546,30 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .shop-news button:hover { text-decoration: underline; }
 .rv-badge { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 12.5px; margin-right: 4px; }
 .shop-news > .rv-badge + *::before { content: none; }
+/* P17-15 찻집 가꾸기 (10-06 → 10-24) */
+.news-side { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.up-pop { display: grid; gap: 14px; }
+.up-h { font-weight: 600; margin-bottom: 6px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.up-h .muted { font-weight: 400; font-size: 12px; }
+.up-seats { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.up-seats .seat { font-size: 20px; filter: grayscale(1); opacity: .35; }
+.up-seats .seat.on { filter: none; opacity: 1; }
+.up-seats .btn { margin-left: auto; }
+.up-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.up-tile { display: grid; justify-items: center; gap: 3px; padding: 10px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; text-align: center; cursor: pointer; }
+.up-tile small { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.up-tile .up-price { font-size: 12px; font-family: var(--font-data); color: var(--accent); }
+.up-tile .up-price.bad { color: var(--warn); }
+.up-tile.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); cursor: default; }
+.up-tile:disabled:not(.on) { opacity: .6; cursor: default; }
+.up-tile img.px { image-rendering: pixelated; }
+.up-wallet { display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--line); }
+.sgn-mini { display: inline-grid; place-items: center; width: 52px; height: 32px; margin-top: 8px; border-radius: 6px; background: #b88a5a; color: #fff8ec; font-size: 11px; position: relative; }
+.shop-sign .ss-board { position: relative; }
+.shop-sign.sign-flower .ss-board, .sgn-mini.sign-flower { box-shadow: 0 0 0 3px #f3c6d2, 0 0 0 5px #b9d39a; }
+.shop-sign.sign-flower .ss-board::before, .sgn-mini.sign-flower::before { content: "🌸🌼🌸"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: -2px; white-space: nowrap; }
+.shop-sign.sign-lantern .ss-board, .sgn-mini.sign-lantern { box-shadow: 0 0 14px 2px rgba(255, 196, 92, .55); }
+.shop-sign.sign-lantern .ss-board::after, .sgn-mini.sign-lantern::after { content: "🏮"; position: absolute; top: -6px; right: -10px; font-size: 14px; }
 .shop-news > .wallet { margin-left: auto; justify-self: start; }   /* 화원 소식 줄 오른쪽에 가진 돈 */
 .shop-news > .wallet::before { content: none; }
 .shopgrid.rv .shopcard { grid-template-rows: auto auto auto 1fr; }   /* 예약 카드: 심는 줄 수가 달라도 위가 맞게 */
