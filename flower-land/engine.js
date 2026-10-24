@@ -457,7 +457,7 @@ const DAILY_GIFT = 500;                          // P17-13 (10-06)
 function onSlot(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  if (!calendar(st.virtual - 1000).frozen) hiveTick(st, ctx);                  // P18 벌통: 끝난 달이 꽃잠이 아니면
+  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); barrelTick(st); }   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
   st.flowers = st.flowers.filter(f => { if (f.withered && cal.abs > f.witherAbs) { addFert(st, 1); return false; } return true; });
   if (cal.idx === 12) recordYear(st, cal, ctx);                                 // P04-02
@@ -1212,6 +1212,7 @@ const DECOS = {
   moonlamp: { name: '달 초롱', month: 13, price: 6000, desc: '꽃잠 밤을 지키는 초롱' },
   pavilion: { name: '정자', month: 14, price: 60000, desc: '정원을 내려다보는 쉼터' },
   hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, desc: '둘레 2칸에 핀 꽃에서 달마다 꿀을 모아요' },   // P18 여름의 꿀 채집 (10-24)
+  barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
 };
 const DECO_KEYS = Object.keys(DECOS);
 const decoInfo = key => {
@@ -1269,6 +1270,16 @@ function honeyOf(blooms) {
   const kinds = Object.keys(by), top = FLOWER_KEYS.filter(k => by[k]).sort((a, b) => by[b] - by[a])[0];
   const type = kinds.length >= 3 && by[top] * 2 < n ? 'wild' : top;
   return { type, jars: n >= 6 ? 3 : n >= 3 ? 2 : 1 };
+}
+// P25-02 빗물 통: 꽃잠이 아닌 달이 끝날 때 바로 옆(가로 · 세로 · 대각선 1칸) 꽃에 물 — 물병 없이, 물 준 것과 같음(2달)
+const BARREL_R = 1;
+function barrelTick(st) {
+  let n = 0;
+  for (const d of st.decos || []) {
+    if (d.key !== 'barrel' || d.x == null) continue;
+    for (const f of st.flowers) if (!f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= BARREL_R && f.waterH < MONTH_H) { f.waterH = 2 * MONTH_H; f.thirstH = 0; n++; }
+  }
+  return n;
 }
 function hiveTick(st, ctx) {
   for (const d of st.decos || []) {
@@ -1408,7 +1419,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

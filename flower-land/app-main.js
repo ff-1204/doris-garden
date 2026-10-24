@@ -84,13 +84,26 @@ function renderAll(force) {
   showNewTitles();
 }
 let lastUi = 0, lastSave = Date.now();
+// P25-01 "자리를 비운 동안" 창
+function showAway() {
+  const a = awayInfo; awayInfo = null;
+  if (!a || $('#modalRoot').innerHTML) return;
+  const hh = a.h >= 48 ? `${Math.round(a.h / 24)}일` : `${Math.round(a.h)}시간`;
+  const pick = a.lines.slice(-8).map(l => `<li><span>${LOG_IC[l.type] || '·'}</span>${esc(l.text)}</li>`).join('');
+  const chips = [a.money ? `💰 ${a.money > 0 ? '+' : ''}${won(a.money)}` : '', a.thirsty ? `💧 목마른 꽃 ${a.thirsty}포기` : '🌿 목마른 꽃 없어요', `⛏️ 기력 ${a.energy} / ${E.MINE_MAX_E}`].filter(Boolean);
+  openModal(`🌙 자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+    ${pick ? `<ul class="away-log">${pick}</ul>${a.lines.length > 8 ? `<p class="muted">그 밖에 ${a.lines.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : '<p class="muted">조용히 시간이 흘렀어요</p>'}</div>`,
+    [{ label: '닫기', act: () => closeModal() }, ...(a.thirsty ? [{ label: '💧 정원으로', primary: true, act: () => { closeModal(); setTab('garden'); ui.flash = { t: 'water', until: performance.now() + 2400 }; } }] : [])]);
+}
 function frame() {
   const real = Date.now(), dt = real - st.lastReal;
+  const snap = dt > AWAY_H * HOUR ? awaySnap() : null;   // 다른 탭 · 잠든 화면에서 오래 있다 돌아옴 (P25-01)
   st.lastReal = real;
   if (dt > 0) {
     ctx.live = dt < 5000;                         // P11-02-01-c: 다른 탭에 있다가 돌아온 동안 생긴 알림은 로그에만
     E.advance(st, st.virtual + dt * (st.speed || 1), ctx);
     ctx.live = true;
+    if (snap) { awayInfo = awayDiff(snap); showAway(); }
   }
   if (ui.tab === 'garden') draw();
   if (real - lastUi > 400) { renderAll(false); lastUi = real; }
@@ -103,4 +116,5 @@ window.addEventListener('pagehide', save);
 resize(); renderAll(true);
 if (window.__brokenSave) brokenNotice(() => { if (!st.onboarded) onboarding(); });
 else if (!st.onboarded) onboarding();
+else showAway();
 requestAnimationFrame(frame);

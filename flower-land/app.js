@@ -279,6 +279,18 @@ const ctx = {
   onRecord: rec => { try { draw(); rec.snapshot = snapshot(); } catch (e) { /* 그림 없이 기록 */ } },
 };
 
+// P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
+const AWAY_H = 3;
+const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null });
+function awayDiff(b) {
+  const h = (Date.now() - b.real) / HOUR;
+  if (h < AWAY_H || !st.onboarded) return null;
+  let i = b.last ? st.log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, st.log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
+  const lines = st.log.slice(i).filter(l => [3, 8, 9, 12, 13, 14].includes(l.type));
+  const cal = E.calendar(st.virtual);
+  const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
+  return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy };
+}
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주, 그 이상은 건너뜀)
 function catchUp() {
   ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
@@ -288,7 +300,9 @@ function catchUp() {
   st.lastReal = now;
   ctx.live = true;
 }
+const awayBefore = awaySnap();
 catchUp();
+let awayInfo = awayDiff(awayBefore);             // 화면이 다 불린 뒤(app-main) 창으로 보여 줌 (ui는 아직 없음)
 
 // ---------------------------------------------------------------- 파일 저장하기 · 불러오기 (P20-02 · 03, 10-17)
 const UNDO_KEY = KEY + '-undo';                                        // 불러오기 직전 정원 (되돌리기 칸 1개)
