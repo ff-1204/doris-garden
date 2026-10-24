@@ -22,7 +22,7 @@ function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.i
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);
-  const sig = JSON.stringify([cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
+  const sig = JSON.stringify([cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
   if (!force && ui.sigs.shop === sig) { updateCountdowns(); return; }
   ui.sigs.shop = sig;
   const onSale = FLOWER_KEYS.filter(k => !cal.frozen && FLOWERS[k].sow.includes(cal.month));
@@ -94,8 +94,15 @@ function renderShop(force) {
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개">📦 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
+  // P26 💐 이웃에게 선물: 종류마다 한 해에 한 번, 다음 달 답장 편지
+  const gs = E.giftsOf(st);
+  const giftSection = `<div class="cab-head"><span class="sb-title">💐 이웃에게 선물</span><span class="muted">종류마다 한 해에 한 번 · 다음 달에 답장 편지가 와요</span></div>
+    <div class="decoshop">${E.GIFT_KEYS.map(k => { const G = E.GIFTS[k], sent = gs.sent[k], short = st.money < G.price;
+      return `<div class="decocard"><span class="dk-art"><span class="gift-ic">${G.ic}</span></span>
+        <span class="dk-main"><b>${G.name}</b><small>${G.desc}</small><small class="muted">✉️ 편지 ${E.letterCount(st)} / ${E.LETTER_KEYS.length}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(G.price)}</span>${sent ? '<span class="muted">✓ 올해 보냈어요</span>' : `<button type="button" class="btn primary" data-gift="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '보내기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${decoSection}</div>`;
+    ${cal.frozen ? rvView : saleView}${decoSection}${giftSection}</div>`;
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
@@ -106,6 +113,7 @@ $('#p-shop').addEventListener('click', e => {
   const k = b.dataset.key;
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
+  if (b.dataset.gift) { const G = E.GIFTS[b.dataset.gift]; return openModal(`${G.ic} ${G.name} 보내기`, `<p>이웃에게 ${josa(G.name, '을/를')} 보내요 · <b class="data">${won(G.price)}</b></p><p class="muted">한 해에 한 번 · 다음 달(오전 · 오후 6시)에 답장 편지가 와요</p>`, [{ label: '취소', act: () => closeModal() }, { label: `보내기 · ${won(G.price)}`, primary: true, act: () => { closeModal(); after(E.sendGift(st, b.dataset.gift, ctx)); } }]); }
   if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
   if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1; ui.shopQty[key] = 1; return after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = null; setTab('garden', true); } }); }
   if (b.dataset.cart) {

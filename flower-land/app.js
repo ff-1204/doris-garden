@@ -286,7 +286,7 @@ function awayDiff(b) {
   const h = (Date.now() - b.real) / HOUR;
   if (h < AWAY_H || !st.onboarded) return null;
   let i = b.last ? st.log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, st.log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
-  const lines = st.log.slice(i).filter(l => [3, 8, 9, 12, 13, 14, 15, 16].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지'));
+  const lines = st.log.slice(i).filter(l => [3, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지'));
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };

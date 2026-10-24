@@ -70,7 +70,9 @@ function renderManual(force) {
       fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '찻집이 열린 달마다')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '12가지 · 도감')}</div>`,
         '손으로 팔든 손님이 사 가든 맞으면 돼요 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
       + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 가짓수', '×10')}${item(ico('🌸'), '정원의 꽃', '80포기까지')}${item(ico('📖'), '늘어난 도감', '×2')}${item(ico('🪴'), '놓은 장식', '×3')}${item(ico('💌'), '들어준 주문', '×5')}</div>`,
-        '쉼달 기록 때 🏅 정원 점수 · 남과 겨루지 않고 내 최고 기록과만 · 250점이 되면 숨은 칭호')),
+        '쉼달 기록 때 🏅 정원 점수 · 남과 겨루지 않고 내 최고 기록과만 · 250점이 되면 숨은 칭호')
+      + fig(`<div class="mn-flow">${item(ico('💐'), '이웃에게 선물', '해마다 종류마다 한 번')}${arrow()}${item(ico('✉️'), '답장 편지', '다음 달 · 12통')}${arrow()}${item(ico('🏅'), '정원 점수', '선물마다 +10')}</div>`,
+        '💐 화원 맨 아래에서 꽃다발 · 차 한 상자 · 정원 잔치를 보내요 · 오래 해서 남는 돈을 쓰는 곳이에요')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
         `칭호 ${E.TITLE_KEYS.length}개 · ${Object.keys(st.titles).length}개 얻음 · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요`)

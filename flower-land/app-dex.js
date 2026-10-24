@@ -28,6 +28,8 @@ function renderDex(force) {
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#9a8f7a"><span class="dc-art">${on ? decoImg(k, info.title ? 2 : 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? esc(info.name) : '???'}</span><span class="dc-sub">${on ? '' : info.title ? '칭호를 얻으면' : info.craft ? '⛏️ 광산에서 만들기' : `화원 ${E.decoMonths(k).map(monthName).join('·')}`}</span></div>`; }).join('')}</div>` },
       { key: 'honey', ic: '🍯', title: '꿀', got: E.honeyCount(st), total: E.HONEY_KEYS.length, grid: `<div class="dexgrid big">${E.HONEY_KEYS.map(k => { const on = !!(st.dex.honey || {})[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#d99a2b"><span class="dc-art">${on ? honeyImg(k, 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? E.honeyName(k) : '???'}</span><span class="dc-sub">${on ? '' : k === 'wild' ? '여러 꽃이 고루 피면' : st.dex.flower[k] ? `벌통 둘레에 ${FLOWERS[k].name}` : '벌통 둘레에 핀 꽃'}</span></div>`; }).join('')}</div>` },
+      { key: 'letter', ic: '✉️', title: '편지', got: E.letterCount(st), total: E.LETTER_KEYS.length, grid: `<div class="dexgrid big">${E.LETTER_KEYS.map(k => { const on = !!(st.dex.letter || {})[k], L = E.LETTERS[k];
+        return `<button type="button" class="dexcard ${on ? '' : 'locked'}" style="--pc:#d9c6a4" ${on ? `data-letter="${k}"` : 'tabindex="-1" aria-disabled="true"'}><span class="dc-art"><span class="dc-memo">${on ? '✉️' : '?'}</span></span><span class="dc-name">${on ? L.from : '???'}</span><span class="dc-sub">${on ? '눌러서 읽기' : '💐 이웃에게 선물하면'}</span></button>`; }).join('')}</div>` },
       { key: 'memento', ic: '💌', title: '기념품', got: E.mementoCount(st), total: E.MEMENTO_KEYS.length, grid: `<div class="dexgrid big">${E.MEMENTO_KEYS.map(k => { const on = !!(st.dex.memento || {})[k], M = E.MEMENTOS[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#c8a2b0"><span class="dc-art"><span class="dc-memo">${on ? M.ic : '?'}</span></span><span class="dc-name">${on ? M.name : '???'}</span><span class="dc-sub">${on ? '' : '손님 주문을 들어주면'}</span></div>`; }).join('')}</div>` },
       { key: 'mine', ic: '⛏️', title: '광산', got: E.mineCount(st), total: E.MINE_DEX_KEYS.length, grid: `<div class="dexgrid big">${E.MINE_DEX_KEYS.map(k => { const on = !!(st.dex.mine || {})[k], from = E.ORES[k] ? E.ORES[k].from : E.FOSSILS[k] ? E.FOSSILS[k].from : 8;
@@ -49,7 +51,7 @@ function renderDex(force) {
         <div class="rec-art">${r.snapshot ? `<img src="${r.snapshot}" alt="${r.year}년차 쉼달 아침의 정원">` : '<div class="rec-noimg"><span>🖼️</span>이 해는 정원 그림이 없어요</div>'}</div>
         <div class="stack" style="gap:10px">
           <div class="rec-head"><h3>${r.year}년차 정원</h3><span class="muted">땅 ${land}가지</span></div>
-          ${r.score != null ? `<div class="rec-score"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${r.scoreParts[k]}`).join(' · ')}</small></div>` : ''}
+          ${r.score != null ? `<div class="rec-score"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders'], ['선물', 'gifts']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${r.scoreParts[k]}`).join(' · ')}</small></div>` : ''}
           <div class="rec-chips">
             <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
             ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
@@ -65,6 +67,7 @@ $('#p-dex').addEventListener('click', e => {
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
   const fd = e.target.closest('details.fold > summary'); if (fd) { const d = fd.parentElement; ui.fold[d.dataset.fold] = !d.open; return; }   // 펼침 상태 기억
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
+  const lt = e.target.closest('[data-letter]'); if (lt) { const L = E.LETTERS[lt.dataset.letter]; return openModal(`✉️ ${L.from}`, `<div class="letter-pop"><p>${esc(L.text)}</p><p class="letter-from">— ${esc(L.from)}</p></div>`, [{ label: '닫기', act: () => closeModal() }]); }
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);
@@ -125,9 +128,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalR
 
 // 📜 이벤트 로그 (P11-02-04)
 // 일지 한 줄마다 알림 종류 아이콘 (P11-01 번호)
-const LOG_IC = { 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯', 15: '💌', 16: '🪣' };
+const LOG_IC = { 17: '✉️', 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯', 15: '💌', 16: '🪣' };
 // 일지 묶음 (거르기 단추와 아이콘 바탕색): 꽃 · 배송 · 도감 · 그 밖
-const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom', 15: 'etc', 16: 'etc' };
+const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom', 15: 'etc', 16: 'etc', 17: 'etc' };
 const LOG_KINDS = [['all', '전체'], ['bloom', '🌸 개화·수확'], ['ship', '📦 배송·예약'], ['book', '📖 도감·기록'], ['etc', '🌱 그 밖']];
 function logHTML(log, kind) {
   const list = kind && kind !== 'all' ? log.filter(l => (LOG_KIND[l.type] || 'etc') === kind) : log;

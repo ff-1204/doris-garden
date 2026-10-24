@@ -24,6 +24,8 @@ function act() {
   const sh = E.shopOf(st), nx = E.SEATS[sh.seats + 1];
   if (!NO_SPEND && nx && st.money >= nx.price + 20000) spend('찻집 가꾸기', () => E.addSeat(st));
   for (const [kind, list] of [['cup', E.CUP_SETS], ['sign', E.SIGNS]]) for (const [k, it] of Object.entries(list)) if (!NO_SPEND && !(kind === 'cup' ? sh.cups : sh.signs).includes(k) && st.money >= it.price + 20000) spend('찻집 가꾸기', () => E.buyDecor(st, kind, k));
+  // 이웃에게 선물 (P26): 값 + 30,000원이 남으면 해마다 종류마다 한 번
+  for (const k of E.GIFT_KEYS) if (!NO_SPEND && !E.giftsOf(st).sent[k] && st.money >= E.GIFTS[k].price + 30000) spend('선물', () => E.sendGift(st, k));
   // 정원 장식 (P17-16): 이달 장식을 아직 없고 돈이 넉넉하면(값 + 20,000원 남음) 하나
   for (const k of E.decoOffer(cal)) if (!NO_SPEND && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
   if (!cal.frozen) {
@@ -84,7 +86,7 @@ while (st.virtual < end) {
   ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
 }
 // 표
-const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
+const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '선물', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
