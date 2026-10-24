@@ -288,12 +288,12 @@ function _create(now, rng, cal) {
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [],                         // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔
     fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, weedCount: 0, pruneCount: 0, // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
-    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {} }, // P08-01-04, P08-02, P08-03
+    dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {}, memento: {} }, // P08-01-04, P08-02, P08-03
     log: [], records: [], yearBest: null, helpYear: null, nextId: 1,
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(),   // P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0,   // P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -457,7 +457,9 @@ const DAILY_GIFT = 500;                          // P17-13 (10-06)
 function onSlot(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); barrelTick(st); }   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
+  if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); barrelTick(st); }
+  if (teaShopOpen(cal)) { makeOrders(st, cal); addLog(st, 13, '💌 찻집에 새 주문 쪽지 3장이 왔어요', ctx); }   // P23-01
+  else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
   st.flowers = st.flowers.filter(f => { if (f.withered && cal.abs > f.witherAbs) { addFert(st, 1); return false; } return true; });
   if (cal.idx === 12) recordYear(st, cal, ctx);                                 // P04-02
@@ -486,13 +488,15 @@ function onSlot(st, cal, ctx) {
 function recordYear(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
-  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null };
+  const sc = yearScore(st), prevBest = st.bestScore || 0;   // P23-02 한 해 정원 평가
+  const rec = { year: yr, counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, prevBest };
+  st.bestScore = Math.max(prevBest, sc.total);
   st.records.unshift(rec);
   st.records = st.records.slice(0, 10);
   if (ctx && ctx.onRecord) ctx.onRecord(rec);
   st.log = [];                                                                // P11-02-04-e: 쉼달에 초기화
   st.yearBest = null;
-  addLog(st, 7, `${yr}년차 정원을 기록했어요`, ctx);
+  addLog(st, 7, `${yr}년차 정원을 기록했어요 · 🏅 정원 점수 ${sc.total}점${sc.total > prevBest && prevBest ? ' · 최고 기록!' : ''}`, ctx);
   addLog(st, 4, '다음 해 꽃을 예약할 수 있어요', ctx);
 }
 
@@ -923,6 +927,7 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
 const bump = (st, k, n) => { st.stats = st.stats || {}; st.stats[k] = (st.stats[k] || 0) + (n || 1); };
 // 찻잔이 팔릴 때마다: 전체 · 손님(자동) · 갓 우린 · 햇차 · 블렌드 잔 수 (P19-07-01: 판매 잔 수 · 햇차 수만 새로 셈)
 function countCup(st, c, cal, auto) {
+  fillOrder(st, c);                               // P23-01 손님 주문
   bump(st, 'cups'); if (auto) bump(st, 'autoCups');
   if (!cupCold(c, cal)) bump(st, 'warmCups');
   if (c.hat) bump(st, 'hatCups');
@@ -1002,6 +1007,11 @@ const TITLES = {
   t_miracle: { name: '한 포기의 기적', tier: 'g', cond: '품질 80% 이하로 심은 꽃을 100%로 피우기', hint: '지친 꽃을 다시 흠 없이', test: st => st.flowers.some(f => !f.withered && f.stage === 'bloom' && pct(f.q) >= 100 && f.startQ != null && f.startQ <= 0.8) },   // 10-24: 화원 꽃은 100%로 와서 너무 쉬웠음 (QA 1회차)
   t_spring4: { name: '네 번째 봄', tier: 'g', cond: '4년차 3월을 맞기', hint: '봄을 네 번 맞은 정원', test: st => yearOf(st, calendar(st.virtual)) >= 4 },
   t_complete: { name: '도감을 채운 정원사', tier: 'g', cond: '도감 모든 칸', hint: '빈칸이 하나도 없는 책', test: st => dexCount(st) >= dexTotal(st) },
+  // P23-03 오래 하는 정원사를 위한 어려운 숨은 칭호 (10-24)
+  t_guests: { name: '손님의 편지', tier: 'g', cond: '손님 주문 30번 들어주기', hint: '쪽지를 서른 번 읽은 찻집', test: st => S(st, 'orders') >= 30 },
+  t_honey: { name: '꿀 열네 병', tier: 'g', cond: '꿀 도감 14칸', hint: '꽃마다 다른 단맛', test: st => honeyCount(st) >= HONEY_KEYS.length },
+  t_deep: { name: '깊은 굴의 광부', tier: 'g', cond: '광산 지하 20층까지', hint: '빛이 닿지 않는 곳까지', test: st => !!st.mine && st.mine.deepest >= MINE_DEEPEST },
+  t_score: { name: '빛나는 한 해', tier: 'g', cond: '한 해 정원 점수 250점', hint: '스스로를 넘어선 해', test: st => (st.bestScore || 0) >= 250 },
 };
 const TITLE_KEYS = Object.keys(TITLES);
 const chapterQuests = key => CHAPTERS.find(c => c.key === key).quests;
@@ -1051,6 +1061,61 @@ function setTitleOn(st, k) {
   if (k != null && st.titles[k] == null) return no('아직 얻지 못한 칭호예요');
   st.titleOn = k;
   return ok(k ? `대표 칭호를 「${TITLES[k].name}」(으)로 걸었어요` : '대표 칭호를 내렸어요');
+}
+
+// ---------------------------------------------------------------- 💌 손님 주문 · 기념품 (P23-01, 10-24)
+// 찻집이 열린 달마다 주문 쪽지 3장. 맞는 찻잔이 팔리면(손으로든 저절로든) 손님이 기념품을 두고 감. 돈 보상 없음, 놓쳐도 벌 없음
+const MEMENTOS = {
+  hanky: { name: '꽃수 손수건', ic: '🧣' }, button: { name: '나무 단추', ic: '🔘' }, postcard: { name: '바다 엽서', ic: '🖼️' }, shell: { name: '분홍 조개껍데기', ic: '🐚' },
+  feather: { name: '파랑새 깃털', ic: '🪶' }, acorn: { name: '반들 도토리', ic: '🌰' }, ribbon: { name: '노란 리본', ic: '🎀' }, stamp: { name: '옛 우표', ic: '📮' },
+  bookmark: { name: '꽃잎 책갈피', ic: '🔖' }, marble: { name: '유리구슬', ic: '🔮' }, bell: { name: '작은 종', ic: '🔔' }, candy: { name: '별사탕', ic: '⭐' },
+};
+const MEMENTO_KEYS = Object.keys(MEMENTOS);
+const mementoCount = st => Object.keys((st.dex && st.dex.memento) || {}).filter(k => MEMENTOS[k]).length;
+const orderText = o => o.kind === 'tea' ? `★${o.stars} 이상 ${FLOWERS[o.type].tea}` : o.kind === 'recipe' ? '레시피 블렌드 아무거나' : o.kind === 'honey' ? '꿀 넣은 차 아무거나' : '🍃 햇차 아무거나';
+function orderMatch(o, c) {
+  if (o.done) return false;
+  if (o.kind === 'tea') return c.kind === 'tea' && c.type === o.type && stars(c.q) >= o.stars;
+  if (o.kind === 'recipe') return c.kind === 'blend' && !!c.recipe;
+  if (o.kind === 'honey') return !!c.honey;
+  return !!c.hat;
+}
+function makeOrders(st, cal) {
+  const rnd = mineRng(hashStr(`${st.gardenId || 'g'}|order|${cal.abs}`));
+  // 차 주문은 만든 적 있는 티백 꽃 중에서 (없으면 이웃의 화분 꽃)
+  const known = FLOWER_KEYS.filter(k => (st.dex.teabag || {})[k] || st.teas.some(x => x.type === k));
+  const pool = known.length ? known : [firstFlower(st)];
+  const kinds = ['tea', 'tea', 'recipe', 'hat'];
+  if (Object.keys(st.dex.honey || {}).length) kinds.push('honey');
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    const kind = i === 0 ? 'tea' : kinds[Math.floor(rnd() * kinds.length)];
+    out.push(kind === 'tea' ? { kind, type: pool[Math.floor(rnd() * pool.length)], stars: 3 + Math.floor(rnd() * 2), done: false } : { kind, done: false });
+  }
+  st.orders = { abs: cal.abs, list: out };
+}
+function fillOrder(st, c) {
+  const os = st.orders && st.orders.list; if (!os) return null;
+  const o = os.find(x => orderMatch(x, c)); if (!o) return null;
+  o.done = true; bump(st, 'orders');
+  st.dex.memento = st.dex.memento || {};
+  const left = MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
+  let gift = null;
+  if (left.length) { const rnd = mineRng(hashStr(`${st.gardenId || 'g'}|memento|${S(st, 'orders')}`)); gift = left[Math.floor(rnd() * left.length)]; st.dex.memento[gift] = true; }
+  addLog(st, 13, gift ? `💌 ${orderText(o)} 주문을 받은 손님이 ${josa(MEMENTOS[gift].name, '을/를')} 두고 갔어요` : `💌 ${orderText(o)} 주문을 받은 손님이 고맙다고 했어요`);
+  return { order: o, gift };
+}
+
+// ---------------------------------------------------------------- 🏅 한 해 정원 평가 (P23-02, 10-24)
+// 쉼달 기록 때 점수 — 땅 가짓수 ×10 · 사는 꽃(80까지) · 그해 늘어난 도감 칸 ×2 · 정원에 놓은 장식(20까지) ×3 · 그해 손님 주문 ×5. 남과 겨루지 않고 내 기록과만
+function yearScore(st) {
+  const counts = landCounts(st), lands = LAND_KEYS.filter(k => k !== 'barren' && counts[k] > 0).length;
+  const alive = Math.min(80, st.flowers.filter(f => !f.withered).length);
+  const prev = st.records[0], dexGain = Math.max(0, dexCount(st) - (prev ? prev.dex : 0));
+  const decos = Math.min(20, (st.decos || []).filter(d => d.x != null).length);
+  const orders = S(st, 'orders') - ((prev && prev.orders) || 0);
+  const parts = { lands: lands * 10, flowers: alive, dex: dexGain * 2, decos: decos * 3, orders: orders * 5 };
+  return { total: Object.values(parts).reduce((a, b) => a + b, 0), parts, orders: S(st, 'orders') };
 }
 
 // ---------------------------------------------------------------- ⛏️ 정원 뒤 광산 (P24, 10-24)
@@ -1393,6 +1458,7 @@ const MIGRATIONS = [
   ['꿀 선반 · 꿀 도감 (P18, 10-24)', s => { s.honey = s.honey || {}; s.dex.honey = s.dex.honey || {}; }],
   ['이웃의 화분 · 첫 꽃 (P22, 10-24): 이미 시작한 정원은 화분을 받지 않고 1장은 캐모마일 그대로', s => { if (s.gift === undefined) s.gift = s.onboarded ? -1 : null; if (s.firstFlower === undefined) s.firstFlower = null; }],
   ['⛏️ 광산 · 광산 도감 (P24, 10-24)', s => { if (!s.mine) s.mine = newMine(); s.dex.mine = s.dex.mine || {}; }],
+  ['💌 손님 주문 · 기념품 도감 · 🏅 정원 점수 (P23, 10-24)', s => { if (s.orders === undefined) s.orders = null; s.dex.memento = s.dex.memento || {}; if (s.bestScore === undefined) s.bestScore = 0; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1419,7 +1485,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

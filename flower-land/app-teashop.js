@@ -171,7 +171,7 @@ function renderCab(force) {
   const dried = groupType(st.dried, p => p.type);
   ui.blendSel = (ui.blendSel || []).filter(id => st.dried.some(p => p.id === id));
   const sig = JSON.stringify([st.money, cal.frozen, cal.idx >= 10, E.teaShopOpen(cal) ? 0 : realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1)), petals.map(p => [p.type, E.pct(p.q), p.ids.length]), teas.map(t => [t.type, E.pct(t.q), t.fresh, t.ids.length]),
-    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal), c.honey]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab, st.honey]);
+    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal), c.honey]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab, st.honey, st.orders]);
   if (!force && ui.sigs.cab === sig) return;
   ui.sigs.cab = sig;
   const shopOpen = E.teaShopOpen(cal);   // P17-09 찻집은 겨울(12월)부터 꽃잠까지
@@ -262,6 +262,7 @@ function renderCab(force) {
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
       <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`} · 🏷️ 티백은 품질이 그대로예요</small></span>
 </div><span class="news-side">${wallet()}<button type="button" class="btn small" data-act="shopUp">🪑 찻집 가꾸기</button></span></div>
+    ${ordersHTML()}
     ${cupSection}
     ${honeyShelf}
     <div class="cab-head"><span class="sb-title">🏷️ 티백${st.teas.length + bagged.length ? ` <span class="sh-n">${st.teas.length + bagged.length}</span>` : ''}</span><span class="muted">우려서 찻잔으로</span>${st.teas.length + bagged.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-brew="all" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 전체 우림' : '🔒 준비 중'}</button></span>` : ''}</div>
@@ -282,6 +283,13 @@ ${blendBox}
 }
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('toggle', e => { if (e.target.matches('.bl-book')) ui.bookOpen = e.target.open; }, true));   // 레시피 펼침 기억
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('click', cabClick));
+// P23-01 💌 손님 주문 쪽지: 찻집이 열린 달마다 3장, 맞는 찻잔이 팔리면 ✓와 기념품
+function ordersHTML() {
+  const os = st.orders && st.orders.list; if (!os) return '';
+  const done = os.filter(o => o.done).length;
+  return `<div class="cab-head"><span class="sb-title">💌 손님 주문 <span class="sh-n">${done} / ${os.length}</span></span><span class="muted">맞는 찻잔이 팔리면 손님이 기념품을 두고 가요 · 다음 달엔 새 쪽지</span></div>
+    <div class="orders">${os.map(o => `<div class="order ${o.done ? 'done' : ''}"><span class="od-ic">${o.done ? '✓' : '💌'}</span><span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b></span></div>`).join('')}</div>`;
+}
 // P17-15 찻집 가꾸기 창 (10-06 백업 → 10-24): 🪑 손님 자리 · ☕ 찻잔 세트 · 🪧 간판. 값은 여기(사는 곳)에서만
 function seatText() { const n = E.shopOf(st).seats; return n === 1 ? '☕ 손님이 1시간마다 한 잔씩 사 가요' : `☕ 손님 ${n}자리 · 1시간에 ${n}잔씩 사 가요`; }
 function openShopUp() {

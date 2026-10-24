@@ -5,8 +5,8 @@ const H = E.HOUR, MON = new Date(2026, 9, 5, 6, 0, 0).getTime(), ctx = { live: f
 
 console.log('[구성]');
 check(E.QUESTS.length === 31 && E.CHAPTERS.length === 7, '퀘스트 0~6장 31개');
-check(E.TITLE_KEYS.length === 15 && E.TITLE_KEYS.filter(k => E.TITLES[k].chapter).length === 7, '칭호 15개 (장 칭호 7 · 숨은 칭호 8)');
-check(['s', 'f', 'g'].map(t => E.TITLE_KEYS.filter(k => E.TITLES[k].tier === t).length).join() === '4,6,5', '등급 새싹 4 · 꽃 6 · 정원 5');
+check(E.TITLE_KEYS.length === 19 && E.TITLE_KEYS.filter(k => E.TITLES[k].chapter).length === 7, '칭호 19개 (장 칭호 7 · 숨은 칭호 12, P23-03에서 4개 더함)');
+check(['s', 'f', 'g'].map(t => E.TITLE_KEYS.filter(k => E.TITLES[k].tier === t).length).join() === '4,6,9', '등급 새싹 4 · 꽃 6 · 정원 9');
 
 console.log('[0장 첫 방문]');
 const first = E.create(MON + H, () => 0.5);
