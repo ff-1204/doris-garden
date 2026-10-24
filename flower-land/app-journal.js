@@ -74,6 +74,8 @@ function questWhen(q, cal) {
   const w = E.questWhenOf(q, st);
   if (!w) return { now: true };
   if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: `${SEASON_IC[3]} 12월부터` };
+  if (w.need === 'dry') return st.petals.length || st.drying.length ? { now: true } : { now: false, label: '꽃잎을 거두면' };   // 널 꽃잎 (QA 16회차)
+  if (w.need === 'sell') return !E.teaShopOpen(cal) ? { now: false, label: `${SEASON_IC[3]} 12월부터` } : st.teas.length || (st.cups || []).length || st.blends.some(b => b.bagged) ? { now: true } : { now: false, label: '티백을 만들면' };
   if (w.need === 'petal') return st.petals.length || st.drying.length || st.dried.length ? { now: true } : { now: false, label: '꽃잎을 거두면' };   // QA 6회차: 정확한 "지금"
   if (w.need === 'land') return { now: false, label: '꽃 둘레 땅이 바뀌면 (2달쯤)' };
   const F = FLOWERS[w.sow || w.bloom];
