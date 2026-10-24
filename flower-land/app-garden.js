@@ -87,7 +87,7 @@ function renderHint() {
   $('#hint').hidden = !msg;
 }
 $('#tray').addEventListener('click', e => {
-  if (e.target.closest('[data-act="endMode"]')) { ui.tool = 'look'; ui.moveFrom = null; ui.decoId = null; renderToolbar(true); renderEmpty(true); return; }
+  if (e.target.closest('[data-act="endMode"]')) { ui.tool = 'look'; ui.moveFrom = null; ui.decoId = null; ui.gearPreview = null; renderToolbar(true); renderEmpty(true); return; }
   const b = e.target.closest('[data-seed]'); if (!b) return;
   ui.plantType = b.dataset.seed && b.dataset.seed !== ui.plantType ? b.dataset.seed : null; renderToolbar(true);   // 다시 누르면 선택 풀기
 });
@@ -219,7 +219,7 @@ function draw() {
     const x0 = Math.max(0, x - G.r), y0 = Math.max(0, y - G.r), x1 = Math.min(W - 1, x + G.r), y1 = Math.min(H - 1, y + G.r);
     g.fillRect(x0 * cell, y0 * cell, (x1 - x0 + 1) * cell, (y1 - y0 + 1) * cell); g.strokeRect(x0 * cell + 1, y0 * cell + 1, (x1 - x0 + 1) * cell - 2, (y1 - y0 + 1) * cell - 2); g.restore(); };
   const placing = ui.tool === 'deco' && decoById(ui.decoId);
-  if (placing && E.GEAR[placing.key]) { const p = hover || (placing.x != null ? [placing.x, placing.y] : null); if (p) gearAt(placing.key, p[0], p[1]); }
+  if (placing && E.GEAR[placing.key]) { const p = ui.gearPreview || hover || (placing.x != null ? [placing.x, placing.y] : null); if (p) gearAt(placing.key, p[0], p[1]); }
   if (ui.gearShow && performance.now() < ui.gearShow.until) { const d = decoById(ui.gearShow.id); if (d && d.x != null) gearAt(d.key, d.x, d.y); } else if (ui.gearShow) ui.gearShow = null;
   const dm = ui.tool === 'deco' && decoById(ui.decoId);
   if (dm && dm.x != null) { g.save(); g.strokeStyle = '#ffd84a'; g.lineWidth = 2.5; g.setLineDash([4, 3]); g.strokeRect(dm.x * cell + 1, dm.y * cell + 1, cell - 2, cell - 2); g.restore(); }
@@ -295,7 +295,8 @@ canvas.addEventListener('pointermove', e => {
     tipEl.style.top = Math.min(innerHeight - 110, e.clientY + 16) + 'px';
   } else tipEl.hidden = true;
 });
-canvas.addEventListener('pointerup', () => {
+canvas.addEventListener('pointerup', e => {
+  ui.lastPointer = e.pointerType;                 // 터치면 장치를 놓기 전에 범위를 먼저 (QA 14회차)
   if (!drag) return;
   const t = drag.start, moved = drag.moved;
   drag = null;
@@ -314,6 +315,12 @@ function onTiles(tiles) {
   }
   if (ui.tool === 'deco') {
     if (f) return feedback('꽃이 있는 칸에는 놓을 수 없어요', true);
+    const pd = decoById(ui.decoId);
+    if (pd && E.GEAR[pd.key] && ui.lastPointer === 'touch' && !(ui.gearPreview && ui.gearPreview[0] === x && ui.gearPreview[1] === y)) {
+      ui.gearPreview = [x, y]; hover = [x, y];
+      return feedback('노란 칸이 효과 범위예요 · 같은 칸을 한 번 더 누르면 놓아요');
+    }
+    ui.gearPreview = null;
     const r = E.placeDeco(st, ui.decoId, x, y);
     if (r.ok) { ui.tool = 'look'; ui.decoId = null; }
     return after(r);
@@ -383,8 +390,10 @@ function openDecoTile(d) {
       ${hn.length ? '<button type="button" class="btn primary" data-takehoney="1">🍯 거두기</button>' : ''}</div>`;
   }
   if (E.GEAR[d.key]) {                           // P27 장치: 지금 몇 포기가 빨리 자라는지 · 지도에 범위
-    const n = st.flowers.filter(f => !f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= E.GEAR[d.key].r && E.growRate(st, f) > 1 && f.ageH < FLOWERS[f.type].mature * E.MONTH_H).length;
-    extra = `<p class="muted">${n ? `지금 ${n}포기가 빨리 자라는 중이에요` : '지금 둘레에 빨리 자랄 꽃이 없어요'} · 둘레 ${E.GEAR[d.key].r}칸 (창을 닫으면 지도에 잠깐 보여요)</p>`;
+    const G = E.GEAR[d.key], frozen = E.calendar(st.virtual).frozen;
+    const n = st.flowers.filter(f => !f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= G.r && f.ageH < FLOWERS[f.type].mature * E.MONTH_H
+      && (!G.young || f.stage === 'germ' || f.stage === 'sprout' || (f.lifeH != null ? f.lifeH : f.ageH) < E.MONTH_H)).length;   // 이 장치 덕분인 꽃만 (QA 14회차)
+    extra = `<p class="muted">${frozen ? '🌙 꽃잠엔 장치도 쉬어요' : n ? `지금 ${n}포기가 빨리 자라는 중이에요` : '지금 둘레에 빨리 자랄 꽃이 없어요'} · 둘레 ${E.GEAR[d.key].r}칸 (창을 닫으면 지도에 잠깐 보여요)</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
   openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${extra}</div>`, [
@@ -493,7 +502,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
       <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H ? ` · 🔆 ${E.growRate(st, f)}배로 자라는 중` : ''}</div></div>
+        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${E.growRate(st, f)}배로 자라는 중` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
