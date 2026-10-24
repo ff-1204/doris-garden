@@ -41,4 +41,13 @@ const fr = E.create(at(c => c.month === 13), () => 0.5); fr.money = 1e6; const f
 const gd = E.buyDeco(fr, 'greenhouse').deco; E.placeDeco(fr, gd.id, 3, 4); E.advance(fr, fr.virtual + 3 * H);
 check(ff.ageH === age0, '꽃잠엔 온실 안에서도 자라지 않음');
 
+console.log('[QA 12회차]');
+{ const run = withGh => { const s = E.create(at(c => c.month === 9 && !c.frozen), () => 0.5); s.money = 1e6; E.buy(s, 'chamomile', 1); const it = s.items[s.items.length - 1];
+    const r = E.plant(s, it.id, 5, 5, () => 0); if (withGh) { const d = E.buyDeco(s, 'greenhouse').deco; E.placeDeco(s, d.id, 6, 5); }
+    let bloomed = false, withered = false; for (let i = 0; i < 24 * 9; i++) { const f = r.flower; f.waterH = 99; f.weedH = 99; E.advance(s, s.virtual + H, { live: false, rng: () => 0.5 }); if (f.stage === 'bloom') bloomed = true; if (f.withered) { withered = true; break; } } return { bloomed, f: r.flower }; };
+  check(run(false).bloomed && run(true).bloomed, '9월 캐모마일은 온실 안에서도 피고 나서 시듦 (수명은 실제로 흐른 시간)'); }
+{ const s = E.create(at(c => c.month === 3 && !c.frozen), () => 0.5); s.money = 1e6; const f = fl(s, 'maehwa', 3, 3); f.lifeH = 1; const d = E.buyDeco(s, 'greenhouse').deco; E.placeDeco(s, d.id, 3, 4);
+  E.advance(s, s.virtual + 10 * H, { live: false, rng: () => 0.5 }); check(Math.abs((f.ageH - 1) / (f.lifeH - 1) - 2) < 0.05, '자란 시간(ageH)은 2배 · 흐른 시간(lifeH)은 그대로'); }
+{ const s = E.create(at(c => c.month === 4), () => 0.5); s.dex.letter = { florist: true, newcomer: true }; check(E.letterLeftFor(s, 'bouquet'), '꽃다발 편지를 다 받아도 공통 편지가 남으면 편지가 옴');
+  for (const k of E.LETTER_KEYS) if (!E.LETTERS[k].gift) s.dex.letter[k] = true; check(!E.letterLeftFor(s, 'bouquet') && E.letterLeftFor(s, 'party'), '꽃다발 · 공통 편지를 다 받으면 꽃다발엔 고맙다는 답장 (잔치엔 아직 편지)'); }
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

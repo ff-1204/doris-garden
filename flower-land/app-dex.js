@@ -38,7 +38,7 @@ function renderDex(force) {
     ];
     const cat = cats.some(c => c.key === ui.dexCat) ? ui.dexCat : 'all';
     const chip = (key, label, got, total) => `<button type="button" class="dexchip ${got >= total ? 'done' : ''}" data-dc="${key}" aria-pressed="${cat === key}"><span>${label}</span><span class="data">${got} / ${total}</span><i style="--p:${Math.round(got / total * 100)}%"></i></button>`;
-    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '전체', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
+    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '기본 도감', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
       ${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${foldGrid('dex-' + c.key, c.grid)}`).join('')}`;   // 못 모은 칸은 접어 둠 (10-17)
   } else if (ui.dexTab === 'journal') {
     body = journalHTML();

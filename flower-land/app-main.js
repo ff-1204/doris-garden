@@ -35,7 +35,7 @@ function nextReason() {
   for (const f of st.flowers) {
     if (f.withered || f.stage === 'bloom') continue;
     const F = FLOWERS[f.type], n = E.untilMonth(st.virtual, c => !c.frozen && F.bloom.includes(c.month));
-    if (n && f.ageH + n.hours >= F.mature * E.MONTH_H && (!best || n.hours < best.h)) best = { F, h: n.hours, m: n.cal.month };
+    if (n && f.ageH + n.hours * E.growRate(st, f) >= F.mature * E.MONTH_H && (!best || n.hours < best.h)) best = { F, h: n.hours, m: n.cal.month };
   }
   if (best && best.h < 72) out.push(`🌸 ${josa(best.F.name, '이/가')} ${monthName(best.m)}(${realH(best.h / (st.speed || 1))} 뒤)에 펴요`);
   const m = E.mineOf(st);
