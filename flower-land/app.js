@@ -463,7 +463,7 @@ function guideState() {
 function guideSub(k, need) {
   const sub = t => `<small>${t}</small>`;
   if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 누르고 꽃 둘레의 💧를 눌러요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
-  if (k === 'harvested' && E.calendar(st.virtual).frozen) return sub('꽃잠엔 수확을 쉬어요 · 정원이 깨어나면 노란 점을 찾아요');   // P04-01-09
+  if (k === 'harvested' && E.calendar(st.virtual).frozen && !need.harvest) return sub('꽃잠엔 새로 피지 않아요 · 핀 채로 잠든 꽃만 꽃잠에 한 번 거둬요');   // P04-01-09
   if (k === 'harvested' && !need.harvest) return sub('꽃이 피면 노란 점이 생겨요');
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
   if (k === 'sold' && st.gift != null && st.gift >= 0 && st.petals.length >= 2) return sub(`꽃잎 하나는 🌾 꽃방에 널고, 하나는 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)부터 꽃잠까지${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);

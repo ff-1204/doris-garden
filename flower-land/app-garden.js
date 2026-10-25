@@ -13,7 +13,7 @@ const HINT = {
   weed: '잡초 난 꽃을 눌러 잡초를 뽑아요. 2달(현실 하루) 동안 괜찮아요. 뽑은 잡초는 비료가 돼요.',
   prune: '나무와 덤불(장미, 라벤더, 재스민, 동백, 매화, 납매)의 가지를 쳐요. 1달 동안 품질이 올라요.',
   fert: '꽃이 있는 칸에 비료를 뿌려요. 1달 동안 품질이 오르고, 품질이 오르면 땅이 넓어져요.',
-  harvest: '노란 점이 있는 꽃(개화)에서 꽃잎을 거둬 제다실에 넣어요. 한 달에 한 번이에요.',
+  harvest: '노란 점이 있는 꽃(개화)에서 꽃잎을 거둬 제다실에 넣어요. 한 달에 한 번, 꽃잠엔 한 번이에요.',
   prop: '다 자란 꽃을 눌러 번식해요. 꽃마다 할 수 있는 달이 정해져 있고(꽃잠엔 언제든), 한 해에 한 번이에요.',
   move: '옮길 꽃을 누른 다음, 빈 칸을 누르세요. 심는 기간이나 휴면기, 꽃잠에 할 수 있어요.',
 };
@@ -28,7 +28,7 @@ function plantable() {
   return by;
 }
 function careNeed(cal) {
-  const need = { water: 0, weed: 0, prune: 0, harvest: 0, fert: 0 };   // 꽃잠에도 돌보기는 됨 (수확은 canCare가 뺌, P04-01-09)
+  const need = { water: 0, weed: 0, prune: 0, harvest: 0, fert: 0 };   // 꽃잠에도 돌보기 · 수확 (수확은 핀 채로 잠든 꽃만 꽃잠에 한 번 — canCare가 셈, P04-01-09)
   for (const f of st.flowers) if (!f.withered) for (const t in need) if (E.canCare(st, f, t, cal)) need[t]++;
   return need;
 }
@@ -133,7 +133,7 @@ function drawFlower(f, cal) {
       break;
     }
     case 'bloom': {
-      const picked = f.harvestKey === cal.abs, open = picked ? 0.6 : 1;
+      const picked = f.harvestKey === E.harvestSlot(cal), open = picked ? 0.6 : 1;
       ell(R * 0.08, R * 0.12, R * 0.95, R * 0.85, 0, 'rgba(0,0,0,.16)');
       if (F.look === 'lotus') { g.fillStyle = '#3c7d4a'; g.beginPath(); g.arc(0, 0, R * 0.95, 0.5, Math.PI * 2 - 0.1); g.lineTo(0, 0); g.fill(); }
       else for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3; ell(Math.cos(a) * R * 0.45, Math.sin(a) * R * 0.45, R * 0.38, R * 0.22, a, '#467f3d'); }
@@ -155,7 +155,7 @@ function drawFlower(f, cal) {
         }
         g.fillStyle = F.center; g.beginPath(); g.arc(0, 0, R * (F.look === 'daisy' ? 0.26 : 0.14), 0, 7); g.fill();
       }
-      if (!picked && !cal.frozen) { g.fillStyle = '#ffd84a'; g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1; g.beginPath(); g.arc(0, -R * 0.95, Math.max(2, R * 0.14), 0, 7); g.fill(); g.stroke(); }
+      if (!picked) { g.fillStyle = '#ffd84a'; g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1; g.beginPath(); g.arc(0, -R * 0.95, Math.max(2, R * 0.14), 0, 7); g.fill(); g.stroke(); }
       break;
     }
   }
@@ -468,7 +468,7 @@ function renderStatus(force) {
     const hH = { water: f.waterH, weed: f.weedH, prune: f.pruneH, fert: f.fertH }[t];
     if (f.withered) { state = 'na'; sub = '-'; }
     else if (t === 'prune' && !F.prune) { state = 'na'; sub = '필요 없어요'; }
-    else if (t === 'harvest' && !can.harvest) { state = f.stage === 'bloom' && f.harvestKey === cal.abs ? 'done' : 'na'; sub = state === 'done' ? '거뒀어요' : monthsText(F.bloom); }
+    else if (t === 'harvest' && !can.harvest) { state = f.stage === 'bloom' && f.harvestKey === E.harvestSlot(cal) ? 'done' : 'na'; sub = state === 'done' ? '거뒀어요' : monthsText(F.bloom); }
     else if (t !== 'harvest' && hH > 0) { state = 'done'; sub = flowH(hH) + ' 남음'; }
     else if (!can[t]) { state = 'na'; sub = '자란 뒤에'; }
     else if (!have(t)) { state = 'lack'; sub = TOOLNAME[t] + ' 없음'; }
@@ -492,7 +492,7 @@ function renderStatus(force) {
   const moveReason = canMove ? '' : f.withered ? '시든 꽃이에요' : '심는 달 · 휴면기 · 꽃잠에 할 수 있어요';
   const actBtn = (act, label, reason) => `<div class="sx-act"><button type="button" class="btn ${reason ? '' : 'primary'}" data-act="${act}" ${reason ? 'disabled' : ''}>${label}</button>${reason ? `<span class="muted">${reason}</span>` : ''}</div>`;
   const actions = `<div class="sx-acts">${actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : '↔ 옮겨심기', moveReason)}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}</div>`;
-  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), f.harvestKey === cal.abs, f.propYear, cal.idx, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
+  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), f.harvestKey === E.harvestSlot(cal), f.propYear, cal.idx, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
   if (!force && ui.sigs.status === sig) return;
   ui.sigs.status = sig;
   el.className = 'status' + (ui.sheetOpen ? ' sheet' : ' idle-mobile');
@@ -532,7 +532,7 @@ function renderStatus(force) {
       <h3 style="margin:10px 0 4px;font-size:14px">일정</h3>
       ${flowerStrip(F, cal.idx)}
       <dl class="kv">
-        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${cal.frozen ? '꽃잠엔 쉬어요' : f.harvestKey === cal.abs ? '이번 달은 수확했어요' : '지금 수확할 수 있어요'}</dd>` : ''}
+        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === E.harvestSlot(cal) ? (cal.frozen ? '이번 꽃잠엔 수확했어요' : '이번 달은 수확했어요') : '지금 수확할 수 있어요'}</dd>` : ''}
         <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
         <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 달 · 휴면기 · 꽃잠에'}</dd>
       </dl>
