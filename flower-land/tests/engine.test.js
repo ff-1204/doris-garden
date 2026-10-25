@@ -105,7 +105,7 @@ E.advance(st, sun + 20 * HOUR, ctx);
 check(lavF.q === qBefore && lavF.ageH === ageBefore, '쉼표에는 꽃이 멈춤');
 check(!st.items[0] || st.items[0].q === it0, '쉼표에는 창고 품질도 멈춤');
 check(!E.buy(st, 'chamomile', 1).ok, '쉼표에는 일반 판매 없음');
-check(!E.care(st, 'harvest', all(), ctx).ok, '쉼표에는 수확 없음 (돌보기 · 옮겨심기 · 번식은 됨, P04-01-09)');
+check(!st.flowers.some(f => f.stage !== 'bloom' && E.canCare(st, f, 'harvest', c2)), '쉼표엔 핀 채로 잠든 꽃만 수확 대상 (새로 피지 않음, P04-01-09)');
 const money0 = st.money;
 let rv = E.reserve(st, [{ type: 'hibiscus', window: 4, qty: 2 }, { type: 'chamomile', window: 3, qty: 2 }, { type: 'chamomile', window: 9, qty: 1 }]);
 check(rv.ok && st.money === money0 - (450 * 2 + 450 * 3), '예약 10% 할인, 나눠서 고르기: ' + rv.msg);

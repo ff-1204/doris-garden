@@ -53,6 +53,8 @@ function calendar(ms) {
 const yearOf = (st, cal) => cal.week - st.firstWeek + 1;
 // P04-01-09 꽃잠 관리 (10-25): 꽃잠은 꽃이 잠든 때라 휴면기처럼 — 옮겨심기 · 번식은 달 조건 없이, 번식은 새해 몫으로 셈
 const propYearOf = (st, cal) => yearOf(st, cal) + (cal.frozen ? 1 : 0);
+// 수확 한 번의 칸: 꽃잠(쉼달 + 꽃샘달)은 합쳐 한 칸 = 쉼달의 abs (10-25 변경: 꽃잠에 한 번, 2월과는 따로)
+const harvestSlot = cal => cal.frozen ? cal.week * 14 + 12 : cal.abs;
 const canMoveNow = (f, cal) => !!f && !f.withered && (cal.frozen || FLOWERS[f.type].sow.includes(cal.month) || f.stage === 'dormant');
 // P17-09 찻집은 겨울부터 (12월 · 1월 · 2월 · 쉼달 · 꽃샘달 = idx 9~13, 금요일 저녁 6시 ~ 일요일) — 10-06 변경 (예전 토·일)
 const SHOP_OPEN_IDX = 9;
@@ -675,13 +677,12 @@ function canCare(st, f, tool, cal) {
     case 'weed': return f.weedH <= 0;
     case 'prune': return F.prune && f.pruneH <= 0;
     case 'fert': return f.fertH <= 0;
-    case 'harvest': return !cal.frozen && f.stage === 'bloom' && f.harvestKey !== cal.abs;   // 꽃잠엔 피는 때가 없어 거두지 않음
+    case 'harvest': return f.stage === 'bloom' && f.harvestKey !== harvestSlot(cal);   // 꽃잠엔 핀 채로 잠든 꽃만 (새로 피지 않음) · 꽃잠에 한 번
   }
   return false;
 }
-function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 물 · 잡초 · 가지치기 · 비료 (P04-01-09, 효과 시간은 흐르는 시간에만 줄어듦)
+function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 돌보기 · 수확 (P04-01-09, 효과 시간은 흐르는 시간에만 줄어듦)
   const cal = calendar(st.virtual);
-  if (cal.frozen && tool === 'harvest') return no('꽃잠에는 수확을 쉬어요');
   const targets = tiles.map(([x, y]) => flowerAt(st, x, y)).filter(f => canCare(st, f, tool, cal));
   if (!targets.length) return no('돌볼 꽃이 없어요');
   if (tool === 'fert' && st.fert < targets.length) return no(`비료가 ${targets.length - st.fert}개 모자라요.`); // P13-06-01-c
@@ -695,14 +696,14 @@ function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 물 · �
     if (tool === 'prune') { f.pruneH = 12; st.shears--; if (++st.pruneCount % 3 === 0) addFert(st, 1); } // 향상: 1달
     if (tool === 'fert') { f.fertH = 12; st.fert--; }
     if (tool === 'harvest') {                                                    // P12-05
-      f.harvestKey = cal.abs; st.basket--;
+      f.harvestKey = harvestSlot(cal); st.basket--;
       st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) });
       if (f.origin === '이웃' && !f.giftPicked) { f.giftPicked = true; st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) }); }   // 화분 첫 수확은 2장 (QA 6회차)
       if (!st.dex.petal[f.type]) { st.dex.petal[f.type] = true; addLog(st, 9, `도감에 등록: ${FLOWERS[f.type].name} 꽃잎`, ctx); } // P08-02-02
     }
   }
   flushPending(st, ctx);
-  const two = tool === 'harvest' && targets.length === 1 && targets[0].origin === '이웃' && st.petals.filter(p => p.type === targets[0].type).length >= 2 && targets[0].harvestKey === cal.abs;
+  const two = tool === 'harvest' && targets.length === 1 && targets[0].origin === '이웃' && st.petals.filter(p => p.type === targets[0].type).length >= 2 && targets[0].harvestKey === harvestSlot(cal);
   const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: two ? '꽃잎 2장을 거둬 제다실로 보냈어요' : '꽃잎을 거둬 제다실로 보냈어요' }[tool];
   return ok(`${targets.length}${unitOf(targets)}에 ${word}`, { count: targets.length });
 }
@@ -1612,7 +1613,7 @@ const api = {
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
-  create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, canMoveNow, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
+  create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;

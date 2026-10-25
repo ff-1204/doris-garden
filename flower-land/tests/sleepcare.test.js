@@ -1,4 +1,4 @@
-// 꽃잠 관리 (P04-01-09, 10-25): 꽃잠에도 옮겨심기 · 번식 · 돌보기, 심기 · 수확은 막힘, 시간은 계속 멈춤
+// 꽃잠 관리 (P04-01-09, 10-25): 꽃잠에도 옮겨심기 · 번식 · 돌보기 · 수확(꽃잠에 한 번), 심기는 막힘, 시간은 계속 멈춤
 // 여정: 일요일 꽃잠에 들어온 정원사가 장미를 옆 칸으로 옮겨심고, 라벤더를 꺾꽂이하고, 목마른 꽃에 물을 준다
 //       → 월요일 3월이 되면 시간이 다시 흐르고, 꺾꽂이 묘목은 1달(흐르는 시간) 뒤 창고로 온다
 const E = require(require('path').resolve((process.argv[2] || require('path').join(__dirname, '..', 'engine.js'))));
@@ -10,13 +10,18 @@ const ctx = { live: false, rng, toast: () => {}, onRecord: () => {} };
 // 한 해 동안 키움 (물 · 잡초는 달마다)
 const st = E.create(MON + 60e3, rng);
 st.water = st.hoe = st.shears = 999;
-check(E.buy(st, 'rose', 1).ok && E.buy(st, 'lavender', 1).ok && E.buy(st, 'chamomile', 1).ok, '3월에 장미 · 라벤더 · 캐모마일 사기');
+check(E.buy(st, 'rose', 1).ok && E.buy(st, 'lavender', 1).ok && E.buy(st, 'dongbaek', 1).ok && E.buy(st, 'chamomile', 1).ok, '3월에 장미 · 라벤더 · 동백 · 캐모마일 사기');
 const itemOf = t => st.items.find(i => i.type === t).id;
-check(E.plant(st, itemOf('rose'), 5, 5, () => 0).ok && E.plant(st, itemOf('lavender'), 8, 5, () => 0).ok, '장미 · 라벤더 심기 (캐모마일 씨앗은 창고에 둠)');
-const rose = st.flowers.find(f => f.type === 'rose'), lav = st.flowers.find(f => f.type === 'lavender');
+check(E.plant(st, itemOf('rose'), 5, 5, () => 0).ok && E.plant(st, itemOf('lavender'), 8, 5, () => 0).ok && E.plant(st, itemOf('dongbaek'), 2, 5, () => 0).ok, '장미 · 라벤더 · 동백 심기 (캐모마일 씨앗은 창고에 둠)');
+const rose = st.flowers.find(f => f.type === 'rose'), lav = st.flowers.find(f => f.type === 'lavender'), dong = st.flowers.find(f => f.type === 'dongbaek');
+st.basket = 20;
+let febHarvest = false;
 const all = () => st.flowers.map(f => [f.x, f.y]);
 const SUN = MON + 6 * 24 * H;
-for (let t = MON + 12 * H; t < SUN; t += 12 * H) { E.advance(st, t, ctx); E.care(st, 'water', all(), ctx); E.care(st, 'weed', all(), ctx); }
+for (let t = MON + 12 * H; t < SUN; t += 12 * H) {
+  E.advance(st, t, ctx); E.care(st, 'water', all(), ctx); E.care(st, 'weed', all(), ctx);
+  if (E.calendar(st.virtual).month === 2) febHarvest = E.care(st, 'harvest', [[dong.x, dong.y]], ctx).ok;   // 2월 수확
+}
 E.advance(st, SUN + 60e3, ctx);
 let cal = E.calendar(st.virtual);
 check(cal.frozen && cal.month === 13, '일요일 = 꽃잠 (쉼달)');
@@ -50,12 +55,14 @@ check(E.canCare(st, lav, 'water', cal), '꽃잠에도 평소처럼 목마른 꽃
 for (const t of ['water', 'weed', 'prune', 'fert']) { r = E.care(st, t, [[lav.x, lav.y]], ctx); check(r.ok, `꽃잠에 ${E.TOOLS[t].name}: ${r.msg}`); }
 check(lav.waterH === 24 && lav.weedH === 24 && lav.pruneH === 12 && lav.fertH === 12, '돌본 효과가 들어감');
 
-// 꽃잠: 수확 · 심기는 막힘
-rose.stage = 'bloom'; rose.harvestKey = -1;
-check(!E.canCare(st, rose, 'harvest', cal), '꽃잠엔 핀 꽃도 수확할 꽃이 아님');
-st.basket = 5;
+// 꽃잠: 핀 채로 잠든 꽃은 꽃잠에 한 번 수확 (2월 수확과는 따로)
+check(febHarvest && dong.stage === 'bloom', '2월에 핀 동백을 거두고, 핀 채로 꽃잠에 듦');
+check(!E.canCare(st, lav, 'harvest', cal) && !E.care(st, 'harvest', [[lav.x, lav.y]], ctx).ok, '핀 꽃이 아니면 꽃잠에도 수확 막힘');
+const pet0 = st.petals.length, bk0 = st.basket;
 r = E.care(st, 'harvest', all(), ctx);
-check(!r.ok && st.petals.length === 0, '꽃잠엔 수확 막힘: ' + r.msg);
+check(r.ok && r.count === 1 && st.petals.length === pet0 + 1 && st.basket === bk0 - 1, '꽃잠에 동백 수확 (2월에 거뒀어도): ' + r.msg);
+check(dong.harvestKey === E.harvestSlot(cal) && st.petals[st.petals.length - 1].seasonKey === E.seasonKey(st, cal), '꽃잠 수확 칸 · 꽃잎 계절은 평소처럼');
+check(!E.canCare(st, dong, 'harvest', cal) && !E.care(st, 'harvest', all(), ctx).ok, '같은 꽃잠에 두 번째 수확은 막힘');
 r = E.plant(st, itemOf('chamomile'), 2, 2, () => 0);
 check(!r.ok && r.msg === '꽃잠에는 정원이 쉬어요', '꽃잠엔 심기 막힘');
 
@@ -65,6 +72,7 @@ const s0 = snap(rose), l0 = snap(lav), due0 = st.pending.map(p => p.dueH).join('
 E.advance(st, MON + 7 * 24 * H - 60e3, ctx);   // 월요일 05:59 (꽃샘달 끝)
 cal = E.calendar(st.virtual);
 check(cal.frozen && cal.month === 14, '꽃샘달 끝까지 꽃잠');
+check(dong.stage === 'bloom' && !E.canCare(st, dong, 'harvest', cal), '쉼달에 거뒀으면 꽃샘달엔 못 거둠 (꽃잠에 한 번)');
 check(snap(rose) === s0 && snap(lav) === l0, '꽃잠 동안 자람 · 품질 · 물 · 잡초 · 적응이 그대로');
 check(st.pending.map(p => p.dueH).join(',') === due0 && st.items.length === items0, '꽃잠 동안 꺾꽂이는 뿌리 내리지 않고 창고에도 안 옴');
 
