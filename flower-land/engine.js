@@ -51,6 +51,9 @@ function calendar(ms) {
   };
 }
 const yearOf = (st, cal) => cal.week - st.firstWeek + 1;
+// P04-01-09 꽃잠 관리 (10-25): 꽃잠은 꽃이 잠든 때라 휴면기처럼 — 옮겨심기 · 번식은 달 조건 없이, 번식은 새해 몫으로 셈
+const propYearOf = (st, cal) => yearOf(st, cal) + (cal.frozen ? 1 : 0);
+const canMoveNow = (f, cal) => !!f && !f.withered && (cal.frozen || FLOWERS[f.type].sow.includes(cal.month) || f.stage === 'dormant');
 // P17-09 찻집은 겨울부터 (12월 · 1월 · 2월 · 쉼달 · 꽃샘달 = idx 9~13, 금요일 저녁 6시 ~ 일요일) — 10-06 변경 (예전 토·일)
 const SHOP_OPEN_IDX = 9;
 const teaShopOpen = cal => cal.idx >= SHOP_OPEN_IDX;
@@ -672,13 +675,13 @@ function canCare(st, f, tool, cal) {
     case 'weed': return f.weedH <= 0;
     case 'prune': return F.prune && f.pruneH <= 0;
     case 'fert': return f.fertH <= 0;
-    case 'harvest': return f.stage === 'bloom' && f.harvestKey !== cal.abs;
+    case 'harvest': return !cal.frozen && f.stage === 'bloom' && f.harvestKey !== cal.abs;   // 꽃잠엔 피는 때가 없어 거두지 않음
   }
   return false;
 }
-function care(st, tool, tiles, ctx) {            // P13
+function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 물 · 잡초 · 가지치기 · 비료 (P04-01-09, 효과 시간은 흐르는 시간에만 줄어듦)
   const cal = calendar(st.virtual);
-  if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
+  if (cal.frozen && tool === 'harvest') return no('꽃잠에는 수확을 쉬어요');
   const targets = tiles.map(([x, y]) => flowerAt(st, x, y)).filter(f => canCare(st, f, tool, cal));
   if (!targets.length) return no('돌볼 꽃이 없어요');
   if (tool === 'fert' && st.fert < targets.length) return no(`비료가 ${targets.length - st.fert}개 모자라요.`); // P13-06-01-c
@@ -708,19 +711,18 @@ function propagate(st, flowerId, rng, ctx) {     // P06-02-05
   rng = rng || Math.random;
   const cal = calendar(st.virtual), f = st.flowers.find(x => x.id === flowerId);
   if (!f || f.withered) return no('번식할 꽃이 없어요');
-  const F = FLOWERS[f.type], yr = yearOf(st, cal);
-  if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
+  const F = FLOWERS[f.type], yr = propYearOf(st, cal);   // 꽃잠에 한 번식은 새해 몫 (P04-01-09)
   if (F.prop === '채종') return no('한해살이는 시들 때 씨앗을 자동으로 거둬요');
   if (!['mature', 'bloom', 'dormant'].includes(f.stage)) return no('다 자란 꽃만 번식할 수 있어요');
-  if (!F.propMonths.includes(cal.month)) return no(`${josa(F.prop, '은/는')} ${F.propMonths.map(monthName).join('·')}에 할 수 있어요`);
-  if (f.propYear === yr) return no('이 꽃은 올해 이미 번식했어요');
+  if (!cal.frozen && !F.propMonths.includes(cal.month)) return no(`${josa(F.prop, '은/는')} ${F.propMonths.map(monthName).join('·')}에 할 수 있어요`);
+  if (f.propYear === yr) return no(cal.frozen ? '이 꽃은 새해 몫 번식을 이미 했어요' : '이 꽃은 올해 이미 번식했어요');
   f.propYear = yr;
   const n = propCount(f.q), qs = [];
   for (let i = 0; i < n; i++) qs.push(propQuality(f.q, rng));
   const formName = FORM[F.form].name;
   if (F.prop === '꺾꽂이' || F.prop === '접붙이기') {
     st.pending.push({ id: nid(st), type: f.type, qs, dueH: MONTH_H, parent: F.name, method: F.prop });
-    return ok(`${josa(F.prop, '을/를')} 했어요. 1달 뒤 ${formName} ${n}개가 창고에 들어와요`);
+    return ok(`${josa(F.prop, '을/를')} 했어요. ${cal.frozen ? '정원이 깨어나고 ' : ''}1달 뒤 ${formName} ${n}개가 창고에 들어와요`);
   }
   for (const q of qs) st.items.push(newItem(st, f.type, q, '번식', F.name));
   return ok(`${josa(F.prop, '으로/로')} ${formName} ${n}개를 얻었어요`);
@@ -730,13 +732,12 @@ function move(st, flowerId, x, y) {              // P13-03
   const cal = calendar(st.virtual), f = st.flowers.find(z => z.id === flowerId);
   if (!f || f.withered) return no('옮길 꽃이 없어요');
   const F = FLOWERS[f.type];
-  if (cal.frozen) return no('꽃잠에는 정원이 쉬어요');
-  if (!(F.sow.includes(cal.month) || f.stage === 'dormant')) return no('심는 기간이나 휴면기에 옮길 수 있어요');
+  if (!canMoveNow(f, cal)) return no('심는 기간이나 휴면기, 꽃잠에 옮길 수 있어요');   // 꽃잠엔 모든 꽃 (P04-01-09)
   if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('그 자리에는 이미 꽃이 있어요');
   if (decoAt(st, x, y)) return no('그 자리에는 장식이 있어요');
   f.x = x; f.y = y; f.adaptH = 24;
-  return ok(`${josa(F.name, '을/를')} 옮겨 심었어요. 2달 동안 새 자리에 적응해요`);
+  return ok(`${josa(F.name, '을/를')} 옮겨 심었어요. ${cal.frozen ? '정원이 깨어나면 ' : ''}2달 동안 새 자리에 적응해요`);
 }
 
 // P08-04: 제다실에서 만든 것은 티백 (찻집으로 보내는 형태). 티백은 처음 만들 때, 차는 찻집에서 처음 우려 팔 때 도감에
@@ -1611,7 +1612,7 @@ const api = {
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
-  create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
+  create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, canMoveNow, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
