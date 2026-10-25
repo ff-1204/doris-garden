@@ -14,8 +14,8 @@ const HINT = {
   prune: '나무와 덤불(장미, 라벤더, 재스민, 동백, 매화, 납매)의 가지를 쳐요. 1달 동안 품질이 올라요.',
   fert: '꽃이 있는 칸에 비료를 뿌려요. 1달 동안 품질이 오르고, 품질이 오르면 땅이 넓어져요.',
   harvest: '노란 점이 있는 꽃(개화)에서 꽃잎을 거둬 제다실에 넣어요. 한 달에 한 번이에요.',
-  prop: '다 자란 꽃을 눌러 번식해요. 꽃마다 할 수 있는 달이 정해져 있고, 한 해에 한 번이에요.',
-  move: '옮길 꽃을 누른 다음, 빈 칸을 누르세요. 심는 기간이나 휴면기에 할 수 있어요.',
+  prop: '다 자란 꽃을 눌러 번식해요. 꽃마다 할 수 있는 달이 정해져 있고(꽃잠엔 언제든), 한 해에 한 번이에요.',
+  move: '옮길 꽃을 누른 다음, 빈 칸을 누르세요. 심는 기간이나 휴면기, 꽃잠에 할 수 있어요.',
 };
 const decoById = id => (st.decos || []).find(d => d.id === id);
 function plantable() {
@@ -28,8 +28,7 @@ function plantable() {
   return by;
 }
 function careNeed(cal) {
-  const need = { water: 0, weed: 0, prune: 0, harvest: 0, fert: 0 };
-  if (cal.frozen) return need;
+  const need = { water: 0, weed: 0, prune: 0, harvest: 0, fert: 0 };   // 꽃잠에도 돌보기는 됨 (수확은 canCare가 뺌, P04-01-09)
   for (const f of st.flowers) if (!f.withered) for (const t in need) if (E.canCare(st, f, t, cal)) need[t]++;
   return need;
 }
@@ -44,7 +43,7 @@ function renderToolbar(force) {
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -79,7 +78,7 @@ $('#needs').addEventListener('click', e => {
 // 안내 문구는 심기·옮겨 심기 중일 때만 (평소 설명은 상태창과 첫걸음 안내에 있음)
 function renderHint() {
   let msg = '';
-  if (E.calendar(st.virtual).frozen) msg = '';      // 꽃잠은 지도 가운데 팝업이 알려 줌
+  if (E.calendar(st.virtual).frozen && ui.tool !== 'move') msg = '';      // 꽃잠은 지도 가운데 팝업이 알려 줌 (옮겨심기는 꽃잠에도)
   else if (ui.tool === 'plant') msg = ui.plantType ? `${josa(FLOWERS[ui.plantType].name, '을/를')} 심을 빈 칸을 누르세요` : HINT.plant;
   else if (ui.tool === 'deco') { const d = decoById(ui.decoId); msg = d ? `${josa(E.decoInfo(d.key).name, '을/를')} 놓을 빈 칸을 누르세요` : ''; }
   else if (ui.tool === 'move') { const f = ui.moveFrom && st.flowers.find(x => x.id === ui.moveFrom); msg = f ? `${josa(FLOWERS[f.type].name, '을/를')} 옮길 빈 칸을 누르세요` : HINT.move; }
@@ -164,7 +163,7 @@ function drawFlower(f, cal) {
 }
 // P13-06-02: 돌봄이 필요한 꽃(물·잡초)에 "!" 말풍선 하나. 무엇이 필요한지는 꽃을 눌러 상태창에서
 function drawMarks(f, cal) {
-  if (cal.frozen || f.withered) return;
+  if (f.withered) return;
   if (!E.canCare(st, f, 'water', cal) && !E.canCare(st, f, 'weed', cal)) return;
   const r = Math.max(8, cell * 0.26), cx = f.x * cell + cell - r * 0.75, cy = f.y * cell + r * 0.75;
   g.save();
@@ -275,7 +274,7 @@ function tipHTML([x, y]) {
   if (!f) return `<b>${land}</b><br><span class="muted">${tl.t.toFixed(1)}°C · 습도 ${Math.round(tl.m)}%</span>`;
   const F = FLOWERS[f.type], cal = E.calendar(st.virtual), v = Math.round(E.vigorOf(st, f));
   const needs = [];
-  if (!cal.frozen && !f.withered) {
+  if (!f.withered) {
     if (E.canCare(st, f, 'water', cal)) needs.push('💧 물이 필요해요');
     if (E.canCare(st, f, 'weed', cal)) needs.push('🌿 잡초가 났어요');
     if (E.canCare(st, f, 'harvest', cal)) needs.push('🧺 수확할 수 있어요');
@@ -454,7 +453,7 @@ function renderStatus(force) {
     </div>`;
     return;
   }
-  const cal = E.calendar(st.virtual), F = FLOWERS[f.type], yr = E.yearOf(st, cal);
+  const cal = E.calendar(st.virtual), F = FLOWERS[f.type];
   const ch = E.monthlyChange(st, f), v = ch.v;
   const next = Math.min(1, Math.max(f.q > 0.3 ? 0.3 : f.q, f.q + (ch.pos - ch.neg) / 100));
   const tl = st.tiles[f.y * W + f.x], land = E.landOf(tl), home = homeLand(F), match = E.landMatch(st, f);
@@ -467,7 +466,7 @@ function renderStatus(force) {
   const careTile = (t, ic, label) => {
     let state, sub;
     const hH = { water: f.waterH, weed: f.weedH, prune: f.pruneH, fert: f.fertH }[t];
-    if (f.withered || cal.frozen) { state = 'na'; sub = cal.frozen ? '쉬는 중' : '-'; }
+    if (f.withered) { state = 'na'; sub = '-'; }
     else if (t === 'prune' && !F.prune) { state = 'na'; sub = '필요 없어요'; }
     else if (t === 'harvest' && !can.harvest) { state = f.stage === 'bloom' && f.harvestKey === cal.abs ? 'done' : 'na'; sub = state === 'done' ? '거뒀어요' : monthsText(F.bloom); }
     else if (t !== 'harvest' && hH > 0) { state = 'done'; sub = flowH(hH) + ' 남음'; }
@@ -480,18 +479,17 @@ function renderStatus(force) {
     return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${ic}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
   };
   ['water', 'weed', 'prune', 'fert', 'harvest'].forEach(t => careTile(t, '', ''));   // 지금 할 수 있는 돌보기 → 꽃 둘레 단추 (10-06)
-  const canMove = !cal.frozen && !f.withered && (F.sow.includes(cal.month) || f.stage === 'dormant');
+  const canMove = E.canMoveNow(f, cal);   // 꽃잠엔 모든 꽃 (P04-01-09)
   // 옮겨 심기와 번식: 할 수 있으면 버튼, 아니면 이유
   const propReason = (() => {
     if (f.withered) return '시든 꽃이에요';
-    if (cal.frozen) return '꽃잠에는 쉬어요';
     if (F.prop === '채종') return '시들 때 자동으로 거둬요';
-    if (f.propYear === yr) return '올해 이미 했어요';
+    if (f.propYear === E.propYearOf(st, cal)) return cal.frozen ? '새해 몫을 이미 했어요' : '올해 이미 했어요';   // 꽃잠 번식은 새해 몫
     if (!['mature', 'bloom', 'dormant'].includes(f.stage)) return '다 자란 뒤에 할 수 있어요';
-    if (!F.propMonths.includes(cal.month)) return `${monthsText(F.propMonths)}에 할 수 있어요`;
+    if (!cal.frozen && !F.propMonths.includes(cal.month)) return `${monthsText(F.propMonths)}에 할 수 있어요`;
     return '';
   })();
-  const moveReason = canMove ? '' : f.withered ? '시든 꽃이에요' : cal.frozen ? '꽃잠에는 쉬어요' : '심는 기간이나 휴면기에 할 수 있어요';
+  const moveReason = canMove ? '' : f.withered ? '시든 꽃이에요' : '심는 달 · 휴면기 · 꽃잠에 할 수 있어요';
   const actBtn = (act, label, reason) => `<div class="sx-act"><button type="button" class="btn ${reason ? '' : 'primary'}" data-act="${act}" ${reason ? 'disabled' : ''}>${label}</button>${reason ? `<span class="muted">${reason}</span>` : ''}</div>`;
   const actions = `<div class="sx-acts">${actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : '↔ 옮겨심기', moveReason)}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}</div>`;
   const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), f.harvestKey === cal.abs, f.propYear, cal.idx, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
@@ -534,9 +532,9 @@ function renderStatus(force) {
       <h3 style="margin:10px 0 4px;font-size:14px">일정</h3>
       ${flowerStrip(F, cal.idx)}
       <dl class="kv">
-        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === cal.abs ? '이번 달은 수확했어요' : '지금 수확할 수 있어요'}</dd>` : ''}
+        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${cal.frozen ? '꽃잠엔 쉬어요' : f.harvestKey === cal.abs ? '이번 달은 수확했어요' : '지금 수확할 수 있어요'}</dd>` : ''}
         <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
-        <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 기간이나 휴면기에'}</dd>
+        <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 달 · 휴면기 · 꽃잠에'}</dd>
       </dl>
       <h3 style="margin:10px 0 4px;font-size:14px">출신</h3>
       <dl class="kv">

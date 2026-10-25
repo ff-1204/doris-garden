@@ -88,7 +88,7 @@ function renderAll(force) {
   renderTop();
   const cal = E.calendar(st.virtual);
   if (!cal.frozen) ui.restClosed = false;
-  $('#restBanner').hidden = !cal.frozen || ui.restClosed || !$('#emptyMap').hidden;
+  $('#restBanner').hidden = !cal.frozen || ui.restClosed || !$('#emptyMap').hidden || !!ui.selected || !!ui.selTile || ui.tool !== 'look';   // 꽃을 고르거나 옮기는 동안엔 가리지 않게 (P04-01-09)
   if (ui.tab === 'garden') { renderToday(force); renderToolbar(force); renderStatus(force); renderLegend(); renderYear(force); renderGardenLog(force); renderEmpty(force); }
   if (ui.tab === 'shop') renderShop(force);
   if (ui.tab === 'store') renderStore(force);
