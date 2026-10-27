@@ -410,6 +410,10 @@ function openDecoTile(d) {
     const racks = E.placedOf(st, 'dryrack').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.RACK_N);
     extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 건조대도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.RACK_N}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
   }
+  if (d.key === 'teahelper') {                    // P28-10-03 찻집 일손: 열려 있으면 카운터를 채움 · 남은 티백
+    const cal = E.calendar(st.virtual), open = E.teaShopOpen(cal), bags = st.teas.length;
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : open ? (bags ? `카운터에 갓 우린 잔이 ${E.helperKeep(st)}잔이 되게 채워요 · 남은 티백 ${bags}개` : '우릴 티백이 없어요 · 제다실에서 티백을 만들어요') : '🔒 찻집이 열리는 겨울(12월)부터 일해요'} · 가장 오래된 티백부터 · 블렌드 티백 · 🍯 꿀은 직접 해요${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}잔`}</p>`;
+  }
   if (E.GEAR[d.key]) {                           // P27 장치: 지금 몇 포기가 빨리 자라는지 · 지도에 범위
     const G = E.GEAR[d.key], frozen = E.calendar(st.virtual).frozen;
     const n = st.flowers.filter(f => !f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= G.r && f.ageH < FLOWERS[f.type].mature * E.MONTH_H

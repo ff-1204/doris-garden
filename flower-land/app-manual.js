@@ -62,6 +62,7 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(decoImg('barrel', 2), '빗물 통', '6–7월 · 25,000원')}${arrow()}${item(ico('💧'), '바로 옆 8칸', '달마다 저절로 물')}</div>`, '하루쯤 비워도 둘레 꽃이 목마르지 않아요 · 잡초 · 수확은 그대로 직접 해요')
       + fig(`<div class="mn-flow">${item(decoImg('autobasket', 2), '자동 수확 바구니', '정원 등급 6 · 40,000원')}${arrow()}${item(ico('🧺'), '바로 옆 8칸', '달이 끝날 때 거둠')}</div>`, '💐 화원 🧺 자동 장치 · 손을 덜어 줄 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 꽃잠 수확은 직접 해요')
       + fig(`<div class="mn-flow">${item(decoImg('dryrack', 2), '자동 건조대', '정원 등급 9 · 50,000원')}${arrow()}${item(ico('🌾'), '생화 8장', '달이 끝날 때 꽃방에')}${arrow()}${item(ico('🏷️'), '티백', '다 마르면 저절로')}</div>`, '오래된 꽃잎부터 하나에 한 달 8장 · 블렌드는 하지 않아요 — 섞고 싶은 꽃잎은 달이 끝나기 전에 직접 널어요')
+      + fig(`<div class="mn-flow">${item(decoImg('teahelper', 2), '찻집 일손', '정원 등급 12 · 80,000원 · 하나만')}${arrow()}${item(ico('🏷️'), '오래된 티백', '찻집이 열리면')}${arrow()}${item(ico('☕'), '카운터', '손님 자리 + 1잔')}</div>`, '카운터가 손님에게 팔아요 · 블렌드 티백 · 🍯 꿀 · 주문은 직접 · 자리를 비운 동안 창에 한 일이 한 줄로 나와요')
       + fig(`<div class="mn-flow">${item(decoImg('heatmat', 2), '온상 매트', '씨앗 · 새싹 2배')}${item(decoImg('growlight', 2), '생장등', '옆 8칸 1.5배')}${item(decoImg('greenhouse', 2), '유리 온실', '둘레 2칸 2배')}</div>`, '💐 화원 🔆 정원 장치 · 다 자라기까지만 빨라지고, 피는 달 · 품질 · 땅 · 꽃잠은 그대로예요 · 겹치면 가장 빠른 것 하나만')
       + `<div class="mn-icons">${item(ico('🪑'), '손님 자리', '1시간에 더 많이')}${item(ico('☕'), '찻잔 세트', '보기만')}${item(ico('🪧'), '간판', '보기만')}</div><p class="note" style="text-align:center">🍵 찻집 › 🪑 찻집 가꾸기에서 바꿔요</p>`),
     sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',

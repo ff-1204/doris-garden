@@ -122,4 +122,89 @@ console.log('[🍂 꽃잠엔 쉼 · 바구니와 이어서 · 따라잡기 3주]
   check(lines.length === 2 && lines[1] === '자동 건조대가 꽃잎을 말려 티백 16개를 만들었어요', '자리를 비운 동안: 장치마다 한 줄');
 }
 
+const bag = (st, type, q, extra) => { const t = Object.assign({ id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: -1, hat: false }, extra); st.teas.push(t); return t; };
+console.log('[🫖 찻집 일손 — 사기 · 하나만]');
+{
+  const st = E.create(at(c => c.month === 12), () => 0.5); st.money = 1e6; st.grade.xp = E.gradeXpAt(11);
+  check(!E.buyDeco(st, 'teahelper', ctx).ok, '등급 12 전엔 못 삼');
+  st.grade.xp = E.gradeXpAt(12);
+  const r = E.buyDeco(st, 'teahelper', ctx), r2 = E.buyDeco(st, 'teahelper', ctx);
+  check(r.ok && !r2.ok && st.money === 1e6 - 80000, '80,000원 · 하나만');
+}
+
+console.log('[🫖 열려 있으면 오래된 티백부터 카운터를 (손님 자리 + 1)잔까지]');
+{
+  const st = garden(c => c.month === 12), cal = E.calendar(st.virtual);
+  const bs = [bag(st, 'rose', 0.6), bag(st, 'lavender', 0.9, { hat: true }), bag(st, 'rose', 0.5), bag(st, 'gamguk', 0.7)];
+  const blend = { id: st.nextId++, parts: ['rose', 'chamomile'], q: 0.7, recipe: 'springfield', name: '봄 들판', hat: false, bagged: true }; st.blends.push(blend);
+  check(E.helperTick(st, cal) === 0 && st.cups.length === 0, '창고에 있으면 쉼');
+  const d = put(st, 'teahelper', 0, 0);
+  check(E.helperKeep(st) === 2 && E.helperTick(st, cal) === 2 && st.cups.map(c => c.type).join() === 'rose,lavender' && st.cups[1].hat, '손님 자리 1 → 2잔, 가장 오래된 티백부터 (햇차는 그대로)');
+  check(st.teas.length === 2 && st.blends.length === 1 && st.cups.every(c => c.kind === 'tea' && c.brewAbs === cal.abs), '블렌드 티백은 남김');
+  check(E.helperTick(st, cal) === 0, '카운터가 차 있으면 그대로');
+  E.addSeat(st);
+  check(E.helperTick(st, cal) === 1 && st.cups.length === 3 && d.n === 3, '손님 자리를 늘리면 하나 더');
+  const m0 = st.money;
+  E.advance(st, st.virtual + 2.05 * H, ctx);   // 손님 2자리 · 2시간 → 4잔 팔림, 그사이 일손이 다시 채움
+  check(st.stats.autoCups === 4 && st.teas.length === 0 && st.money > m0, '카운터가 한 잔씩 팖 (기존 자동 판매)');
+}
+
+console.log('[🫖 닫혀 있으면 쉼 · 꽃잠엔 열려 있어 일함 · 자리를 비운 동안 한 줄]');
+{
+  const cl = garden(c => c.month === 6 && !c.frozen); put(cl, 'teahelper', 0, 0); bag(cl, 'rose');
+  E.advance(cl, cl.virtual + 3 * H, ctx);
+  check(cl.cups.length === 0 && cl.teas.length === 1, '6월(찻집 닫힘)엔 안 우림');
+  const st = garden(c => c.month === 13); put(st, 'teahelper', 0, 0);
+  for (let i = 0; i < 6; i++) bag(st, 'rose');
+  const b0 = E.autoStats(st);
+  E.advance(st, st.virtual + 8 * H, ctx);
+  check(st.teas.length === 0 && st.stats.autoBrew === 6 && st.stats.autoCups === 6, '쉼달에도 우려 팖 (시간은 멈춰도 찻집은 열림)');
+  E.advance(st, E.calendar(st.virtual).slotEnd + 0.1 * H, ctx);
+  check(st.log.some(l => l.type === 13 && l.text === '찻집 일손이 찻잔 6잔을 우렸어요'), '일지는 달이 바뀔 때 한 줄');
+  check(E.autoAwayLines(st, b0).join() === '찻집 일손이 찻잔 6잔을 우렸어요' && E.autoLineType('찻집 일손이 찻잔 6잔을 우렸어요') === 13, '자리를 비운 동안 한 줄 (☕)');
+}
+
+// 같은 꽃 · 같은 때를 사람이 손으로(달 중간에 거둬 바로 널고, 마르면 티백, 찻집이 열리면 모두 우려 바로 팖) 한 정원과 장치 셋만 둔 정원
+function twin(auto) {
+  const st = garden(c => c.idx === 0 && c.yh < 1);
+  if (auto) { put(st, 'autobasket', 10, 10); put(st, 'dryrack', 0, 0); put(st, 'teahelper', 1, 0); }
+  else st.money -= 40000 + 50000 + 80000;   // 같은 돈에서 시작
+  for (const [x, y] of [[9, 9], [10, 9], [11, 9], [9, 11], [11, 11]]) fl(st, 'dongbaek', x, y);
+  const end = st.virtual + 14 * 24 * H;
+  while (st.virtual < end) {
+    if (!auto) {
+      const cal = E.calendar(st.virtual);
+      while (st.basket < 5) E.buySupply(st, 'basket', 1);   // 바구니 용품은 사서 씀
+      for (const f of st.flowers) E.care(st, 'harvest', [[f.x, f.y]], ctx);
+      if (st.petals.length) E.dryPetals(st, st.petals.map(p => p.id));
+      if (st.dried.length) E.makeTeaDried(st, st.dried.map(p => p.id), ctx);
+      if (E.teaShopOpen(cal) && st.teas.length) { E.brew(st, st.teas.map(t => t.id), []); E.sellCups(st, st.cups.map(c => c.id), ctx); }
+    }
+    E.advance(st, st.virtual + 2 * H, ctx);
+  }
+  return st;
+}
+console.log('[사람이 손으로 하는 것보다 더 벌지 않음 (P17-14)]');
+{
+  const hand = twin(false), auto = twin(true);
+  console.log(`    손: 돈 ${hand.money} · 판 잔 ${hand.stats.cups || 0} / 장치: 돈 ${auto.money} · 판 잔 ${auto.stats.cups || 0} · 거둠 ${auto.stats.autoHarvest} · 티백 ${auto.stats.autoBags} · 우림 ${auto.stats.autoBrew}`);
+  check(auto.stats.autoHarvest > 0 && auto.stats.autoBags > 0 && auto.stats.autoBrew > 0 && auto.stats.cups > 0, '장치 셋이 이어서 일함 (거둠 → 티백 → 우림 → 판매)');
+  check(auto.money <= hand.money, '같은 꽃이면 손으로 한 정원이 같거나 더 벎 (장치 값을 빼고 셈)');
+  check(auto.stats.cups <= hand.stats.cups, '판 잔 수도 손이 같거나 많음 (꽃잠 수확 · 블렌드는 사람 몫)');
+}
+
+console.log('[저장 · 불러오기]');
+{
+  const st = garden(c => c.month === 6 && !c.frozen);
+  const a = put(st, 'autobasket', 3, 3), r = put(st, 'dryrack', 0, 0); put(st, 'teahelper', 1, 0); fl(st, 'lavender', 3, 4);
+  monthEnd(st);
+  const re = E.parseSave(JSON.stringify(E.makeSave(st, 12345)));
+  const g = re.ok && E.migrateSave(JSON.parse(JSON.stringify(re.data.game)));   // 앱 불러오기와 같은 길 (파일 → 열 때 보정)
+  check(re.ok && !!g, '파일로 저장해서 다시 열기');
+  check(['autobasket', 'dryrack', 'teahelper'].every(k => g.decos.some(d => d.key === k && d.x != null)) && g.decos.find(d => d.key === 'autobasket').n === 1, '놓인 자리 · 장치가 센 수 그대로');
+  check(g.drying.length === 1 && g.drying[0].auto && g.stats.autoHarvest === 1, '건조대가 넌 꽃잎(말리는 중)도 그대로');
+  monthEnd(g);
+  check(g.teas.some(t => t.auto), '불러온 뒤에도 다 마르면 티백');
+}
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

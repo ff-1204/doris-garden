@@ -257,7 +257,7 @@ function renderCab(force) {
   const honeyShelf = honeyKinds.length ? `<div class="cab-head"><span class="sb-title">🍯 꿀 선반 <span class="sh-n">${honeyLeft}</span></span><span class="muted">찻잔에 한 숟갈 넣으면 꿀차가 돼요 · 값은 그대로</span></div>
     <div class="honeyshelf">${honeyKinds.map(k => `<span class="hj">${honeyImg(k, 2)}<small>${E.honeyName(k)} <b class="data">×${st.honey[k]}</b></small></span>`).join('')}</div>` : '';
   // ☕ 카운터: 우린 찻잔을 나무빛 상자 안에 (티백 선반과 구분)
-  const cupSection = (st.cups || []).length ? `<section class="counter"><div class="cab-head"><span class="sb-title">☕ 찻잔 <span class="sh-n">${st.cups.length}</span></span><span class="muted">${shopOpen ? `${seatText()} · 다음 손님 <b>${realH(Math.max(0, E.cupSellH(st) - (st.cupTimerH || 0)) / (st.speed || 1))}</b> 뒤` : `찻집이 열리면 ${seatText()}`}</span>${st.cups.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-sellcup="all" ${shopOpen ? '' : 'disabled'}>💰 전체 판매</button></span>` : ''}</div>${shopOpen ? `<div class="cust-bar" title="다음 손님까지"><i style="width:${Math.round(Math.min(1, (st.cupTimerH || 0) / E.cupSellH(st)) * 100)}%"></i></div>` : ''}<div class="shopgrid cabgrid">${cupCards}</div></section>` : (shopOpen ? '<section class="counter empty"><span>☕</span><div class="muted">카운터가 비어 있어요 · 아래 🏷️ 티백에서 "🫖 우림"을 누르면 찻잔이 여기에 놓여요</div></section>' : '<section class="counter empty closed"><span>🔒</span><div class="muted">카운터는 겨울(12월)부터 열려요</div></section>');
+  const cupSection = (st.cups || []).length ? `<section class="counter"><div class="cab-head"><span class="sb-title">☕ 찻잔 <span class="sh-n">${st.cups.length}</span></span><span class="muted">${helperOn() ? '🫖 일손이 채워요 · ' : ''}${shopOpen ? `${seatText()} · 다음 손님 <b>${realH(Math.max(0, E.cupSellH(st) - (st.cupTimerH || 0)) / (st.speed || 1))}</b> 뒤` : `찻집이 열리면 ${seatText()}`}</span>${st.cups.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-sellcup="all" ${shopOpen ? '' : 'disabled'}>💰 전체 판매</button></span>` : ''}</div>${shopOpen ? `<div class="cust-bar" title="다음 손님까지"><i style="width:${Math.round(Math.min(1, (st.cupTimerH || 0) / E.cupSellH(st)) * 100)}%"></i></div>` : ''}<div class="shopgrid cabgrid">${cupCards}</div></section>` : (shopOpen ? `<section class="counter empty"><span>☕</span><div class="muted">카운터가 비어 있어요 · ${helperOn() ? '🫖 일손이 우릴 티백이 생기면 바로 채워요' : '아래 🏷️ 티백에서 "🫖 우림"을 누르면 찻잔이 여기에 놓여요'}</div></section>` : '<section class="counter empty closed"><span>🔒</span><div class="muted">카운터는 겨울(12월)부터 열려요</div></section>');
   $('#p-cab').innerHTML = `<div class="stack">
     <div class="news-row"><div class="shop-sign ${shopOpen ? 'open' : 'closed'} sign-${E.shopOf(st).sign}">
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
@@ -266,7 +266,7 @@ function renderCab(force) {
     ${ordersHTML()}
     ${cupSection}
     ${honeyShelf}
-    <div class="cab-head"><span class="sb-title">🏷️ 티백${st.teas.length + bagged.length ? ` <span class="sh-n">${st.teas.length + bagged.length}</span>` : ''}</span><span class="muted">우려서 찻잔으로</span>${st.teas.length + bagged.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-brew="all" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 전체 우림' : '🔒 준비 중'}</button></span>` : ''}</div>
+    <div class="cab-head"><span class="sb-title">🏷️ 티백${st.teas.length + bagged.length ? ` <span class="sh-n">${st.teas.length + bagged.length}</span>` : ''}</span><span class="muted">우려서 찻잔으로${helperOn() ? ' · 🫖 일손이 오래된 것부터 우려요 · 블렌드 티백은 직접' : ''}</span>${st.teas.length + bagged.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-brew="all" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 전체 우림' : '🔒 준비 중'}</button></span>` : ''}</div>
     ${teaCards ? `<div class="shopgrid cabgrid">${teaCards}</div>` : '<div class="cab-empty"><span>🏷️</span><div><b>티백이 없어요</b> <span class="muted">🌿 제다실에서 생화 · 말린 꽃잎 · 블렌드를 티백으로 만들면 여기로 와요</span></div></div>'}</div>`;
   // 🌿 제다실: 생화 · 꽃방 · 말린 꽃잎 · 블렌딩 · 블렌드 → 모두 🏷️ 티백으로 (10-06)
   $('#p-tearoom').innerHTML = `<div class="stack">
@@ -292,6 +292,7 @@ function ordersHTML() {
     <div class="orders">${os.map(o => `<div class="order ${o.done ? 'done' : ''}"><span class="od-ic">${o.done ? '✓' : '💌'}</span><span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b></span></div>`).join('')}</div>`;
 }
 // P17-15 찻집 가꾸기 창 (10-06 백업 → 10-24): 🪑 손님 자리 · ☕ 찻잔 세트 · 🪧 간판. 값은 여기(사는 곳)에서만
+const helperOn = () => E.placedOf(st, 'teahelper').length > 0;   // P28-10-03 찻집 일손이 정원에 놓여 있음
 function seatText() { const n = E.shopOf(st).seats; return n === 1 ? '☕ 손님이 1시간마다 한 잔씩 사 가요' : `☕ 손님 ${n}자리 · 1시간에 ${n}잔씩 사 가요`; }
 function openShopUp() {
   const sh = E.shopOf(st), next = E.SEATS[sh.seats + 1];

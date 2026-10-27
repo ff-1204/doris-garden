@@ -296,7 +296,7 @@ function awayDiff(b) {
   const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18].includes(l.type) && !E.isAutoLine(l.text) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호')
     && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text) && !E.isWeeklyLine(l.text));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
   const wl = E.weeklyAwayLine(st, b.weekly); if (wl) lines.push({ type: 9, text: wl });   // 🗓️ 그동안 끝낸 주간 목표 한 줄 (P28-09 · 느긋하게 보기면 없음)
-  for (const t of E.autoAwayLines(st, b.auto)) lines.push({ type: 18, text: t });   // 🧺 자동 장치가 한 일은 장치마다 한 줄 (P28-10)
+  for (const t of E.autoAwayLines(st, b.auto)) lines.push({ type: E.autoLineType(t), text: t });   // 🧺 자동 장치가 한 일은 장치마다 한 줄 (P28-10)
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
