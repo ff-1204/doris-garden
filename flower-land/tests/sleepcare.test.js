@@ -83,12 +83,34 @@ cal = E.calendar(st.virtual);
 check(!cal.frozen && cal.month === 3 && E.yearOf(st, cal) === yr + 1, '월요일 = 새해 3월');
 check(E.FLOWERS.lavender.propMonths.includes(3), '3월은 라벤더 꺾꽂이 달');
 r = E.propagate(st, lav.id, rng, ctx);
-check(!r.ok && r.msg === '이 꽃은 올해 이미 번식했어요', '꽃잠에 번식한 꽃은 3월에 또 못 함');
+check(!r.ok && r.msg === '이 꽃은 꽃잠에 새해 몫 번식을 했어요' && lav.propRest, '꽃잠에 번식한 꽃은 3월에 또 못 함 · 꽃잠에 했다고 알려 줌 (QA 19회차)');
 check(!E.canMoveNow({ type: 'rose', stage: 'mature' }, { frozen: false, month: 7 }), '평일 옮겨심기는 달 조건 그대로 (7월 장미는 못 옮김)');
 E.advance(st, MON2 + 11 * H, ctx);
 check(st.pending.length === 2 && !st.items.some(i => i.origin === '번식'), '흐르는 시간 1달이 안 됐으면 아직 안 옴');
 E.advance(st, MON2 + 12 * H + 60e3, ctx);
 check(st.pending.length === 0 && st.items.filter(i => i.origin === '번식' && i.type === 'lavender').length >= 1, '흐르는 1달 뒤 꺾꽂이 묘목이 창고로 옴');
+check(st.log.some(l => l.type === 10 && /^라벤더 묘목 \d+개가 뿌리를 내려 창고에 들어왔어요$/.test(l.text)) && st.log.some(l => l.text.startsWith('장미 묘목')), '묘목이 오면 일지에 한 줄 (알림 종류 아님, QA 19회차)');
+st.fert = 0; lav.fertH = 0;
+check(E.care(st, 'fert', [[lav.x, lav.y]], ctx).msg === '비료가 1개 모자라요', '모자람 문구에 마침표 없음');
+E.advance(st, MON2 + 13 * H, ctx);
+const lav2 = st.flowers.find(f => f.type === 'lavender');
+lav2.propYear = null;   // 새 해가 된 셈 치고
+check(E.calendar(st.virtual).month === 4 && E.propagate(st, lav2.id, rng, ctx).ok && lav2.propRest === false, '평소 달(4월)에 번식하면 꽃잠 표시가 꺼짐');
+
+// 여정 (QA 19회차): 1월에 장미를 심은 정원사가 일요일 꽃잠에 장미를 눌러 본다 → 아직 덜 자라서 번식이 막힘
+const j = E.create(MON + 5 * 24 * H + 6 * H, rng);   // 토요일 12시 = 1월 중간
+j.money = 99999;
+check(E.calendar(j.virtual).month === 1 && E.buy(j, 'rose', 1).ok, '1월에 장미 묘목 사기');
+check(E.plant(j, j.items.find(i => i.type === 'rose').id, 5, 5, () => 0).ok, '1월에 장미 심기');
+E.advance(j, SUN + 60e3, ctx);
+const jr = j.flowers[0], jc = E.calendar(j.virtual);
+check(jc.frozen && jr.stage === 'dormant' && jr.ageH < E.FLOWERS.rose.mature * E.MONTH_H, `꽃잠의 어린 장미는 휴면으로 보이지만 덜 자람 (${(jr.ageH / E.MONTH_H).toFixed(2)}달)`);
+r = E.propagate(j, jr.id, rng, ctx);
+check(!E.propGrown(jr) && !r.ok && r.msg === '다 자란 꽃만 번식할 수 있어요' && !j.pending.length, '어린 휴면 꽃은 꽃잠 번식 막힘');
+check(E.canMoveNow(jr, jc) && E.move(j, jr.id, 6, 5).ok, '어린 휴면 꽃도 꽃잠에 옮겨심기는 됨 (원래 규칙)');
+jr.ageH = E.FLOWERS.rose.mature * E.MONTH_H;
+check(E.propGrown(jr) && E.propagate(j, jr.id, rng, ctx).ok, '다 자란 나이면 휴면 꽃도 꽃잠 번식 됨');
+check(E.propGrown({ type: 'rose', stage: 'mature', ageH: 0 }) && !E.propGrown({ type: 'rose', stage: 'young', ageH: 999 }), '평소 단계 판단은 그대로');
 
 // 0년차 (꽃잠에 처음 시작): 번식은 1년차 몫
 const z = E.create(SUN + 3 * H, rng);

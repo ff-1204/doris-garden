@@ -484,8 +484,8 @@ function renderStatus(force) {
   const propReason = (() => {
     if (f.withered) return '시든 꽃이에요';
     if (F.prop === '채종') return '시들 때 자동으로 거둬요';
-    if (f.propYear === E.propYearOf(st, cal)) return cal.frozen ? '새해 몫을 이미 했어요' : '올해 이미 했어요';   // 꽃잠 번식은 새해 몫
-    if (!['mature', 'bloom', 'dormant'].includes(f.stage)) return '다 자란 뒤에 할 수 있어요';
+    if (f.propYear === E.propYearOf(st, cal)) return cal.frozen ? '새해 몫을 이미 했어요' : f.propRest ? '꽃잠에 새해 몫을 했어요' : '올해 이미 했어요';   // 꽃잠 번식은 새해 몫
+    if (!E.propGrown(f)) return '다 자란 뒤에 할 수 있어요';   // 휴면 달의 어린 꽃은 나이로 (QA 19회차)
     if (!cal.frozen && !F.propMonths.includes(cal.month)) return `${monthsText(F.propMonths)}에 할 수 있어요`;
     return '';
   })();
