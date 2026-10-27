@@ -214,11 +214,11 @@ function draw() {
     if (d.honey && d.honey.length) { g.fillStyle = '#f2b632'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(d.x * cell + cell * 0.82, d.y * cell + cell * 0.2, Math.max(2.5, cell * 0.14), 0, 7); g.fill(); g.stroke(); }   // 🍯 거둘 꿀이 있음
   }
   // P27 장치 효과 범위: 놓거나 옮기는 중엔 가리킨 칸 둘레, 놓인 장치를 누르면 잠깐 그 둘레 (QA 12회차 제안)
-  const gearAt = (key, x, y) => { const G = E.GEAR[key]; if (!G) return; g.save(); g.fillStyle = 'rgba(255, 216, 74, .18)'; g.strokeStyle = 'rgba(255, 216, 74, .9)'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
+  const gearAt = (key, x, y) => { const G = { r: decoReach(key) }; if (G.r == null) return; g.save(); g.fillStyle = 'rgba(255, 216, 74, .18)'; g.strokeStyle = 'rgba(255, 216, 74, .9)'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
     const x0 = Math.max(0, x - G.r), y0 = Math.max(0, y - G.r), x1 = Math.min(W - 1, x + G.r), y1 = Math.min(H - 1, y + G.r);
     g.fillRect(x0 * cell, y0 * cell, (x1 - x0 + 1) * cell, (y1 - y0 + 1) * cell); g.strokeRect(x0 * cell + 1, y0 * cell + 1, (x1 - x0 + 1) * cell - 2, (y1 - y0 + 1) * cell - 2); g.restore(); };
   const placing = ui.tool === 'deco' && decoById(ui.decoId);
-  if (placing && E.GEAR[placing.key]) { const p = ui.gearPreview || hover || (placing.x != null ? [placing.x, placing.y] : null); if (p) gearAt(placing.key, p[0], p[1]); }
+  if (placing && decoReach(placing.key) != null) { const p = ui.gearPreview || hover || (placing.x != null ? [placing.x, placing.y] : null); if (p) gearAt(placing.key, p[0], p[1]); }
   if (ui.gearShow && performance.now() < ui.gearShow.until) { const d = decoById(ui.gearShow.id); if (d && d.x != null) gearAt(d.key, d.x, d.y); } else if (ui.gearShow) ui.gearShow = null;
   const dm = ui.tool === 'deco' && decoById(ui.decoId);
   if (dm && dm.x != null) { g.save(); g.strokeStyle = '#ffd84a'; g.lineWidth = 2.5; g.setLineDash([4, 3]); g.strokeRect(dm.x * cell + 1, dm.y * cell + 1, cell - 2, cell - 2); g.restore(); }
@@ -328,7 +328,7 @@ function onTiles(tiles) {
   if (ui.tool === 'deco') {
     if (f) return feedback('꽃이 있는 칸에는 놓을 수 없어요', true);
     const pd = decoById(ui.decoId);
-    if (pd && E.GEAR[pd.key] && ui.lastPointer === 'touch' && !(ui.gearPreview && ui.gearPreview[0] === x && ui.gearPreview[1] === y)) {
+    if (pd && decoReach(pd.key) != null && ui.lastPointer === 'touch' && !(ui.gearPreview && ui.gearPreview[0] === x && ui.gearPreview[1] === y)) {
       ui.gearPreview = [x, y]; hover = [x, y];
       return feedback('노란 칸이 효과 범위예요 · 같은 칸을 한 번 더 누르면 놓아요');
     }
@@ -401,6 +401,11 @@ function openDecoTile(d) {
       <small class="muted">둘레 ${E.HONEY_R}칸에 핀 꽃 ${bl.length}포기 · ${frozen ? '🌙 꽃잠에는 벌도 쉬어요' : h ? `이 달이 끝나면 ${E.honeyName(h.type)} ${h.jars}병` : '꽃이 피면 꿀이 모여요'} · 벌통엔 ${E.HIVE_MAX}병까지</small>
       ${hn.length ? '<button type="button" class="btn primary" data-takehoney="1">🍯 거두기</button>' : ''}</div>`;
   }
+  if (d.key === 'autobasket') {                   // P28-10-01 자동 수확 바구니: 이 달이 끝나면 거둘 꽃 · 지도에 범위
+    const cal = E.calendar(st.virtual), bl = E.basketBlooms(st, d, cal);
+    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : '지금 바로 옆에 거둘 핀 꽃이 없어요'} · 둘레 ${E.AUTO_R}칸 · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+    ui.gearShow = { id: d.id, until: performance.now() + 60000 };
+  }
   if (E.GEAR[d.key]) {                           // P27 장치: 지금 몇 포기가 빨리 자라는지 · 지도에 범위
     const G = E.GEAR[d.key], frozen = E.calendar(st.virtual).frozen;
     const n = st.flowers.filter(f => !f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= G.r && f.ageH < FLOWERS[f.type].mature * E.MONTH_H
@@ -414,6 +419,14 @@ function openDecoTile(d) {
   ]);
   const tb = $('#modalRoot [data-takehoney]');
   if (tb) tb.onclick = () => { closeModal(); after(E.takeHoney(st, d.id, ctx), null, { label: '🍵 찻집', fn: () => setTab('cab') }); };
+}
+// 지도에 범위를 그리는 장식의 둘레 칸 수 (P27 장치 · P28-10 자동 수확 바구니), 없으면 null
+function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : key === 'autobasket' ? E.AUTO_R : null; }
+// 상태창 한 줄: 자동 수확 바구니 둘레의 꽃 (P28-10-01)
+function basketNote(f) {
+  const cal = E.calendar(st.virtual);
+  if (cal.frozen || !E.placedOf(st, 'autobasket').some(d => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= E.AUTO_R)) return '';
+  return E.canCare(st, f, 'harvest', cal) ? ' · 🧺 달이 끝나면 저절로 거둬요' : ' · 🧺 자동 바구니 둘레';
 }
 function select(id) { ui.selected = id; ui.selTile = null; ui.sheetOpen = true; renderStatus(true); }
 function plantAt(type, x, y) {
@@ -513,7 +526,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
       <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
+        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${basketNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}

@@ -29,7 +29,7 @@ function act() {
   // 이웃에게 선물 (P26): 값 + 30,000원이 남으면 해마다 종류마다 한 번
   for (const k of E.GIFT_KEYS) if (!NO_SPEND && !E.giftsOf(st).sent[k] && st.money >= E.GIFTS[k].price + 30000) spend('선물', () => E.sendGift(st, k));
   // 정원 장식 (P17-16): 이달 장식을 아직 없고 돈이 넉넉하면(값 + 20,000원 남음) 하나
-  for (const k of E.decoOffer(cal)) if (!NO_SPEND && !E.DECOS[k].gear && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
+  for (const k of E.decoOffer(cal)) if (!NO_SPEND && !E.DECOS[k].gear && !E.DECOS[k].auto && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
   // 🌱 등급 장식 (P28-05-01): 등급이 닿은 것 가운데 아직 없는 것을 같은 기준(값 + 20,000원 남음)으로 하나씩
   for (const k of E.gradeDecoOffer(st)) if (!NO_SPEND && !NO_GRADE_DECO && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('등급 장식', () => E.buyDeco(st, k));
   if (!cal.frozen) {
