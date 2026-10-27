@@ -301,7 +301,7 @@ function _create(now, rng, cal) {
     drying: [], dried: [], blends: [], cups: [],                         // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔
     fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, weedCount: 0, pruneCount: 0, // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
     dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {}, memento: {}, letter: {} }, // P08-01-04, P08-02, P08-03
-    log: [], records: [], yearLog: [], yearNow: newYearNow(), yearBest: null, helpYear: null, nextId: 1,   // P28-07-01 해마다 기록 · 올해 쌓는 중
+    log: [], records: [], yearLog: [], yearNow: newYearNow(), yearPace: Object.assign(newYearPace(0), { now: Array.from({ length: yearMonth(cal) }, () => [0, 0]) }), yearBest: null, helpYear: null, nextId: 1,   // P28-07-01 해마다 기록 · 올해 쌓는 중 · P28-07-02 달마다 쌓인 값 (시작 전 달은 0)
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
@@ -486,6 +486,7 @@ function onSlot(st, cal, ctx) {
   else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
   st.flowers = st.flowers.filter(f => { if (f.withered && cal.abs > f.witherAbs) { addFert(st, 1); return false; } return true; });
+  paceMark(st, cal);                                                            // P28-07-02 끝난 달까지 쌓인 수입 · 경험치 (기록 앞에)
   if (cal.idx === 12) recordYear(st, cal, ctx);                                 // P04-02
   // P17-13 하루 용돈: 요일이 바뀔 때(매일 아침 6시, 짝수 idx)마다 500원. 꽃잠(일요일)도 받음
   if (cal.idx % 2 === 0) { st.money += DAILY_GIFT; addLog(st, 11, `${'월화수목금토일'[cal.idx / 2]}요일 아침, 용돈 ${DAILY_GIFT}원이 들어왔어요`, ctx); }
@@ -526,6 +527,8 @@ function recordYear(st, cal, ctx) {
   addLog(st, 7, `${yr}년차 정원을 기록했어요${slowView(st) ? '' : ` · 🏅 정원 점수 ${sc.total}점${sc.total > prevBest && prevBest ? ' · 최고 기록!' : ''}`}`, ctx);   // 점수는 기록(rec)에는 남기고 일지 줄에서만 뺌 (P28-02)
   addLog(st, 4, '다음 해 꽃을 예약할 수 있어요', ctx);
   addXp(st, 'year', yearXpOf(sc), ctx); row.grade = gradeOf(st).grade;        // P28-05-01 한 해 평가도 등급 경험치로 — 오른 줄은 새해 일지에, 해마다 기록의 grade는 그 뒤 등급
+  const p = st.yearPace || {};                                                // P28-07-02 올해 달마다 쌓인 값 → 지난해로 (한 해 평가 경험치는 어느 해에도 넣지 않음)
+  st.yearPace = Object.assign(newYearPace((st.grade && st.grade.xp) || 0), p.xp0 != null ?{ last: p.now || [], lastYear: yr } : {});
 }
 
 // ---------------------------------------------------------------- 📈 해마다 기록 (P28-07-01, 10-27)
@@ -545,6 +548,60 @@ function addYearLog(st, row) {   // 같은 해는 한 줄만 (나중 것으로),
   st.yearLog.sort((a, b) => a.year - b.year);
 }
 const yearLogOf = st => (st.yearLog || []).map(r => Object.assign({}, r));
+
+// ---------------------------------------------------------------- 📈 해마다 그래프 (P28-07-02, 10-28)
+// 화면(도감 "해마다" 쪽 · 한 해 기록 카드)은 아래 함수만 읽음. 느긋하게 보기면 숫자 · 견줌은 화면이 숨김 (P28-02)
+// 한 해 = 쉼달(idx 12)부터 다음 쉼달까지 → 그해 몇째 달인지 0(쉼달) ~ 13(2월)
+const yearMonth = cal => (cal.idx + 2) % 14;
+// yearPace = { xp0: 올해 시작할 때 경험치(null이면 올해는 모름), now: [달마다 끝날 때 [수입, 경험치]], last: 지난해 것, lastYear }
+const newYearPace = xp0 => ({ xp0, now: [], last: null, lastYear: null });
+function paceMark(st, cal) {   // 달이 바뀔 때: 끝난 달(그해 몇째 달)까지 쌓인 값. 업데이트한 해의 수입은 모름(null)
+  const p = st.yearPace; if (!p || p.xp0 == null) return;
+  const y = st.yearNow || newYearNow(), ended = (yearMonth(cal) + 13) % 14;
+  p.now = p.now || [];
+  while (p.now.length < ended) p.now.push(null);
+  p.now[ended] = [y.part ? null : y.income, ((st.grade && st.grade.xp) || 0) - p.xp0];
+}
+// 축: 0부터, 눈금 ticks칸이 1 · 2 · 2.5 · 5 × 10ⁿ 간격으로 가장 큰 값을 덮게. 값이 없거나 모두 0이면 top 0 (빈 축)
+function graphAxis(values, ticks) {
+  const n = ticks || 4, vs = (values || []).filter(v => typeof v === 'number' && isFinite(v) && v > 0), max = vs.length ? Math.max(...vs) : 0;
+  if (!max) return { top: 0, step: 0, ticks: [0] };
+  const raw = max / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / mag;
+  const step = Math.max(1, (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag);   // 정수 값(점수 · 잔 · 원)이라 1보다 작게 자르지 않음
+  const top = step * Math.ceil(max / step - 1e-9), out = [];
+  for (let v = 0; v <= top + 1e-9; v += step) out.push(Math.round(v * 100) / 100);
+  return { top, step, ticks: out };
+}
+// 그래프에 보일 해: 해가 많으면 n해(기본 10)씩. end = 보일 마지막 해의 자리(없으면 가장 최근). 0~1해면 empty
+function graphYears(st, n, end) {
+  const all = yearLogOf(st), size = n || 10, total = all.length;
+  const last = end == null ? total - 1 : Math.max(Math.min(size, total) - 1, Math.min(total - 1, end));
+  const from = Math.max(0, last - size + 1);
+  return { rows: all.slice(from, last + 1), from, end: last, total, prev: from > 0, next: last < total - 1, empty: total < 2 };
+}
+// 지난해와 견줌: 수입은 %(지난해가 0 · 모름 · 일부만이면 null), 점수 · 등급은 차이
+function yearDiff(cur, prev) {
+  if (!cur || !prev) return null;
+  const ok = v => typeof v === 'number';
+  const income = ok(cur.income) && ok(prev.income) && prev.income > 0 && !cur.part && !prev.part ? Math.round((cur.income - prev.income) / prev.income * 100) : null;
+  const score = ok(cur.score) && ok(prev.score) ? cur.score - prev.score : null;
+  const grade = ok(cur.grade) && ok(prev.grade) ? cur.grade - prev.grade : null;
+  return income == null && score == null && grade == null ? null : { year: cur.year, prevYear: prev.year, income, score, grade };
+}
+// 그해 기록 줄의 바로 앞 해와 견줌 (해가 비면 견주지 않음)
+const yearDiffOf = (st, year) => { const all = yearLogOf(st), i = all.findIndex(r => r.year === year); return i > 0 && all[i - 1].year === year - 1 ? yearDiff(all[i], all[i - 1]) : null; };
+// 올해 지금까지 vs 지난해 같은 때 (05-6 "어제보다 큰 숫자"): 지난해 같은 달 안 같은 자리까지를 달 끝 값 사이로 어림. 모르면 그 칸은 null, 둘 다 없으면 null
+function yearPace(st, cal) {
+  const p = st.yearPace, c = cal || calendar(st.virtual);
+  if (!p || p.xp0 == null || !p.last || p.lastYear !== propYearOf(st, c) - 1) return null;
+  const m = yearMonth(c), f = clamp((c.yh - c.idx * SLOT_H) / SLOT_H, 0, 1);
+  const a = m === 0 ? [0, 0] : p.last[m - 1], b = p.last[m];
+  const at = i => a && b && a[i] != null && b[i] != null ? Math.round(a[i] + (b[i] - a[i]) * f) : null;
+  const y = st.yearNow || newYearNow(), nowIncome = y.part ? null : y.income || 0, nowXp = ((st.grade && st.grade.xp) || 0) - p.xp0;
+  const pair = (now, then) => now == null || then == null ? null : { now, then, diff: now - then };
+  const income = pair(nowIncome, at(0)), xp = pair(nowXp, at(1));
+  return income || xp ? { year: propYearOf(st, c), month: m, income, xp } : null;
+}
 
 // ---------------------------------------------------------------- 🌱 정원 등급 (P28-05-01, 10-27)
 // 정원에서 한 일로 경험치가 쌓이고 등급이 오름 — 처음엔 빨리, 뒤로 갈수록 천천히, 끝이 없음. 돈을 주고 사는 것(씨앗 · 용품 · 장식 · 찻집 가꾸기 · 선물)만으로는 오르지 않음 (P17-14)
@@ -1876,6 +1933,7 @@ const MIGRATIONS = [
     s.grade = newGrade(); s.grade.dex = gradeDexCount(s);
     for (const k in n) { const v = Math.round(XP[k] * n[k]); if (v) { s.grade.by[k] = v; s.grade.xp += v; } }
   }],
+  ['📈 그래프 견줌 yearPace (P28-07-02, 10-28): 달마다 쌓인 수입 · 경험치 — 예전 정원은 올해 시작 값을 몰라(xp0 null) 다음 쉼달 기록부터 셈', s => { if (!s.yearPace) s.yearPace = newYearPace(null); }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1984,7 +2042,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

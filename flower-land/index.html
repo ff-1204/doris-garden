@@ -609,6 +609,47 @@ button.bl-rec { font: inherit; font-size: 11.5px; cursor: pointer; }
 .dc-memo { display: grid; place-items: center; width: 48px; height: 48px; font-size: 28px; }
 .rec-score { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .rec-score small { color: var(--muted); }
+/* 📈 해마다 그래프 (P28-07-02): 막대 = 수입 · 판 잔 · 꽃잎, 선 = 정원 점수, 아래 = 년차 · 등급. 축 숫자는 HTML이라 좁은 화면에서도 같은 크기 */
+.rec-vs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.yg-pace { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 8px 12px; border-radius: 10px; background: var(--sunk); font-size: 13px; }
+.yg-pace-t { color: var(--muted); font-size: 12px; }
+.yg-pace small { font-size: 12px; }
+.ygraph { --yg-bar: var(--accent); --yg-line: var(--warn); display: grid; gap: 8px; }
+.yg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.yg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.yg-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.yg-legend .lg-bar { width: 10px; height: 10px; background: var(--yg-bar); }
+.yg-legend .lg-line { width: 14px; height: 2px; background: var(--yg-line); }
+.yg-note { margin: 0; font-size: 12px; }
+.yg-plot { display: grid; grid-template-columns: 38px minmax(0, 1fr) 30px; gap: 6px; height: 170px; padding-top: 8px; }
+.yg-plot.bare { grid-template-columns: minmax(0, 1fr); height: 130px; }
+.yg-axis { position: relative; font-size: 11px; color: var(--muted); }
+.yg-axis span { position: absolute; right: 0; transform: translateY(50%); line-height: 1; white-space: nowrap; }
+.yg-axis.r span { left: 0; right: auto; color: var(--yg-line); }
+.yg-area { position: relative; border-bottom: 1px solid var(--line); }
+.yg-grid { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--line); }
+.yg-cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: end; }
+.yg-col { height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.yg-bar { display: block; width: 62%; max-width: 44px; min-height: 2px; background: var(--yg-bar); opacity: .85; }
+.yg-bar.none { height: 18%; background: transparent; border: 1px dashed var(--line); opacity: 1; }
+.yg-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.yg-line polyline { fill: none; stroke: var(--yg-line); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.yg-dot { position: absolute; width: 8px; height: 8px; margin: -6px 0 0 -6px; background: var(--yg-line); border: 2px solid var(--panel); box-sizing: content-box; pointer-events: none; }
+.yg-xrow { display: grid; grid-template-columns: 38px minmax(0, 1fr) 30px; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.yg-xrow.grade { color: var(--good); }
+.ygraph.slow .yg-xrow { grid-template-columns: minmax(0, 1fr); }
+.yg-xl { text-align: right; white-space: nowrap; }
+.yg-xs { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); text-align: center; }
+.yg-nav { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; }
+.yg-vs { margin: 0; font-size: 13px; }
+.yg-table summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.yg-table table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.5px; }
+.yg-table th, .yg-table td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.yg-table th:first-child, .yg-table thead th { text-align: right; font-weight: 600; }
+.yg-table tbody th { text-align: left; }
+.yg-table p { margin: 6px 0 0; font-size: 12px; }
+.ygraph.slow { --yg-bar: color-mix(in srgb, var(--accent) 55%, var(--panel)); --yg-line: color-mix(in srgb, var(--warn) 60%, var(--panel)); }
+@media (max-width: 420px) { .yg-plot, .yg-xrow { grid-template-columns: 32px minmax(0, 1fr) 24px; gap: 4px; } .yg-plot { height: 150px; } .yg-seg button { padding: 3px 7px; font-size: 12px; } .yg-table th, .yg-table td { padding: 4px 3px; font-size: 11.5px; } }
 /* P25 돌아왔을 때 (10-24) */
 .away-pop { display: grid; gap: 10px; }
 .away-chips { display: flex; flex-wrap: wrap; gap: 6px; }

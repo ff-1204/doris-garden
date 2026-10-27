@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -37,6 +37,7 @@ check(m.resetAt === null, '처음부터 다시 시작한 때 칸 (P16-12-03 완�
 check(Array.isArray(m.yearLog) && m.yearLog.length === 0 && m.yearNow.income === 0 && m.yearNow.part === true, '📈 해마다 기록 칸 · 올해는 업데이트 뒤부터 셈 (P28-07-01)');
 check(m.settings.slow === false && !E.slowView(m), '🐢 느긋하게 보기는 꺼진 채로 (P28-02)');
 check(m.grade && m.grade.xp >= 0 && m.grade.dex === E.gradeDexCount(m) && E.gradeOf(m).grade >= 1, '🌱 정원 등급 칸 · 지금 도감 칸 수를 센 것으로 (P28-05-01)');
+check(m.yearPace && m.yearPace.xp0 === null && m.yearPace.last === null && E.yearPace(m) === null, '📈 그래프 견줌 칸 · 올해 시작 값은 몰라 견줌 없음 (P28-07-02)');
 check(m._fertNew === 0 && JSON.stringify(m._bloomNew) === '{}', '열 때마다: 새 알림 표시 비움');
 
 console.log('[📈 해마다 기록: 남은 한 해 기록으로 채움 (P28-07-01)]');
@@ -63,7 +64,7 @@ check(E.migrateSave(dup).yearLog.length === 1 && dup.yearLog[0].income === 5, '�
 
 console.log('[🌱 정원 등급: 남은 기록으로 경험치 어림 (P28-05-01)]');
 const GR = E.MIGRATIONS.findIndex(x => x[0].includes('정원 등급'));
-check(GR === E.MIGRATIONS.length - 1, '등급 보정은 MIGRATIONS 맨 끝');
+check(GR > YL, '등급 보정은 해마다 기록 보정 뒤 (해마다 기록으로 어림)');
 const gr = copy(st); delete gr.grade; gr.mig = GR;
 gr.stats = { dried: 30, cups: 12, orders: 4 };
 gr.journal = { done: { c0_visit: 1, c1_bloom: 2, c1_petal: 3 } };
