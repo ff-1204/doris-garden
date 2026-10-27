@@ -119,7 +119,7 @@ function renderSettings() {
       + (us ? row('↩︎', '불러오기 전으로 되돌리기', `보관한 정원: ${yearWord(us.year)} ${monthName(us.month)} · ${won(us.money)} · 도감 ${us.dex} / ${us.dexTotal} · 칭호 ${us.titles}개`, '<button type="button" class="btn small" id="undoBtn">되돌리기</button>') : '')
       + (brokenRaw() ? row('🧰', '열지 못한 예전 정원', '여는 중에 문제가 생겨 따로 보관한 정원이에요. 파일로 받아 운영자에게 보내 주세요', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="brokenDl">내려받기</button><button type="button" class="btn small" id="brokenDel">지우기</button></span>') : ''));
     })()}
-    ${group('🌱', '정원', '되돌릴 수 없어요',
+    ${!E.canReset(st, E.calendar(st.virtual)) ? '' : group('🌱', '정원', '되돌릴 수 없어요',
       row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
       row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '진행은 이 브라우저에 자동 저장돼요 (💾 파일로 옮길 수 있어요)', '')
@@ -144,7 +144,8 @@ function renderSettings() {
   $('#sleepTo').addEventListener('change', e => { s.sleep.to = +e.target.value; save(); renderSettings(); });
   if (DEV) root.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { st.speed = +b.dataset.speed; save(); renderTop(); root.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   if (DEV) $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
-  $('#resetBtn').addEventListener('click', e => {
+  if ($('#resetBtn')) $('#resetBtn').addEventListener('click', e => {
+    if (!E.canReset(st, E.calendar(st.virtual))) { resetArmed = false; return renderSettings(); }   // 1년차 동안만 (10-27): 그새 2년차가 됐으면 지우지 않고 줄을 걷음
     if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워져요'; return; }
     const keep = st.settings; st = E.create(Date.now()); st.settings = keep; st.onboarded = true;
     cloudNewGarden();                             // 로그인했으면 계정의 첫 방문을 이어 붙임 (P20-08-02)

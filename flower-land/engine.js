@@ -51,6 +51,8 @@ function calendar(ms) {
   };
 }
 const yearOf = (st, cal) => cal.week - st.firstWeek + 1;
+// 처음부터 다시 시작은 1년차 동안만 (변경 10-27, 사용자 요청) — 1년차 꽃잠 · 일요일에 시작한 0년차도 포함
+const canReset = (st, cal) => yearOf(st, cal) <= 1;
 // P04-01-09 꽃잠 관리 (10-25): 꽃잠은 꽃이 잠든 때라 휴면기처럼 — 옮겨심기 · 번식은 달 조건 없이, 번식은 새해 몫으로 셈
 const propYearOf = (st, cal) => yearOf(st, cal) + (cal.frozen ? 1 : 0);
 // 수확 한 번의 칸: 꽃잠(쉼달 + 꽃샘달)은 합쳐 한 칸 = 쉼달의 abs (10-25 변경: 꽃잠에 한 번, 2월과는 따로)
@@ -1677,7 +1679,7 @@ function outsideUrl(href, info) {
 }
 
 const api = {
-  DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
+  DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf, canReset,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
