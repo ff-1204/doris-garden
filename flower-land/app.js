@@ -417,7 +417,7 @@ function undoImport(sure) {
   if (!g || !g.tiles) return feedback('되돌릴 정원이 없어요', true);
   if (!sure) {                                   // 10-24: 한 번 묻고 바꿈 (지금 정원은 되돌리기 칸에 남지 않아요)
     return openModal('↩︎ 불러오기 전으로', `<div class="stack" style="gap:10px"><div class="imp-cmp">${summaryCol('지금 정원', E.saveSummary(st), '이 브라우저')}<span class="imp-arrow" aria-hidden="true">›</span>${summaryCol('되돌릴 정원', E.saveSummary(g), '보관한 정원')}</div>
-      <p class="note">지금 정원은 따로 남지 않아요 · 필요하면 먼저 💾 저장해 두세요</p></div>`,
+      <p class="note">지금 정원은 따로 남지 않아요${cloudIn() ? '' : ' · 필요하면 먼저 💾 저장해 두세요'}</p></div>`,
       [{ label: '취소', act: closeModal }, { label: '되돌리기', primary: true, act: () => undoImport(true) }]);
   }
   try { localStorage.removeItem(UNDO_KEY); } catch (e) { /* 무시 */ }

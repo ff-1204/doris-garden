@@ -4,7 +4,7 @@
 const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
-  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length]);
+  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn()]);
   if (!force && ui.sigs.manual === sig) return;
   ui.sigs.manual = sig;
   const sec = (k, title, sub, inner) => `<section class="mn-sec" id="mn-${k}"><h2 class="mn-h">${title}${sub ? `<small>${sub}</small>` : ''}</h2>${inner}</section>`;
@@ -78,9 +78,12 @@ function renderManual(force) {
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
         `칭호 ${E.TITLE_KEYS.length}개 · ${Object.keys(st.titles).length}개 얻음 · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요`)
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
-    sec('save', '저장', '서버에 보내지 않아요',
-      fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${item(ico('💾'), '저장하기', '.json 파일로')}${arrow('›')}${item(ico('📂'), '불러오기', '다른 기기에서')}${item(ico('↩️'), '되돌리기', '불러오기 직전으로')}${cloud.on ? item(ico('☁️'), '구글 드라이브', '로그인하면 내 드라이브에') : ''}</div>`,
-        '브라우저 데이터를 지우면 정원이 사라질 수 있어요 · ⚙️ 설정 › 💾 저장에서 가끔 파일로 받아 두세요 · 오래 비워도 다시 열면 최대 3주를 따라잡아요')),
+    sec('save', '저장', '운영자 서버에 보내지 않아요',
+      cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
+        ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
+          '구글로 로그인해 두어 정원이 내 드라이브에도 저장돼요 · 다른 기기에서 같은 계정으로 로그인하면 이어 해요 · 오래 비워도 다시 열면 최대 3주를 따라잡아요')
+        : fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${item(ico('💾'), '저장하기', '.json 파일로')}${arrow('›')}${item(ico('📂'), '불러오기', '다른 기기에서')}${item(ico('↩️'), '되돌리기', '불러오기 직전으로')}${cloud.on ? item(ico('☁️'), '구글 드라이브', '로그인하면 내 드라이브에') : ''}</div>`,
+          '브라우저 데이터를 지우면 정원이 사라질 수 있어요 · ⚙️ 설정 › 💾 저장에서 가끔 파일로 받아 두세요 · 오래 비워도 다시 열면 최대 3주를 따라잡아요')),
   ].join('');
   $('#p-manual').innerHTML = `<div class="stack"><div class="sectionhead"><span class="sb-title" style="font-family:var(--font-display);font-weight:700;font-size:16px">📘 매뉴얼</span><span class="muted">그림으로 보는 정원 규칙</span></div>
     <nav class="mn-chips" aria-label="매뉴얼 차례">${MN_SECS.map(([k, l]) => `<a href="#mn-${k}" data-mn="${k}">${l}</a>`).join('')}</nav>${body}</div>`;
@@ -110,11 +113,12 @@ function renderSettings() {
     ${!DEV ? '' : group('⏩', '시간', '개발용 · 이 컴퓨터(localhost)에서만 보여요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>'))}
-    ${(() => { const us = undoSummary(); return group('💾', '저장', '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요',
+    ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
+      return group('💾', '저장', files ? '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요' : '진행은 이 브라우저와 내 구글 드라이브에 저장돼요',
       (cloud.on ? `<div id="cloudRows" class="cloud-rows">${cloudRows(row)}</div>` : '')   // ☁️ 구글 드라이브 (P20-04-02, 클라이언트 ID가 있을 때만)
-      + row('💾', '저장하기', `파일로 내려받아요 · ${st.lastExport ? `마지막 저장 ${whenText(st.lastExport)}` : '아직 저장한 적이 없어요'}${exportStale() ? ' · <b class="val-down">한동안 저장하지 않았어요</b>' : ''}`, `<span class="row" style="gap:6px"><button type="button" class="btn small" id="exportBtn">저장</button>${canShareFile ? '<button type="button" class="btn small" id="shareBtn">보내기</button>' : ''}</span>`)
-      + row('📂', '불러오기', '저장한 파일로 정원을 바꿔요. 바꾸기 전에 요약을 보여 줘요', '<button type="button" class="btn small" id="importBtn">불러오기</button><input type="file" id="importFile" hidden>')
-      + (IOS_EVICT ? row('📱', 'iPhone · iPad Safari', '7일 넘게 열지 않으면 Safari가 정원을 지울 수 있어요. <b>공유 › 홈 화면에 추가</b>로 앱처럼 쓰거나 💾 저장해 두세요', '') : '')
+      + (!files ? '' : row('💾', '저장하기', `파일로 내려받아요 · ${st.lastExport ? `마지막 저장 ${whenText(st.lastExport)}` : '아직 저장한 적이 없어요'}${exportStale() ? ' · <b class="val-down">한동안 저장하지 않았어요</b>' : ''}`, `<span class="row" style="gap:6px"><button type="button" class="btn small" id="exportBtn">저장</button>${canShareFile ? '<button type="button" class="btn small" id="shareBtn">보내기</button>' : ''}</span>`)
+      + row('📂', '불러오기', '저장한 파일로 정원을 바꿔요. 바꾸기 전에 요약을 보여 줘요', '<button type="button" class="btn small" id="importBtn">불러오기</button><input type="file" id="importFile" hidden>'))
+      + (IOS_EVICT ? row('📱', 'iPhone · iPad Safari', `7일 넘게 열지 않으면 Safari가 정원을 지울 수 있어요. <b>공유 › 홈 화면에 추가</b>로 앱처럼 쓰${files ? '거나 💾 저장해 두세요' : '세요 · ☁️ 드라이브에서 다시 불러올 수 있어요'}`, '') : '')
       + (IN_APP ? row('💬', '앱 안의 브라우저', '카카오톡 · 인스타그램 안에서 연 정원은 그 앱 안에만 저장돼요. Chrome · Safari로 열면 다른 정원이 돼요', '<button type="button" class="btn small" id="copyAddrBtn">주소 복사</button>') : '')
       + (us ? row('↩︎', '불러오기 전으로 되돌리기', `보관한 정원: ${yearWord(us.year)} ${monthName(us.month)} · ${won(us.money)} · 도감 ${us.dex} / ${us.dexTotal} · 칭호 ${us.titles}개`, '<button type="button" class="btn small" id="undoBtn">되돌리기</button>') : '')
       + (brokenRaw() ? row('🧰', '열지 못한 예전 정원', '여는 중에 문제가 생겨 따로 보관한 정원이에요. 파일로 받아 운영자에게 보내 주세요', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="brokenDl">내려받기</button><button type="button" class="btn small" id="brokenDel">지우기</button></span>') : ''));
@@ -122,16 +126,16 @@ function renderSettings() {
     ${!E.canReset(st, E.calendar(st.virtual)) ? '' : group('🌱', '정원', '되돌릴 수 없어요',
       row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
-      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", '진행은 이 브라우저에 자동 저장돼요 (💾 파일로 옮길 수 있어요)', '')
+      row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", `진행은 이 브라우저에 자동 저장돼요 ${cloudIn() ? '(☁️ 구글 드라이브에도)' : '(💾 파일로 옮길 수 있어요)'}`, '')
       + row('🔤', '글꼴', '주아 · 고운바탕 · IBM Plex (모두 SIL 오픈 폰트 라이선스)', '')
       + row('📜', '정책', '정원이 저장하는 곳과 약속', '<span class="row" style="gap:6px"><a class="btn small" href="privacy.html">개인정보처리방침</a><a class="btn small" href="terms.html">이용약관</a></span>'))}
   </div>`;
   resetArmed = false;
   const root = $('#p-settings');
-  $('#exportBtn').addEventListener('click', saveClick);
+  if ($('#exportBtn')) $('#exportBtn').addEventListener('click', saveClick);
   if ($('#shareBtn')) $('#shareBtn').addEventListener('click', shareSave);
-  $('#importBtn').addEventListener('click', () => $('#importFile').click());
-  $('#importFile').addEventListener('change', e => { readImport(e.target.files[0]); e.target.value = ''; });
+  if ($('#importBtn')) $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  if ($('#importFile')) $('#importFile').addEventListener('change', e => { readImport(e.target.files[0]); e.target.value = ''; });
   if ($('#undoBtn')) $('#undoBtn').addEventListener('click', () => undoImport());
   if ($('#brokenDl')) $('#brokenDl').addEventListener('click', downloadBroken);
   if ($('#brokenDel')) $('#brokenDel').addEventListener('click', () => openModal('🧰 보관본 지우기', '<p>열지 못한 예전 정원을 지울까요? 되돌릴 수 없어요</p>', [{ label: '취소', act: () => closeModal() }, { label: '지우기', primary: true, act: () => { try { localStorage.removeItem(BROKEN_KEY); } catch (e) { /* 무시 */ } closeModal(); renderAll(true); } }]));

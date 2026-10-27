@@ -111,6 +111,7 @@ async function cloudLogin() {
   let email = null;
   try { email = (await cloudDrive.userinfo()).email; } catch (e) { /* 이름을 못 받아도 저장은 됨 */ }
   cloud.meta = { email: email || '구글 계정' }; cloudSaveMeta();
+  if (ui.tab === 'settings') renderSettings();               // 💾 저장하기 · 📂 불러오기 숨김 (P20-02)
   feedback(`☁️ ${cloud.meta.email}로 로그인했어요`);
   cloudSync('login');
 }
@@ -118,6 +119,7 @@ function cloudLogout() {
   if (cloud.token && window.google) try { google.accounts.oauth2.revoke(cloud.token, () => null); } catch (e) { /* 무시 */ }   // 권한도 구글에 돌려줌
   cloud.token = null; cloud.exp = 0; cloud.meta = {}; cloud.remote = null; cloud.pending = null; cloud.askData = null;
   cloudSaveMeta(); cloudSet('idle');
+  if (ui.tab === 'settings') renderSettings();               // 💾 저장하기 · 📂 불러오기 다시 보임
   feedback('로그아웃했어요 · 이 브라우저의 정원은 그대로예요 (드라이브 저장만 멈춰요)');   // P20-04-04
 }
 // 다시 로그인 (토큰이 끝났거나 새로 연 페이지): 누를 때 받고, 밀린 확인 · 저장을 함
