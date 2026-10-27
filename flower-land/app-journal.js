@@ -221,7 +221,7 @@ function renderTop() {
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
 $('#brandBtn').addEventListener('click', () => { setTab('garden'); window.scrollTo({ top: 0, behavior: 'smooth' }); });   // 상단 로고 → 정원 (10-17)
 $('#topTitle').addEventListener('click', () => { ui.dexTab = 'journal'; setTab('dex'); });
-$('#restBanner').addEventListener('click', e => { if (e.target.closest('[data-rest="close"]')) { ui.restClosed = true; $('#restBanner').hidden = true; } });
+$('#restBanner').addEventListener('click', e => { if (e.target.closest('[data-rest="close"]')) { st.restClosed = E.calendar(st.virtual).week; save(); $('#restBanner').hidden = true; } });
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]'); if (!go) return;
   if (go.dataset.go === 'rec') { ui.dexTab = 'rec'; return setTab('dex'); }

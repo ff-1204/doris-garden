@@ -87,8 +87,8 @@ $('#emptyMap').addEventListener('click', e => {
 function renderAll(force) {
   renderTop();
   const cal = E.calendar(st.virtual);
-  if (!cal.frozen) ui.restClosed = false;
-  $('#restBanner').hidden = !cal.frozen || ui.restClosed || !$('#emptyMap').hidden || !!ui.selected || !!ui.selTile || ui.tool !== 'look';   // 꽃을 고르거나 옮기는 동안엔 가리지 않게 (P04-01-09)
+  $('#restBanner').hidden = !cal.frozen || st.restClosed === cal.week ||   // 닫으면 그 꽃잠 동안은 새로고침해도 안 뜸 (QA 19회차)
+    !$('#emptyMap').hidden || !!ui.selected || !!ui.selTile || ui.tool !== 'look';   // 꽃을 고르거나 옮기는 동안엔 가리지 않게 (P04-01-09)
   if (ui.tab === 'garden') { renderToday(force); renderToolbar(force); renderStatus(force); renderLegend(); renderYear(force); renderGardenLog(force); renderEmpty(force); }
   if (ui.tab === 'shop') renderShop(force);
   if (ui.tab === 'store') renderStore(force);

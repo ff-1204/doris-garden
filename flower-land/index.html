@@ -228,7 +228,9 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .filter input { accent-color: var(--accent); width: 16px; height: 16px; }
 #restBanner { place-items: end center; }   /* 꽃잠에도 꽃을 눌러 돌보니 지도 아래쪽에 (P04-01-09) */
 #restBanner .box { position: relative; padding-top: 18px; }
-@media (max-width: 600px) { #restBanner { padding: 8px; } #restBanner .box { padding: 10px 34px 10px 14px; gap: 2px; } #restBanner .box b { font-size: 14px; } #restBanner .box .muted { font-size: 12px !important; } }
+#restBanner .rest-short { display: none; }
+/* 좁은 화면은 지도 밖 아래 한 줄 띠로 — 지도를 가리지 않게 (QA 19회차) */
+@media (max-width: 600px) { #restBanner:not([hidden]) { position: static; display: block; padding: 6px 0 0; } #restBanner .box { max-width: none; display: flex; align-items: center; gap: 8px; padding: 6px 38px 6px 12px; text-align: left; box-shadow: none; } #restBanner .box b { font-size: 14px; white-space: nowrap; } #restBanner .rest-long { display: none; } #restBanner .rest-short { display: inline; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } #restBanner .restclose { top: 50%; margin-top: -14px; } }
 .restclose { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; font-size: 13px; }
 
 /* 상태창 (P14) */
@@ -1137,12 +1139,12 @@ body { margin: 0; }
               <div class="mapframe">
                 <div class="yearstrip" id="yearBox" role="img" aria-label="올해의 흐름"></div>
                 <canvas id="map" aria-label="정원 지도"></canvas>
-                <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted" style="font-size:13px">꽃들이 자고 있어요. 옮겨심기 · 번식 · 돌보기, 핀 채로 잠든 꽃 수확은 할 수 있어요. 블렌딩이나 새해 꽃 예약도 해 보세요.</span></div></div>
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
                 <div class="care-ring" id="careRing" hidden></div>
               </div>
+              <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size:13px">꽃들이 자고 있어요. 옮겨심기 · 번식 · 돌보기, 핀 채로 잠든 꽃 수확은 할 수 있어요. 블렌딩이나 새해 꽃 예약도 해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기는 돼요</span></div></div>
             </div>
           </div>
           <div class="sidecol">
