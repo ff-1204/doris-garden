@@ -93,3 +93,7 @@ for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   console.log([yr, ...keys.map(k => Math.round(L[k] || 0))].join('\t'));
 }
 console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL}`);
+// 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
+console.log('\n해마다 기록 (yearLogOf)');
+console.log(['해', '수입', '판 잔', '꽃잎', '주문', '점수', '등급', '도감'].join('\t'));
+for (const r of E.yearLogOf(st)) console.log([r.year, r.income, r.sold, r.harvest, r.orders, r.score, r.grade == null ? '-' : r.grade, `${r.dex}/${r.dexTotal}`].join('\t'));

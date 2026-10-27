@@ -41,7 +41,7 @@ check(E.guideFill(w).pot === true, '화분이 시들면 누를 수 없으니 ✓
 
 console.log('[예전 저장]');
 const mig = (s, n) => { const o = copy(s); o.mig = n; return E.migrateSave(o); };
-const N = E.MIGRATIONS.length - 1;
+const N = E.MIGRATIONS.findIndex(m => m[0].includes('guide.pot'));   // 이 보정부터 (뒤에 보정이 더 붙어도)
 const a = copy(fresh(c => c.month === 6 && !c.frozen)); a.guide = { bought: true };
 check(mig(a, N).guide.pot === true, '다른 단계를 이미 한 정원은 ✓');
 const b = copy(fresh(c => c.month === 6 && !c.frozen)); b.guide = { bought: true, planted: true, watered: true, harvested: true, sold: true, celebrated: true };
