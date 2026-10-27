@@ -458,9 +458,9 @@ function feedback(msg, warn, action) {
   feedbackTimer = setTimeout(() => { el.hidden = true; }, action ? 7000 : 3500);
 }
 // 첫걸음 안내 — 단계 순서 · 이미 한 것은 엔진(E.guideKeys · E.guideFill), 여기는 이름만
-// P04-04 예전 시작 선물 정원은 제다실 · 찻집부터, P04-05 꽃잠에 시작하면 예약부터, P22-02 화분을 받으면 화분 눌러 보기부터 (변경 10-27)
+// P04-04 예전 시작 선물 정원은 제다실 · 찻집부터, P04-05 꽃잠에 시작하면 예약부터, P22-02 화분을 받으면 그 꽃 돌보기부터 (변경 10-27, 문구 10-27)
 const GUIDE_LABEL = {
-  pot: '🌸 이웃의 화분 눌러 보기', reserved: '🗓️ 화원에서 새해 꽃 예약하기', blended: '🫖 제다실에서 블렌딩',
+  pot: '🌸 정원의 첫 꽃 돌보기', reserved: '🗓️ 화원에서 새해 꽃 예약하기', blended: '🫖 제다실에서 블렌딩',
   bought: '💐 화원에서 제철 꽃 사기', planted: '🌰 빈 칸에 심기', watered: '💧 목마른 꽃에 물 주기', harvested: '🧺 꽃이 피면 수확하기', sold: '🍵 차를 만들어 팔기',
 };
 const guideList = () => E.guideKeys(st).map(k => [k, k === 'sold' && st.starterGift ? '🍵 찻집에서 판매' : GUIDE_LABEL[k]]);
@@ -470,7 +470,7 @@ function guideSub(k, need) {
   if (k === 'watered') return sub(need.water ? '심은 꽃은 목말라요. 반짝이는 꽃을 누르고 꽃 둘레의 💧를 눌러요' : '목마른 꽃이 생기면 위 💧 숫자가 늘어요');
   if (k === 'harvested' && E.calendar(st.virtual).frozen && !need.harvest) return sub('꽃잠엔 새로 피지 않아요 · 핀 채로 잠든 꽃만 꽃잠에 한 번 거둬요');   // P04-01-09
   if (k === 'harvested' && !need.harvest) return sub('꽃이 피면 노란 점이 생겨요');
-  if (k === 'pot') { const f = E.potFlower(st); return sub(`이웃이 준 ${f ? FLOWERS[f.type].name + ' ' : ''}화분이에요 · 반짝이는 화분을 눌러 언제 피는지 · 무엇이 필요한지 봐요`); }
+  if (k === 'pot') { const f = E.potFlower(st); return sub(`이웃에게 선물 받은 ${f ? josa(FLOWERS[f.type].name, '이에요/예요') : '꽃이에요'} · 반짝이는 꽃을 눌러 언제 피는지, 무엇이 필요한지 봐요`); }
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
   if (k === 'sold' && st.gift != null && st.gift >= 0 && st.petals.length >= 2) return sub(`꽃잎 하나는 🌾 꽃방에 널고, 하나는 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)부터 꽃잠까지${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);
   if (k === 'sold') return sub(st.starterGift ? '블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요' : `꽃잎을 말려 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)에 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);   // P22-04
@@ -486,7 +486,7 @@ function guideCheer() {
   if (gd.celebrated || !guideList().every(([k]) => gd[k])) return '';
   gd.celebrated = true; return ' · 첫걸음을 모두 마쳤어요 🎉';
 }
-// 첫걸음 '🌸 이웃의 화분 눌러 보기' (변경 10-27): 시작할 때 자동으로 열지 않고, 플레이어가 지도에서 화분을 직접 누르거나 그 화분을 돌볼 때만 ✓
+// 첫걸음 '🌸 정원의 첫 꽃 돌보기' (변경 10-27): 시작할 때 자동으로 열지 않고, 플레이어가 지도에서 화분을 직접 누르거나 그 화분을 돌볼 때만 ✓
 function tapPot(f) {
   if (!E.guideTap(st, f)) return;
   const cheer = guideCheer(); if (cheer) feedback(cheer.slice(3));

@@ -238,7 +238,7 @@ function draw() {
     }
   }
   const pot = !ui.selected && !(st.guide && (st.guide.pot || st.guide.hidden)) && E.potFlower(st);
-  if (pot) {                                       // 첫걸음 "이웃의 화분 눌러 보기": 누를 때까지 화분 둘레가 분홍으로 반짝 (변경 10-27)
+  if (pot) {                                       // 첫걸음 "정원의 첫 꽃 돌보기": 누를 때까지 화분 둘레가 분홍으로 반짝 (변경 10-27)
     const a = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.8 : 0.35 + 0.45 * Math.abs(Math.sin(performance.now() / 600));   // 움직임 줄이기면 깜빡이지 않음
     g.save(); g.lineWidth = 2.5; g.strokeStyle = rgba('#ff8fbf', a); g.shadowColor = rgba('#ff8fbf', 0.9); g.shadowBlur = 8;
     g.beginPath(); g.arc((pot.x + 0.5) * cell, (pot.y + 0.5) * cell, cell * (0.72 + 0.1 * a), 0, Math.PI * 2); g.stroke(); g.restore();
@@ -319,7 +319,7 @@ canvas.addEventListener('pointerleave', () => { hover = null; tipEl.hidden = tru
 function onTiles(tiles) {
   const [x, y] = tiles[tiles.length - 1];
   const f = E.flowerAt(st, x, y);
-  tapPot(f);                                       // 첫걸음 "이웃의 화분 눌러 보기" (변경 10-27)
+  tapPot(f);                                       // 첫걸음 "정원의 첫 꽃 돌보기" (변경 10-27)
   if (BATCH.includes(ui.tool)) {
     const r = E.care(st, ui.tool, tiles, ctx);
     if (tiles.length === 1 && f) select(f.id);

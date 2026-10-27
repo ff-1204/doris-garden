@@ -1,4 +1,4 @@
-// 첫걸음 "🌸 이웃의 화분 눌러 보기" (P22-02 변경 10-27): 화분을 받은 정원은 화분부터, 직접 누를 때만 ✓, 예전 저장은 ✓
+// 첫걸음 "🌸 정원의 첫 꽃 돌보기" (P22-02 변경 10-27): 화분을 받은 정원은 화분부터, 직접 누를 때만 ✓, 예전 저장은 ✓
 const E = require(require('path').resolve((process.argv[2] || require('path').join(__dirname, '..', 'engine.js'))));
 let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails++; };
 const H = E.HOUR;

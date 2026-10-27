@@ -165,7 +165,7 @@ function fullReset() {
 }
 
 // P22-02 이웃의 화분: 첫 방문 · 처음부터 다시 시작할 때 한 번
-// 변경 10-27: 화분을 자동으로 골라 상태창을 열지 않음 — 첫걸음 첫 단계가 "화분 눌러 보기"라 직접 눌러 보게 (지도에서 화분이 반짝임)
+// 변경 10-27: 화분을 자동으로 골라 상태창을 열지 않음 — 첫걸음 첫 단계가 "정원의 첫 꽃 돌보기"라 직접 눌러 보게 (지도에서 화분이 반짝임)
 function giveGift() {
   const r = E.giftPot(st, ctx, ui.giftWant); ui.giftWant = null; ui.titleHold = performance.now() + 2600;
   return r;

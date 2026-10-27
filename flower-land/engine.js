@@ -1474,7 +1474,7 @@ const GUIDE_STEPS = {
 };
 const gotPot = st => st.gift != null && st.gift >= 0;
 const potFlower = st => (gotPot(st) && st.flowers.find(f => f.origin === '이웃' && !f.withered)) || null;
-// 변경 10-27 (사용자 요청): 화분이 이미 심겨 있으니 화분을 받은 정원은 "🌸 이웃의 화분 눌러 보기"부터
+// 변경 10-27 (사용자 요청): 화분이 이미 심겨 있으니 화분을 받은 정원은 "🌸 정원의 첫 꽃 돌보기"부터 (문구 변경 10-27: 남의 것이 아닌 내 꽃으로)
 function guideKeys(st) {
   const ks = st.starterGift ? GUIDE_STEPS.gift : st.startedInSleep ? GUIDE_STEPS.sleep : GUIDE_STEPS.base;
   return gotPot(st) ? ['pot', ...ks] : ks;
@@ -1754,7 +1754,7 @@ const MIGRATIONS = [
   ['☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null)', s => { if (s.account === undefined) s.account = null; if (s.actAt === undefined) s.actAt = null; }],
   ['🎁 답례품 · 받은 편지함 letterBox (P26-06, 10-27): 예전에 받은 편지에는 답례품을 소급하지 않음', s => { s.letterBox = s.letterBox || []; }],
   ['처음부터 다시 시작한 때 resetAt (P16-12-03 완전 초기화, 10-27): 예전 정원은 null — 예전 재시작 정원도 계정 칭호를 이어 받던 그대로', s => { if (s.resetAt === undefined) s.resetAt = null; }],
-  ['첫걸음 🌸 이웃의 화분 눌러 보기 guide.pot (P22-02 변경 10-27): 이미 다른 단계를 했거나 · 마쳤거나 · 닫은 정원은 ✓', s => { const g = s.guide; if (g && !g.pot && Object.values(g).some(v => v === true)) g.pot = true; }],
+  ['첫걸음 🌸 정원의 첫 꽃 돌보기 guide.pot (P22-02 변경 10-27): 이미 다른 단계를 했거나 · 마쳤거나 · 닫은 정원은 ✓', s => { const g = s.guide; if (g && !g.pot && Object.values(g).some(v => v === true)) g.pot = true; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
