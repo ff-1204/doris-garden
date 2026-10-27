@@ -147,6 +147,7 @@ function titleCard(k) {
 // 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
 function showNewTitles() {
   if (!st._newTitles || !st._newTitles.length || $('#modalRoot').innerHTML) return;
+  if (E.slowView(st)) { st._newTitles = []; return; }   // 🐢 느긋하게 보기: 켜기 전에 쌓인 창도 띄우지 않음 — 칭호는 도감에 이미 있음 (P28-02)
   if (ui.titleHold && performance.now() < ui.titleHold) return;   // 첫 화분을 먼저 보고 (QA 6회차)
   if (st._newTitles[0] === 't_visit') {            // 첫 방문 칭호는 창 대신 알림 한 줄 — 첫 화면을 화분과 첫걸음에 (QA 15회차)
     st._newTitles.shift(); queueToast('🏅 새 칭호 「정원 문을 연 사람」 · 문장 장식은 📦 창고에'); save(); return showNewTitles();

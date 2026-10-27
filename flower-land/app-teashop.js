@@ -249,7 +249,7 @@ function renderCab(force) {
   const cupCards = cupGroups.map(g => { const isB = g.kind === 'blend', key = isB ? g.parts[0] : g.type, nm = isB ? `${g.recipe ? '✨ ' : ''}${g.name}` : FLOWERS[g.type].tea; return `<div class="shopcard cabcard teacard cupcard ${g.cold ? 'cold' : ''}" style="--pc:${SPR.tea[key] || FLOWERS[key].petal}">
       <div class="sc-art"><span class="cup-steam">${spriteImg(key, 'tea', 64, false, nm)}</span><span class="chip sc-form">${g.cold ? '🧊 식은 차' : '☕ 갓 우림'}</span><span class="sc-count">×${g.ids.length}</span>${shopOpen && st.cups[0] && g.ids.includes(st.cups[0].id) ? '<span class="sc-next-up">다음 차례</span>' : ''}</div>
       <div class="cc-name"><b>${g.honey ? '🍯 꿀 ' : ''}${nm}</b><span class="stars">${starStr(g.q)}</span></div>
-      <div class="cc-meta"><span class="data">한 잔 ${won(E.cupValue(st, st.cups.find(x => x.id === g.ids[0]), cal))}</span> · ${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? (g.hat ? ' <span class="chip hat-chip">🍃 햇차</span>' : '') : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}${st.orders && st.orders.list.some(o => E.orderMatch(o, g)) ? ' <span class="chip order-chip">💌 주문에 맞아요</span>' : ''}</div>
+      <div class="cc-meta"><span class="data">한 잔 ${won(E.cupValue(st, st.cups.find(x => x.id === g.ids[0]), cal))}</span> · ${g.cold ? '식어서 <b class="val-down">값이 반</b>' : '이번 달 안에 팔면 제값'}${isB ? (g.hat ? ' <span class="chip hat-chip">🍃 햇차</span>' : '') : teaTags(g)}${g.honey ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}${st.orders && !E.slowView(st) && st.orders.list.some(o => E.orderMatch(o, g)) ? ' <span class="chip order-chip">💌 주문에 맞아요</span>' : ''}</div>
       ${!g.honey && honeyLeft ? `<button type="button" class="btn small honey-btn" data-honeycup="${g.ids.join(',')}">🍯 꿀 한 숟갈</button>` : ''}
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>💰 판매</button></div>`; }).join('');
   // P18 🍯 꿀 선반: 거둔 꿀을 종류마다 병으로
@@ -286,7 +286,7 @@ ${blendBox}
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('click', cabClick));
 // P23-01 💌 손님 주문 쪽지: 찻집이 열린 달마다 3장, 맞는 찻잔이 팔리면 ✓와 기념품
 function ordersHTML() {
-  const os = st.orders && st.orders.list; if (!os) return '';
+  const os = st.orders && st.orders.list; if (!os || E.slowView(st)) return '';   // 🐢 느긋하게 보기면 쪽지를 숨김 — 맞는 찻잔이 팔리면 기념품은 그대로 (P28-02)
   const done = os.filter(o => o.done).length;
   return `<div class="cab-head"><span class="sb-title">💌 손님 주문 <span class="sh-n">${done} / ${os.length}</span></span><span class="muted">맞는 찻잔이 팔리면 손님이 기념품을 두고 가요 · 다음 달엔 새 쪽지</span></div>
     <div class="orders">${os.map(o => `<div class="order ${o.done ? 'done' : ''}"><span class="od-ic">${o.done ? '✓' : '💌'}</span><span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b></span></div>`).join('')}</div>`;

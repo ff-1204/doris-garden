@@ -76,7 +76,7 @@ function renderManual(force) {
         '💐 화원 맨 아래에서 꽃다발 · 차 한 상자 · 정원 잔치를 보내요 · 답장과 함께 씨앗 · 꿀 · 광석 · 장식 같은 답례품이 하나 와요(비싼 선물일수록 좋은 것) · 오래 해서 남는 돈을 쓰는 곳이에요')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
-        `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」는 따로' : ''} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요`)
+        `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」는 따로' : ''} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요 · 퀘스트 · 주문 · 점수가 숙제 같으면 ⚙️ 설정 › 🐢 느긋하게 보기`)
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
@@ -106,6 +106,8 @@ function renderSettings() {
     return `<div class="sleepbar" id="sleepBar" data-hours="${hours.filter(on).length}" style="background-image:linear-gradient(90deg, ${stops})"></div><div class="sleepticks"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>`; };
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
   $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
+    ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
+      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수를 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
     ${group('🔔', '알림', '꺼도 정원 일지에는 그대로 남아요',
       [[3, '📦', '예약 배송', '예약한 꽃이 창고에 왔을 때'], [8, '🌸', '개화와 수확', '꽃이 피어 거둘 수 있을 때'], [9, '📖', '도감 등록', '새 꽃·차·땅을 처음 만났을 때']].map(([t, ic, nm, d]) => row(ic, nm, d, tog(`data-toast="${t}"`, s.toast[t]))).join('')
       + row('🌙', '수면 시간', '이 시간의 알림은 모았다가 끝날 때 한 번에 (휴대폰 푸시용, 웹은 저장만)', tog('id="sleepOn"', s.sleep.on))
@@ -141,6 +143,7 @@ function renderSettings() {
   if ($('#brokenDel')) $('#brokenDel').addEventListener('click', () => openModal('🧰 보관본 지우기', '<p>열지 못한 예전 정원을 지울까요? 되돌릴 수 없어요</p>', [{ label: '취소', act: () => closeModal() }, { label: '지우기', primary: true, act: () => { try { localStorage.removeItem(BROKEN_KEY); } catch (e) { /* 무시 */ } closeModal(); renderAll(true); } }]));
   if ($('#copyAddrBtn')) $('#copyAddrBtn').addEventListener('click', copyAddress);
   cloudPrep();
+  $('#slowOn').addEventListener('change', e => { s.slow = e.target.checked; save(); renderAll(true); feedback(s.slow ? '🐢 느긋하게 볼게요' : '다시 다 보여요'); });
   root.querySelectorAll('[data-toast]').forEach(i => i.addEventListener('change', () => { s.toast[i.dataset.toast] = i.checked; save(); }));
   // 수면 시간은 바꾸면 막대와 선택 칸을 다시 그림
   $('#sleepOn').addEventListener('change', e => { s.sleep.on = e.target.checked; save(); renderSettings(); });

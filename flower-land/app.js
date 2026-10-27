@@ -292,7 +292,8 @@ function awayDiff(b) {
   const rec = st.records[0] && st.records[0] !== b.recTop ? st.records[0] : null;
   const log = rec ? [...rec.log, ...st.log] : st.log;
   let i = b.last ? log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
-  const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호'));
+  const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호')
+    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02)
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };

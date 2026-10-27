@@ -302,7 +302,7 @@ function _create(now, rng, cal) {
     fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, weedCount: 0, pruneCount: 0, // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
     dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {}, memento: {}, letter: {} }, // P08-01-04, P08-02, P08-03
     log: [], records: [], yearLog: [], yearNow: newYearNow(), yearBest: null, helpYear: null, nextId: 1,   // P28-07-01 해마다 기록 · 올해 쌓는 중
-    settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
+    settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
     shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null, resetAt: null,   // P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
@@ -315,6 +315,9 @@ const unitOf = fs => fs.length && fs.every(f => plantUnit(FLOWERS[f.type]) === '
 
 // ---------------------------------------------------------------- 알림 (P11)
 const TOAST_TYPES = [3, 8, 9];                   // P11-02-01-a
+// P28-02 🐢 느긋하게 보기 (10-27): 켜면 퀘스트 띠 · 주문 쪽지 · 점수 · 칭호 연출을 숨김. 얻는 규칙은 그대로, 보이는 것만
+// 새 숫자 · 목표 화면(정원 등급 · 그래프 · 주간 목표 · 효율 표 …)은 이 함수를 따른다 — 숨길지 여기 하나만 봄
+const slowView = st => !!(st && st.settings && st.settings.slow);
 function addLog(st, type, text, ctx) {
   const cal = calendar(st.virtual);
   st.log.push({ y: yearOf(st, cal), m: cal.month, d: cal.day, type, text });
@@ -478,7 +481,7 @@ function onSlot(st, cal, ctx) {
   flushPending(st, ctx);
   deliverLetters(st, cal, ctx);                                                // P26 답장 편지
   if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); const nb = barrelTick(st); if (nb) addLog(st, 16, `빗물 통이 꽃 ${nb}포기에 물을 줬어요`, ctx); }
-  if (teaShopOpen(cal)) { makeOrders(st, cal); addLog(st, 15, '찻집에 새 주문 쪽지가 왔어요', ctx); }   // P23-01
+  if (teaShopOpen(cal)) { makeOrders(st, cal); if (!slowView(st)) addLog(st, 15, '찻집에 새 주문 쪽지가 왔어요', ctx); }   // P23-01 · 느긋하게 보기면 쪽지 소식은 남기지 않음 (P28-02)
   else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
   // 시든 한해살이는 다음 달에 사라지며 비료 1개 (P07-02)
   st.flowers = st.flowers.filter(f => { if (f.withered && cal.abs > f.witherAbs) { addFert(st, 1); return false; } return true; });
@@ -519,7 +522,7 @@ function recordYear(st, cal, ctx) {
   if (ctx && ctx.onRecord) ctx.onRecord(rec);
   st.log = [];                                                                // P11-02-04-e: 쉼달에 초기화
   st.yearBest = null;
-  addLog(st, 7, `${yr}년차 정원을 기록했어요 · 🏅 정원 점수 ${sc.total}점${sc.total > prevBest && prevBest ? ' · 최고 기록!' : ''}`, ctx);
+  addLog(st, 7, `${yr}년차 정원을 기록했어요${slowView(st) ? '' : ` · 🏅 정원 점수 ${sc.total}점${sc.total > prevBest && prevBest ? ' · 최고 기록!' : ''}`}`, ctx);   // 점수는 기록(rec)에는 남기고 일지 줄에서만 뺌 (P28-02)
   addLog(st, 4, '다음 해 꽃을 예약할 수 있어요', ctx);
 }
 
@@ -1081,10 +1084,11 @@ function giveTitle(st, k, cal, ctx, silent) {
   st.titles[k] = cal.abs;
   if (!(st.dex.deco && st.dex.deco['t:' + k])) addDeco(st, 't:' + k);   // P17-16-06 칭호 문장 장식
   if (!silent) {
-    addLog(st, 9, `🏅 새 칭호: ${TITLES[k].name}`, ctx);
-    (st._newTitles = st._newTitles || []).push(k);                       // 화면이 얻는 연출을 띄움 (P19-05-06)
+    const quiet = slowView(st), lc = quiet ? null : ctx;                  // 느긋하게 보기 (P28-02): 일지 · 도감에만 조용히 — 알림 · 창 없음
+    addLog(st, 9, `🏅 새 칭호: ${TITLES[k].name}`, lc);
+    if (!quiet) (st._newTitles = st._newTitles || []).push(k);           // 화면이 얻는 연출을 띄움 (P19-05-06)
     const hb = ALL_BLEND_KEYS.find(b => BLENDS[b].hidden === k);
-    if (hb) addLog(st, 9, `📖 숨은 레시피가 열렸어요: ${BLENDS[hb].name}`, ctx);
+    if (hb) addLog(st, 9, `📖 숨은 레시피가 열렸어요: ${BLENDS[hb].name}`, lc);
   }
   return true;
 }
@@ -1101,7 +1105,7 @@ function checkJournal(st, ctx) {
       for (const q of c.quests) {
         if (st.journal.done[q.key] != null || !q.test(st)) continue;
         st.journal.done[q.key] = cal.abs; nq++;
-        if (!migrate) addLog(st, 9, `📜 퀘스트: ${questName(q, st)} 완료`, ctx);
+        if (!migrate) addLog(st, 9, `📜 퀘스트: ${questName(q, st)} 완료`, slowView(st) ? null : ctx);   // 느긋하게 보기면 알림 없이 일지에만 (P28-02)
       }
       if (chapterDone(st, c.key) && giveTitle(st, c.title, cal, ctx, migrate)) nt++;
     }
@@ -1789,6 +1793,7 @@ const MIGRATIONS = [
       addYearLog(s, { year: r.year, income: null, sold: null, harvest: null, orders, score: r.score == null ? null : r.score, grade: null, dex: r.dex == null ? null : r.dex, dexTotal: r.dexTotal == null ? null : r.dexTotal });
     });
   }],
+  ['🐢 느긋하게 보기 settings.slow (P28-02, 10-27): 예전 정원은 꺼짐', s => { if (s.settings && s.settings.slow == null) s.settings.slow = false; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1895,7 +1900,7 @@ const api = {
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
-  create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
+  create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
