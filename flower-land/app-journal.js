@@ -112,10 +112,25 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return gradeHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
+}
+// 🌱 정원 등급 쪽 (P28-05-01, M1-4 10-28): 도감일지 맨 위 — 칭호 · 퀘스트처럼 "정원에서 한 일이 쌓인 곳"이라 같은 쪽에, 위 막대 🌱를 누르면 여기로
+// 🐢 느긋하게 보기면 숫자를 빼고 이름 · 막대 · 등급 장식만 (판단은 E.gradeView의 slow = E.slowView 하나)
+function gradeHTML() {
+  const g = E.gradeView(st), slow = g.slow, pct = Math.floor(g.progress * 100), n = x => x.toLocaleString('ko-KR');
+  const max = Math.max(1, ...g.sources.map(s => s.xp)), nd = g.nextDeco;
+  const src = slow ? '' : `<div class="gr-src">${g.sources.map(s => `<span class="gr-row"><span>${s.ic} ${s.label}</span><i><b style="width:${Math.round(s.xp / max * 100)}%"></b></i><span class="data">${n(s.xp)}</span></span>`).join('')}</div>`;
+  const decos = `<div class="gr-decos">${g.decos.map(d => `<span class="gr-deco ${d.open ? '' : 'locked'}" title="${esc(d.name)}${d.open ? ' · 화원에 있어요' : slow ? '' : ` · 정원 등급 ${d.grade}에 열려요`}">${decoImg(d.key, 2)}<small>${d.open ? esc(d.name) : slow ? '?' : `${d.grade}등급`}</small></span>`).join('')}</div>`;
+  const next = nd ? (slow ? `다음 등급 장식은 「${esc(nd.name)}」` : `다음 등급 장식 「${esc(nd.name)}」 · ${nd.grade}등급 (경험치 ${n(g.nextDecoLeft)} 남음)`) : '등급 장식을 모두 열었어요';
+  return `<div class="cab-head dex-head j-head" id="jGrade"><span class="sb-title">🌱 정원 등급</span>${slow ? '' : `<span class="dh-count data">${g.grade}등급</span>`}</div>
+    <div class="card gr-card"><div class="gr-head"><b>${g.name}</b>${slow ? '<small>거두고 팔고 돌본 만큼 천천히 자라요</small>' : `<small class="data">경험치 ${n(g.xp)} · 다음 등급까지 ${n(g.left)}</small>`}</div>
+      <div class="gr-bar" role="img" aria-label="${slow ? '다음 등급까지 차는 막대' : `다음 등급까지 ${pct}%`}"><b style="width:${pct}%"></b></div>
+      ${src}${decos}
+      <p class="note">🪴 ${next} · 열린 장식은 💐 화원에서 언제든 사요</p>
+      ${slow ? '' : '<p class="note muted">정원에서 한 일만큼 쌓여요 · 돈으로 산 것은 세지 않아요</p>'}</div>`;
 }
 function titlesHTML() {
   // 얻은 칭호는 펼쳐 두고, 못 얻은 칭호는 접어 둠 (10-17)
@@ -216,6 +231,8 @@ function renderTop() {
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
   const tt = $('#topTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호
   if (tt.dataset.k !== tk) { tt.dataset.k = tk; tt.hidden = !tk; tt.innerHTML = tk ? `${titleImg(tk, 22, false)}<span>${E.TITLES[tk].name}</span>` : ''; }
+  const gb = E.gradeBadge(st), tg = $('#topGrade'), gk = gb ? `${gb.grade}|${gb.pct}` : '';   // 🌱 정원 등급 (P28-05-01, M1-4) · 느긋하게 보기면 null → 숨김
+  if (tg.dataset.k !== gk) { tg.dataset.k = gk; tg.hidden = !gb; tg.title = gb ? `정원 등급 ${gb.grade} · ${gb.name} · 다음 등급까지 ${gb.pct}% · 눌러서 등급 보기` : ''; tg.innerHTML = gb ? `🌱<span class="tg-name">${gb.name}</span><span class="tg-n">${gb.grade}</span><i class="tg-bar" aria-hidden="true"><b style="width:${gb.pct}%"></b></i>` : ''; }
   if (document.documentElement.dataset.season !== String(cal.season)) { document.documentElement.dataset.season = cal.season; requestAnimationFrame(() => document.documentElement.classList.add('season-anim')); }   // 계절 바탕색
   cloudTop();                                       // ☁️ 드라이브 저장 표시 (P20-04-02, 로그인했을 때만)
 }
@@ -224,6 +241,7 @@ function renderTop() {
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
 $('#brandBtn').addEventListener('click', () => { setTab('garden'); window.scrollTo({ top: 0, behavior: 'smooth' }); });   // 상단 로고 → 정원 (10-17)
 $('#topTitle').addEventListener('click', () => { ui.dexTab = 'journal'; setTab('dex'); });
+$('#topGrade').addEventListener('click', () => { ui.dexTab = 'journal'; setTab('dex'); window.scrollTo({ top: 0 }); });   // 🌱 → 도감일지 맨 위 등급 쪽
 $('#restBanner').addEventListener('click', e => { if (e.target.closest('[data-rest="close"]')) { st.restClosed = E.calendar(st.virtual).week; save(); $('#restBanner').hidden = true; } });
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]'); if (!go) return;

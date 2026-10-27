@@ -280,11 +280,12 @@ const ctx = {
   live: false, rng: Math.random,   // 화면의 뽑기(심기 · 번식 등)는 모두 ctx.rng로 — 시뮬레이션 · 테스트처럼 시드 rng로 바꿔 끼울 수 있게
   toast: (text) => queueToast(text),
   onRecord: rec => { try { draw(); rec.snapshot = snapshot(); } catch (e) { /* 그림 없이 기록 */ } },
+  onGrade: e => { if (ctx.live) gradeToasts(e); },   // 🌱 등급이 오르면 알림 한 줄 (P28-05-01, M1-4) · 따라잡는 동안 오른 것은 '자리를 비운 동안' 한 줄로
 };
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
 const AWAY_H = 3;
-const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0 });
+const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0, grade: E.gradeOf(st).grade });
 function awayDiff(b) {
   const h = (Date.now() - b.real) / HOUR;
   if (h < AWAY_H || !st.onboarded) return null;
@@ -293,7 +294,8 @@ function awayDiff(b) {
   const log = rec ? [...rec.log, ...st.log] : st.log;
   let i = b.last ? log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
   const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호')
-    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02)
+    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
+  const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
@@ -523,6 +525,8 @@ function showToast(msg, ms) {
   setTimeout(() => { toastEl.classList.remove('show'); setTimeout(() => { toastBusy = false; if (toastPending.length) flushToast(); }, 300); }, ms);
 }
 toastEl.addEventListener('click', () => { toastEl.classList.remove('show'); openLog(); });
+// 🌱 정원 등급이 오를 때 (P28-05-01, M1-4): 등급 한 줄 → 열린 장식 한 줄, 따로따로 (큰 창은 없음 · 느긋하게 보기면 E.gradeAlerts가 빈 목록)
+function gradeToasts(e) { E.gradeAlerts(st, e).forEach((t, i) => setTimeout(() => queueToast(t), i * 400)); }
 
 // ---------------------------------------------------------------- 위 막대
 const SEASON_IC = ['🌸', '☀️', '🍁', '❄️', '🌙'];

@@ -572,7 +572,8 @@ function addXp(st, kind, n, ctx) {
   const after = gradeAt(g.xp).grade;
   if (after > before) {
     const name = gradeName(after), unlock = GRADE_DECO_KEYS.filter(k => DECOS[k].grade > before && DECOS[k].grade <= after);
-    if (!slowView(st)) addLog(st, 9, `🌱 정원 등급이 올랐어요 · ${name}`);   // 알림은 화면이 onGrade로 (M1-4), 느긋하게 보기면 일지에도 숫자를 남기지 않음 (P28-02)
+    if (!slowView(st)) addLog(st, 9, gradeUpText(name));   // 알림은 화면이 onGrade로 (M1-4), 느긋하게 보기면 일지에도 숫자를 남기지 않음 (P28-02)
+    for (const k of unlock) addLog(st, 9, gradeUnlockText(k));   // 등급 장식이 화원에 — 숫자가 없어 느긋하게 보기여도 남김 (M1-4)
     if (ctx && ctx.onGrade) ctx.onGrade({ from: before, grade: after, name, unlock });
   }
   return { xp: add, up: after - before };
@@ -583,6 +584,25 @@ function gradeDexSync(st, ctx) {   // advance 끝에: 늘어난 도감 칸만큼
   if (c > g.dex) { const d = c - g.dex; g.dex = c; addXp(st, 'dex', d, ctx); }
 }
 const yearXpOf = sc => Math.max(0, sc.total - (sc.parts.decos || 0) - (sc.parts.gifts || 0));   // 한 해 평가 점수에서 장식 · 선물 몫(돈으로 사는 것)은 뺌
+// 🌱 등급 화면 (P28-05-01, M1-4 10-28): 화면은 이것만 읽음. 숨길지는 slowView 하나 — 경험치 · 등급 · 장식은 그대로
+const gradeUpText = name => `🌱 정원 등급이 올랐어요 · ${name}`;
+const gradeUnlockText = ks => { const names = [].concat(ks).map(k => DECOS[k].name); return `🪴 화원에 ${names.slice(0, -1).map(x => x + ' · ').join('')}${josa(names[names.length - 1], '이/가')} 들어왔어요`; };   // 하나 또는 여럿 (한 줄로)
+const GRADE_BY = [['harvest', '🧺', '거두기'], ['sell', '💰', '팔기'], ['order', '💌', '주문'], ['quest', '📜', '퀘스트'], ['dex', '📖', '도감'], ['year', '🏅', '한 해 평가'], ['weekly', '🗓️', '주간 목표']];
+const gradeXpAt = g => { let x = 0; for (let i = 1; i < g; i++) x += gradeCost(i); return x; };   // g등급이 되는 누적 경험치
+function gradeView(st) {   // 도감 등급 쪽: 지금 등급 · 남은 양 · 어디서 왔는지 · 등급 장식 (느긋하게 보기면 slow: true → 숫자를 줄여 보여 줌)
+  const g = gradeOf(st), by = (st.grade && st.grade.by) || {};
+  const sources = GRADE_BY.filter(([k]) => k !== 'weekly' || by[k] > 0).map(([k, ic, label]) => ({ k, ic, label, xp: by[k] || 0 }));   // 주간 목표는 생기면(P28-09)
+  const decos = GRADE_DECO_KEYS.map(k => ({ key: k, name: DECOS[k].name, grade: DECOS[k].grade, open: DECOS[k].grade <= g.grade }));
+  const nextDeco = decos.find(d => !d.open) || null;
+  return Object.assign(g, { left: g.next - g.xp, slow: slowView(st), sources, decos, nextDeco, nextDecoLeft: nextDeco ? gradeXpAt(nextDeco.grade) - g.xp : 0 });
+}
+const gradeBadge = st => slowView(st) ? null : (g => ({ grade: g.grade, name: g.name, pct: Math.floor(g.progress * 100) }))(gradeOf(st));   // 위 막대 (느긋하게 보기면 없음)
+const gradeAlerts = (st, e) => slowView(st) || !e ? [] : [gradeUpText(e.name), ...(e.unlock && e.unlock.length ? [gradeUnlockText(e.unlock)] : [])];   // 오를 때 알림 줄 (onGrade 이벤트로) — 등급 한 줄 + 열린 장식 한 줄
+function gradeAwayLine(st, from) {   // "자리를 비운 동안" 한 줄 (P25-01): 그동안 오른 등급을 하나로
+  const to = gradeOf(st).grade;
+  return slowView(st) || from == null || to <= from ? null : `🌱 정원 등급이 올랐어요 · ${gradeName(from)} → ${gradeName(to)}`;
+}
+const isGradeUpLine = t => typeof t === 'string' && t.startsWith('🌱 정원 등급이 올랐어요');
 
 function landCounts(st) {
   const c = {}; for (const k of LAND_KEYS) c[k] = 0;
@@ -1590,7 +1610,7 @@ const DECOS = {
   barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, func: true, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
   cloudstone: { name: '구름 돌', month: 0, months: [], extra: true, desc: '구름 정원사에게 온 뭉게구름 모양 돌' },   // P20-16 덤 장식 (10-27): 팔지 않음 · 꾸밈 도감 칸과 따로 셈
   // P28-05-01 🌱 등급 장식 (10-27): 정원 등급이 그만큼 오르면 화원에 늘 나옴 (달과 상관없이). 땅 · 꽃 · 값에는 영향 없음 (보너스는 M3 P28-05-02)
-  // 화원 줄 · 꾸밈 도감 칸은 등급 화면(M1-4)과 함께 — 그때까지 DECO_KEYS · 꾸밈 도감 수에 넣지 않음
+  // 화원은 🌱 등급 장식 줄(이달의 장식 DECO_KEYS와 따로), 꾸밈 도감 칸에는 넣음 (M1-4, 10-28)
   sproutsign: { name: '새싹 팻말', month: 0, months: [], grade: 5, price: 3000, desc: '"새싹이 자라요" 나무 팻말' },
   wateringcan: { name: '양철 물뿌리개', month: 0, months: [], grade: 10, price: 6000, desc: '오래 써서 반질반질한 물뿌리개' },
   arch: { name: '꽃 아치', month: 0, months: [], grade: 15, price: 18000, desc: '덩굴꽃이 감아 오른 아치' },
@@ -1607,8 +1627,8 @@ const decoInfo = key => {
   const tk = typeof key === 'string' && key.startsWith('t:') ? key.slice(2) : null;
   return tk && TITLES[tk] ? { name: `${TITLES[tk].name} 문장`, title: tk, price: null, extra: !!TITLES[tk].extra, desc: '칭호를 얻은 기념 문장' } : null;
 };
-const decoTotal = () => DECO_KEYS.length + TITLE_KEYS.length;               // 꾸밈 도감 칸 (도감 93칸과 따로 셈, P17-16-05) — 덤 장식 · 덤 칭호 문장은 빼고
-const decoCount = st => Object.keys((st.dex && st.dex.deco) || {}).filter(k => decoInfo(k) && !decoInfo(k).extra && !decoInfo(k).grade).length;
+const decoTotal = () => DECO_KEYS.length + GRADE_DECO_KEYS.length + TITLE_KEYS.length;   // 꾸밈 도감 칸 (도감 93칸과 따로 셈, P17-16-05) — 덤 장식 · 덤 칭호 문장은 빼고, 등급 장식은 넣음 (M1-4)
+const decoCount = st => Object.keys((st.dex && st.dex.deco) || {}).filter(k => decoInfo(k) && !decoInfo(k).extra).length;
 const decoExtras = st => [...EXTRA_DECO_KEYS, ...EXTRA_TITLE_KEYS.map(k => 't:' + k)].filter(k => ((st.dex && st.dex.deco) || {})[k]);   // 가진 덤 장식 (꾸밈 도감 끝에 덧붙여 보여 줌)
 const decoMonths = k => DECOS[k].months || [DECOS[k].month];
 const decoOffer = cal => DECO_KEYS.filter(k => decoMonths(k).includes(cal.month));
@@ -1964,7 +1984,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeDexCount, newGrade, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

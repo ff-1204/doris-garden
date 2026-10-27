@@ -22,7 +22,7 @@ function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.i
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);
-  const sig = JSON.stringify([cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
+  const sig = JSON.stringify([E.gradeOf(st).grade, cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
   if (!force && ui.sigs.shop === sig) { updateCountdowns(); return; }
   ui.sigs.shop = sig;
   const onSale = FLOWER_KEYS.filter(k => !cal.frozen && FLOWERS[k].sow.includes(cal.month));
@@ -101,6 +101,13 @@ function renderShop(force) {
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
+  // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
+  const gNow = E.gradeOf(st).grade;
+  const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 땅 · 꽃에는 영향이 없어요</span></div>
+    <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
+      return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${open ? `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>` : `<span class="muted">🔒 ${D.grade}등급에 열려요</span>`}</span></div>`; }).join('')}</div>`;
   // P26 💐 이웃에게 선물: 종류마다 한 해에 한 번, 다음 달 답장 편지
   const gs = E.giftsOf(st);
   const lc = E.letterCount(st), allL = lc >= E.LETTER_KEYS.length;
@@ -110,7 +117,7 @@ function renderShop(force) {
         <span class="dk-main"><b>${G.name}</b><small>${G.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(G.price)}</span>${sent ? '<span class="muted">✓ 올해 보냈어요 · 3월에 다시</span>' : `<button type="button" class="btn primary" data-gift="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '보내기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${decoSection}${gearSection}${giftSection}</div>`;
+    ${cal.frozen ? rvView : saleView}${decoSection}${gradeSection}${gearSection}${giftSection}</div>`;
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });

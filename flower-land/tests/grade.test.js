@@ -107,7 +107,7 @@ check(E.gradeDexCount(buy) === b0.dex, '사서 생기는 씨앗 · 묘목 · 꾸
 
 console.log('[등급 장식 (12-6 여정)]');
 check(E.GRADE_DECO_KEYS.length === 6 && E.GRADE_DECO_KEYS.map(k => E.DECOS[k].grade).join() === '5,10,15,20,25,30', '등급 5 · 10 · 15 · 20 · 25 · 30에 하나씩');
-check(E.GRADE_DECO_KEYS.every(k => !E.DECO_KEYS.includes(k) && !E.decoOffer({ month: 3 }).includes(k) && !E.DECOS[k].func), '이달의 장식 · 기능 장식이 아님 (화원 줄 · 꾸밈 도감은 M1-4)');
+check(E.GRADE_DECO_KEYS.every(k => !E.DECO_KEYS.includes(k) && !E.decoOffer({ month: 3 }).includes(k) && !E.DECOS[k].func), '이달의 장식 · 기능 장식이 아님 (화원은 🌱 등급 장식 줄, M1-4)');
 check(E.GRADE_DECO_KEYS.every(k => E.DECOS[k].price > 0) && E.GRADE_DECO_KEYS.every((k, i) => i === 0 || E.DECOS[k].price > E.DECOS[E.GRADE_DECO_KEYS[i - 1]].price), '값은 등급 따라 오름');
 const gd = E.create(mon + 0.1 * H, () => 0.5); gd.money = 100000;
 check(E.gradeDecoOffer(gd).length === 0, '1등급엔 살 수 있는 등급 장식 없음');
@@ -120,7 +120,7 @@ check(gev.length === 1 && gev[0].grade === 5 && gev[0].unlock.join() === 'sprout
 check(E.gradeDecoOffer(gd).join() === 'sproutsign', 'gradeDecoOffer: 지금 살 수 있는 등급 장식');
 const months = [];
 for (let i = 0; i < 14 && months.length < 3; i++) { const c = E.calendar(gd.virtual); if (!months.includes(c.month)) { months.push(c.month); check(E.buyDeco(gd, 'sproutsign').ok, `${c.month}월에도 삼 (달과 상관없이)`); } E.advance(gd, gd.virtual + 12 * H, ctx); }
-check(gd.dex.deco.sproutsign && E.decoCount(gd) === 0 && E.decoTotal() === E.DECO_KEYS.length + E.TITLE_KEYS.length, '꾸밈 도감에 남지만 칸 수 · 모은 수에는 아직 넣지 않음');
+check(gd.dex.deco.sproutsign && E.decoCount(gd) === 1 && E.decoTotal() === E.DECO_KEYS.length + E.GRADE_DECO_KEYS.length + E.TITLE_KEYS.length, '꾸밈 도감 칸 · 모은 수에 들어감 (여러 개 사도 한 칸, M1-4)');
 const placed = gd.decos.find(d => d.key === 'sproutsign');
 check(E.placeDeco(gd, placed.id, 0, 0).ok && E.decoAt(gd, 0, 0) === placed, '정원에 놓을 수 있음');
 check(!E.buyDeco(gd, 'wateringcan').ok, '10등급 장식은 아직');
