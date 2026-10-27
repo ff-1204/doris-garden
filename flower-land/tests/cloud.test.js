@@ -71,5 +71,19 @@ check(E.outsideUrl(URL1, ia('fbA')) === 'intent://ff-1204.github.io/doris-garden
 check(E.outsideUrl('http://localhost:5173/', ia('naverA')).includes('scheme=http;'), '주소의 http · https를 그대로');
 check(E.outsideUrl(URL1, ia('instaI')) === null && E.outsideUrl(URL1, null) === null, 'iPhone 앱 안 · 바깥 브라우저는 주소 없음 (메뉴 안내 · 주소 복사)');
 
+console.log('[첫 누름에 조용히 다시 받기 (P20-04-03)]');
+const A = o => E.cloudAutoOk(Object.assign({ on: true, inApp: null, email: 'a@b.c', tokenOk: false, ready: true, waiting: false, failed: false, tried: null, exp: 0 }, o));
+check(A({}), '새로 연 페이지 · 로그인해 둔 기기 · 토큰 없음 → 첫 누름에 해 봄');
+check(!A({ tried: 0 }), '이 페이지에서 이미 해 봤으면(토큰 없음 그대로) 다시 안 함');
+check(!A({ failed: true }) && !A({ failed: true, exp: T, tried: 0 }), '한 번 실패하면 그 페이지에서는 더 안 함 (누를 때마다 창이 뜨지 않게)');
+check(A({ exp: T, tried: 0 }), '받은 토큰이 1시간 뒤 끝나면 다음 누름에 한 번 더');
+check(!A({ exp: T, tried: T }), '같은 토큰 끝남에는 한 번만');
+check(!A({ tokenOk: true }), '토큰이 살아 있으면 안 함');
+check(!A({ email: '' }) && !A({ email: undefined }), '로그인한 적 없거나 로그아웃했으면 안 함');
+check(!A({ on: false }), '클라이언트 ID가 비면 안 함');
+check(!A({ inApp: { app: 'kakao', os: 'android' } }), '앱 안 브라우저에서는 안 함');
+check(!A({ ready: false }), '구글 스크립트가 아직이면 이번 누름은 넘김 (다음 누름에)');
+check(!A({ waiting: true }), '이미 로그인 창을 기다리는 중이면 안 함 (이중 요청 없음)');
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
 process.exit(fails ? 1 : 0);

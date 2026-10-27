@@ -15,6 +15,7 @@ const cloud = {
   state: 'idle',            // idle · saving · saved · offline · error · relogin · ask
   remote: null,             // 마지막으로 본 드라이브 목록 { garden, prev }
   busy: false, pending: null, timer: null, checkedAt: 0, recheck: false, askData: null, seen: null,
+  autoTried: null, autoFailed: false,   // 첫 누름에 조용히 다시 받기 (P20-04-03): 마지막으로 해 본 토큰의 exp · 이 페이지에서 실패함
 };
 const cloudIn = () => cloud.on && !cloud.inApp && !!cloud.meta.email;
 function cloudSaveMeta() { try { if (cloud.meta.email) localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud.meta)); else localStorage.removeItem(CLOUD_KEY); } catch (e) { /* 무시 */ } }
@@ -41,15 +42,16 @@ function cloudRequest(first) {
   if (!cloud.client) { cloudLib().catch(() => null); return Promise.reject(Object.assign(new Error('notready'), { kind: 'notready' })); }
   return new Promise((res, rej) => {
     const w = { res, rej, t: setTimeout(() => { cloud.waiters = cloud.waiters.filter(x => x !== w); rej(Object.assign(new Error('timeout'), { kind: 'popup' })); }, 120000) };
+    const asking = cloud.waiters.length > 0;                   // 이미 창이 떠 있으면 그 답을 같이 기다림 (이중 요청 없음)
     cloud.waiters.push(w);
-    cloud.client.requestAccessToken(first || !cloud.meta.email ? { prompt: 'select_account' } : { prompt: '', login_hint: cloud.meta.email });
+    if (!asking) cloud.client.requestAccessToken(first || !cloud.meta.email ? { prompt: 'select_account' } : { prompt: '', login_hint: cloud.meta.email });
   });
 }
 function cloudOnToken(r) {
   const ws = cloud.waiters.splice(0); ws.forEach(w => clearTimeout(w.t));
   if (r.error) return ws.forEach(w => w.rej(Object.assign(new Error(r.error), { kind: 'denied' })));
   if (!google.accounts.oauth2.hasGrantedAllScopes(r, CLOUD_SCOPE)) return ws.forEach(w => w.rej(Object.assign(new Error('scope'), { kind: 'scope' })));
-  cloud.token = r.access_token; cloud.exp = Date.now() + (+r.expires_in || 3600) * 1000;
+  cloud.token = r.access_token; cloud.exp = Date.now() + (+r.expires_in || 3600) * 1000; cloud.autoFailed = false;   // 받았으면 다음 끝남에 다시 한 번
   ws.forEach(w => w.res(cloud.token));
 }
 function cloudOnTokenError(e) { const ws = cloud.waiters.splice(0); ws.forEach(w => { clearTimeout(w.t); w.rej(Object.assign(new Error(e && e.type), { kind: 'popup' })); }); }
@@ -119,10 +121,24 @@ function cloudLogout() {
   feedback('로그아웃했어요 · 이 브라우저의 정원은 그대로예요 (드라이브 저장만 멈춰요)');   // P20-04-04
 }
 // 다시 로그인 (토큰이 끝났거나 새로 연 페이지): 누를 때 받고, 밀린 확인 · 저장을 함
-async function cloudReconnect(then) {
-  try { await cloudRequest(false); } catch (e) { return cloudFail(e, true); }
+async function cloudReconnect(then, quiet) {
+  try { await cloudRequest(false); } catch (e) { return quiet ? cloudAutoFail() : cloudFail(e, true); }
   cloud.pending = null;
   cloudSync(then === 'now' ? 'now' : 'open');                 // 드라이브 확인 → 이 기기에서 손댄 것이 있으면 올림
+}
+// 첫 누름에 조용히 다시 받기 (P20-04-03, 10-27): 새로 연 페이지 · 토큰이 끝난 뒤 페이지 어디든 처음 누를 때 한 번.
+// 누른 것(꽃 · 탭 …)은 그대로 하고, ☁️ 단추는 그 단추가 받음. 실패 · 창 닫힘 · 계정 고르기가 필요하면 조용히 "다시 로그인해 주세요"
+function cloudAuto(e) {
+  if (e.type === 'keydown' && (e.repeat || ['Escape', 'Tab', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key))) return;
+  if (e.target && e.target.closest && e.target.closest('#topCloud, [data-cloud]')) return;
+  if (!E.cloudAutoOk({ on: cloud.on, inApp: cloud.inApp, email: cloud.meta.email, tokenOk: cloudTokenOk(), ready: !!cloud.client,
+    waiting: cloud.waiters.length > 0, failed: cloud.autoFailed, tried: cloud.autoTried, exp: cloud.exp })) return;
+  cloud.autoTried = cloud.exp;
+  cloudReconnect(null, true);
+}
+function cloudAutoFail() {
+  cloud.autoFailed = true;
+  if (cloud.meta.email && !cloudTokenOk() && cloud.state !== 'ask') cloudSet('relogin');
 }
 // 앱 안 브라우저 (P20-07-02): 로그인 대신 바깥 브라우저 안내 — 💾 저장 안내 창과 같은 함수
 function cloudInAppGuide() {
@@ -267,7 +283,8 @@ function cloudNewGarden() {
 function cloudStart() {
   if (!cloud.on) return;
   cloudSeen();
-  if (cloudIn()) { cloudLib().catch(() => null); cloudSet('relogin', 'open'); }   // 새로 연 페이지엔 토큰이 없음 → ☁️를 누르면 맞춤
+  if (cloudIn()) { cloudLib().catch(() => null); cloudSet('relogin', 'open'); }   // 새로 연 페이지엔 토큰이 없음 → 처음 누를 때 조용히 맞춤 (안 되면 ☁️를 눌러서)
+  ['click', 'keydown'].forEach(t => document.addEventListener(t, cloudAuto, true));   // 막지 않고 보기만 (capture · preventDefault 없음)
   setInterval(cloudTick, 2000);
   document.addEventListener('visibilitychange', () => {
     if (!cloudIn()) return;
