@@ -98,6 +98,7 @@ function renderAll(force) {
   if (ui.tab === 'settings' && force) renderSettings();   // 입력 중에 다시 그려지지 않게, 들어올 때만
   showNewTitles();
   if (awayInfo) showAway();                       // 칭호 창이 먼저면 그 뒤에 (QA 9회차 참고)
+  showLetters();                                  // ✉️ 막 온 답장 · 답례품 (P26-06)
 }
 let lastUi = 0, lastSave = Date.now();
 // P25-01 "자리를 비운 동안" 창

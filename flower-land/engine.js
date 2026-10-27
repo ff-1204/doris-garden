@@ -302,7 +302,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], restClosed: null, account: null, actAt: null,   // P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null,   // P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -1142,7 +1142,7 @@ function fillOrder(st, c) {
 }
 
 // ---------------------------------------------------------------- 💐 이웃에게 선물 · ✉️ 답장 편지 (P26, 10-24)
-// 오래 하면 남는 돈을 해마다 되풀이해 쓰는 곳. 종류마다 한 해에 한 번, 다음 달에 답장 편지(12통 도감). 돈만 씀 — 수입 · 값 영향 없음
+// 오래 하면 남는 돈을 해마다 되풀이해 쓰는 곳. 종류마다 한 해에 한 번, 다음 달에 답장 편지(12통 도감) + 답례품 하나 (P26-06, 10-27)
 const GIFTS = {
   bouquet: { name: '꽃다발', ic: '💐', price: 8000, desc: '이웃집 식탁에 놓을 꽃다발' },
   teabox: { name: '차 한 상자', ic: '🍵', price: 15000, desc: '고운 차 상자를 사서 보내요' },
@@ -1150,18 +1150,18 @@ const GIFTS = {
 };
 const GIFT_KEYS = Object.keys(GIFTS);
 const LETTERS = {
-  florist: { from: '꽃집 할머니', gift: 'bouquet', text: '꽃다발 고마워요. 식탁에 두니 아침이 환해졌어요. 다음 봄에도 좋은 씨앗을 골라 둘게요.' },
-  postman: { from: '우체부 아저씨', text: '배달 길에 정원을 지나는 게 하루의 즐거움이에요. 덕분에 저도 화분 하나를 들였어요.' },
-  kid: { from: '옆집 꼬마', gift: null, text: '선물 고마워요! 저도 커서 정원사가 될래요. 꽃 그림을 그려서 넣었어요.' },
-  regular: { from: '찻집 단골 할아버지', gift: 'teabox', text: '보내 준 차를 우려 아내와 마셨어요. 오래전 함께 걷던 꽃길 이야기를 나눴어요.' },
-  librarian: { from: '도서관 사서', text: '책 사이에 꽃잎을 끼워 두었어요. 펼칠 때마다 정원 냄새가 날 거예요.' },
-  beekeeper: { from: '양봉가 이웃', text: '벌들이 요즘 정원 쪽으로 자주 가요. 좋은 꽃이 많다는 뜻이겠지요.' },
-  baker: { from: '빵집 사장님', gift: 'teabox', text: '나눠 준 차에 맞춰 꽃잎 쿠키를 구워 봤어요. 다음엔 제가 들고 갈게요.' },
-  bori: { from: '강아지 보리네', text: '보리가 정원 앞에서 늘 멈춰요. 꽃 냄새 맡는 게 제일 좋은가 봐요.' },
-  newcomer: { from: '이사 온 새 이웃', gift: 'bouquet', text: '처음 받은 선물이 꽃이라 이 동네가 금방 좋아졌어요. 고마워요.' },
-  teacher: { from: '학교 선생님', text: '아이들과 정원 이야기를 나눴어요. 꽃이 땅을 바꾼다는 말에 다들 눈이 반짝였어요.' },
-  photo: { from: '사진관 주인', gift: 'party', text: '잔치 때 찍은 사진을 한 장 넣었어요. 모두 웃고 있네요.' },
-  faraway: { from: '바다 건너 친구', gift: null, text: '멀리서도 정원 소식이 반가워요. 저도 창가에 작은 화분을 하나 두었어요.' },
+  florist: { from: '꽃집 할머니', likes: 'seed', gift: 'bouquet', text: '꽃다발 고마워요. 식탁에 두니 아침이 환해졌어요. 다음 봄에도 좋은 씨앗을 골라 둘게요.' },
+  postman: { from: '우체부 아저씨', likes: 'supply', text: '배달 길에 정원을 지나는 게 하루의 즐거움이에요. 덕분에 저도 화분 하나를 들였어요.' },
+  kid: { from: '옆집 꼬마', likes: 'mine', gift: null, text: '선물 고마워요! 저도 커서 정원사가 될래요. 꽃 그림을 그려서 넣었어요.' },
+  regular: { from: '찻집 단골 할아버지', likes: 'honey', gift: 'teabox', text: '보내 준 차를 우려 아내와 마셨어요. 오래전 함께 걷던 꽃길 이야기를 나눴어요.' },
+  librarian: { from: '도서관 사서', likes: 'seed', text: '책 사이에 꽃잎을 끼워 두었어요. 펼칠 때마다 정원 냄새가 날 거예요.' },
+  beekeeper: { from: '양봉가 이웃', likes: 'honey', text: '벌들이 요즘 정원 쪽으로 자주 가요. 좋은 꽃이 많다는 뜻이겠지요.' },
+  baker: { from: '빵집 사장님', likes: 'honey', gift: 'teabox', text: '나눠 준 차에 맞춰 꽃잎 쿠키를 구워 봤어요. 다음엔 제가 들고 갈게요.' },
+  bori: { from: '강아지 보리네', likes: 'mine', text: '보리가 정원 앞에서 늘 멈춰요. 꽃 냄새 맡는 게 제일 좋은가 봐요.' },
+  newcomer: { from: '이사 온 새 이웃', likes: 'deco', gift: 'bouquet', text: '처음 받은 선물이 꽃이라 이 동네가 금방 좋아졌어요. 고마워요.' },
+  teacher: { from: '학교 선생님', likes: 'seed', text: '아이들과 정원 이야기를 나눴어요. 꽃이 땅을 바꾼다는 말에 다들 눈이 반짝였어요.' },
+  photo: { from: '사진관 주인', likes: 'deco', gift: 'party', text: '잔치 때 찍은 사진을 한 장 넣었어요. 모두 웃고 있네요.' },
+  faraway: { from: '바다 건너 친구', likes: 'seed', gift: null, text: '멀리서도 정원 소식이 반가워요. 저도 창가에 작은 화분을 하나 두었어요.' },
 };
 const LETTER_KEYS = Object.keys(LETTERS);
 const letterCount = st => Object.keys((st.dex && st.dex.letter) || {}).filter(k => LETTERS[k]).length;
@@ -1180,21 +1180,115 @@ function sendGift(st, k, ctx) {
 }
 // 이 선물을 보내면 새 편지가 올지 (보낸 선물에 맞는 편지나 공통 편지가 남았는지) — 화면 안내용 (QA 11회차)
 const letterLeftFor = (st, k) => LETTER_KEYS.some(x => !(st.dex.letter || {})[x] && (!LETTERS[x].gift || LETTERS[x].gift === k));
+// 🎁 답례품 (P26-06, 10-27 사용자 요청): 답장마다 하나. 선물값이 클수록 좋은 칸에서 뽑고, 기대 가치는 선물값의 25% 아래 (P26-07)
+// 돈이 다시 돈을 벌면 안 됨(P17-14): 팔 수 있는 것(차 · 꽃잎)과 수입을 늘리는 장식(벌통 · 빗물 통 · 장치)은 넣지 않음
+// cat: seed(창고) · supply(창고 용품) · honey(찻집 꿀 선반) · mine(광산 주머니) · deco(창고 장식, 한 번 가진 것은 같은 등급의 다른 것으로)
+const ANNUALS = ['chamomile', 'bpea', 'hibiscus', 'marigold', 'celosia'];
+const RETURNS = {
+  bouquet: [   // 💐 작은 것
+    { cat: 'seed', keys: ANNUALS, n: 3, w: 20 },
+    { cat: 'supply', keys: ['fert'], n: 10, w: 15 },
+    { cat: 'supply', keys: ['water'], n: 20, w: 15 },
+    { cat: 'honey', n: 2, w: 10 },
+    { cat: 'mine', keys: ['stone'], n: 5, w: 10 },
+    { cat: 'mine', keys: ['dirt'], n: 10, w: 10 },
+    { cat: 'mine', keys: ['shell'], n: 1, w: 5 },
+    { cat: 'deco', keys: ['stepstone', 'fence'], n: 1, w: 15 },
+  ],
+  teabox: [    // 🍵 보통
+    { cat: 'seed', keys: ['lavender', 'gamguk', 'dongbaek', 'lotus'], n: 1, w: 18 },
+    { cat: 'seed', keys: ANNUALS, n: 6, w: 10 },
+    { cat: 'supply', keys: ['fert'], n: 20, w: 12 },
+    { cat: 'supply', keys: ['basket', 'hoe', 'shears'], n: 2, w: 10 },
+    { cat: 'honey', n: 4, w: 12 },
+    { cat: 'mine', keys: ['stone'], n: 10, w: 8 },
+    { cat: 'mine', keys: ['quartz'], n: 1, w: 6 },
+    { cat: 'mine', keys: ['shell', 'fern', 'leaf', 'bone'], n: 1, w: 6 },
+    { cat: 'deco', keys: ['pumpkin', 'snowman', 'chime', 'moonlamp'], n: 1, w: 18 },
+  ],
+  party: [     // 🎉 좋은 것 · 가끔 귀한 장식
+    { cat: 'seed', keys: ['rose', 'jasmine', 'maehwa', 'napmae'], n: 1, w: 16 },
+    { cat: 'supply', keys: ['fert'], n: 40, w: 12 },
+    { cat: 'honey', n: 3, w: 12 },
+    { cat: 'mine', keys: ['amber'], n: 3, w: 8 },
+    { cat: 'mine', keys: ['oldseed'], n: 1, w: 8 },
+    { cat: 'mine', keys: ['shell', 'fern', 'leaf', 'bone'], n: 2, w: 8 },
+    { cat: 'deco', keys: ['birdhouse', 'basin', 'bench', 'stonelamp'], n: 1, w: 30 },
+    { cat: 'deco', keys: ['jars', 'bonsai'], n: 1, w: 7 },
+  ],
+};
+// 가치(원): 씨앗 · 용품 · 장식은 화원 값. 꿀 · 광산 재료는 팔지 않아 참고값 — 만들 수 있는 것의 값으로 어림 (돌 20 → 돌 물확 9,000 · 석영 → 꽃무늬 찻잔 등)
+const RETURN_V = { honey: 300, stone: 450, dirt: 30, quartz: 1500, amber: 1000, oldseed: 2000, fossil: 1000 };
+const returnBias = 2;                             // 답장한 이웃이 좋아하는 쪽(likes) 칸은 2배로 잘 나옴
+function returnValue(re) {
+  if (!re) return 0;
+  const one = re.cat === 'seed' ? FLOWERS[re.key].price : re.cat === 'supply' ? SUPPLIES[re.key].price : re.cat === 'deco' ? DECOS[re.key].price
+    : re.cat === 'honey' ? RETURN_V.honey : FOSSILS[re.key] ? RETURN_V.fossil : RETURN_V[re.key];
+  return one * re.n;
+}
+const returnName = re => re.cat === 'seed' ? `${FLOWERS[re.key].name} ${FORM[FLOWERS[re.key].form].name}` : re.cat === 'supply' ? SUPPLIES[re.key].name
+  : re.cat === 'honey' ? honeyName(re.key) : re.cat === 'mine' ? mineName(re.key) : decoInfo(re.key).name;
+const returnText = re => `${returnName(re)} ×${re.n}`;
+const RETURN_WHERE = { seed: '창고', supply: '창고', honey: '찻집 꿀 선반', mine: '광산 주머니', deco: '창고' };
+const returnKeys = (st, e) => e.cat === 'honey' ? HONEY_KEYS.filter(k => k === 'wild' || (st.dex.flower || {})[k])   // 꿀은 들꽃꿀이나 본 적 있는 꽃의 꿀
+  : e.cat === 'deco' ? e.keys.filter(k => !(st.dex.deco || {})[k]) : e.keys;                                         // 장식은 아직 없는 것만
+const pickW = (list, rng) => { const tot = list.reduce((a, x) => a + x.w, 0); let r = rng() * tot; for (const x of list) { r -= x.w; if (r < 0) return x; } return list[list.length - 1]; };
+// 답례품 하나 뽑기 (주지는 않음). likes: 이웃이 좋아하는 칸. 고른 장식이 다 있으면 같은 등급의 더 싸거나 같은 장식 → 그것도 없으면 장식 아닌 칸에서 다시
+function pickReturn(st, giftKey, likes, rng) {
+  const table = RETURNS[giftKey]; if (!table) return null;
+  const w = e => ({ e, w: e.w * (likes && e.cat === likes ? returnBias : 1) });
+  let e = pickW(table.map(w), rng).e, keys = returnKeys(st, e);
+  if (!keys.length && e.cat === 'deco') {
+    const cap = Math.max(...e.keys.map(k => DECOS[k].price));
+    keys = table.filter(x => x.cat === 'deco' && x !== e).flatMap(x => returnKeys(st, x)).filter(k => DECOS[k].price <= cap);
+  }
+  if (!keys.length) { e = pickW(table.filter(x => x.cat !== 'deco').map(w), rng).e; keys = returnKeys(st, e); }
+  return { cat: e.cat, key: keys[Math.floor(rng() * keys.length)], n: e.n };
+}
+function giveReturn(st, re, ctx) {                // 알맞은 곳에 넣기
+  if (re.cat === 'seed') for (let i = 0; i < re.n; i++) st.items.push(newItem(st, re.key, 1, '답례품'));
+  else if (re.cat === 'supply') st[re.key] = (st[re.key] || 0) + SUPPLIES[re.key].per * re.n;
+  else if (re.cat === 'honey') { st.honey = st.honey || {}; st.honey[re.key] = (st.honey[re.key] || 0) + re.n; }   // 꿀 도감 · 올해 꿀은 직접 거둔 것만
+  else if (re.cat === 'mine') { const m = st.mine = st.mine || newMine(); m.bag[re.key] = (m.bag[re.key] || 0) + re.n; }               // 광산 도감은 직접 판 것만
+  else if (re.cat === 'deco') { const first = !(st.dex.deco || {})[re.key]; addDeco(st, re.key); if (first) addLog(st, 9, `도감에 등록: 🪴 ${DECOS[re.key].name}`, ctx); }
+}
+const LETTER_BOX_MAX = 60;
 function deliverLetters(st, cal, ctx) {           // onSlot: 때가 된 답장
   const due = (st.letterPending || []).filter(p => cal.abs >= p.due); if (!due.length) return;
   st.letterPending = st.letterPending.filter(p => cal.abs < p.due);
   st.dex.letter = st.dex.letter || {};
+  st.letterBox = st.letterBox || [];
   for (const p of due) {
     if (!GIFTS[p.gift]) continue;                 // 모르는 선물(손댄 파일)은 건너뜀 (QA 9회차)
     const left0 = LETTER_KEYS.filter(k => !st.dex.letter[k]);
     // 보낸 선물에 맞는 편지 → 어느 선물에나 맞는 편지 → 남은 아무 편지 (QA 9회차: 꽃다발에 차 이야기가 오던 것)
     const left = [left0.filter(k => LETTERS[k].gift === p.gift), left0.filter(k => !LETTERS[k].gift)].find(a => a.length) || [];   // 다른 선물 전용 편지는 주지 않음 (QA 10회차)
+    let k = null;
     if (left.length) {
-      const k = left[Math.floor(mineRng(hashStr(`${st.gardenId || 'g'}|letter|${S(st, 'gifts')}|${p.gift}`))() * left.length)];
+      k = left[Math.floor(mineRng(hashStr(`${st.gardenId || 'g'}|letter|${S(st, 'gifts')}|${p.gift}`))() * left.length)];
       st.dex.letter[k] = true;
       addLog(st, 17, `${LETTERS[k].from}에게서 답장이 왔어요 · 📖 도감 ✉️ 편지`, ctx);
     } else addLog(st, 17, `${josa(GIFTS[p.gift].name, '을/를')} 받은 이웃이 고맙다는 답장을 보냈어요`, ctx);
+    // P26-06 답례품: ctx.rng(화면은 Math.random, 시뮬 · 테스트는 시드 rng). 없으면 정원 이름표로 정해지는 난수
+    const rng = (ctx && ctx.rng) || mineRng(hashStr(`${st.gardenId || 'g'}|return|${S(st, 'gifts')}|${p.gift}|${cal.abs}`));
+    const re = pickReturn(st, p.gift, k && LETTERS[k].likes, rng);
+    if (re) {
+      giveReturn(st, re, ctx);
+      addLog(st, 17, `🎁 답례품 ${returnText(re)} · ${RETURN_WHERE[re.cat]}에 있어요`, ctx);
+      if (ctx && ctx.live && ctx.toast) ctx.toast(`✉️ ${k ? LETTERS[k].from : '이웃'}의 답장 · 🎁 ${returnText(re)}`);
+    }
+    // 받은 편지함: 도감에서 다시 읽을 때 그때 받은 답례품을 보여 줌 · read는 화면이 편지를 띄우면 true
+    st.letterBox.push({ k, gift: p.gift, re, y: yearOf(st, cal), m: cal.month, read: false });
+    if (st.letterBox.length > LETTER_BOX_MAX) { const i = st.letterBox.findIndex(b => !b.k && b.read); st.letterBox.splice(i >= 0 ? i : 0, 1); }
   }
+}
+const letterOf = (st, k) => (st.letterBox || []).find(b => b.k === k) || null;
+function returnEV(giftKey, likes, owned) {    // 기대 가치(원) — 체크리스트 표 · 테스트용. owned: 장식을 다 가진 정원으로 셈
+  const table = RETURNS[giftKey], w = e => e.w * (likes && e.cat === likes ? returnBias : 1);
+  const avg = e => { const ks = e.cat === 'honey' ? ['wild'] : e.keys; return ks.reduce((a, key) => a + returnValue({ cat: e.cat, key, n: e.n }), 0) / ks.length; };
+  const list = owned ? table.filter(e => e.cat !== 'deco') : table;
+  const tot = list.reduce((a, e) => a + w(e), 0);
+  return list.reduce((a, e) => a + w(e) * avg(e), 0) / tot;
 }
 
 // ---------------------------------------------------------------- 🏅 한 해 정원 평가 (P23-02, 10-24)
@@ -1602,6 +1696,7 @@ const MIGRATIONS = [
   ['심은 뒤 흐른 시간 lifeH (QA 12회차, 10-24): 지금까지는 자란 시간과 같음', s => { for (const f of s.flowers || []) if (f.lifeH == null) f.lifeH = f.ageH; }],
   ['꽃잠 번식 표시 propRest · 꽃잠 안내를 닫은 주 restClosed (QA 19회차, 10-27)', s => { for (const f of s.flowers || []) if (f.propRest == null) f.propRest = false; if (s.restClosed === undefined) s.restClosed = null; }],
   ['☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null)', s => { if (s.account === undefined) s.account = null; if (s.actAt === undefined) s.actAt = null; }],
+  ['🎁 답례품 · 받은 편지함 letterBox (P26-06, 10-27): 예전에 받은 편지에는 답례품을 소급하지 않음', s => { s.letterBox = s.letterBox || []; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1708,7 +1803,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

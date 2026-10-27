@@ -67,7 +67,7 @@ $('#p-dex').addEventListener('click', e => {
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
   const fd = e.target.closest('details.fold > summary'); if (fd) { const d = fd.parentElement; ui.fold[d.dataset.fold] = !d.open; return; }   // 펼침 상태 기억
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
-  const lt = e.target.closest('[data-letter]'); if (lt) { const L = E.LETTERS[lt.dataset.letter]; return openModal(`✉️ ${L.from}`, `<div class="letter-pop"><p>${esc(L.text)}</p><p class="letter-from">— ${esc(L.from)}</p></div>`, [{ label: '닫기', act: () => closeModal() }]); }
+  const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);
@@ -110,6 +110,18 @@ function openDexDetail(kind, k) {
 }
 
 // ---------------------------------------------------------------- 창
+// ✉️ 답장 편지 창 (P26-06): 막 온 편지(fresh)는 답례품이 어디 있는지, 도감에서 다시 읽을 땐 그때 받은 답례품을 함께
+function openLetter(b, fresh) {
+  const L = b.k ? E.LETTERS[b.k] : null, G = E.GIFTS[b.gift];
+  const text = L ? L.text : `${josa(G ? G.name : '선물', '을/를')} 잘 받았어요. 정말 고마워요.`, from = L ? L.from : '이웃';
+  const gift = b.re ? `<p class="letter-gift">🎁 ${fresh ? '답례품' : '그때 받은 답례품'}: <b>${esc(E.returnText(b.re))}</b>${fresh ? ` · ${E.RETURN_WHERE[b.re.cat]}에 넣었어요` : ''}</p>` : '';
+  openModal(`✉️ ${from}${fresh ? '의 답장' : ''}`, `<div class="letter-pop"><p>${esc(text)}</p><p class="letter-from">— ${esc(from)}</p></div>${gift}`, [{ label: '닫기', act: () => closeModal() }]);
+}
+function showLetters() {                           // 받은 편지함에서 아직 안 띄운 편지를 하나씩 (다른 창이 닫히면 그다음에)
+  if ($('#modalRoot').innerHTML || !st.onboarded) return;
+  const b = (st.letterBox || []).find(x => !x.read); if (!b) return;
+  b.read = true; openLetter(b, true); save();
+}
 function openModal(title, html, buttons) {
   ui.onDismiss = null;                            // 닫기(✕ · 바깥 · Esc)에 할 일은 창마다 새로 (QA 15회차)
   $('#modalRoot').innerHTML = `<div class="overlay" data-close="1"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
