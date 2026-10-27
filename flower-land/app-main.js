@@ -114,17 +114,17 @@ function showAway() {
   const hh = a.h >= 48 ? `${Math.round(a.h / 24)}일` : `${Math.round(a.h)}시간`;
   const pick = a.lines.slice(-8).map(l => `<li><span>${LOG_IC[l.type] || '·'}</span>${esc(l.text)}</li>`).join('');
   const chips = [a.money ? `💰 ${a.money > 0 ? '+' : ''}${won(a.money)}` : '', a.thirsty ? `💧 목마른 꽃 ${a.thirsty}포기` : '🌿 목마른 꽃 없어요', `⛏️ 기력 ${a.gained > 0 ? `+${a.gained} · ` : ''}${a.energy >= E.MINE_MAX_E ? '가득' : `${a.energy} / ${E.MINE_MAX_E}`}`].filter(Boolean);
-  const acts = careAllBtns(careNeed(E.calendar(st.virtual)), 'btn small care');   // P28-11 모두 물 주기 · 모두 거두기
+  const acts = careAllBtns(careNeed(E.calendar(st.virtual)), 'btn small care') + pantryAllBtn('btn small care');   // P28-11 모두 물 주기 · 모두 거두기 · P28-04 🧺 저장고 모두 거두기
   openModal(`🌙 자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
     ${acts ? `<div class="away-acts">${acts}</div>` : ''}
     ${pick ? `<ul class="away-log">${pick}</ul>${a.lines.length > 8 ? `<p class="muted">그 밖에 ${a.lines.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : '<p class="muted">조용히 시간이 흘렀어요</p>'}</div>`,
     [{ label: '닫기', act: () => closeModal() }, ...(a.thirsty ? [{ label: '💧 정원으로', primary: true, act: () => { closeModal(); setTab('garden'); ui.flash = { t: 'water', until: performance.now() + 2400 }; } }] : [])]);
   const box = $('#modalRoot .away-acts');
   if (box) box.onclick = e => {                   // 누르면 그 자리에 결과 한 줄 (창은 그대로)
-    const b = e.target.closest('[data-all]'); if (!b) return;
-    const r = E.careAll(st, b.dataset.all, ctx);
+    const b = e.target.closest('[data-all], [data-pantry]'); if (!b) return;
+    const r = b.dataset.pantry ? E.takePantry(st, ctx) : E.careAll(st, b.dataset.all, ctx);
     b.outerHTML = `<span class="chip${r.ok ? '' : ' warn'}">${r.ok ? '✓' : '⚠️'} ${esc(r.msg)}</span>`;
-    after(r, b.dataset.all === 'water' ? 'watered' : 'harvested');
+    after(r, b.dataset.pantry ? null : b.dataset.all === 'water' ? 'watered' : 'harvested');
   };
 }
 function frame() {

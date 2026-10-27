@@ -2,11 +2,12 @@
 // --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
 // --no-grade-deco: 🌱 등급 장식(P28-05-01)만 사지 않음 (등급 장식 전과 비교할 때)
 // --auto: 🧺 자동 장치(P28-10)를 사서 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 장치가 더 벌어 주지 않아서). 바구니 3 · 건조대 2 · 일손 1까지, 맡긴 일은 손으로 안 함
+// --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto');
+const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
@@ -21,6 +22,8 @@ const KEEP = { water: 8, hoe: 6, basket: 6, shears: 4 };
 function spend(k, fn) { const m = st.money, r = fn(); if (r && r.ok) add(yearNow(), k, st.money - m); return r; }
 function act() {
   const cal = E.calendar(st.virtual), yr = yearNow();
+  // 🧺 정원 저장고 (P28-04, --pantry): 용품을 사기 전에 먼저 거둠
+  if (PANTRY && st.pantry.items.length) { const r = E.takePantry(st, ctx); for (const x of r.list) if (x.k === 'petal') add(yr, '저장고 꽃잎', x.n); else add(yr, '저장고', x.n * x.won); }
   // 용품
   for (const [k, n] of Object.entries(KEEP)) while ((st[k] || 0) < n && st.money >= E.SUPPLIES[k].price + 500) spend('용품', () => E.buySupply(st, k, 1));
   // 찻집 가꾸기 (P17-15): 돈이 넉넉하면(값 + 20,000원 남음) 손님 자리 → 찻잔 세트 → 간판 순서로
@@ -115,7 +118,7 @@ while (st.virtual < end) {
   if (st.weekly) weeks[st.weekly.week] = JSON.parse(JSON.stringify(st.weekly));   // P28-09 그 주 목표 (마지막 모습)
 }
 // 표
-const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['카운터 판매'] : []), '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), '선물', '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
+const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['카운터 판매'] : []), ...(PANTRY ? ['저장고', '저장고 꽃잎'] : []), '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), '선물', '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
