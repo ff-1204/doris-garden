@@ -45,8 +45,29 @@ function recVsHTML(r) {
   const d = E.slowView(st) ? null : E.yearDiffOf(st, r.year);
   return `<div class="rec-vs">${d ? `<span>📈 지난해보다 <b>${vsText(d)}</b></span>` : ''}<button type="button" class="btn small" data-dt="year">${d ? '그래프 보기' : '📈 해마다 보기'}</button></div>`;
 }
+// 📊 꽃별 셈 (P28-06, 10-28): 값은 엔진 flowerEconomy만 읽음. 도감에 없는 꽃은 "?"로 가리고 정렬에서도 맨 뒤 (모르는 꽃의 순위가 드러나지 않게)
+// 🐢 느긋하게 보기면 칩째 숨김 (P28-02). 좁은 화면은 줄마다 카드 (CSS .econ)
+const ECON_SORTS = [['income', '💰 한 해 수입'], ['price', '🏷️ 값 싼 순'], ['mature', '🌱 빨리 자람']];
+const econKnown = k => !!st.dex.flower[k];
+function econHTML() {
+  const by = ECON_SORTS.some(x => x[0] === ui.econSort) ? ui.econSort : 'income', rows = E.flowerEconomy(by);
+  const list = [...rows.filter(r => econKnown(r.key)), ...rows.filter(r => !econKnown(r.key))];
+  const cols = [['값', '화원 값'], ['자람', '다 자람'], ['핌', '피는 달'], ['수확', '한 해 수확'], ['찻값', '한 잔 ★3'], ['수입', '한 해 수입'], ['땅', '좋아하는 땅']];
+  const tr = r => {
+    if (!econKnown(r.key)) return `<tr class="locked"><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 22, true, '아직 모르는 꽃')}<span>???</span></span></th>${cols.map(c => `<td data-l="${c[1]}">?</td>`).join('')}</tr>`;
+    const L = LANDS[r.land], extra = r.harvests > r.bloom;
+    const v = [won(r.price), `${r.mature}달`, `${r.bloom}달 <small>${monthsText(r.bloomMonths)}</small>`, `${r.harvests}번 × ${r.petals}장${extra ? ' <small>꽃잠 +1</small>' : ''}`,
+      `${won(r.tea)} <small>★1 ${r.star[0].toLocaleString('ko-KR')} ~ ★5 ${r.star[4].toLocaleString('ko-KR')}</small>`, `<b>${won(r.income)}</b>`, `<span><span class="sw" style="background:${L.color}"></span>${L.name}</span>`];
+    return `<tr><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 22, false, r.name)}<span>${r.name}</span><small class="muted">${LIFE[r.life]}</small></span></th>${v.map((x, i) => `<td data-l="${cols[i][1]}" class="${i === 5 ? 'ec-inc' : ''}">${x}</td>`).join('')}</tr>`;
+  };
+  const seg = `<span class="seg ec-seg" role="group" aria-label="정렬">${ECON_SORTS.map(([k, l]) => `<button type="button" data-es="${k}" aria-pressed="${k === by}">${l}</button>`).join('')}</span>`;
+  return `<div class="card econ"><div class="yg-head"><b>📊 꽃별 셈</b>${seg}</div>
+    <p class="muted ec-note">다 자란 한 포기가 한 해(한 주)에 버는 돈이에요. 찻값은 ★3 티백 한 잔 값이고, 땅이 맞고 잘 돌보면 ★이 올라요.</p>
+    <div class="ec-wrap"><table><thead><tr><th>꽃</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${list.map(tr).join('')}</tbody></table></div>
+    <p class="muted ec-note">레시피 블렌드로 팔면 더 받아요. 아직 못 본 꽃은 피우면 보여요.</p></div>`;
+}
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
@@ -80,10 +101,11 @@ function renderDex(force) {
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#8d8a80"><span class="dc-art">${on ? mineImg(k, 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? E.mineName(k) : '???'}</span><span class="dc-sub">${on ? '' : `광산 ${from}층부터`}</span></div>`; }).join('')}</div>` },
       { key: 'land', ic: '🟫', title: '땅', got: nl, total: 10, grid: `<div class="dexgrid big">${LAND_KEYS.map(k => { const L = LANDS[k], on = !!st.dex.land[k], mk = makers(k); return card('land', k, on, `<span class="dc-land" style="background-color:${on ? L.color : 'var(--line)'}"></span>`, L.name, on ? '' : (mk.some(f => st.dex.flower[f]) ? `${FLOWERS[mk.find(f => st.dex.flower[f])].name}의 땅` : mk.length ? '어떤 꽃의 땅일까요' : '꽃과 꽃 사이에서'), L.color); }).join('')}</div>` },
     ];
-    const cat = cats.some(c => c.key === ui.dexCat) ? ui.dexCat : 'all';
+    const econ = !E.slowView(st), nKnown = FLOWER_KEYS.filter(econKnown).length;   // 📊 꽃별 셈 칩 (P28-06) — 모음이 아니라 'all'엔 넣지 않음
+    const cat = cats.some(c => c.key === ui.dexCat) || (econ && ui.dexCat === 'calc') ? ui.dexCat : 'all';
     const chip = (key, label, got, total) => `<button type="button" class="dexchip ${got >= total ? 'done' : ''}" data-dc="${key}" aria-pressed="${cat === key}"><span>${label}</span><span class="data">${got} / ${total}</span><i style="--p:${Math.round(got / total * 100)}%"></i></button>`;
-    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '기본 도감', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}</div>
-      ${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${foldGrid('dex-' + c.key, c.grid)}`).join('')}`;   // 못 모은 칸은 접어 둠 (10-17)
+    body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '기본 도감', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}${econ ? chip('calc', '📊 꽃별 셈', nKnown, FLOWER_KEYS.length) : ''}</div>
+      ${cat === 'calc' ? econHTML() : ''}${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${foldGrid('dex-' + c.key, c.grid)}`).join('')}`;   // 못 모은 칸은 접어 둠 (10-17)
   } else if (ui.dexTab === 'year') {
     body = yearGraphHTML();
   } else if (ui.dexTab === 'journal') {
@@ -115,6 +137,7 @@ $('#p-dex').addEventListener('click', e => {
   const yb = e.target.closest('[data-yb]'); if (yb) { ui.yearBar = yb.dataset.yb; return renderDex(true); }
   const yn = e.target.closest('[data-ynav]'); if (yn) { ui.yearEnd = +yn.dataset.ynav >= (st.yearLog || []).length - 1 ? null : +yn.dataset.ynav; return renderDex(true); }   // 가장 최근까지 오면 다시 '최근' (새해가 생기면 따라감)
   const fd = e.target.closest('details.fold > summary'); if (fd) { const d = fd.parentElement; ui.fold[d.dataset.fold] = !d.open; return; }   // 펼침 상태 기억
+  const es = e.target.closest('[data-es]'); if (es) { ui.econSort = es.dataset.es; return renderDex(true); }
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);

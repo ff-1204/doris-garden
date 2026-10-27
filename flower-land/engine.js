@@ -251,6 +251,21 @@ const isHat = q => stars(q) === 5;
 const teaItemValue = (st, t, cal) => Math.round(FLOWERS[t.type].teaBase * (0.5 + t.q) * (t.hat ? HAT_RATE : 1) * (t.raw ? RAW_RATE : 1) / 10) * 10;   // ✨ 제철 보너스는 없앰 (10-06, P17-05)
 function seasonKey(st, cal) { const y = yearOf(st, cal); return y * 10 + (cal.season === 4 ? 3 : cal.season); } // P17-05-02: 꽃잠엔 겨울 티백 유지
 const isFresh = () => false;   // P17-05 제철 보너스 없앰 (10-06): 찻집이 겨울에만 열려 거의 받을 수 없었음. 예전 저장의 seasonKey는 그대로 둠
+// P28-06 효율 정보 표 (10-28): 꽃마다 셈 — 값은 모두 FLOWERS · teaItemValue · classify에서 계산하고 숫자를 따로 적지 않음
+const HARVEST_PETALS = 1;                        // P12-05 수확 한 번에 꽃잎 1장 (care가 이 수만큼 거둠)
+const ECON_Q = [0.1, 0.3, 0.5, 0.7, 0.9];        // ★1~★5 칸의 가운데 품질 — 대표값은 ★3
+// 다 자란 한 포기가 한 해에 거두는 수: 피는 달마다 한 번 + 마지막 흐르는 달(2월)에 핀 채 꽃잠에 들면 꽃잠에 한 번 더 (harvestSlot)
+const harvestsPerYear = F => F.bloom.length + (F.bloom.includes(MONTHS[MONTHS.indexOf(13) - 1]) ? 1 : 0);
+function flowerEconomy(by) {
+  const rows = FLOWER_KEYS.map((key, i) => {
+    const F = FLOWERS[key], star = ECON_Q.map(q => teaItemValue(null, { type: key, q, hat: isHat(q) }));
+    const harvests = harvestsPerYear(F), tea = star[2];
+    return { key, i, name: F.name, life: F.life, price: F.price, mature: F.mature, bloom: F.bloom.length, bloomMonths: F.bloom.slice(), harvests, petals: HARVEST_PETALS,
+      tea, star, income: harvests * HARVEST_PETALS * tea, land: classify(F.t, F.m) };
+  });
+  const cmp = { income: (a, b) => b.income - a.income, price: (a, b) => a.price - b.price, mature: (a, b) => a.mature - b.mature }[by];
+  return cmp ? rows.sort((a, b) => cmp(a, b) || a.i - b.i) : rows;
+}
 
 // ---------------------------------------------------------------- 꽃방과 블렌딩 (P12-07, P12-08, P08-02)
 const DRY_H = MONTH_H;                           // P12-07-02: 꽃방에 널면 흐르는 시간 1달 뒤 다 마름
@@ -950,8 +965,8 @@ function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 돌보�
     if (tool === 'fert') { f.fertH = 12; st.fert--; }
     if (tool === 'harvest') {                                                    // P12-05
       f.harvestKey = harvestSlot(cal); st.basket--;
-      st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) });
-      yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx);                 // P28-07-01 올해 거둔 꽃잎 · P28-05-01 등급 경험치
+      for (let n = 0; n < HARVEST_PETALS; n++) st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) });
+      yearAdd(st, 'harvest', HARVEST_PETALS); addXp(st, 'harvest', HARVEST_PETALS, ctx);   // P28-07-01 올해 거둔 꽃잎 · P28-05-01 등급 경험치
       const two = f.origin === '이웃' && !f.giftPicked;
       if (two) { f.giftPicked = true; st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) }); yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx); }   // 화분 첫 수확은 2장 (QA 6회차)
       weekNote(st, 'harvest', { type: f.type, q: f.q }, two ? 2 : 1, ctx);       // P28-09 이번 주 목표
@@ -2253,7 +2268,7 @@ function outsideUrl(href, info) {
 
 const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf, canReset, resetKeys,
-  FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
+  FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts, flowerEconomy, harvestsPerYear, HARVEST_PETALS, ECON_Q,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
