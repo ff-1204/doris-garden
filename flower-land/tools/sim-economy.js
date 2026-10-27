@@ -1,10 +1,11 @@
-// 경제 시뮬레이션: 부지런한 정원사가 몇 해 동안 어떻게 벌고 쓰는지 (node flower-land/tools/sim-economy.js [해 수] [씨앗] [--no-spend])
+// 경제 시뮬레이션: 부지런한 정원사가 몇 해 동안 어떻게 벌고 쓰는지 (node flower-land/tools/sim-economy.js [해 수] [씨앗] [--no-spend] [--no-grade-deco])
 // --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
+// --no-grade-deco: 🌱 등급 장식(P28-05-01)만 사지 않음 (등급 장식 전과 비교할 때)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend');
+const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
@@ -28,6 +29,8 @@ function act() {
   for (const k of E.GIFT_KEYS) if (!NO_SPEND && !E.giftsOf(st).sent[k] && st.money >= E.GIFTS[k].price + 30000) spend('선물', () => E.sendGift(st, k));
   // 정원 장식 (P17-16): 이달 장식을 아직 없고 돈이 넉넉하면(값 + 20,000원 남음) 하나
   for (const k of E.decoOffer(cal)) if (!NO_SPEND && !E.DECOS[k].gear && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
+  // 🌱 등급 장식 (P28-05-01): 등급이 닿은 것 가운데 아직 없는 것을 같은 기준(값 + 20,000원 남음)으로 하나씩
+  for (const k of E.gradeDecoOffer(st)) if (!NO_SPEND && !NO_GRADE_DECO && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('등급 장식', () => E.buyDeco(st, k));
   if (!cal.frozen) {
     // 꽃 사기 (꽃마다 정원 + 창고 3포기까지, 돈은 2,000원 남김)
     for (const k of E.FLOWER_KEYS) {
@@ -84,14 +87,24 @@ while (st.virtual < end) {
   add(yr, '_기타', st.money - m0);
   if (st.records[0] && st.records[0].score != null && !(ledger[st.records[0].year] || {})['점수']) (ledger[st.records[0].year] = ledger[st.records[0].year] || {})['점수'] = st.records[0].score;   // P23-02 쉼달 정원 점수
   ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
+  ledger[yr]['_등급'] = E.gradeOf(st); ledger[yr]['_by'] = Object.assign({}, st.grade.by);   // P28-05-01 그 주(해) 끝 등급
 }
 // 표
-const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '선물', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
+const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', '선물', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
   console.log([yr, ...keys.map(k => Math.round(L[k] || 0))].join('\t'));
 }
+// 🌱 정원 등급 (P28-05-01): 주(= 한 해, 월요일 3월부터)마다 끝 등급 · 그 주에 오른 등급 · 그 주 경험치와 어디서 왔는지
+console.log('\n주마다 정원 등급');
+console.log(['주', '등급', '이름', '+등급', '경험치', '+경험치', ...Object.keys(E.XP).map(k => '+' + k)].join('\t'));
+{ let pg = 1, px = 0, pb = {};
+  for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
+    const g = ledger[yr]._등급, by = ledger[yr]._by; if (!g) continue;
+    console.log([yr, g.grade, g.name, g.grade - pg, g.xp, g.xp - px, ...Object.keys(E.XP).map(k => (by[k] || 0) - (pb[k] || 0))].join('\t'));
+    pg = g.grade; px = g.xp; pb = by;
+  } }
 console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL}`);
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');

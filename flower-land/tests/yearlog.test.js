@@ -40,7 +40,7 @@ check(log.every(r => { const rec = st.records.find(x => x.year === r.year); retu
 check(log.every((r, i) => r.income === want[i].income && r.sold === want[i].sold), '수입 · 판 잔이 그해(기록과 기록 사이) 판 찻잔 값 · 잔 수와 같음 — 용돈은 넣지 않음');
 check(log.some(r => r.income > 0) && log.every(r => r.sold === 0 || r.income > 0), '판 해에는 수입이 있음');
 check(log.every((r, i) => r.harvest === want[i].harvest) && log.some(r => r.harvest > 0), `거둔 꽃잎이 그해 거둔 수와 같음 (${log.map(r => r.harvest).join(',')})`);
-check(log.every(r => r.grade === null), '등급은 M1-3이 채울 자리 (null)');
+check(log.every((r, i) => Number.isInteger(r.grade) && r.grade >= 1 && (i === 0 || r.grade >= log[i - 1].grade)), `등급은 그해 끝 정원 등급 (P28-05-01 · ${log.map(r => r.grade).join(',')})`);
 check(log.every(r => Number.isInteger(r.orders) && r.orders >= 0), '들어준 주문 수 (그해)');
 check(log.every(r => !('part' in r)), '새 정원 줄에는 "일부만" 표시 없음');
 check(JSON.stringify(st.yearNow) === JSON.stringify(cur), '기록 뒤 올해 쌓는 칸은 새로 셈');
