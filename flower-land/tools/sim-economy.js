@@ -11,6 +11,7 @@ let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
 const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 1000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
 const st = E.create(mon + 0.1 * H, rng); st.gardenId = `sim-${SEED}`;   // 광산 판 · 주문 쪽지 · 기념품이 이름표로 정해져서 고정 (QA 7회차: 매번 같은 값)
+st.onboarded = true;   // 첫 안내를 마친 정원사 — 🗓️ 주간 목표(P28-09)는 첫 안내 뒤부터 뽑혀서 (0장 첫 방문 퀘스트 10점도 이때)
 const ctx = { live: false, rng };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
 const ledger = {}; const add = (yr, k, v) => { (ledger[yr] = ledger[yr] || {})[k] = (ledger[yr][k] || 0) + v; };
 const spots = []; for (let y = 2; y < E.H - 1; y += 3) for (let x = 2; x < E.W - 1; x += 3) spots.push([x, y]);
@@ -76,6 +77,7 @@ function act() {
 }
 const end = st.virtual + YEARS * 7 * 24 * H;
 let lastIdx = E.calendar(st.virtual).idx, help0 = st.helpYear;
+const weeks = {};
 while (st.virtual < end) {
   act();
   const m0 = st.money, yr = yearNow();
@@ -88,6 +90,7 @@ while (st.virtual < end) {
   if (st.records[0] && st.records[0].score != null && !(ledger[st.records[0].year] || {})['점수']) (ledger[st.records[0].year] = ledger[st.records[0].year] || {})['점수'] = st.records[0].score;   // P23-02 쉼달 정원 점수
   ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
   ledger[yr]['_등급'] = E.gradeOf(st); ledger[yr]['_by'] = Object.assign({}, st.grade.by);   // P28-05-01 그 주(해) 끝 등급
+  if (st.weekly) weeks[st.weekly.week] = JSON.parse(JSON.stringify(st.weekly));   // P28-09 그 주 목표 (마지막 모습)
 }
 // 표
 const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', '선물', '잔 수', '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
@@ -105,6 +108,9 @@ console.log(['주', '등급', '이름', '+등급', '경험치', '+경험치', ..
     console.log([yr, g.grade, g.name, g.grade - pg, g.xp, g.xp - px, ...Object.keys(E.XP).map(k => (by[k] || 0) - (pb[k] || 0))].join('\t'));
     pg = g.grade; px = g.xp; pb = by;
   } }
+// 🗓️ 주간 목표 (P28-09): 주마다 뽑힌 3개 · 진행 · 끝냈는지 (정원사는 목표를 따로 쫓지 않고 늘 하던 대로)
+console.log('\n주마다 목표 (✓ 끝냄)');
+Object.keys(weeks).sort((a, b) => a - b).forEach((k, i) => console.log([i + 1, ...weeks[k].goals.map(g => `${g.done ? '✓' : '·'} ${E.weeklyText(g)} ${g.got}/${g.n}`), weeks[k].bonus ? '덤' : ''].join('\t')));
 console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL}`);
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');

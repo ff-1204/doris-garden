@@ -285,7 +285,7 @@ const ctx = {
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
 const AWAY_H = 3;
-const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0, grade: E.gradeOf(st).grade });
+const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0, grade: E.gradeOf(st).grade, weekly: E.weeklySnap(st) });
 function awayDiff(b) {
   const h = (Date.now() - b.real) / HOUR;
   if (h < AWAY_H || !st.onboarded) return null;
@@ -294,7 +294,8 @@ function awayDiff(b) {
   const log = rec ? [...rec.log, ...st.log] : st.log;
   let i = b.last ? log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
   const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17].includes(l.type) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호')
-    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
+    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text) && !E.isWeeklyLine(l.text));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
+  const wl = E.weeklyAwayLine(st, b.weekly); if (wl) lines.push({ type: 9, text: wl });   // 🗓️ 그동안 끝낸 주간 목표 한 줄 (P28-09 · 느긋하게 보기면 없음)
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;

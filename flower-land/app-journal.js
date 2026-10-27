@@ -112,7 +112,7 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return gradeHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return gradeHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -131,6 +131,18 @@ function gradeHTML() {
       ${src}${decos}
       <p class="note">🪴 ${next} · 열린 장식은 💐 화원에서 언제든 사요</p>
       ${slow ? '' : '<p class="note muted">정원에서 한 일만큼 쌓여요 · 돈으로 산 것은 세지 않아요</p>'}</div>`;
+}
+// 🗓️ 이번 주 목표 (P28-09, 10-28): 등급 쪽 바로 아래 — 끝내면 등급 경험치라 같은 자리에. 🐢 느긋하게 보기면 통째로 숨김 (E.weeklyView가 null)
+const weekLeft = h => h >= 24 ? `${Math.floor(h / 24)}일` : h >= 1 ? `${Math.floor(h)}시간` : '곧';
+function weeklyRows(v) {
+  return v.goals.map(g => `<div class="wk-row ${g.done ? 'done' : ''}"><span class="wk-ic">${g.done ? '✅' : g.ic}</span><span class="wk-name">${esc(g.text)}<small>${g.tierName} · 🌱 +${g.xp}</small></span><span class="wk-n data">${g.got} / ${g.n}</span><i class="wk-bar" aria-hidden="true"><b style="width:${Math.round(g.got / g.n * 100)}%"></b></i></div>`).join('');
+}
+function weeklyHTML() {
+  const v = E.weeklyView(st); if (!v) return '';
+  return `<div class="cab-head dex-head j-head" id="jWeekly"><span class="sb-title">🗓️ 이번 주 목표</span><span class="dh-count data">${v.done} / ${v.goals.length}</span></div>
+    <div class="card wk-card">${weeklyRows(v)}
+      <p class="note">${v.bonus ? `🎉 셋 다 끝냈어요 · 덤 🌱 +${v.bonusXp}` : `셋 다 끝내면 덤 🌱 +${v.bonusXp}`} · 월요일 아침 6시에 새 목표로 바뀌어요 (${weekLeft(v.leftH / (st.speed || 1))} 남음)</p>
+      <p class="note muted">주 안에 언제 해도 돼요 · 꽃잠에도 돼요 · 못 끝낸 목표는 그냥 사라져요</p></div>`;
 }
 function titlesHTML() {
   // 얻은 칭호는 펼쳐 두고, 못 얻은 칭호는 접어 둠 (10-17)

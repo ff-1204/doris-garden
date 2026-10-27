@@ -79,6 +79,8 @@ function renderManual(force) {
         `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」는 따로' : ''} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요 · 퀘스트 · 주문 · 점수가 숙제 같으면 ⚙️ 설정 › 🐢 느긋하게 보기`)
       + fig(`<div class="mn-flow">${item(ico('🧺'), '거두기 · 팔기', '꽃잎 · 한 잔 2')}${item(ico('💌'), '주문 · 퀘스트', '15 · 10')}${item(ico('📖'), '도감 · 한 해 평가', '새 칸 5 · 1점에 1')}${arrow()}${item(ico('🌱'), '정원 등급', '씨앗 정원 1 → … 숲 정원')}${arrow()}${item(decoImg('sproutsign', 2), '등급 장식', '5등급마다 화원에')}</div>`,   // P28-05-01 🌱 정원 등급 (M1-4)
         '정원에서 한 일만큼 등급이 올라요 · 돈으로 산 것은 세지 않아요 · 끝이 없어요 · 위 막대 🌱를 누르면 📔 도감일지 맨 위에서 봐요 · 🐢 느긋하게 보기면 위 막대 · 알림 · 숫자가 숨어요')
+      + fig(`<div class="mn-flow">${item(ico('🗓️'), '월요일 아침', '목표 3개')}${arrow()}${item(ico('🌿'), '쉬움 · 보통 · 어려움', `🌱 +${E.WEEKLY_XP.join(' · +')}`)}${arrow()}${item(ico('🎉'), '셋 다', `덤 🌱 +${E.WEEKLY_BONUS}`)}</div>`,   // P28-09 🗓️ 주간 목표
+        '이번 주 목표는 📔 도감일지 등급 아래에 있어요 · 주 안에 언제 해도 되고 꽃잠에도 돼요 · 못 끝낸 목표는 그냥 사라져요 · 돈은 주지 않아요')
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
@@ -109,7 +111,7 @@ function renderSettings() {
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
   $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
     ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
-      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자를 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
+      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 주간 목표를 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
     ${group('🔔', '알림', '꺼도 정원 일지에는 그대로 남아요',
       [[3, '📦', '예약 배송', '예약한 꽃이 창고에 왔을 때'], [8, '🌸', '개화와 수확', '꽃이 피어 거둘 수 있을 때'], [9, '📖', '도감 등록', '새 꽃·차·땅을 처음 만났을 때']].map(([t, ic, nm, d]) => row(ic, nm, d, tog(`data-toast="${t}"`, s.toast[t]))).join('')
       + row('🌙', '수면 시간', '이 시간의 알림은 모았다가 끝날 때 한 번에 (휴대폰 푸시용, 웹은 저장만)', tog('id="sleepOn"', s.sleep.on))
@@ -117,7 +119,8 @@ function renderSettings() {
     ${!DEV ? '' : group('⏩', '시간', '개발용 · 이 컴퓨터(localhost)에서만 보여요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>')
-      + row('🌱', '등급 경험치 더하기', '등급 화면 확인용 · 퀘스트 10개 몫(100)', '<button type="button" class="btn small" id="devXp">+100</button>'))}
+      + row('🌱', '등급 경험치 더하기', '등급 화면 확인용 · 퀘스트 10개 몫(100)', '<button type="button" class="btn small" id="devXp">+100</button>')
+      + row('🗓️', '주간 목표', '목표 확인용 · 안 끝낸 첫 목표를 끝내거나 다음 월요일 아침으로', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devWeekly">하나 끝</button><button type="button" class="btn small" id="devWeek">다음 주</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
       return group('💾', '저장', files ? '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요' : '진행은 이 브라우저와 내 구글 드라이브에 저장돼요',
       (cloud.on ? `<div id="cloudRows" class="cloud-rows">${cloudRows(row)}</div>` : '')   // ☁️ 구글 드라이브 (P20-04-02, 클라이언트 ID가 있을 때만)
@@ -154,6 +157,8 @@ function renderSettings() {
   $('#sleepTo').addEventListener('change', e => { s.sleep.to = +e.target.value; save(); renderSettings(); });
   if (DEV) root.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { st.speed = +b.dataset.speed; save(); renderTop(); root.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   if (DEV) $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
+  if (DEV) $('#devWeekly').addEventListener('click', () => { const w = E.weeklyOf(st), i = w ? w.goals.findIndex(g => !g.done) : -1; const r = E.weeklyFinish(st, i, ctx); if (!r.ok) feedback(r.msg, true); save(); renderAll(true); });   // 개발용 (P28-09)
+  if (DEV) $('#devWeek').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.ws + 7 * 24 * E.HOUR + 1000, ctx); save(); renderAll(true); feedback('다음 주 월요일 아침이 되었어요'); });
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)
   if ($('#resetBtn')) $('#resetBtn').addEventListener('click', e => {
     if (!E.canReset(st, E.calendar(st.virtual))) { resetArmed = false; return renderSettings(); }   // 1년차 동안만 (10-27): 그새 2년차가 됐으면 지우지 않고 줄을 걷음

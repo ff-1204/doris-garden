@@ -138,10 +138,10 @@ check(JSON.stringify(again.grade) === JSON.stringify(st.grade), '여러 번 열�
 
 console.log('[시뮬레이션 목표 (sim-economy 7 7)]');
 const out = require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '7', '7'], { encoding: 'utf8' });
-const rows = out.split('주마다 정원 등급')[1].split('\n끝:')[0].trim().split('\n').slice(1).filter(l => /^\d+\t/.test(l)).map(l => l.split('\t'));
+const rows = out.split('주마다 정원 등급')[1].split('\n\n')[0].split('\n끝:')[0].trim().split('\n').slice(1).filter(l => /^\d+\t/.test(l)).map(l => l.split('\t'));
 const gr = rows.map(x => +x[1]);
 check(gr.length === 7, `7주 줄 (${gr.join(',')})`);
-check(gr[0] >= 5 && gr[0] <= 8, `열심히 하는 정원: 첫 주 5~8등급 (${gr[0]})`);
+check(gr[0] >= 5 && gr[0] <= 9, `열심히 하는 정원: 첫 주 5~9등급 (${gr[0]}) — 🗓️ 주간 목표(P28-09)를 셋 다 끝내면 첫 주 +1등급이라 9까지`);
 check(gr[3] >= 15 && gr[3] <= 20, `4주에 15~20등급 (${gr[3]})`);
 check(gr.slice(4).every((g, i) => g - gr[3 + i] >= 1 && g - gr[3 + i] <= 3), `그 뒤로 주마다 1~3등급 (${gr.slice(3).map((g, i) => i ? '+' + (g - gr[2 + i]) : g).join(' ')})`);
 

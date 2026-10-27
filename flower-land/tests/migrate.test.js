@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -38,6 +38,11 @@ check(Array.isArray(m.yearLog) && m.yearLog.length === 0 && m.yearNow.income ===
 check(m.settings.slow === false && !E.slowView(m), '🐢 느긋하게 보기는 꺼진 채로 (P28-02)');
 check(m.grade && m.grade.xp >= 0 && m.grade.dex === E.gradeDexCount(m) && E.gradeOf(m).grade >= 1, '🌱 정원 등급 칸 · 지금 도감 칸 수를 센 것으로 (P28-05-01)');
 check(m.yearPace && m.yearPace.xp0 === null && m.yearPace.last === null && E.yearPace(m) === null, '📈 그래프 견줌 칸 · 올해 시작 값은 몰라 견줌 없음 (P28-07-02)');
+check(m.weekly === null || (m.weekly && m.weekly.week === E.calendar(m.virtual).week), '🗓️ 주간 목표 칸 — 비어 있다가 다음 확인 때 이번 주 목표를 뽑음 (P28-09)');
+const wk = copy(st); delete wk.weekly; wk.mig = E.MIGRATIONS.length - 1; const wm = E.migrateSave(wk);
+check(wm.weekly === null && wm.mig === E.MIGRATIONS.length, '🗓️ 주간 목표 보정은 맨 끝 · 예전 정원은 null로 (P28-09)');
+wm.onboarded = true; E.advance(wm, wm.virtual + H, ctx);
+check(wm.weekly && wm.weekly.goals.length === 3, '🗓️ 연 뒤 한 시간: 이번 주 목표 3개가 생김');
 check(m._fertNew === 0 && JSON.stringify(m._bloomNew) === '{}', '열 때마다: 새 알림 표시 비움');
 
 console.log('[📈 해마다 기록: 남은 한 해 기록으로 채움 (P28-07-01)]');

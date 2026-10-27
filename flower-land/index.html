@@ -436,6 +436,23 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .ttl-pop small { color: var(--muted); font-size: 12.5px; }
 .ttl-anim { width: 132px; height: 132px; image-rendering: pixelated; }
 .jguide .btn.small { white-space: nowrap; }
+/* 🗓️ 이번 주 목표 (P28-09): 정원 위 한 줄 띠 · 도감일지 3줄 */
+.wguide { padding: 6px 10px 6px 12px; }
+.wguide .gd-now { min-width: 0; }
+.wguide .gd-now b { font-weight: 600; }
+.wguide .gd-now .data { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.wguide .btn.small { white-space: nowrap; }
+#jWeekly { scroll-margin-top: 84px; }   /* 정원 띠 "보기"로 올 때 위 막대에 가리지 않게 */
+.wk-card { display: grid; gap: 8px; }
+.wk-row { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; grid-template-areas: "ic name n" "ic bar bar"; align-items: center; gap: 2px 8px; }
+.wk-ic { grid-area: ic; font-size: 18px; text-align: center; }
+.wk-name { grid-area: name; display: grid; font-size: 13.5px; line-height: 1.35; }
+.wk-name small { font-size: 11.5px; color: var(--muted); }
+.wk-n { grid-area: n; font-size: 12.5px; color: var(--muted); }
+.wk-bar { grid-area: bar; height: 6px; background: var(--sunk); }
+.wk-bar b { display: block; height: 100%; background: color-mix(in srgb, var(--good) 65%, var(--line)); }
+.wk-row.done .wk-name { color: var(--muted); }
+.wk-row.done .wk-bar b { background: var(--good); }
 /* 불러오기 확인 창 (P20-03): 지금 정원 ↔ 불러올 정원 */
 .imp-cmp { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: stretch; }
 .imp-col { display: grid; justify-items: center; gap: 6px; padding: 10px; background: var(--sunk); text-align: center; }

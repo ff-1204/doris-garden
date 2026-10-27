@@ -46,7 +46,7 @@ function recVsHTML(r) {
   return `<div class="rec-vs">${d ? `<span>📈 지난해보다 <b>${vsText(d)}</b></span>` : ''}<button type="button" class="btn small" data-dt="year">${d ? '그래프 보기' : '📈 해마다 보기'}</button></div>`;
 }
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.dexTab === 'year' && st.yearNow && st.yearNow.income]);   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);

@@ -7,7 +7,8 @@ function renderToday(force) {
   const need = careNeed(cal);
   const showGuide = !gd.hidden && guideList().some(([k]) => !gd[k]);
   const nq = !showGuide && !E.slowView(st) && st.journal && !st.journal.hidden && (gd.hidden || guideList().every(([k]) => gd[k])) ? nextQuest(cal) : null;   // 첫걸음을 닫아도 퀘스트 띠 (QA 7회차) · 🐢 느긋하게 보기면 숨김, 첫걸음 🌱은 그대로 (P28-02)
-  const sig = JSON.stringify([need, cal.frozen, showGuide && guideList().map(([k]) => !!gd[k]), nq && [nq.q.key, nq.w.now, nq.w.label]]);
+  const wv = showGuide ? null : E.weeklyView(st), wg = wv && (wv.goals.find(g => !g.done) || null);   // 🗓️ 이번 주 목표 (P28-09): 아직 안 끝낸 첫 줄 · 느긋하게 보기면 null
+  const sig = JSON.stringify([need, cal.frozen, showGuide && guideList().map(([k]) => !!gd[k]), nq && [nq.q.key, nq.w.now, nq.w.label], wv && [wv.done, wv.week, wg && [wg.k, wg.got]]]);
   if (!force && ui.sigs.today === sig) return;
   ui.sigs.today = sig;
   let html = '';
@@ -26,6 +27,9 @@ function renderToday(force) {
       <button type="button" class="btn small" data-do="journal">📔 도감일지</button>
       <button type="button" class="x" data-do="hideJournal" aria-label="퀘스트 안내 닫기" title="안내 닫기 (도감일지에서는 계속 보여요)">✕</button></div>`;
   }
+  if (wv) html += `<div class="guide wguide"><span class="gd-t">🗓️ 이번 주 목표 <span class="data">${wv.done} / ${wv.goals.length}</span></span>
+      <span class="gd-now">${wg ? `<b>${wg.ic} ${esc(wg.text)} <span class="data">${wg.got} / ${wg.n}</span></b>` : `<b>🎉 셋 다 끝냈어요</b>`}</span>
+      <button type="button" class="btn small" data-do="weekly">보기</button></div>`;
   $('#today').innerHTML = html;
 }
 // "다음에 올 이유" (QA 6회차): 곧 필 꽃 · 광산 기력이 다 차는 때
@@ -48,6 +52,7 @@ $('#today').addEventListener('click', e => {
   const d = b.dataset.do;
   if (d === 'hideGuide') { guideState().hidden = true; save(); return renderToday(true); }
   if (d === 'hideJournal') { st.journal.hidden = true; save(); return renderToday(true); }
+  if (d === 'weekly') { ui.dexTab = 'journal'; setTab('dex'); return $('#jWeekly') && $('#jWeekly').scrollIntoView({ block: 'start' }); }
   if (d === 'journal') { ui.dexTab = 'journal'; setTab('dex'); return $('#jQuests') && $('#jQuests').scrollIntoView({ block: 'start' }); }
   if (d === 'gocab') return setTab('tearoom');
   if (d === 'plant') { ui.tool = 'plant'; ui.plantType = null; renderToolbar(true); return renderEmpty(true); }

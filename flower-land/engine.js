@@ -305,7 +305,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null, resetAt: null,   // P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null, resetAt: null, weekly: null,   // P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -356,6 +356,7 @@ function advance(st, target, ctx) {
   checkHelp(st, calendar(st.virtual), ctx);
   checkJournal(st, ctx);
   gradeDexSync(st, ctx);                                               // P28-05-01 늘어난 도감 칸
+  weeklyOf(st);                                                        // P28-09 이번 주 목표 (처음 · 3주 넘게 건너뛴 뒤에도)
 }
 
 function step(st, dtH, cal, ctx) {
@@ -481,6 +482,7 @@ function onSlot(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx);
   deliverLetters(st, cal, ctx);                                                // P26 답장 편지
+  if (cal.idx === 0) weeklyOf(st);                                             // P28-09 월요일 아침 6시: 이번 주 목표 (지난 주 것은 벌칙 없이 사라짐)
   if (!calendar(st.virtual - 1000).frozen) { hiveTick(st, ctx); const nb = barrelTick(st); if (nb) addLog(st, 16, `빗물 통이 꽃 ${nb}포기에 물을 줬어요`, ctx); }
   if (teaShopOpen(cal)) { makeOrders(st, cal); if (!slowView(st)) addLog(st, 15, '찻집에 새 주문 쪽지가 왔어요', ctx); }   // P23-01 · 느긋하게 보기면 쪽지 소식은 남기지 않음 (P28-02)
   else if (st.orders) st.orders = null;   // P18 벌통 · P25 빗물 통: 끝난 달이 꽃잠이 아니면
@@ -660,6 +662,103 @@ function gradeAwayLine(st, from) {   // "자리를 비운 동안" 한 줄 (P25-0
   return slowView(st) || from == null || to <= from ? null : `🌱 정원 등급이 올랐어요 · ${gradeName(from)} → ${gradeName(to)}`;
 }
 const isGradeUpLine = t => typeof t === 'string' && t.startsWith('🌱 정원 등급이 올랐어요');
+
+// ---------------------------------------------------------------- 🗓️ 주마다 바뀌는 목표 (P28-09, 10-28)
+// 월요일 아침 6시(정원 3월 = 새해)마다 쉬움 · 보통 · 어려움 하나씩 3개. 뽑기는 정원 이름표 + 주로 정하고 뽑은 것은 저장 → 같은 주엔 다시 열어도 같음
+// 그 정원이 연 기능에서만 고름(광산을 판 적 없으면 광산 목표 없음 …). 그 주 안 언제든(꽃잠에도) 끝내면 되고, 못 끝낸 목표는 벌칙 없이 사라짐
+// 보상은 등급 경험치만(addXp 'weekly') — 돈 · 용품은 주지 않음 (P17-14). 셋 다 끝낸 덤도 경험치: 용품은 돈과 같아 경제를 흔들고,
+// 그 주에만 얻는 장식은 몰아서 하는 사람(10 이현)에게 놓치면 영영 못 얻는 벌칙이 되어서
+// 느긋하게 보기(P28-02)여도 진행 · 보상은 그대로, 일지 줄 · 알림만 남기지 않음 (목표 줄을 숨기는 건 화면 몫)
+const WEEKLY_TIERS = ['쉬움', '보통', '어려움'];
+const WEEKLY_XP = [20, 40, 80], WEEKLY_BONUS = 40;   // 끝내면 등급 경험치 (어려울수록 많이) · 셋 다 끝낸 덤
+// 목표 종류: tier 0 쉬움 · 1 보통 · 2 어려움 · ev 어떤 일에 오르는지 · fam 같은 주에 한 번만(같은 일을 두 줄로 내지 않게) · open 그 정원이 연 기능인지
+const hasHive = st => (st.decos || []).some(d => d.key === 'hive' && d.x != null);
+const aliveTypes = st => { const c = {}; for (const f of st.flowers || []) if (!f.withered) c[f.type] = (c[f.type] || 0) + 1; return c; };
+const WEEKLY = {
+  water: { tier: 0, ic: '💧', n: 15, ev: 'care', fam: 'water', match: (g, i) => i.tool === 'water', text: g => `꽃에 물 ${g.n}번 주기`, open: () => true },
+  petal: { tier: 0, ic: '🧺', n: 15, ev: 'harvest', fam: 'petal', text: g => `꽃잎 ${g.n}장 거두기`, open: () => true },
+  dry: { tier: 0, ic: '🌾', n: 10, ev: 'dry', fam: 'dry', text: g => `꽃방에 꽃잎 ${g.n}장 널기`, open: st => n0(st.dex.petal) > 0 },
+  cup: { tier: 0, ic: '☕', n: 10, ev: 'sell', fam: 'cup', text: g => `찻잔 ${g.n}잔 팔기`, open: st => n0(st.dex.teabag) > 0 },
+  dig: { tier: 0, ic: '⛏️', n: 20, ev: 'dig', fam: 'dig', text: g => `광산 ${g.n}칸 파기`, open: st => S(st, 'dug') > 0 },
+  tidy: { tier: 1, ic: '🌿', n: 12, ev: 'care', fam: 'tidy', match: (g, i) => i.tool === 'weed' || i.tool === 'prune', text: g => `잡초 뽑기 · 가지치기 ${g.n}번`, open: () => true },
+  star4: { tier: 1, ic: '⭐', n: 10, ev: 'harvest', fam: 'petal', match: (g, i) => stars(i.q) >= 4, text: g => `★4 이상 꽃잎 ${g.n}장 거두기`, open: () => true },
+  teabag: { tier: 1, ic: '🍵', n: 15, ev: 'teabag', fam: 'teabag', text: g => `티백 ${g.n}개 만들기`, open: st => n0(st.dex.petal) > 0 },
+  order: { tier: 1, ic: '💌', n: 4, ev: 'order', fam: 'order', text: g => `손님 주문 ${g.n}장 들어주기`, open: st => S(st, 'orders') > 0 },
+  recipe: { tier: 1, ic: '🫖', n: 3, ev: 'blend', fam: 'blend', match: (g, i) => !!i.recipe, text: g => `이름 있는 블렌드 ${g.n}잔 만들기`, open: st => n0(st.dex.blend) > 0 },
+  prop: { tier: 1, ic: '🌱', n: 2, ev: 'prop', fam: 'prop', text: g => `번식 ${g.n}번 하기`, open: st => (st.flowers || []).some(f => !f.withered && FLOWERS[f.type].prop !== '채종') },   // 한해살이는 시들 때 저절로라 뺌
+  stairs: { tier: 1, ic: '🪜', n: 3, ev: 'descend', fam: 'dig', text: g => `광산 계단 ${g.n}번 내려가기`, open: st => !!st.mine && st.mine.deepest >= 2 },
+  star5: { tier: 2, ic: '🌟', n: 5, ev: 'harvest', fam: 'petal', match: (g, i) => i.type === g.type && stars(i.q) >= 5, text: g => `★5 ${FLOWERS[g.type].name} 꽃잎 ${g.n}장 거두기`, open: st => n0(aliveTypes(st)) > 0,
+    pick: (st, rnd) => { const c = aliveTypes(st), ks = Object.keys(c).sort(), type = ks[Math.floor(rnd() * ks.length)]; return { type, n: Math.max(2, Math.min(5, 2 * c[type])) }; } },   // 정원에 있는 꽃에서 · 포기가 적으면 장 수도 적게
+  blends: { tier: 2, ic: '🫖', n: 3, ev: 'sell', fam: 'cup', match: (g, i) => i.cup.kind === 'blend', distinct: i => i.cup.recipe || i.cup.parts.slice().sort().join('+'), text: g => `블렌드 차 ${g.n}종 팔기`, open: st => S(st, 'blendCups') > 0 },
+  hat: { tier: 2, ic: '🍃', n: 5, ev: 'sell', fam: 'cup', match: (g, i) => !!i.cup.hat, text: g => `햇차 ${g.n}잔 팔기`, open: st => S(st, 'hatCups') > 0 },
+  honey: { tier: 2, ic: '🍯', n: 3, ev: 'honey', fam: 'honey', text: g => `벌통 꿀 ${g.n}병 거두기`, open: hasHive },
+  digs: { tier: 2, ic: '⛏️', n: 60, ev: 'dig', fam: 'dig', text: g => `광산 ${g.n}칸 파기`, open: st => S(st, 'dug') >= 20 },
+  cups: { tier: 2, ic: '☕', n: 40, ev: 'sell', fam: 'cup', text: g => `찻잔 ${g.n}잔 팔기`, open: st => S(st, 'cups') >= 20 },
+  orders: { tier: 2, ic: '💌', n: 8, ev: 'order', fam: 'order', text: g => `손님 주문 ${g.n}장 들어주기`, open: st => S(st, 'orders') >= 5 },
+  petals: { tier: 2, ic: '🧺', n: 40, ev: 'harvest', fam: 'petal', text: g => `꽃잎 ${g.n}장 거두기`, open: () => true },
+};
+const WEEKLY_KEYS = Object.keys(WEEKLY);
+const weeklyText = g => WEEKLY[g.k].text(g);
+function weeklyRoll(st, cal) {   // 이번 주 목표 3개 (어려움부터 뽑아 같은 fam은 한 번 — 고를 게 적은 쪽이 먼저, 보여 줄 땐 쉬움 → 어려움)
+  const prev = st.weekly || {}, rnd = mineRng(hashStr(`${st.gardenId || 'g'}|weekly|${cal.week}`)), goals = [], fams = [];
+  for (let t = 2; t >= 0; t--) {
+    const ks = WEEKLY_KEYS.filter(k => WEEKLY[k].tier === t && !fams.includes(WEEKLY[k].fam) && WEEKLY[k].open(st));
+    if (!ks.length) continue;
+    const k = ks[Math.floor(rnd() * ks.length)], K = WEEKLY[k];
+    goals.push(Object.assign({ k, tier: t, n: K.n, got: 0, done: false }, K.pick ? K.pick(st, rnd) : {}));
+    fams.push(K.fam);
+  }
+  goals.reverse();
+  st.weekly = { week: cal.week, goals, bonus: false, full: prev.full || 0, doneAll: prev.doneAll || 0 };   // full: 셋 다 끝낸 주 · doneAll: 끝낸 목표 (모두)
+  return st.weekly;
+}
+function weeklyOf(st) {   // 이번 주 목표 (주가 바뀌었으면 새로 뽑음). 첫 안내 전 정원은 아직 없음(null)
+  if (!st.onboarded) return null;
+  const cal = calendar(st.virtual);
+  return st.weekly && st.weekly.week === cal.week ? st.weekly : weeklyRoll(st, cal);
+}
+function weeklyDone(st, g, ctx) {
+  const w = st.weekly, quiet = slowView(st), xp = WEEKLY_XP[g.tier];
+  g.done = true; g.got = g.n; w.doneAll = (w.doneAll || 0) + 1;
+  if (!quiet) addLog(st, 9, `🗓️ 이번 주 목표를 끝냈어요 · ${weeklyText(g)} · 🌱 +${xp}`, ctx);
+  addXp(st, 'weekly', xp, ctx);
+  if (!w.bonus && w.goals.length && w.goals.every(x => x.done)) {
+    w.bonus = true; w.full = (w.full || 0) + 1;
+    if (!quiet) addLog(st, 9, `🗓️ 이번 주 목표를 모두 끝냈어요 · 덤 🌱 +${WEEKLY_BONUS}`, ctx);
+    addXp(st, 'weekly', WEEKLY_BONUS, ctx);
+  }
+}
+// 정원에서 한 일 → 이번 주 목표 진행 (ev: care · harvest · prop · dry · teabag · blend · sell · order · dig · descend · honey)
+function weekNote(st, ev, info, n, ctx) {
+  const w = weeklyOf(st); if (!w) return;
+  for (const g of w.goals) {
+    const K = WEEKLY[g.k];
+    if (g.done || K.ev !== ev || (K.match && !K.match(g, info || {}))) continue;
+    if (K.distinct) { const id = K.distinct(info); g.seen = g.seen || []; if (g.seen.includes(id)) continue; g.seen.push(id); g.got = g.seen.length; }
+    else g.got = Math.min(g.n, g.got + (n == null ? 1 : n));
+    if (g.got >= g.n) weeklyDone(st, g, ctx);
+  }
+}
+function weeklyFinish(st, i, ctx) {   // 개발용(DEV) · 테스트: 이번 주 i번째 목표를 바로 끝냄
+  const w = weeklyOf(st), g = w && w.goals[i];
+  if (!g || g.done) return no('끝낼 목표가 없어요');
+  weeklyDone(st, g, ctx);
+  return ok(`${weeklyText(g)} 끝`);
+}
+// 화면은 아래만 읽음. 느긋하게 보기면 null → 목표 줄 · 띠를 통째로 숨김
+function weeklyView(st) {
+  const w = weeklyOf(st); if (!w || slowView(st)) return null;
+  const leftH = (weekStart(st.virtual) + WEEK - st.virtual) / HOUR;
+  const goals = w.goals.map(g => ({ k: g.k, ic: WEEKLY[g.k].ic, text: weeklyText(g), tier: g.tier, tierName: WEEKLY_TIERS[g.tier], n: g.n, got: g.got, done: g.done, xp: WEEKLY_XP[g.tier] }));
+  return { week: w.week, goals, done: goals.filter(g => g.done).length, bonus: w.bonus, bonusXp: WEEKLY_BONUS, full: w.full || 0, leftH };
+}
+const weeklySnap = st => ({ all: (st.weekly && st.weekly.doneAll) || 0, full: (st.weekly && st.weekly.full) || 0, xp: (st.grade && st.grade.by && st.grade.by.weekly) || 0 });
+function weeklyAwayLine(st, snap) {   // "자리를 비운 동안" 한 줄 (P25-01): 그동안 끝낸 목표를 하나로
+  if (slowView(st) || !snap) return null;
+  const now = weeklySnap(st), n = now.all - snap.all;
+  return n > 0 ? `🗓️ 주간 목표 ${n}개를 끝냈어요${now.full > (snap.full || 0) ? ' · 🎉 셋 다 끝' : ''} · 🌱 +${now.xp - snap.xp}` : null;   // 경험치는 덤까지
+}
+const isWeeklyLine = t => typeof t === 'string' && t.startsWith('🗓️ 이번 주 목표');
 
 function landCounts(st) {
   const c = {}; for (const k of LAND_KEYS) c[k] = 0;
@@ -848,10 +947,13 @@ function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 돌보�
       f.harvestKey = harvestSlot(cal); st.basket--;
       st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) });
       yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx);                 // P28-07-01 올해 거둔 꽃잎 · P28-05-01 등급 경험치
-      if (f.origin === '이웃' && !f.giftPicked) { f.giftPicked = true; st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) }); yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx); }   // 화분 첫 수확은 2장 (QA 6회차)
+      const two = f.origin === '이웃' && !f.giftPicked;
+      if (two) { f.giftPicked = true; st.petals.push({ id: nid(st), type: f.type, q: f.q, seasonKey: seasonKey(st, cal) }); yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx); }   // 화분 첫 수확은 2장 (QA 6회차)
+      weekNote(st, 'harvest', { type: f.type, q: f.q }, two ? 2 : 1, ctx);       // P28-09 이번 주 목표
       if (!st.dex.petal[f.type]) { st.dex.petal[f.type] = true; addLog(st, 9, `도감에 등록: ${FLOWERS[f.type].name} 꽃잎`, ctx); } // P08-02-02
     }
   }
+  if (tool !== 'harvest') weekNote(st, 'care', { tool }, targets.length, ctx);   // P28-09
   flushPending(st, ctx);
   const two = tool === 'harvest' && targets.length === 1 && targets[0].origin === '이웃' && st.petals.filter(p => p.type === targets[0].type).length >= 2 && targets[0].harvestKey === harvestSlot(cal);
   const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: two ? '꽃잎 2장을 거둬 제다실로 보냈어요' : '꽃잎을 거둬 제다실로 보냈어요' }[tool];
@@ -868,6 +970,7 @@ function propagate(st, flowerId, rng, ctx) {     // P06-02-05
   if (!cal.frozen && !F.propMonths.includes(cal.month)) return no(`${josa(F.prop, '은/는')} ${F.propMonths.map(monthName).join('·')}에 할 수 있어요`);
   if (f.propYear === yr) return no(cal.frozen ? '이 꽃은 새해 몫 번식을 이미 했어요' : f.propRest ? '이 꽃은 꽃잠에 새해 몫 번식을 했어요' : '이 꽃은 올해 이미 번식했어요');
   f.propYear = yr; f.propRest = !!cal.frozen;   // 꽃잠에 했는지 (QA 19회차: 다음 해 문구)
+  weekNote(st, 'prop', null, 1, ctx);   // P28-09
   const n = propCount(f.q), qs = [];
   for (let i = 0; i < n; i++) qs.push(propQuality(f.q, rng));
   const formName = FORM[F.form].name;
@@ -906,6 +1009,7 @@ function makeTea(st, ids, ctx) {                 // P12-03
     regTeabag(st, p.type, ctx);
     if (!st.yearBest || p.q > st.yearBest.q) st.yearBest = { type: p.type, q: p.q };
   }
+  weekNote(st, 'teabag', null, list.length, ctx);   // P28-09
   return ok(`티백 ${list.length}개를 만들었어요`);
 }
 // P12-10 생화 티백 (예전 생차): 생화를 말리지 않고 티백으로. 값 −10% (10-06)
@@ -918,14 +1022,15 @@ function makeRaw(st, ids, ctx) {
     regTeabag(st, p.type, ctx);
     if (!st.yearBest || p.q > st.yearBest.q) st.yearBest = { type: p.type, q: p.q };
   }
+  weekNote(st, 'teabag', null, list.length, ctx);
   return ok(`생화 티백 ${list.length}개를 만들어 찻집으로 보냈어요`);
 }
 // P12-07 꽃방: 꽃잎을 널면 1달(흐르는 시간) 뒤 말린 꽃잎이 됨. 언제든 널 수 있음
-function dryPetals(st, ids) {
+function dryPetals(st, ids, ctx) {
   const list = st.petals.filter(p => ids.includes(p.id));
   if (!list.length) return no('널 꽃잎이 없어요');
   for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H }); }
-  bump(st, 'dried', list.length);
+  bump(st, 'dried', list.length); weekNote(st, 'dry', null, list.length, ctx);   // P28-09
   return ok(`꽃잎 ${list.length}장을 꽃방에 널었어요. 1달 뒤에 다 말라요`);
 }
 // P12-07-04: 말린 꽃잎으로도 차를 만들 수 있음 (제철 보너스는 없음)
@@ -938,6 +1043,7 @@ function makeTeaDried(st, ids, ctx) {
     regTeabag(st, p.type, ctx);
     if (!st.yearBest || p.q > st.yearBest.q) st.yearBest = { type: p.type, q: p.q };
   }
+  weekNote(st, 'teabag', null, list.length, ctx);
   return ok(`말린 꽃잎으로 티백 ${list.length}개를 만들었어요`);
 }
 // P12-08 블렌딩: 언제든 (변경 10-06, 예전엔 꽃잠에만), 서로 다른 말린 꽃잎 2~3장으로 블렌딩 차 1잔
@@ -957,6 +1063,7 @@ function blend(st, ids, ctx) {
     if (!st.dex.blend[recipe]) addLog(st, 9, `도감에 등록: ${name}`, ctx);
     st.dex.blend[recipe] = Math.max(st.dex.blend[recipe] || 0, q);
   }
+  weekNote(st, 'blend', { recipe }, 1, ctx);   // P28-09
   return ok(`${josa(name, '을/를')} 만들었어요`, { blend: b });
 }
 // 예전 규칙(P17-01: 우리지 않고 바로 팔기)의 판매 함수 — 화면은 찻잔(sellCups)만 씀. 예전 테스트 · 도구를 위해 남겨 둠
@@ -1090,12 +1197,13 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
 const bump = (st, k, n) => { st.stats = st.stats || {}; st.stats[k] = (st.stats[k] || 0) + (n || 1); };
 // 찻잔이 팔릴 때마다: 전체 · 손님(자동) · 갓 우린 · 햇차 · 블렌드 잔 수 (P19-07-01: 판매 잔 수 · 햇차 수만 새로 셈)
 function countCup(st, c, cal, auto, ctx) {
-  if (fillOrder(st, c)) addXp(st, 'order', 1, ctx);   // P23-01 손님 주문 · P28-05-01 등급 경험치
+  if (fillOrder(st, c)) { addXp(st, 'order', 1, ctx); weekNote(st, 'order', null, 1, ctx); }   // P23-01 손님 주문 · P28-05-01 등급 경험치 · P28-09
   bump(st, 'cups'); if (auto) bump(st, 'autoCups');
   yearAdd(st, 'sold', 1); addXp(st, 'sell', 1, ctx);   // P28-07-01 올해 판 잔 수 · P28-05-01
   if (!cupCold(c, cal)) bump(st, 'warmCups');
   if (c.hat) bump(st, 'hatCups');
   if (c.kind === 'blend') bump(st, 'blendCups');
+  weekNote(st, 'sell', { cup: c }, 1, ctx);   // P28-09
 }
 const n0 = o => Object.keys(o || {}).length;
 const S = (st, k) => (st.stats || {})[k] || 0;
@@ -1516,14 +1624,14 @@ function dig(st, i, ctx) {
   st.dex.mine = st.dex.mine || {};
   let first = false;
   if (MINE_DEX_KEYS.includes(c.k) && !st.dex.mine[c.k]) { st.dex.mine[c.k] = true; first = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(c.k)}`, ctx); }
-  st.stats = st.stats || {}; st.stats.dug = (st.stats.dug || 0) + 1;
+  st.stats = st.stats || {}; st.stats.dug = (st.stats.dug || 0) + 1; weekNote(st, 'dig', null, 1, ctx);   // P28-09
   return ok(`${c.k === 'oldseed' ? '🌰 ' : ''}${mineName(c.k)}${c.stairs ? (m.depth >= MINE_DEEPEST ? ' · 가장 깊은 곳이에요' : ' · 아래로 내려가는 계단을 찾았어요') : ''}`, { cell: c, first, stairs: !!c.stairs && m.depth < MINE_DEEPEST });
 }
-function descend(st) {
+function descend(st, ctx) {
   const m = mineOf(st);
   if (!m.board.cells.some(c => c.dug && c.stairs)) return no('먼저 계단을 찾아요');
   if (m.depth >= MINE_DEEPEST) return no('가장 깊은 층이에요');
-  m.depth++; m.deepest = Math.max(m.deepest, m.depth); m.board = newBoard(st, m.depth);
+  m.depth++; m.deepest = Math.max(m.deepest, m.depth); m.board = newBoard(st, m.depth); weekNote(st, 'descend', null, 1, ctx);   // P28-09
   return ok(`지하 ${m.depth}층으로 내려왔어요`);
 }
 function mineUp(st) {                            // 1층으로 돌아가기 (새 판)
@@ -1779,7 +1887,7 @@ function takeHoney(st, id, ctx) {                 // 벌통의 꿀을 거둬 찻
     st.honey[k] = (st.honey[k] || 0) + 1; seeYear(st, 'honey', k);
     if (!st.dex.honey[k]) { st.dex.honey[k] = true; addLog(st, 9, `도감에 등록: 🍯 ${honeyName(k)}`, ctx); }
   }
-  d.honey = [];
+  d.honey = []; weekNote(st, 'honey', null, n, ctx);   // P28-09
   return ok(`꿀 ${n}병을 거뒀어요 · 찻집 꿀 선반에 있어요`);
 }
 function honeyCup(st, cupId, k) {                  // 찻잔에 꿀 한 숟갈 (P18-07)
@@ -1934,6 +2042,7 @@ const MIGRATIONS = [
     for (const k in n) { const v = Math.round(XP[k] * n[k]); if (v) { s.grade.by[k] = v; s.grade.xp += v; } }
   }],
   ['📈 그래프 견줌 yearPace (P28-07-02, 10-28): 달마다 쌓인 수입 · 경험치 — 예전 정원은 올해 시작 값을 몰라(xp0 null) 다음 쉼달 기록부터 셈', s => { if (!s.yearPace) s.yearPace = newYearPace(null); }],
+  ['🗓️ 주마다 바뀌는 목표 weekly (P28-09, 10-28): 예전 정원은 null — 다음 확인 때 이번 주 목표를 뽑음', s => { if (s.weekly === undefined) s.weekly = null; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2042,7 +2151,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
