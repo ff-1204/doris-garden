@@ -511,7 +511,7 @@ function renderStatus(force) {
     </div>
     ${stagePath}
     <div class="sx-stats">
-      <div title="${qualityWord(f.q, f.stage === 'bloom')}"><span class="lbl">품질</span><b>${E.pct(f.q)}%</b><span class="mini"><i style="width:${E.pct(f.q)}%;background:#d39b12"></i></span><span class="sub">다음 달 ${nextArrow} ${E.pct(next)}%</span></div>
+      <div title="${qualityWord(f.q, f.stage === 'bloom')}"><span class="lbl">품질</span><b>${E.pct(f.q)}%</b><span class="mini"><i style="width:${E.pct(f.q)}%;background:#d39b12"></i></span><span class="sub${cal.frozen ? ' wrap' : ''}">${cal.frozen ? '깨어나고 1달 뒤' : '다음 달'} ${nextArrow} ${E.pct(next)}%</span></div>
       <div title="${vigorWord(v, f.thirstH > 0, f.waterH > 18)}"><span class="lbl">기운</span><b style="color:${vCol}">${Math.round(v)}%</b><span class="mini"><i style="width:${Math.round(v)}%;background:${vCol}"></i></span><span class="sub">${vigorWord(v, f.thirstH > 0, f.waterH > 18)}</span></div>
       <div title="꽃이 바꾸는 땅의 범위"><span class="lbl">땅</span><b>${E.qualityRadius(f)}칸</b><span class="mini land"><i style="background:${LANDS[land].color}"></i></span><span class="sub">${LANDS[land].name}</span></div>
     </div>

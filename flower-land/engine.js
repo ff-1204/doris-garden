@@ -450,6 +450,8 @@ function step(st, dtH, cal, ctx) {
     if (p.dueH <= 0) {
       for (const q of p.qs) st.items.push(newItem(st, p.type, q, '번식', p.parent));
       st.pending.splice(i, 1);
+      const F = FLOWERS[p.type];
+      addLog(st, 10, `${F.name} ${FORM[F.form].name} ${p.qs.length}개가 뿌리를 내려 창고에 들어왔어요`, ctx);   // 일지에만 (QA 19회차)
     }
   }
 }
@@ -685,7 +687,7 @@ function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 돌보�
   const cal = calendar(st.virtual);
   const targets = tiles.map(([x, y]) => flowerAt(st, x, y)).filter(f => canCare(st, f, tool, cal));
   if (!targets.length) return no('돌볼 꽃이 없어요');
-  if (tool === 'fert' && st.fert < targets.length) return no(`비료가 ${targets.length - st.fert}개 모자라요.`); // P13-06-01-c
+  if (tool === 'fert' && st.fert < targets.length) return no(`비료가 ${targets.length - st.fert}개 모자라요`); // P13-06-01-c
   if (tool === 'water' && (st.water || 0) < targets.length) return no(st.water ? `물병이 ${targets.length - st.water}개 모자라요` : '물병이 없어요. 창고에서 살 수 있어요');
   if (tool === 'weed' && (st.hoe || 0) < targets.length) return no(st.hoe ? `호미가 ${targets.length - st.hoe}번 모자라요` : '호미가 없어요. 창고에서 살 수 있어요');
   if (tool === 'harvest' && (st.basket || 0) < targets.length) return no(st.basket ? `바구니가 ${targets.length - st.basket}번 모자라요` : '바구니가 없어요. 창고에서 살 수 있어요');
@@ -967,9 +969,9 @@ const CHAPTERS = [
     Q('c1_bloom', st => `${FLOWERS[firstFlower(st)].name} 피우기`, st => !!st.dex.flower[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_petal', st => `${FLOWERS[firstFlower(st)].name} 꽃잎 거두기`, st => !!(st.dex.petal || {})[firstFlower(st)], 'garden', st => ({ bloom: firstFlower(st) })),
     Q('c1_dry', '꽃방에 꽃잎 널기', st => S(st, 'dried') > 0, 'tearoom', { need: 'dry' }),
-    Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom', { need: 'petal' }),
+    Q('c1_bag', st => `${FLOWERS[firstFlower(st)].name} 티백 만들기`, st => !!(st.dex.teabag || {})[firstFlower(st)], 'tearoom', st => ({ need: 'petal', flower: firstFlower(st) })),
     Q('c1_land', st => st.gift != null && st.gift >= 0 ? '첫 땅 만들기' : '초원 만들기', st => st.gift != null && st.gift >= 0 ? LAND_KEYS.some(k => k !== 'barren' && st.dex.land[k]) : !!st.dex.land.grassland, 'garden', { need: 'land' }),   // 화분을 받은 정원은 어떤 땅이든 (QA 4회차)
-    Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', { need: 'sell' }),   // 팔 차가 있어야 지금 (QA 16회차)
+    Q('c1_sell', st => `${FLOWERS[firstFlower(st)].tea} 팔기`, st => st.dex.tea[firstFlower(st)] != null, 'cab', st => ({ need: 'sell', flower: firstFlower(st) })),   // 그 꽃 차가 있어야 지금 (QA 16 · 19회차)
   ] },
   { key: 'c2', no: 2, name: '땅 바꾸기', title: 't_land', quests: [
     Q('c2_foothill', '산기슭 만들기', st => !!st.dex.land.foothill, 'shop', { sow: 'gamguk' }),

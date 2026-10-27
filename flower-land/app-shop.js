@@ -209,7 +209,7 @@ function renderStore(force) {
       <span class="ar-art">${spriteImg(k, 'flower', 36, false, F.name)}<span class="ar-n">×${n}</span></span>
       <span class="ar-main"><b>${F.name} <span class="muted">${FORM[F.form].name}</span></b><span class="ar-tag ${tagCls}">${tag}</span></span>
       <span class="ar-when"><b>${when}</b><small>${sub}</small></span></div>`; };
-  const pend = st.pending.map(p => arrive(p.type, p.qs.length, `🌱 ${p.method}`, 'grow', `${flowH(Math.max(0, p.dueH))} 뒤`, '뿌리 내리는 중')).join('');
+  const pend = st.pending.map(p => arrive(p.type, p.qs.length, `🌱 ${p.method}`, 'grow', `${cal.frozen ? '정원이 깨어나고 ' : ''}${flowH(Math.max(0, p.dueH))} 뒤`, '뿌리 내리는 중')).join('');
   const resv = st.reservations.filter(r => !r.done).map(r => arrive(r.type, r.qty, '🗓️ 예약', 'resv', `${monthName(MONTHS[r.deliverIdx])} 1일`, `${relYear(r.year)} · 특수 포장`)).join('');
   $('#p-store').innerHTML = `<div class="stack">
     <div class="shop-news">
