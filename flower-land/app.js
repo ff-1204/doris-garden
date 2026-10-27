@@ -267,9 +267,12 @@ function load() {
   window.__brokenSave = true;
   return null;
 }
-function save() { try { st.lastReal = Date.now(); localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* 무시 */ } }
+let saveOff = false;                                                   // 처음부터 다시 시작: 지운 뒤 새로고침하는 동안 다시 쓰지 않게
+function save() { if (saveOff) return; try { st.lastReal = Date.now(); localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* 무시 */ } }
 
 let st = load() || E.create(Date.now());
+// P16-12-03 처음부터 다시 시작(완전 초기화, 10-27): 새로고침 전에 남긴 표시 → 이 정원엔 계정 칭호를 이어 붙이지 않음 (E.applyAccount · giveCloudReward)
+try { const r = sessionStorage.getItem(KEY + '-reset'); if (r) { sessionStorage.removeItem(KEY + '-reset'); if (!st.onboarded && st.resetAt == null) st.resetAt = +r || Date.now(); } } catch (e) { /* 표시를 못 읽으면 새 기기와 같음 */ }
 // 관리자 · 테스트 기능(⏩ 배속 · 다음 달 건너뛰기)은 로컬 개발 주소에서만 (P20-12, 10-17). 배포 사이트에선 배속도 1로
 const DEV = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 if (!DEV && st.speed !== 1) st.speed = 1;

@@ -143,10 +143,11 @@ async function cloudLogin() {
   feedback(`☁️ ${cloud.meta.email}로 로그인했어요`);
   cloudSync('login');
 }
-function cloudLogout() {
+function cloudLogout(quiet) {   // quiet: 처음부터 다시 시작에서 (알림 · 다시 그리기 없이)
   if (cloud.token && window.google) try { google.accounts.oauth2.revoke(cloud.token, () => null); } catch (e) { /* 무시 */ }   // 권한도 구글에 돌려줌
   cloud.token = null; cloud.exp = 0; cloud.meta = {}; cloud.remote = null; cloud.pending = null; cloud.askData = null;
   cloudSaveMeta(); cloudSet('idle');
+  if (quiet) return;
   if (ui.tab === 'settings') renderSettings();               // 💾 저장하기 · 📂 불러오기 다시 보임
   feedback('로그아웃했어요 · 이 브라우저의 정원은 그대로예요 (드라이브 저장만 멈춰요)');   // P20-04-04
 }
@@ -317,13 +318,6 @@ function cloudTick() {
   if (!s) return cloudSeen();
   if (n > s.titles) { cloudSeen(); return cloudSync('title'); }
   if (abs !== s.abs) { cloudSeen(); return cloudSync('month'); }
-}
-// 처음부터 다시 시작한 정원 (P20-08-02): 계정에 첫 방문이 있으면 칭호를 이어 붙이고 연출은 띄우지 않음
-function cloudNewGarden() {
-  if (!cloudIn() || !cloud.meta.firstVisit) return;
-  E.applyAccount(st, cloud.meta.firstVisit, ctx);
-  if (cloud.meta.reward) E.giveCloudReward(st, cloud.meta.reward, Date.now(), ctx);   // P20-16 받은 계정이면 구름 정원사도 조용히
-  st.actAt = Date.now();
 }
 // 화면이 다 불린 뒤(app-main) 한 번
 function cloudStart() {

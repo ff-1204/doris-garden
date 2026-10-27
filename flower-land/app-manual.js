@@ -124,7 +124,7 @@ function renderSettings() {
       + (brokenRaw() ? row('🧰', '열지 못한 예전 정원', '여는 중에 문제가 생겨 따로 보관한 정원이에요. 파일로 받아 운영자에게 보내 주세요', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="brokenDl">내려받기</button><button type="button" class="btn small" id="brokenDel">지우기</button></span>') : ''));
     })()}
     ${!E.canReset(st, E.calendar(st.virtual)) ? '' : group('🌱', '정원', '되돌릴 수 없어요',
-      row('🗑️', '처음부터 다시 시작', '꽃, 창고, 찻집, 돈, 도감, 기록이 모두 지워져요. 설정은 남아요', '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
+      row('🗑️', '처음부터 다시 시작', `이 브라우저의 정원 · 설정 · 보관본이 모두 지워지고 첫 안내부터 다시 시작해요${cloud.on && cloud.meta.email ? ' · 구글에서 로그아웃해요 · 드라이브에 저장한 정원은 남아요' : ''}`, '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
       row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", `진행은 이 브라우저에 자동 저장돼요 ${cloudIn() ? '(☁️ 구글 드라이브에도)' : '(💾 파일로 옮길 수 있어요)'}`, '')
       + row('🔤', '글꼴', '주아 · 고운바탕 · IBM Plex (모두 SIL 오픈 폰트 라이선스)', '')
@@ -150,11 +150,18 @@ function renderSettings() {
   if (DEV) $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
   if ($('#resetBtn')) $('#resetBtn').addEventListener('click', e => {
     if (!E.canReset(st, E.calendar(st.virtual))) { resetArmed = false; return renderSettings(); }   // 1년차 동안만 (10-27): 그새 2년차가 됐으면 지우지 않고 줄을 걷음
-    if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워져요'; return; }
-    const keep = st.settings; st = E.create(Date.now()); st.settings = keep; st.onboarded = true;
-    cloudNewGarden();                             // 로그인했으면 계정의 첫 방문을 이어 붙임 (P20-08-02)
-    ui.selected = null; ui.cart = {}; ui.sigs = {}; giveGift(); save(); setTab('garden'); feedback('빈 황무지에서 새 정원을 시작했어요 · 이웃의 화분이 정원 가운데에 있어요');
+    if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워요'; return; }
+    fullReset();
   });
+}
+// P16-12-03 처음부터 다시 시작 = 완전 초기화 (변경 10-27, 사용자 요청): 이 게임의 저장 키 전부(정원 · 설정 · 되돌리기 칸 · 보관본 · 안내 표시)를 지우고
+// 구글 로그인도 끊은 뒤(권한도 돌려줌, 드라이브 파일은 남김) 새로고침 → 처음 온 사람처럼 첫 안내 · 이웃의 화분부터. 계정 칭호는 이어 붙이지 않음 (st.resetAt)
+function fullReset() {
+  saveOff = true;                                 // 새로고침 직전 pagehide 저장이 정원을 되살리지 않게
+  if (cloud.on && cloud.meta.email) cloudLogout(true);
+  try { E.resetKeys(Object.keys(localStorage), KEY).forEach(k => localStorage.removeItem(k)); } catch (e) { /* 저장소를 못 쓰면 지울 것도 없음 */ }
+  try { sessionStorage.setItem(KEY + '-reset', String(Date.now())); } catch (e) { /* 표시를 못 남기면 새 기기처럼 */ }
+  location.reload();
 }
 
 // P22-02 이웃의 화분: 첫 방문 · 처음부터 다시 시작할 때 한 번

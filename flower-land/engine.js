@@ -53,6 +53,9 @@ function calendar(ms) {
 const yearOf = (st, cal) => cal.week - st.firstWeek + 1;
 // 처음부터 다시 시작은 1년차 동안만 (변경 10-27, 사용자 요청) — 1년차 꽃잠 · 일요일에 시작한 0년차도 포함
 const canReset = (st, cal) => yearOf(st, cal) <= 1;
+// P16-12-03 처음부터 다시 시작 = 완전 초기화 (변경 10-27, 사용자 요청): 이 게임의 브라우저 저장 키 전부 (정원 · 되돌리기 칸 · 보관본 · 안내 표시 · 구글 로그인 기록 · 토큰)
+// base 'flower-land-v3' → 'flower-land-v3' 자신과 'flower-land-v3-…'만. 다른 사이트 · 옛 판('flower-land-v2') 키는 건드리지 않음
+const resetKeys = (keys, base) => keys.filter(k => k === base || (typeof k === 'string' && k.startsWith(base + '-')));
 // P04-01-09 꽃잠 관리 (10-25): 꽃잠은 꽃이 잠든 때라 휴면기처럼 — 옮겨심기 · 번식은 달 조건 없이, 번식은 새해 몫으로 셈
 const propYearOf = (st, cal) => yearOf(st, cal) + (cal.frozen ? 1 : 0);
 // 수확 한 번의 칸: 꽃잠(쉼달 + 꽃샘달)은 합쳐 한 칸 = 쉼달의 abs (10-25 변경: 꽃잠에 한 번, 2월과는 따로)
@@ -302,7 +305,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null,   // P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], restClosed: null, account: null, actAt: null, resetAt: null,   // P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -1697,6 +1700,7 @@ const MIGRATIONS = [
   ['꽃잠 번식 표시 propRest · 꽃잠 안내를 닫은 주 restClosed (QA 19회차, 10-27)', s => { for (const f of s.flowers || []) if (f.propRest == null) f.propRest = false; if (s.restClosed === undefined) s.restClosed = null; }],
   ['☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null)', s => { if (s.account === undefined) s.account = null; if (s.actAt === undefined) s.actAt = null; }],
   ['🎁 답례품 · 받은 편지함 letterBox (P26-06, 10-27): 예전에 받은 편지에는 답례품을 소급하지 않음', s => { s.letterBox = s.letterBox || []; }],
+  ['처음부터 다시 시작한 때 resetAt (P16-12-03 완전 초기화, 10-27): 예전 정원은 null — 예전 재시작 정원도 계정 칭호를 이어 받던 그대로', s => { if (s.resetAt === undefined) s.resetAt = null; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1755,7 +1759,7 @@ function applyAccount(st, firstVisit, ctx) {
   const a = st.account || {};
   st.account = Object.assign({}, a, { firstVisit: firstVisitOf(firstVisit, a.firstVisit), gave: !!a.gave });   // gave: 칭호를 계정 날짜로 받음 (도감일지에 그 날짜를 보여 줌) · reward(P20-16)는 그대로
   st.journal = st.journal || { done: {} }; st.titles = st.titles || {};
-  if (st.titles.t_visit != null) return false;
+  if (st.titles.t_visit != null || st.resetAt) return false;            // 처음부터 다시 시작한 정원엔 이어 붙이지 않음 (P16-12-03 변경 10-27) — 첫 안내에서 다시 얻음
   const cal = calendar(st.virtual);
   if (st.journal.done.c0_visit == null) st.journal.done.c0_visit = cal.abs;
   giveTitle(st, 't_visit', cal, ctx, true); st.account.gave = true;
@@ -1764,12 +1768,13 @@ function applyAccount(st, firstVisit, ctx) {
 }
 // P20-16 구름 정원사 (10-27): 처음 로그인해 드라이브와 맞춘 정원에 덤 칭호 + 구름 돌. 얻는 연출은 계정마다 한 번
 //  has: 이 정원이 이미 받음 · rewardedAt: 계정이 처음 받은 때(드라이브 · 이 기기 기록, 모르면 null)
-//  → { give: 이 정원에 줄지, show: 얻는 연출을 띄울지 } — 이미 받은 계정이면 새 기기 · 다시 시작한 정원에 조용히 이어 붙임
-const cloudRewardPlan = (has, rewardedAt) => ({ give: !has, show: !has && !rewardedAt });
+//  reset: 처음부터 다시 시작한 정원 (P16-12-03 변경 10-27) — 계정에서 이어 받지 않고 로그인해서 다시 얻음 (연출도 다시)
+//  → { give: 이 정원에 줄지, show: 얻는 연출을 띄울지 } — 이미 받은 계정이면 새 기기 정원에 조용히 이어 붙임
+const cloudRewardPlan = (has, rewardedAt, reset) => ({ give: !has, show: !has && (!rewardedAt || !!reset) });
 // 정원에 줌 (돈 · 씨앗은 주지 않음). 줬으면 { at: 계정이 받은 때(처음이면 now), show }, 이 정원이 이미 받았으면 null
 function giveCloudReward(st, rewardedAt, now, ctx) {
   st.titles = st.titles || {};
-  const p = cloudRewardPlan(st.titles.t_cloud != null, rewardedAt);
+  const p = cloudRewardPlan(st.titles.t_cloud != null, rewardedAt, st.resetAt);
   if (!p.give) return null;
   giveTitle(st, 't_cloud', calendar(st.virtual), ctx, !p.show);         // 연출 · 일지 🏅는 처음 받는 계정에서만
   if (!(st.decos || []).some(d => d.key === 'cloudstone')) addDeco(st, 'cloudstone');
@@ -1798,7 +1803,7 @@ function outsideUrl(href, info) {
 }
 
 const api = {
-  DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf, canReset,
+  DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf, canReset, resetKeys,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
