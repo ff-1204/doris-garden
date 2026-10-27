@@ -6,6 +6,7 @@ const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 600
 const garden = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'auto-test'; st.money = 1e6; st.grade.xp = E.gradeXpAt(12); return st; };
 const fl = (st, type, x, y, extra) => { const f = Object.assign({ id: 7000 + st.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'bloom', bloomed: true, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 }, extra); st.flowers.push(f); return f; };
 const put = (st, key, x, y) => { const r = E.buyDeco(st, key, ctx); E.placeDeco(st, r.deco.id, x, y); return r.deco; };
+const petal = (st, type, q) => { const p = { id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: 11 }; st.petals.push(p); return p; };
 const monthEnd = st => E.advance(st, E.calendar(st.virtual).slotEnd + 0.2 * H, ctx);
 
 console.log('[🧺 자동 수확 바구니 — 사기]');
@@ -36,6 +37,9 @@ console.log('[🧺 바로 옆 핀 꽃만 · 그 달에 손으로 거둔 꽃은 �
   check(st.basket === basket0 - 1, '바구니 용품은 손으로 거둔 1번만 씀');
   check(st.grade.xp === xp0 + 2 * E.XP.harvest && st.yearNow.harvest === h0 + 2 && d.n === 2, '경험치 · 올해 거둔 꽃잎은 사람이 거둔 것과 같은 양 · 장치에 센 수');
   check(E.basketTick(st, cal, ctx) === 0, '같은 달엔 한 번만');
+  const wk = s => JSON.stringify((E.weeklyOf(s) || { goals: [] }).goals.map(g => g.got));
+  st.onboarded = true; const w0 = wk(st); fl(st, 'chamomile', 4, 6); E.basketTick(st, cal, ctx); petal(st, 'rose'); put(st, 'dryrack', 0, 0); E.rackTick(st, ctx);
+  check(wk(st) === w0, '장치가 한 일은 주간 목표에 세지 않음 (P28-09 — 목표는 손으로 한 일)');
   check(E.canCare(st, near[0], 'harvest', cal) === false, '바구니가 거둔 꽃은 그 달에 손으로도 다시 못 거둠');
 }
 
@@ -69,7 +73,6 @@ console.log('[🧺 따라잡기 3주 · 꽃잠을 건너뜀]');
   check(E.autoAwayLines(st, E.autoStats(st)).length === 0, '그사이 한 일이 없으면 줄 없음');
 }
 
-const petal = (st, type, q) => { const p = { id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: 11 }; st.petals.push(p); return p; };
 console.log('[🍂 자동 건조대 — 사기 · 오래된 꽃잎부터 하나에 8장]');
 {
   const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); st.money = 1e6; st.grade.xp = E.gradeXpAt(8);
