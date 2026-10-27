@@ -10,7 +10,7 @@ const cal = E.calendar(st.virtual);
 console.log('[달마다 하나]');
 check(E.MONTHS.every(m => E.DECO_KEYS.filter(k => !E.DECOS[k].months && E.DECOS[k].month === m).length === 1), '14달에 하나씩 (+ 여름 벌통)');
 check(JSON.stringify(E.decoOffer(cal).filter(k => !E.DECOS[k].gear && !E.DECOS[k].auto)) === '["bench"]', '5월엔 나무 벤치 (늘 파는 정원 장치 · 자동 장치 빼고)');
-check(E.decoTotal() === E.DECO_KEYS.length + E.GRADE_DECO_KEYS.length + E.TITLE_KEYS.length && E.DECO_KEYS.length === 23 && E.decoCount(st) === 0, '꾸밈 도감 칸 = 장식 + 등급 장식 + 칭호 문장');
+check(E.decoTotal() === E.DECO_KEYS.length + E.GRADE_DECO_KEYS.length + E.TITLE_KEYS.length && E.DECO_KEYS.length === 24 && E.decoCount(st) === 0, '꾸밈 도감 칸 = 장식 + 등급 장식 + 칭호 문장');
 
 console.log('[사기]');
 st.money = 5000;

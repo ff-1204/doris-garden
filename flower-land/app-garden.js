@@ -406,6 +406,10 @@ function openDecoTile(d) {
     extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : '지금 바로 옆에 거둘 핀 꽃이 없어요'} · 둘레 ${E.AUTO_R}칸 · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
+  if (d.key === 'dryrack') {                      // P28-10-02 자동 건조대: 이 달이 끝나면 널 꽃잎 · 꽃방에서 마르는 중
+    const racks = E.placedOf(st, 'dryrack').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.RACK_N);
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 건조대도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.RACK_N}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+  }
   if (E.GEAR[d.key]) {                           // P27 장치: 지금 몇 포기가 빨리 자라는지 · 지도에 범위
     const G = E.GEAR[d.key], frozen = E.calendar(st.virtual).frozen;
     const n = st.flowers.filter(f => !f.withered && Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= G.r && f.ageH < FLOWERS[f.type].mature * E.MONTH_H

@@ -190,12 +190,12 @@ function renderCab(force) {
   const dryShow = k => ui.dryTab === 'all' || ui.dryTab === k;
   const dryTabs = dryTypes.length > 1 ? `<div class="dexchips dry-tabs" role="tablist" aria-label="꽃방 꽃잎">${[['all', '전체', st.drying.length], ...dryTypes.map(k => [k, FLOWERS[k].name, dryN(k)])].map(([k, nm, n]) => `<button type="button" class="dexchip" role="tab" data-drt="${k}" aria-pressed="${ui.dryTab === k}">${k === 'all' ? '' : spriteImg(k, 'dried', 18, false, '')}<span>${nm}</span><span class="data">${n}</span></button>`).join('')}</div>` : '';
   // 말리는 중은 같은 꽃 · 같은 진행(5% 단위)이면 한 장 (×개수)
-  const dryGroups = groupBy(st.drying.filter(d => dryShow(d.type)), d => [d.type, Math.round((1 - d.leftH / E.DRY_H) * 20)].join('|'));
+  const dryGroups = groupBy(st.drying.filter(d => dryShow(d.type)), d => [d.type, Math.round((1 - d.leftH / E.DRY_H) * 20), !!d.auto].join('|'));   // 자동 건조대가 넌 것은 따로 (다 마르면 티백, P28-10-02)
   const dryingCards = dryGroups.map(d => { const F = FLOWERS[d.type], pr = Math.round((1 - d.leftH / E.DRY_H) * 100); return `<div class="shopcard cabcard drying" style="--pc:${F.petal}">
-      <div class="sc-art">${spriteImg(d.type, 'petal', 52, false, F.name)}<span class="chip sc-form">말리는 중</span>${d.ids.length > 1 ? `<span class="sc-count">×${d.ids.length}</span>` : ''}</div>
+      <div class="sc-art">${spriteImg(d.type, 'petal', 52, false, F.name)}<span class="chip sc-form">${d.auto ? '🍂 건조대' : '말리는 중'}</span>${d.ids.length > 1 ? `<span class="sc-count">×${d.ids.length}</span>` : ''}</div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(d.q)}</span></div>
       <div class="cc-q"><span class="qbar"><i style="width:${pr}%;background:#b49a74"></i></span><span class="data">${pr}%</span></div>
-      <div class="cc-meta">${cal.frozen ? '꽃잠에는 쉬어요' : `${flowH(Math.max(0, d.leftH))} 뒤 다 말라요`}</div></div>`; }).join('');
+      <div class="cc-meta">${cal.frozen ? '꽃잠에는 쉬어요' : `${flowH(Math.max(0, d.leftH))} 뒤 ${d.auto ? '티백이 돼요' : '다 말라요'}`}</div></div>`; }).join('');
   const starRange = g => E.stars(g.qMin != null ? g.qMin : g.q) === E.stars(g.q) ? starStr(g.q) : `★${E.stars(g.qMin)}~${E.stars(g.q)}`;   // 묶음의 품질 범위 (10-24)
   const driedCards = dried.map(d => {
     const F = FLOWERS[d.type], selN = d.ids.filter(id => ui.blendSel.includes(id)).length, canSel = selN < d.ids.length && ui.blendSel.length < 3 && !ui.blendSel.some(id => st.dried.find(p => p.id === id).type === d.type);
@@ -274,7 +274,7 @@ function renderCab(force) {
     <nav class="flow-steps" aria-label="제다실 흐름">${[['tr-petal', '🌸', '생화', st.petals.length], ['tr-dry', '🌾', '꽃방', st.drying.length], ['tr-dried', '🍂', '말린 꽃잎', st.dried.length], ['tr-blend', '🫖', '블렌드', loose.length]].map(([id, ic, nm, n], j) => `${j ? '<span class="fs-arrow" aria-hidden="true">›</span>' : ''}<button type="button" class="fs-step ${n ? '' : 'zero'}" data-jump="${id}"><span>${ic}</span>${nm}<b class="data">${n}</b></button>`).join('')}<span class="fs-arrow" aria-hidden="true">›</span><button type="button" class="fs-step out" data-go="cab"><span>🏷️</span>찻집으로</button></nav>
     <div class="cab-head" id="tr-petal"><span class="sb-title">🌸 생화${st.petals.length ? ` <span class="sh-n">${st.petals.length}</span>` : ''}</span><span class="muted">그냥 두면 <b class="val-down">품질이 줄어요</b> · 바로 티백(<b class="val-down">값 −10%</b>) 또는 건조</span>${st.petals.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-dry="all">전체 건조</button><button type="button" class="btn small" data-raw="all">전체 티백</button></span>` : ''}</div>
     ${petalCards ? `<div class="shopgrid cabgrid">${petalCards}</div>` : '<div class="cab-empty"><span>🧺</span><div><b>꽃잎이 없어요</b> <span class="muted">꽃이 피면 정원에서 거둬요</span></div></div>'}
-    <div class="cab-head" id="tr-dry"><span class="sb-title">🌾 꽃방${st.drying.length ? ` <span class="sh-n">${st.drying.length}</span>` : ''}</span><span class="muted">1달이면 다 말라요</span></div>
+    <div class="cab-head" id="tr-dry"><span class="sb-title">🌾 꽃방${st.drying.length ? ` <span class="sh-n">${st.drying.length}</span>` : ''}</span><span class="muted">1달이면 다 말라요${E.placedOf(st, 'dryrack').length ? ` · 🍂 자동 건조대 ${E.placedOf(st, 'dryrack').length}개가 달이 끝날 때 생화를 ${E.placedOf(st, 'dryrack').length * E.RACK_N}장까지 널어 티백까지 만들어요` : ''}</span></div>
     ${dryTabs}
     ${dryingCards ? `<div class="shopgrid cabgrid">${dryingCards}</div>` : '<div class="cab-empty slim"><span>🌾</span><div class="muted">위 생화에서 "🌾 건조"를 눌러요</div></div>'}
     <div class="cab-head" id="tr-dried"><span class="sb-title">🍂 말린 꽃잎${st.dried.length ? ` <span class="sh-n">${st.dried.length}</span>` : ''}</span><span class="muted">시들지 않아요 · 블렌딩이나 티백으로</span></div>
