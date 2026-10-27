@@ -220,6 +220,8 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .legend2.on-map { position: absolute; top: 14px; left: 10px; right: 10px; z-index: 2; pointer-events: none; gap: 4px; }
 .legend2.on-map .lg-chip { background: color-mix(in srgb, var(--panel) 78%, transparent); backdrop-filter: blur(3px); border-color: transparent; box-shadow: 0 1px 3px rgba(0,0,0,.12); font-size: 11.5px; padding: 1px 8px 1px 5px; }
 .legend2.on-map .lg-chip.barren { background: color-mix(in srgb, var(--panel) 55%, transparent); }
+/* 좁은 화면은 지도 아래 한 줄로 — 땅이 많아 두 줄이 되면 위쪽 꽃을 가려서 (QA 20회차) */
+@media (max-width: 600px) { .mapwrap { min-width: 0; } .legend2.on-map { position: static; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding: 5px 8px; background: var(--panel); border-top: 1px solid var(--line); } .legend2.on-map::-webkit-scrollbar { display: none; } .legend2.on-map .lg-chip { flex: none; white-space: nowrap; backdrop-filter: none; box-shadow: none; border-color: var(--line); background: var(--panel); } .legend2.on-map .lg-chip.barren { background: transparent; } }
 /* 돌볼 꽃 칩 앞 한마디 */
 .needs { align-items: center; }
 .needs .nd-say { font-size: 12px; color: var(--muted); margin-right: 4px; }
@@ -1144,7 +1146,7 @@ body { margin: 0; }
                 <div class="legend2 on-map" id="legend2"></div>
                 <div class="care-ring" id="careRing" hidden></div>
               </div>
-              <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size:13px">꽃들이 자고 있어요. 옮겨심기 · 번식 · 돌보기, 핀 채로 잠든 꽃 수확은 할 수 있어요. 블렌딩이나 새해 꽃 예약도 해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기는 돼요</span></div></div>
+              <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size:13px">꽃들이 자고 있어요. 옮겨심기 · 번식 · 돌보기, 핀 채로 잠든 꽃 수확은 할 수 있어요. 블렌딩이나 새해 꽃 예약도 해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기 · 수확은 돼요</span></div></div>
             </div>
           </div>
           <div class="sidecol">
