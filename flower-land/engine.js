@@ -300,7 +300,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true } },
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], restClosed: null,   // P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], restClosed: null, account: null, actAt: null,   // P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -1593,6 +1593,7 @@ const MIGRATIONS = [
   ['💐 이웃에게 선물 · ✉️ 편지 도감 (P26, 10-24)', s => { if (s.gifts === undefined) s.gifts = null; s.letterPending = s.letterPending || []; s.dex.letter = s.dex.letter || {}; }],
   ['심은 뒤 흐른 시간 lifeH (QA 12회차, 10-24): 지금까지는 자란 시간과 같음', s => { for (const f of s.flowers || []) if (f.lifeH == null) f.lifeH = f.ageH; }],
   ['꽃잠 번식 표시 propRest · 꽃잠 안내를 닫은 주 restClosed (QA 19회차, 10-27)', s => { for (const f of s.flowers || []) if (f.propRest == null) f.propRest = false; if (s.restClosed === undefined) s.restClosed = null; }],
+  ['☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null)', s => { if (s.account === undefined) s.account = null; if (s.actAt === undefined) s.actAt = null; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1613,13 +1614,69 @@ function migrateSave(s) {
   return s;
 }
 
+// ---------------------------------------------------------------- ☁️ 구글 드라이브 · 여러 기기 (P20-05 ~ 08, 10-27)
+// 통신 · 창은 화면(drive.js · app-cloud.js)이 하고, 무엇을 할지는 여기서 정함. 시각은 모두 현실 ms
+const CLOUD_GAP = 5 * 60 * 1000;                                       // P20-05-02 자동 저장 최소 간격
+const CLOUD_CLOSE = 60 * 1000;                                          // 처음 맞추는 기기에서 두 저장이 1분 안이면 애매함
+// 지금 드라이브에 저장해도 되나: 닫을 때 · 지금 저장 · 로그인 · 고른 뒤는 바로, 나머지(달 · 칭호)는 5분 간격
+const cloudDue = (now, lastAt, why) => ['close', 'now', 'login', 'pick'].includes(why) || !lastAt || now - lastAt >= CLOUD_GAP;
+// P20-06 드라이브 정원과 이 기기 정원 중 무엇을 쓸까
+//  local  { gardenId, actAt }    — actAt: 이 정원에 마지막으로 손댄 때 (st.actAt, 모르면 0)
+//  base   { gardenId, savedAt }  — 이 기기가 마지막으로 드라이브와 맞춘 판 (올렸거나 받았거나 고른 것), 없으면 null
+//  remote { gardenId, savedAt }  — 지금 드라이브의 garden.json, 없으면 null
+// → { act: 'local'(이 기기 것을 올려도 됨) | 'remote'(드라이브 것을 자동으로) | 'ask'(어느 정원을 쓸까요?), why }
+function cloudDecide(local, base, remote) {
+  if (!remote || !remote.gardenId) return { act: 'local', why: 'empty' };
+  // 이 기기가 본 뒤로 드라이브가 그대로면 이 기기 것이 맞음 (처음부터 다시 시작 · 파일 불러오기로 정원이 바뀐 경우도)
+  if (base && remote.gardenId === base.gardenId && remote.savedAt <= base.savedAt) return { act: 'local', why: 'mine' };
+  if (remote.gardenId !== local.gardenId) return { act: 'ask', why: 'other' };           // 다른 정원 (P20-06-03)
+  const act = local.actAt || 0;
+  if (base && base.gardenId === local.gardenId)                                          // 다른 기기에서 저장함 (P20-06-04)
+    return act <= base.savedAt ? { act: 'remote', why: 'newer' } : { act: 'ask', why: 'both' };   // 이 기기도 그 뒤에 손댔으면 둘 다 바뀐 것
+  // 이 기기에서 처음 맞춤: 늦은 쪽 (P20-06-02), 1분 안이면 묻기
+  if (Math.abs(remote.savedAt - act) < CLOUD_CLOSE) return { act: 'ask', why: 'close' };
+  return remote.savedAt > act ? { act: 'remote', why: 'newer' } : { act: 'local', why: 'older' };
+}
+// P20-08 계정의 첫 방문: 아는 날짜 중 가장 이른 것 (없으면 null)
+const firstVisitOf = (...xs) => { const v = xs.map(Number).filter(x => x > 0); return v.length ? Math.min(...v) : null; };
+// 계정 날짜를 정원에 이어 붙임: 「정원 문을 연 사람」이 없으면 조용히(연출 없이) 주고, 정원에 계정 날짜를 적음. 새로 줬으면 true
+function applyAccount(st, firstVisit, ctx) {
+  if (!firstVisit) return false;
+  st.account = { firstVisit: firstVisitOf(firstVisit, st.account && st.account.firstVisit) };
+  st.journal = st.journal || { done: {} }; st.titles = st.titles || {};
+  if (st.titles.t_visit != null) return false;
+  const cal = calendar(st.virtual);
+  if (st.journal.done.c0_visit == null) st.journal.done.c0_visit = cal.abs;
+  giveTitle(st, 't_visit', cal, ctx, true);
+  addLog(st, 11, '☁️ 계정의 첫 방문 날짜로 「정원 문을 연 사람」을 이어 붙였어요', ctx);
+  return true;
+}
+// P20-07 앱 안 브라우저 (사용자 에이전트 → 종류). 구글 로그인은 앱 안 웹뷰에서 막힘(disallowed_useragent)
+const IN_APPS = [['kakao', /KAKAOTALK/i], ['instagram', /Instagram/i], ['facebook', /FBAN|FBAV|FB_IAB/i], ['line', /\bLine\//i], ['naver', /NAVER\(inapp/i],
+  ['daum', /DaumApps/i], ['everytime', /everytimeApp/i], ['google', /\bGSA\//], ['webview', /; wv\)/]];
+function inAppBrowser(ua) {
+  ua = ua || '';
+  const hit = IN_APPS.find(([, re]) => re.test(ua));
+  if (!hit) return null;
+  return { app: hit[0], os: /Android/i.test(ua) ? 'android' : /iP(hone|ad|od)/.test(ua) ? 'ios' : 'other' };
+}
+// 바깥 브라우저로 같은 주소 열기: 카카오톡은 자기 주소, 안드로이드는 Chrome intent, 그 밖은 null(메뉴 안내 · 주소 복사)
+function outsideUrl(href, info) {
+  if (!info) return null;
+  const url = String(href).split('#')[0];
+  if (info.app === 'kakao') return 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  const m = url.match(/^(https?):\/\/(.*)$/);
+  if (info.os === 'android' && m) return `intent://${m[2]}#Intent;scheme=${m[1]};package=com.android.chrome;end`;
+  return null;
+}
+
 const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudDecide, firstVisitOf, applyAccount, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
