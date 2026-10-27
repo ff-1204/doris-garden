@@ -7,7 +7,10 @@
 const GOOGLE_CLIENT_ID = '15931935276-vdbrlr9rn4koe7nfpk7v0edf2dd9sn1v.apps.googleusercontent.com';
 const CLOUD_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';   // P20-04-01 드라이브는 앱 전용 숨김 폴더만
 const CLOUD_SCOPES = `${CLOUD_SCOPE} openid email profile`;              // + 계정 이름 표시
-const CLOUD_KEY = KEY + '-cloud';   // 이 기기 기록 { email, base: { gardenId, savedAt }, lastAt, firstVisit } — 토큰은 넣지 않음 (메모리에만, P20-04-03)
+const CLOUD_KEY = KEY + '-cloud';   // 이 기기 기록 { email, base: { gardenId, savedAt }, lastAt, firstVisit } — 토큰은 넣지 않음
+// 토큰은 따로 끝날 때까지(약 1시간)만 기억 { token, exp, email } — 새로고침해도 창 없이 이어지게 (P20-04-03, 10-27 변경 · 사용자 요청)
+// 정원 저장 · 💾 파일 · 드라이브 파일에는 넣지 않음. 로그아웃 · 401 · 끝남 · 다른 계정 · 기록이 지워지면 지움
+const CLOUD_TOKEN_KEY = KEY + '-cloud-token';
 const cloud = {
   on: !!GOOGLE_CLIENT_ID, inApp: IN_APP_INFO,
   meta: (() => { try { return JSON.parse(localStorage.getItem(CLOUD_KEY)) || {}; } catch (e) { return {}; } })(),
@@ -18,7 +21,16 @@ const cloud = {
   autoTried: null, autoFailed: false,   // 첫 누름에 조용히 다시 받기 (P20-04-03): 마지막으로 해 본 토큰의 exp · 이 페이지에서 실패함
 };
 const cloudIn = () => cloud.on && !cloud.inApp && !!cloud.meta.email;
-function cloudSaveMeta() { try { if (cloud.meta.email) localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud.meta)); else localStorage.removeItem(CLOUD_KEY); } catch (e) { /* 무시 */ } }
+function cloudSaveMeta() { try { if (cloud.meta.email) localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud.meta)); else { localStorage.removeItem(CLOUD_KEY); cloudForget(); } } catch (e) { /* 무시 */ } }
+function cloudKeep() { try { if (cloud.token && cloud.meta.email) localStorage.setItem(CLOUD_TOKEN_KEY, JSON.stringify({ token: cloud.token, exp: cloud.exp, email: cloud.meta.email })); } catch (e) { /* 기억 못 해도 이 페이지에선 씀 */ } }
+// tok을 주면 기억한 것이 그 토큰일 때만 지움 (다른 탭이 새로 받아 둔 토큰은 남김)
+function cloudForget(tok) { try { if (!tok || (JSON.parse(localStorage.getItem(CLOUD_TOKEN_KEY)) || {}).token === tok) localStorage.removeItem(CLOUD_TOKEN_KEY); } catch (e) { /* 무시 */ } }
+// 페이지를 열 때 · 이 페이지 토큰이 끝났을 때: 같은 계정이고 1분 넘게 남았으면 그 토큰을 씀 (다른 탭이 받은 것도), 아니면 지움
+function cloudRestore() {
+  let t = null; try { t = JSON.parse(localStorage.getItem(CLOUD_TOKEN_KEY)); } catch (e) { /* 없음 */ }
+  if (E.cloudTokenUse(t, cloud.meta.email, Date.now())) { cloud.token = t.token; cloud.exp = +t.exp; return true; }
+  cloudForget(); return false;
+}
 
 // ---- 토큰 (Google Identity Services 토큰 방식)
 // 구글 스크립트는 ☁️ 줄이 보일 때(설정)나 로그인해 둔 기기에서만 불러옴 — 그 밖엔 구글에 접속하지 않음
@@ -52,6 +64,7 @@ function cloudOnToken(r) {
   if (r.error) return ws.forEach(w => w.rej(Object.assign(new Error(r.error), { kind: 'denied' })));
   if (!google.accounts.oauth2.hasGrantedAllScopes(r, CLOUD_SCOPE)) return ws.forEach(w => w.rej(Object.assign(new Error('scope'), { kind: 'scope' })));
   cloud.token = r.access_token; cloud.exp = Date.now() + (+r.expires_in || 3600) * 1000; cloud.autoFailed = false;   // 받았으면 다음 끝남에 다시 한 번
+  cloudKeep();
   ws.forEach(w => w.res(cloud.token));
 }
 function cloudOnTokenError(e) { const ws = cloud.waiters.splice(0); ws.forEach(w => { clearTimeout(w.t); w.rej(Object.assign(new Error(e && e.type), { kind: 'popup' })); }); }
@@ -110,7 +123,7 @@ async function cloudLogin() {
   try { await cloudRequest(true); } catch (e) { return cloudFail(e, true); }
   let email = null;
   try { email = (await cloudDrive.userinfo()).email; } catch (e) { /* 이름을 못 받아도 저장은 됨 */ }
-  cloud.meta = { email: email || '구글 계정' }; cloudSaveMeta();
+  cloud.meta = { email: email || '구글 계정' }; cloudSaveMeta(); cloudKeep();   // 새 계정 것으로 덮어씀
   if (ui.tab === 'settings') renderSettings();               // 💾 저장하기 · 📂 불러오기 숨김 (P20-02)
   feedback(`☁️ ${cloud.meta.email}로 로그인했어요`);
   cloudSync('login');
@@ -133,6 +146,7 @@ async function cloudReconnect(then, quiet) {
 function cloudAuto(e) {
   if (e.type === 'keydown' && (e.repeat || ['Escape', 'Tab', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key))) return;
   if (e.target && e.target.closest && e.target.closest('#topCloud, [data-cloud]')) return;
+  if (cloudIn() && !cloudTokenOk() && cloudRestore()) { if (cloud.state === 'relogin') { cloud.pending = null; cloudSync('open'); } return; }   // 다른 탭이 받아 둔 토큰이 있으면 창 없이
   if (!E.cloudAutoOk({ on: cloud.on, inApp: cloud.inApp, email: cloud.meta.email, tokenOk: cloudTokenOk(), ready: !!cloud.client,
     waiting: cloud.waiters.length > 0, failed: cloud.autoFailed, tried: cloud.autoTried, exp: cloud.exp })) return;
   cloud.autoTried = cloud.exp;
@@ -156,7 +170,7 @@ async function cloudSync(why) {
   if (cloud.state === 'ask' && why !== 'pick' && why !== 'open') return;                      // 고를 때까지 드라이브에 쓰지 않음
   const now = Date.now(), check = why === 'login' || why === 'open';
   if (!check && !E.cloudDue(now, cloud.meta.lastAt, why)) return cloudLater(why);
-  if (!cloudTokenOk()) return cloudSet('relogin', why);                                       // 조용히 받을 수 없음 → 누를 때 (P20-04-03)
+  if (!cloudTokenOk() && !cloudRestore()) return cloudSet('relogin', why);                    // 끝남 → 다음 누름에 한 번 다시 받음 (P20-04-03)
   if (navigator.onLine === false) return cloudSet('offline', why);                            // P20-05-03
   cloud.busy = true; cloud.pending = null; cloudSet('saving');
   try {
@@ -257,7 +271,7 @@ async function cloudPrev() {
 function cloudFail(e, loud) {
   const k = e && e.kind;
   if (k === 'offline') return cloudSet('offline');
-  if (k === 'auth') { cloud.token = null; return cloudSet('relogin'); }
+  if (k === 'auth') { cloudForget(cloud.token); cloud.token = null; return cloudSet('relogin'); }   // 401: 기억한 토큰도 지움
   if (k === 'notready') return feedback('구글 로그인을 불러오는 중이에요 · 잠시 뒤 다시 눌러 주세요', true);
   if (k === 'popup' || k === 'denied') { if (loud) feedback('로그인 창이 닫혔어요 · 다시 눌러 주세요', true); if (cloud.meta.email && !cloudTokenOk()) cloudSet('relogin'); return; }
   if (k === 'scope') { feedback('"드라이브의 앱 데이터" 권한을 허락해야 저장할 수 있어요', true); if (cloud.meta.email) cloudSet('relogin'); return; }
@@ -285,7 +299,11 @@ function cloudNewGarden() {
 function cloudStart() {
   if (!cloud.on) return;
   cloudSeen();
-  if (cloudIn()) { cloudLib().catch(() => null); cloudSet('relogin', 'open'); }   // 새로 연 페이지엔 토큰이 없음 → 처음 누를 때 조용히 맞춤 (안 되면 ☁️를 눌러서)
+  if (cloudIn()) {
+    cloudLib().catch(() => null);
+    if (cloudRestore()) cloudSync('open');            // 기억한 토큰이 살아 있으면 창 없이 바로 맞춤
+    else cloudSet('relogin', 'open');                 // 없거나 끝남 → 처음 누를 때 조용히 맞춤 (안 되면 ☁️를 눌러서)
+  } else cloudForget();
   ['click', 'keydown'].forEach(t => document.addEventListener(t, cloudAuto, true));   // 막지 않고 보기만 (capture · preventDefault 없음)
   setInterval(cloudTick, 2000);
   document.addEventListener('visibilitychange', () => {

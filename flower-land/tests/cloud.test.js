@@ -85,5 +85,15 @@ check(!A({ inApp: { app: 'kakao', os: 'android' } }), '앱 안 브라우저에�
 check(!A({ ready: false }), '구글 스크립트가 아직이면 이번 누름은 넘김 (다음 누름에)');
 check(!A({ waiting: true }), '이미 로그인 창을 기다리는 중이면 안 함 (이중 요청 없음)');
 
+console.log('[기억한 토큰 (P20-04-03, 10-27 변경)]');
+const tok = { token: 'x', exp: T + H, email: 'a@b.c' };
+check(E.cloudTokenUse(tok, 'a@b.c', T), '같은 계정 · 1시간 남음 → 새로고침해도 그 토큰을 씀 (창 없음)');
+check(!E.cloudTokenUse(tok, 'a@b.c', T + H - 30 * 1000), '1분 안에 끝나면 안 씀');
+check(!E.cloudTokenUse(tok, 'a@b.c', T + 2 * H), '끝났으면 안 씀');
+check(!E.cloudTokenUse(tok, 'other@b.c', T), '다른 계정 기록이면 안 씀');
+check(!E.cloudTokenUse(tok, '', T) && !E.cloudTokenUse(tok, undefined, T), '로그아웃했으면(이메일 없음) 안 씀');
+check(!E.cloudTokenUse(null, 'a@b.c', T) && !E.cloudTokenUse({ exp: T + H, email: 'a@b.c' }, 'a@b.c', T) && !E.cloudTokenUse({ token: 'x', email: 'a@b.c' }, 'a@b.c', T), '없거나 깨진 기록은 안 씀');
+check(E.cloudAutoOk({ on: true, email: 'a@b.c', tokenOk: E.cloudTokenUse(tok, 'a@b.c', T), ready: true, tried: null, exp: tok.exp }) === false, '기억한 토큰을 쓰면 첫 누름 창도 안 뜸');
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
 process.exit(fails ? 1 : 0);
