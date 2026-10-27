@@ -37,14 +37,14 @@ check(!E.applyAccount(st, null, ctx) && st.account === null, '계정 날짜가 �
 check(E.applyAccount(st, T, ctx) === true, '계정 날짜가 있으면 새 정원에 이어 붙임');
 check(st.titles.t_visit != null && st.journal.done.c0_visit != null, '「정원 문을 연 사람」과 0장 퀘스트가 생김');
 check(!st._newTitles || !st._newTitles.includes('t_visit'), '얻는 연출은 다시 띄우지 않음');
-check(st.account.firstVisit === T && st.log.some(l => l.text.includes('계정의 첫 방문')), '정원에 계정 날짜 · 일지 한 줄');
+check(st.account.firstVisit === T && st.account.gave === true && st.log.some(l => l.text.includes('계정의 첫 방문')), '정원에 계정 날짜 · 일지 한 줄');
 check(E.applyAccount(st, T - H, ctx) === false && st.account.firstVisit === T - H, '더 이른 날짜를 알게 되면 날짜만 바뀌고 칭호는 그대로');
 check(E.applyAccount(st, T + H, ctx) === false && st.account.firstVisit === T - H, '늦은 날짜로는 바뀌지 않음');
 st.onboarded = true; E.checkJournal(st, ctx);
 check(!st._newTitles || !st._newTitles.includes('t_visit'), '첫 안내에서 시작해도 첫 방문 연출이 다시 뜨지 않음');
 const own = E.create(MON, () => 0.5); own.onboarded = true; E.checkJournal(own, ctx); const had = own.titles.t_visit;
 E.applyAccount(own, T, ctx);
-check(own.titles.t_visit === had && own.account.firstVisit === T, '이미 얻은 칭호는 그대로 두고 계정 날짜만 적음');
+check(own.titles.t_visit === had && own.account.firstVisit === T && !own.account.gave, '이미 얻은 칭호는 그대로 두고 계정 날짜만 적음');
 
 console.log('[앱 안 브라우저 (P20-07)]');
 const UA = {

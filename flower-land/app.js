@@ -334,31 +334,38 @@ function downloadSave() {
 const canShareFile = (() => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'a.json', { type: 'application/json' })] })); } catch (e) { return false; } })();
 // 모바일 (10-17): 앱 안 브라우저(카카오톡 · 인스타그램 · 페이스북 · 라인 · 네이버)는 파일 내려받기가 막히거나 JSON이 글자로 열릴 수 있음
 const UA = navigator.userAgent || '';
-const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|FB_IAB|Line\/|NAVER\(inapp|DaumApps|everytimeApp|; wv\)/i.test(UA);
+const IN_APP_INFO = E.inAppBrowser(UA), IN_APP = !!IN_APP_INFO;     // { app, os } — 카카오톡 · 인스타그램 · 페이스북 · 라인 · 네이버 · 다음 · 구글 앱 · 웹뷰 (P20-07-01)
 const IS_IOS = /iP(hone|ad|od)/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const IS_ANDROID = /Android/i.test(UA);
 const STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 // iPhone · iPad Safari는 7일 넘게 열지 않은 사이트의 저장 데이터를 지울 수 있음 (홈 화면 앱은 예외)
 const IOS_EVICT = IS_IOS && !STANDALONE && !IN_APP;
 // 브라우저에 "이 사이트 저장소는 지우지 말아 줘" 요청 (안드로이드 Chrome 등에서 받아들여질 수 있음, 실패해도 그만)
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { /* 무시 */ }
-function openOutside() {   // 바깥 브라우저로 같은 주소 열기
-  const url = location.href.split('#')[0];
-  if (/KAKAOTALK/i.test(UA)) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
-  else if (IS_ANDROID) location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-}
+function openOutside() { const u = E.outsideUrl(location.href, IN_APP_INFO); if (u) location.href = u; }   // 바깥 브라우저로 같은 주소 열기
 function copyAddress() {
   const url = location.href.split('#')[0];
   (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => feedback('주소를 복사했어요 · Chrome이나 Safari에 붙여 넣어 주세요'), () => feedback(url));
 }
+// iPhone 앱 안 브라우저: 오른쪽 위 ··· › Safari로 열기 도트 그림 (24×14, 3배)
+const MENU_PX = ['bbbbbbbbbbbbbbbbbbbbbbbb', 'bbbbbbbbbbbbbbbhhhhhhhhb', 'bbbbbbbbbbbbbbbhdbdbdbhb', 'bbbbbbbbbbbbbbbhhhhhhhhb', '', '.......kkkkkkkkkkkkkkkkk', '.......kmmmmmmmmmmmmmmmk', '.......kmllllllllllmmmmk', '.......kmmmmmmmmmmmmmmmk',
+  '.......ksscccssssssssssk', '.......kscwwcswwwwwwwwssk', '.......ksscccssssssssssk', '.......kmmmmmmmmmmmmmmmk', '.......kkkkkkkkkkkkkkkkk'];
+const MENU_PAL = { b: '#e9dfcf', h: '#e08a3c', d: '#5b4a3a', k: '#9a8471', m: '#fffaf2', l: '#cdb89f', s: '#cfe6c0', c: '#4a90c8', w: '#fffaf2' };
+const menuPixel = () => `<figure class="ia-guide"><svg viewBox="0 0 24 14" width="72" height="42" shape-rendering="crispEdges" aria-hidden="true">${MENU_PX.flatMap((r, y) => [...r].map((c, x) => MENU_PAL[c] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${MENU_PAL[c]}"/>` : '')).join('')}</svg><figcaption>오른쪽 위 <b>···</b> › <b>Safari로 열기</b></figcaption></figure>`;
+// 앱 안 브라우저 안내 창 — 💾 저장(P20-03b-03)과 ☁️ 구글 로그인(P20-07-02)이 같이 씀. more: 끝에 붙일 단추
+function outsideGuide(title, lead, tail, more, info) {
+  info = info || IN_APP_INFO;
+  const url = E.outsideUrl(location.href, info);
+  openModal(title, `<div class="stack" style="gap:10px"><p style="margin:0">${lead}</p>${url ? '' : menuPixel()}
+    <p class="note">${url ? '바깥 브라우저(Chrome · Safari)로 열면 돼요.' : '앱에 따라 메뉴 이름이 "브라우저로 열기"일 수도 있어요.'} ${tail}</p></div>`,
+    [{ label: '주소 복사', act: () => { closeModal(); copyAddress(); } }]
+      .concat(url ? [{ label: info.app === 'kakao' ? '바깥 브라우저로 열기' : 'Chrome으로 열기', primary: !more, act: () => { closeModal(); location.href = url; } }] : [])
+      .concat(more || []));
+}
 // 💾 저장 단추: 앱 안 브라우저면 먼저 안내 (P20-07과 같은 안내를 저장에도)
 function saveClick() {
   if (!IN_APP) return downloadSave();
-  const canOpen = /KAKAOTALK/i.test(UA) || IS_ANDROID;
-  openModal('💾 저장하기', `<div class="stack" style="gap:10px"><p style="margin:0">지금은 <b>앱 안의 브라우저</b>라서 파일 저장이 막히거나 글자로 열릴 수 있어요.</p>
-    <p class="note">${canOpen ? '바깥 브라우저(Chrome · Safari)로 열어서 저장하면 확실해요. 정원은 브라우저마다 따로 저장되니, 지금 정원을 옮기려면 여기서 한 번 저장해 두세요.' : '오른쪽 위 ··· 메뉴에서 <b>Safari로 열기</b>를 고르면 확실해요. 정원은 브라우저마다 따로 저장되니, 지금 정원을 옮기려면 여기서 한 번 저장해 두세요.'}</p></div>`,
-    [{ label: '주소 복사', act: () => { closeModal(); copyAddress(); } }].concat(canOpen ? [{ label: '바깥 브라우저로 열기', act: () => { closeModal(); openOutside(); } }] : [])
-      .concat([{ label: '그래도 저장', primary: true, act: () => { closeModal(); downloadSave(); } }]));
+  outsideGuide('💾 저장하기', '지금은 <b>앱 안의 브라우저</b>라서 파일 저장이 막히거나 글자로 열릴 수 있어요.', '정원은 브라우저마다 따로 저장되니, 지금 정원을 옮기려면 여기서 한 번 저장해 두세요.',
+    [{ label: '그래도 저장', primary: true, act: () => { closeModal(); downloadSave(); } }]);
 }
 async function shareSave() {
   const { name, sm, file } = saveFile();
@@ -402,6 +409,7 @@ function applyImport(game, withSettings) {
   try { localStorage.setItem(UNDO_KEY, JSON.stringify(st)); } catch (e) { /* 보관 못 해도 불러오기는 함 */ }
   if (!withSettings) game.settings = st.settings;
   swapGarden(game, '📂 불러왔어요');
+  st.actAt = Date.now(); save();                 // 직접 바꾼 것 — 드라이브와 맞출 때 이 기기에서 손댄 것으로 (P20-06)
 }
 function undoImport(sure) {
   let g = null;
@@ -414,6 +422,7 @@ function undoImport(sure) {
   }
   try { localStorage.removeItem(UNDO_KEY); } catch (e) { /* 무시 */ }
   swapGarden(g, '↩︎ 불러오기 전으로 되돌렸어요');
+  st.actAt = Date.now(); save();
 }
 // 열지 못한 예전 정원 (10-24): 알림 창 · 설정에서 파일로 내려받기 · 지우기
 const BROKEN_KEY = KEY + '-broken';
@@ -478,7 +487,7 @@ function after(r, kind, action) {
   if (r) {
     let msg = r.msg;
     if (r.ok) {
-      track(kind);
+      track(kind); st.actAt = Date.now();           // P20-06 이 기기에서 마지막으로 손댄 때 (드라이브와 맞출 때 씀)
       const gd = guideState();
       if (!gd.celebrated && guideList().every(([k]) => gd[k])) { gd.celebrated = true; msg += ' · 첫걸음을 모두 마쳤어요 🎉'; }
     }

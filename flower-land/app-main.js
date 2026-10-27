@@ -134,4 +134,5 @@ resize(); renderAll(true);
 if (window.__brokenSave) brokenNotice(() => { if (!st.onboarded) onboarding(); });
 else if (!st.onboarded) onboarding();
 else showAway();
+cloudStart();                                     // ☁️ 구글 드라이브 (P20-04 ~ 06, 클라이언트 ID가 없으면 아무것도 안 함)
 requestAnimationFrame(frame);

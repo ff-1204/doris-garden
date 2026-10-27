@@ -1642,12 +1642,13 @@ const firstVisitOf = (...xs) => { const v = xs.map(Number).filter(x => x > 0); r
 // 계정 날짜를 정원에 이어 붙임: 「정원 문을 연 사람」이 없으면 조용히(연출 없이) 주고, 정원에 계정 날짜를 적음. 새로 줬으면 true
 function applyAccount(st, firstVisit, ctx) {
   if (!firstVisit) return false;
-  st.account = { firstVisit: firstVisitOf(firstVisit, st.account && st.account.firstVisit) };
+  const a = st.account || {};
+  st.account = { firstVisit: firstVisitOf(firstVisit, a.firstVisit), gave: !!a.gave };   // gave: 칭호를 계정 날짜로 받음 (도감일지에 그 날짜를 보여 줌)
   st.journal = st.journal || { done: {} }; st.titles = st.titles || {};
   if (st.titles.t_visit != null) return false;
   const cal = calendar(st.virtual);
   if (st.journal.done.c0_visit == null) st.journal.done.c0_visit = cal.abs;
-  giveTitle(st, 't_visit', cal, ctx, true);
+  giveTitle(st, 't_visit', cal, ctx, true); st.account.gave = true;
   addLog(st, 11, '☁️ 계정의 첫 방문 날짜로 「정원 문을 연 사람」을 이어 붙였어요', ctx);
   return true;
 }

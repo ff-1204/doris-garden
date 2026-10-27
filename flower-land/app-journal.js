@@ -140,7 +140,8 @@ function foldGrid(key, gridHTML) {   // 티백 · 차처럼 그리드가 여럿(
 }
 function titleCard(k) {
   const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;
-  const sub = has ? `${hidden ? `${T.cond} · ` : ''}${absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
+  const acct = k === 't_visit' && st.account && st.account.gave && st.account.firstVisit ? new Date(st.account.firstVisit) : null;   // P20-08 계정 날짜로 받은 첫 방문
+  const sub = has ? `${hidden ? `${T.cond} · ` : ''}${acct ? `${acct.getFullYear()}년 ${acct.getMonth() + 1}월 ${acct.getDate()}일 · 계정 첫 방문` : absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
   return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
 }
 // 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
@@ -215,6 +216,7 @@ function renderTop() {
   const tt = $('#topTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호
   if (tt.dataset.k !== tk) { tt.dataset.k = tk; tt.hidden = !tk; tt.innerHTML = tk ? `${titleImg(tk, 22, false)}<span>${E.TITLES[tk].name}</span>` : ''; }
   if (document.documentElement.dataset.season !== String(cal.season)) { document.documentElement.dataset.season = cal.season; requestAnimationFrame(() => document.documentElement.classList.add('season-anim')); }   // 계절 바탕색
+  cloudTop();                                       // ☁️ 드라이브 저장 표시 (P20-04-02, 로그인했을 때만)
 }
 
 // ---------------------------------------------------------------- 탭 (P16-02)

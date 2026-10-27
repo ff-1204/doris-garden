@@ -72,6 +72,11 @@ h3 { font-family: var(--font-display); font-size: 16px; margin: 0; font-weight: 
 .topinfo { justify-self: end; font-size: 12px; color: var(--muted); text-align: right; line-height: 1.35; display: flex; align-items: center; gap: 10px; }
 .toptitle { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--sunk); padding: 1px 8px 1px 2px; font-size: 12px; color: var(--ink); }   /* P19-05-05 대표 칭호 */
 .toptitle[hidden] { display: none; }
+.topcloud { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--sunk); padding: 1px 7px 1px 5px; font-size: 12px; color: var(--muted); }   /* P20-04-02 ☁️ 드라이브 저장 표시 */
+.topcloud small { font-size: 11px; }
+.topcloud.warn { color: var(--val-down); border-color: color-mix(in srgb, var(--val-down) 45%, var(--line)); }
+.topcloud[hidden] { display: none; }
+@media (max-width: 640px) { .topcloud small { display: none; } .topcloud.warn::after { content: '!'; font-weight: 700; } }   /* 좁은 화면은 ☁️만 (알릴 것이 있으면 !) */
 @media (max-width: 640px) { .topbar { grid-template-columns: 1fr; gap: 3px; padding-block: 8px; } .brand { justify-self: start; } .topinfo { justify-self: start; text-align: left; font-size: 11.5px; } }
 .wallet { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 12px; font-family: var(--font-data); font-weight: 600; font-size: 14px; white-space: nowrap; }
 /* 로고: 도트 새싹 + 둥근 글씨 */
@@ -1028,7 +1033,12 @@ img.px { image-rendering: pixelated; image-rendering: crisp-edges; flex: none; d
 .setcard2 { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
 .danger-group .setcard2 { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .set-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; }
-.set-row + .set-row, .set-sub + .set-row, .speedgrid + .set-row { border-top: 1px solid var(--line); }
+.set-row + .set-row, .set-sub + .set-row, .speedgrid + .set-row, .cloud-rows + .set-row { border-top: 1px solid var(--line); }
+.cloud-rows[hidden] + .set-row { border-top: 0; }
+.cloud-mail { overflow-wrap: anywhere; color: var(--ink); }
+@media (max-width: 640px) { .cloud-btns { flex-direction: column; align-items: stretch; } }   /* ☁️ 줄 단추 둘은 좁은 화면에서 위아래로 */
+.ia-guide { margin: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--sunk); font-size: 13px; }   /* P20-07-02 ··· › Safari로 열기 도트 그림 */
+.ia-guide svg { flex: none; image-rendering: pixelated; }
 .sr-ic { width: 36px; height: 36px; border-radius: 11px; background: var(--sunk); display: grid; place-items: center; font-size: 17px; }
 .set-row.danger .sr-ic { background: color-mix(in srgb, var(--warn) 14%, var(--panel)); }
 .sr-t { display: grid; gap: 1px; min-width: 0; }
@@ -1121,7 +1131,7 @@ body { margin: 0; }
 <div class="app">
   <header class="topbar">
     <button type="button" class="brand" id="brandBtn" title="정원으로" aria-label="도리의 정원 · 정원으로 가기"><svg class="logo-px" viewBox="0 0 11 10" width="24" height="22" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="#a6dc86"/><rect x="2" y="0" width="1" height="1" fill="#a6dc86"/><rect x="8" y="0" width="1" height="1" fill="#a6dc86"/><rect x="9" y="0" width="1" height="1" fill="#a6dc86"/><rect x="0" y="1" width="1" height="1" fill="#a6dc86"/><rect x="1" y="1" width="1" height="1" fill="#6db35a"/><rect x="2" y="1" width="1" height="1" fill="#6db35a"/><rect x="3" y="1" width="1" height="1" fill="#6db35a"/><rect x="7" y="1" width="1" height="1" fill="#6db35a"/><rect x="8" y="1" width="1" height="1" fill="#6db35a"/><rect x="9" y="1" width="1" height="1" fill="#6db35a"/><rect x="10" y="1" width="1" height="1" fill="#a6dc86"/><rect x="0" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="2" width="1" height="1" fill="#6db35a"/><rect x="2" y="2" width="1" height="1" fill="#6db35a"/><rect x="3" y="2" width="1" height="1" fill="#6db35a"/><rect x="4" y="2" width="1" height="1" fill="#6db35a"/><rect x="6" y="2" width="1" height="1" fill="#6db35a"/><rect x="7" y="2" width="1" height="1" fill="#6db35a"/><rect x="8" y="2" width="1" height="1" fill="#6db35a"/><rect x="9" y="2" width="1" height="1" fill="#6db35a"/><rect x="10" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="3" width="1" height="1" fill="#6db35a"/><rect x="3" y="3" width="1" height="1" fill="#6db35a"/><rect x="4" y="3" width="1" height="1" fill="#6db35a"/><rect x="5" y="3" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="3" width="1" height="1" fill="#6db35a"/><rect x="7" y="3" width="1" height="1" fill="#6db35a"/><rect x="8" y="3" width="1" height="1" fill="#6db35a"/><rect x="9" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="4" width="1" height="1" fill="#6db35a"/><rect x="3" y="4" width="1" height="1" fill="#6db35a"/><rect x="4" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="4" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="4" width="1" height="1" fill="#6db35a"/><rect x="7" y="4" width="1" height="1" fill="#6db35a"/><rect x="8" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="5" width="1" height="1" fill="#4f8f3e"/><rect x="5" y="6" width="1" height="1" fill="#4f8f3e"/><rect x="2" y="7" width="1" height="1" fill="#a5743f"/><rect x="3" y="7" width="1" height="1" fill="#a5743f"/><rect x="4" y="7" width="1" height="1" fill="#a5743f"/><rect x="5" y="7" width="1" height="1" fill="#a5743f"/><rect x="6" y="7" width="1" height="1" fill="#a5743f"/><rect x="7" y="7" width="1" height="1" fill="#a5743f"/><rect x="8" y="7" width="1" height="1" fill="#a5743f"/><rect x="1" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="8" width="1" height="1" fill="#a5743f"/><rect x="3" y="8" width="1" height="1" fill="#a5743f"/><rect x="4" y="8" width="1" height="1" fill="#a5743f"/><rect x="5" y="8" width="1" height="1" fill="#a5743f"/><rect x="6" y="8" width="1" height="1" fill="#a5743f"/><rect x="7" y="8" width="1" height="1" fill="#a5743f"/><rect x="8" y="8" width="1" height="1" fill="#a5743f"/><rect x="9" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="9" width="1" height="1" fill="#7a5230"/><rect x="3" y="9" width="1" height="1" fill="#7a5230"/><rect x="4" y="9" width="1" height="1" fill="#7a5230"/><rect x="5" y="9" width="1" height="1" fill="#7a5230"/><rect x="6" y="9" width="1" height="1" fill="#7a5230"/><rect x="7" y="9" width="1" height="1" fill="#7a5230"/><rect x="8" y="9" width="1" height="1" fill="#7a5230"/></svg><span class="bt"><b>도리의 정원</b><small>Dori's Garden</small></span></button>
-    <div class="topinfo"><span id="topInfo"></span><button type="button" class="toptitle" id="topTitle" hidden title="대표 칭호 · 눌러서 칭호 보기"></button></div>
+    <div class="topinfo"><span id="topInfo"></span><button type="button" class="toptitle" id="topTitle" hidden title="대표 칭호 · 눌러서 칭호 보기"></button><button type="button" class="topcloud" id="topCloud" hidden></button></div>
   </header>
 
   <div class="body">
@@ -1188,6 +1198,7 @@ body { margin: 0; }
 <div id="modalRoot"></div>
 
 <script src="engine.js"></script>
+<script src="drive.js"></script>
 <script src="sprites.js"></script>
 <script src="decos.js"></script>
 <script src="titles.js"></script>
@@ -1198,6 +1209,7 @@ body { margin: 0; }
 <script src="app-teashop.js"></script>
 <script src="app-dex.js"></script>
 <script src="app-manual.js"></script>
+<script src="app-cloud.js"></script>
 <script src="app-main.js"></script>
 </body>
 </html>
