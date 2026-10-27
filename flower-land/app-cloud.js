@@ -4,7 +4,7 @@
 
 // P20-09-06 클라이언트 ID: Google Cloud 콘솔 › 클라이언트(웹 애플리케이션)의 "…apps.googleusercontent.com". 공개돼도 되는 값
 // 클라이언트 보안 비밀(secret)은 쓰지 않고 어디에도 적지 않음. 비어 있으면 ☁️ 화면이 모두 숨고 지금 게임과 똑같음
-const GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID = '15931935276-vdbrlr9rn4koe7nfpk7v0edf2dd9sn1v.apps.googleusercontent.com';
 const CLOUD_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';   // P20-04-01 드라이브는 앱 전용 숨김 폴더만
 const CLOUD_SCOPES = `${CLOUD_SCOPE} openid email profile`;              // + 계정 이름 표시
 const CLOUD_KEY = KEY + '-cloud';   // 이 기기 기록 { email, base: { gardenId, savedAt }, lastAt, firstVisit } — 토큰은 넣지 않음 (메모리에만, P20-04-03)
