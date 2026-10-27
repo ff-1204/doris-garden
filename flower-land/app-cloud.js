@@ -266,6 +266,15 @@ async function cloudTake(meta) {
 // 어느 정원을 쓸까요? (P20-06-03 · 04): 고르지 않은 쪽은 ↩︎ 되돌리기 칸에
 async function cloudAsk(meta, why) {
   const data = await cloudRead(meta);
+  // P20-06-05 다른 정원인데 한쪽이 거의 새 정원이면 묻지 않음 (10-27, 사용자 요청) — 고르지 않은 쪽은 ↩︎ 되돌리기 칸에
+  const pick = why === 'other' ? E.freshPick(E.freshGarden(st), E.freshGarden(data.game)) : null;
+  if (pick === 'remote') { cloudUse(meta, data, '☁️ 드라이브의 정원을 불러왔어요 · 이 기기에서 막 시작한 정원은 ↩︎ 되돌리기에 있어요'); return cloudSet('saved'); }
+  if (pick === 'local') {
+    cloudKeepRemote(meta, data);
+    feedback('☁️ 이 기기 정원을 써요 · 드라이브에서 막 시작한 정원은 ↩︎ 되돌리기에 있어요');
+    if (ui.tab === 'settings') renderSettings();
+    cloud.pending = 'pick'; return cloudSet('idle');                                           // 끝나면 바로 이 기기 정원을 올림
+  }
   cloud.askData = { meta, data, why };
   cloudSet('ask');
   cloudAskOpen();
@@ -282,11 +291,15 @@ function cloudPick(side) {
   const a = cloud.askData; if (!a) return closeModal();
   cloud.askData = null; cloud.state = 'idle';
   if (side === 'remote') { cloudUse(a.meta, a.data, '☁️ 드라이브 정원으로 바꿨어요'); cloudSet('saved'); return; }
-  try { localStorage.setItem(UNDO_KEY, JSON.stringify(a.data.game)); } catch (e) { /* 무시 */ }   // 드라이브 정원은 되돌리기 칸에
-  cloud.meta.base = { gardenId: a.meta.gardenId, savedAt: a.meta.savedAt }; cloudSaveMeta();   // 이 기기가 본 드라이브 판 → 덮어써도 됨
+  cloudKeepRemote(a.meta, a.data);
   closeModal(); feedback('이 기기 정원을 써요 · 드라이브 정원은 되돌리기 칸에 보관했어요');
   if (ui.tab === 'settings') renderSettings();
   cloudSync('pick');
+}
+// 이 기기 정원을 쓰기로 함: 드라이브 정원은 되돌리기 칸에, 이 기기가 본 드라이브 판으로 적어 덮어써도 되게
+function cloudKeepRemote(meta, data) {
+  try { localStorage.setItem(UNDO_KEY, JSON.stringify(data.game)); } catch (e) { /* 무시 */ }
+  cloud.meta.base = { gardenId: meta.gardenId, savedAt: meta.savedAt }; cloudSaveMeta();
 }
 // 드라이브 직전 저장본 (P20-05-01) 보기 → 불러오기
 async function cloudPrev() {

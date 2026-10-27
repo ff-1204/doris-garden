@@ -1626,11 +1626,34 @@ function hashText(str) {
 }
 // 정원마다 붙는 이름표: 여러 기기에서 같은 정원인지 가릴 때 씀 (P20-06). 시드 rng를 쓰지 않아 땅 생성 · 시뮬레이션에 영향 없음
 const newGardenId = () => Date.now().toString(36) + '-' + Math.floor(Math.random() * 36 ** 6).toString(36);
-// 불러오기 전에 보여 줄 요약 (JSON에서 막 읽은 정원에도 씀)
+// 정원을 만든 현실 시각: 이름표 앞쪽이 만든 때(ms, 36진수) — 새 저장 칸 없이 (P20-06-06, 10-27). 예전 정원(이름표를 나중에 받음)은 이름표를 받은 때라 추정, 이상하면 null
+function gardenBorn(st) {
+  const t = parseInt(String((st && st.gardenId) || '').split('-')[0], 36);
+  return t > Date.UTC(2026, 0, 1) && t < Date.UTC(2100, 0, 1) ? t : null;
+}
+// 불러오기 전에 보여 줄 요약 (JSON에서 막 읽은 정원에도 씀). born: 시작한 때 · flowers: 지금 정원에 있는 꽃 (P20-06-06)
 function saveSummary(st) {
   const cal = calendar(st.virtual);
-  return { year: yearOf(st, cal), month: cal.month, money: st.money, dex: dexCount(st), dexTotal: dexTotal(st), titles: n0(st.titles), titleOn: st.titleOn || null };
+  return { year: yearOf(st, cal), month: cal.month, money: st.money, dex: dexCount(st), dexTotal: dexTotal(st), titles: n0(st.titles), titleOn: st.titleOn || null,
+    born: gardenBorn(st), flowers: (st.flowers || []).filter(f => !f.withered).length };
 }
+// P20-06-05 거의 새 정원 (10-27, 사용자 요청): 첫 안내 · 이웃의 화분 뒤로 직접 한 것이 없음. 저절로 일어나는 일(하루 용돈 · 화분이 피어 생기는
+// 도감 · 1장 퀘스트 · 땅 · 칭호 문장 장식 · 쉼달의 한 해 기록)은 보지 않고, 직접 해야만 남는 흔적만 봄: 심기 · 사기 · 예약 · 수확 · 차 · 블렌딩 · 판매 · 돌보기 도구 · 장식 · 찻집 가꾸기 · 광산 · 선물
+const EMPTY_DEX = ['petal', 'tea', 'teabag', 'bagBlend', 'blend', 'honey', 'mine', 'memento', 'letter'];
+function freshGarden(st) {
+  if (!st) return false;
+  if (!st.onboarded) return true;
+  const none = a => !a || a.length === 0, sh = st.shop || newShop();
+  return (st.flowers || []).every(f => f.origin === '이웃')
+    && ['items', 'reservations', 'pending', 'petals', 'teas', 'drying', 'dried', 'blends', 'cups', 'letterBox'].every(k => none(st[k]))
+    && (st.decos || []).every(d => { const i = decoInfo(d.key); return !!(i && (i.title || i.extra)); })        // 칭호 문장 · 덤 장식만 (산 장식 없음)
+    && Object.values(st.stats || {}).every(v => !v)                                                               // 판매 · 찻잔 · 주문 · 선물 · 광산
+    && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).length === 0)
+    && st.water === 10 && st.shears === 5 && st.hoe === 10 && st.basket === 10 && !st.fert
+    && sh.seats === 1 && (sh.cups || []).length <= 1 && (sh.signs || []).length <= 1;
+}
+// "어느 정원을 쓸까요?"(다른 정원) 전에: 한쪽이 거의 새 정원이면 묻지 않음. 이 기기가 새 정원이면(둘 다 새것이어도) 드라이브 것, 드라이브만 새것이면 이 기기 것, 아니면 null(묻기)
+const freshPick = (localFresh, remoteFresh) => localFresh ? 'remote' : remoteFresh ? 'local' : null;
 function makeSave(st, now) {
   const game = JSON.parse(JSON.stringify(st));
   delete game._newTitles;                                                // 얻는 연출 대기열은 이 기기에서만
@@ -1808,7 +1831,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

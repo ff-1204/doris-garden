@@ -380,7 +380,7 @@ async function shareSave() {
 function summaryCol(label, sm, when) {
   return `<div class="imp-col"><small class="imp-l">${label}</small>${sm.titleOn && E.TITLES[sm.titleOn] ? titleImg(sm.titleOn, 44, false) : '<span class="imp-ph">🌱</span>'}
     <b>${yearWord(sm.year)} ${monthName(sm.month)}</b>
-    <dl class="kv"><dt>돈</dt><dd class="data">${won(sm.money)}</dd><dt>도감</dt><dd class="data">${sm.dex} / ${sm.dexTotal}</dd><dt>칭호</dt><dd class="data">${sm.titles}개</dd><dt>저장한 때</dt><dd>${when}</dd></dl></div>`;
+    <dl class="kv"><dt>돈</dt><dd class="data">${won(sm.money)}</dd><dt>도감</dt><dd class="data">${sm.dex} / ${sm.dexTotal}</dd><dt>칭호</dt><dd class="data">${sm.titles}개</dd><dt>시작한 날</dt><dd>${sm.born ? whenText(sm.born) : '—'}</dd><dt>심은 꽃</dt><dd class="data">${sm.flowers != null ? `${sm.flowers}포기` : '—'}</dd><dt>저장한 때</dt><dd>${when}</dd></dl></div>`;   // 시작한 날 · 심은 꽃 (P20-06-06, 10-27)
 }
 function readImport(file) {
   if (!file) return;
