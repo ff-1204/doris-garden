@@ -44,9 +44,9 @@ check(E.cloudDecide({ gardenId: rs.gardenId, actAt: T }, null, null).act === 'lo
 console.log('[저장 · 예전 정원]');
 const back = E.parseSave(JSON.stringify(E.makeSave(rs, T)));
 check(back.ok && back.data.game.resetAt === T, '저장 파일 · 드라이브에도 표시가 남음 (다른 기기에서 받아도 이 정원은 잇지 않음)');
-const old = JSON.parse(JSON.stringify(fresh)); delete old.resetAt; old.mig = E.MIGRATIONS.length - 1;
+const old = JSON.parse(JSON.stringify(fresh)); delete old.resetAt; old.mig = E.MIGRATIONS.findIndex(([n]) => n.includes('resetAt'));
 const m = E.migrateSave(old);
-check(m && m.resetAt === null && m.mig === E.MIGRATIONS.length, '예전 정원은 resetAt null (MIGRATIONS 마지막)');
+check(m && m.resetAt === null && m.mig === E.MIGRATIONS.length, '예전 정원은 resetAt null (MIGRATIONS resetAt 보정)');
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
 process.exit(fails ? 1 : 0);

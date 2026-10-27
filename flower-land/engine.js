@@ -1456,13 +1456,43 @@ function giftPot(st, ctx, want) {                // want: 안내 창에서 보�
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
   if (cal.frozen) {                               // 꽃잠엔 거둘 수 없으니 티백 2개도 (QA 7회차: 첫 쪽지를 들어줄 수 있게)
-    for (let i = 0; i < 2; i++) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false });
+    for (let i = 0; i < 2; i++) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false, gift: true });   // gift: 첫걸음 수확으로 치지 않음
     st.dex.teabag = st.dex.teabag || {}; st.dex.teabag[type] = true;
   }
   if (teaShopOpen(cal)) makeOrders(st, cal);      // 쪽지는 화분 꽃을 알고 나서 다시 (QA 6회차 높음)
   st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
   addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께` : ''}`, ctx);
   return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께 받았어요` : ''}`, { flower: f });
+}
+
+// ---------------------------------------------------------------- 첫걸음 (P11-01-05 · P04-05 · P22-02)
+// 어떤 단계를 어떤 순서로 하는지, 이미 한 것은 ✓. 단계 이름은 화면(app.js GUIDE_LABEL)이 붙임
+const GUIDE_STEPS = {
+  base: ['bought', 'planted', 'watered', 'harvested', 'sold'],
+  gift: ['blended', 'sold', 'bought', 'planted', 'watered', 'harvested'],   // P04-04 예전 시작 선물 정원
+  sleep: ['reserved', 'planted', 'watered', 'harvested', 'sold'],           // P04-05 꽃잠에 시작: 화원이 닫혀 있으니 예약부터
+};
+const gotPot = st => st.gift != null && st.gift >= 0;
+const potFlower = st => (gotPot(st) && st.flowers.find(f => f.origin === '이웃' && !f.withered)) || null;
+// 변경 10-27 (사용자 요청): 화분이 이미 심겨 있으니 화분을 받은 정원은 "🌸 이웃의 화분 눌러 보기"부터
+function guideKeys(st) {
+  const ks = st.starterGift ? GUIDE_STEPS.gift : st.startedInSleep ? GUIDE_STEPS.sleep : GUIDE_STEPS.base;
+  return gotPot(st) ? ['pot', ...ks] : ks;
+}
+function guideFill(st) {
+  const g = st.guide = st.guide || {};
+  if (st.flowers.some(f => f.origin !== '이웃')) { g.bought = true; g.planted = true; }   // 이웃의 화분은 산 것 · 심은 것으로 치지 않음
+  if (st.items.length) g.bought = true;
+  if (st.reservations.length || g.bought) g.reserved = true;   // 예약을 건너뛰고 월요일에 바로 사도 됨
+  if (Object.keys(st.dex.petal || {}).length || Object.keys(st.dex.tea).length || (!st.starterGift && (st.petals.length || st.teas.some(t => !t.gift)))) g.harvested = true;   // 시작 선물 꽃잎 · 화분과 받은 티백은 수확으로 치지 않음
+  if (gotPot(st) && !potFlower(st)) g.pot = true;  // 받은 화분이 시들었거나 없으면 누를 수 없으니 (받기 전엔 그대로)
+  return g;
+}
+// 플레이어가 지도에서 화분을 직접 누르거나 그 화분에 돌보기를 했을 때. 새로 ✓가 되면 true
+function guideTap(st, f) {
+  if (!f || f.origin !== '이웃' || (st.guide && st.guide.pot)) return false;
+  guideFill(st).pot = true;
+  return true;
 }
 
 // ---------------------------------------------------------------- 정원 장식 (P17-16, 10-24)
@@ -1724,6 +1754,7 @@ const MIGRATIONS = [
   ['☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null)', s => { if (s.account === undefined) s.account = null; if (s.actAt === undefined) s.actAt = null; }],
   ['🎁 답례품 · 받은 편지함 letterBox (P26-06, 10-27): 예전에 받은 편지에는 답례품을 소급하지 않음', s => { s.letterBox = s.letterBox || []; }],
   ['처음부터 다시 시작한 때 resetAt (P16-12-03 완전 초기화, 10-27): 예전 정원은 null — 예전 재시작 정원도 계정 칭호를 이어 받던 그대로', s => { if (s.resetAt === undefined) s.resetAt = null; }],
+  ['첫걸음 🌸 이웃의 화분 눌러 보기 guide.pot (P22-02 변경 10-27): 이미 다른 단계를 했거나 · 마쳤거나 · 닫은 정원은 ✓', s => { const g = s.guide; if (g && !g.pot && Object.values(g).some(v => v === true)) g.pot = true; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -1831,6 +1862,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
+  guideKeys, guideFill, guideTap, potFlower,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;

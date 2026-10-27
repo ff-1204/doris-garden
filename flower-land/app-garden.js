@@ -237,6 +237,12 @@ function draw() {
       g.restore();
     }
   }
+  const pot = !ui.selected && !(st.guide && (st.guide.pot || st.guide.hidden)) && E.potFlower(st);
+  if (pot) {                                       // 첫걸음 "이웃의 화분 눌러 보기": 누를 때까지 화분 둘레가 분홍으로 반짝 (변경 10-27)
+    const a = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.8 : 0.35 + 0.45 * Math.abs(Math.sin(performance.now() / 600));   // 움직임 줄이기면 깜빡이지 않음
+    g.save(); g.lineWidth = 2.5; g.strokeStyle = rgba('#ff8fbf', a); g.shadowColor = rgba('#ff8fbf', 0.9); g.shadowBlur = 8;
+    g.beginPath(); g.arc((pot.x + 0.5) * cell, (pot.y + 0.5) * cell, cell * (0.72 + 0.1 * a), 0, Math.PI * 2); g.stroke(); g.restore();
+  }
   const sel = st.flowers.find(f => f.id === ui.selected);
   if (sel) {
     const r = E.stageRadius(sel);
@@ -313,6 +319,7 @@ canvas.addEventListener('pointerleave', () => { hover = null; tipEl.hidden = tru
 function onTiles(tiles) {
   const [x, y] = tiles[tiles.length - 1];
   const f = E.flowerAt(st, x, y);
+  tapPot(f);                                       // 첫걸음 "이웃의 화분 눌러 보기" (변경 10-27)
   if (BATCH.includes(ui.tool)) {
     const r = E.care(st, ui.tool, tiles, ctx);
     if (tiles.length === 1 && f) select(f.id);
@@ -587,7 +594,7 @@ function renderTileStatus(force) {
       : keys.length ? `<div class="pgrid">${list}</div>`
       : '<p class="note">지금 심을 수 있는 게 창고에 없어요. 화원에서 제철 꽃을 사 보세요.</p><div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}`;
 }
-function careOn(f, t) { return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
+function careOn(f, t) { tapPot(f); return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // 꽃 둘레 돌보기 단추 (10-06): 고른 꽃에 지금 할 수 있는 돌보기만 꽃 위에 부채꼴로. (상태창의 다섯 칸은 뺌)
 const RING_TOOL = { water: 'water', weed: 'hoe', prune: 'shears', fert: 'fert', harvest: 'basket' };
 const RING_IC = { water: '💧', weed: '🌿', prune: '✂️', fert: '🌱', harvest: '🧺' }, RING_NM = { water: '물', weed: '잡초', prune: '가지치기', fert: '비료', harvest: '수확' };
