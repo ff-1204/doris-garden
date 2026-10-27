@@ -1035,8 +1035,11 @@ const TITLES = {
   t_honey: { name: '꿀 열네 병', tier: 'g', cond: '꿀 도감 14칸', hint: '꽃마다 다른 단맛', test: st => honeyCount(st) >= HONEY_KEYS.length },
   t_deep: { name: '깊은 굴의 광부', tier: 'g', cond: '광산 지하 20층까지', hint: '빛이 닿지 않는 곳까지', test: st => !!st.mine && st.mine.deepest >= MINE_DEEPEST },
   t_score: { name: '빛나는 한 해', tier: 'g', cond: '한 해 정원 점수 250점', hint: '스스로를 넘어선 해', test: st => (st.bestScore || 0) >= 250 },
+  // P20-16 덤 칭호 (10-27): 구글 로그인 · 드라이브 저장 보상. 로그인할 수 없는 곳(앱 안 브라우저 등)도 있어서 칭호 수 · 꾸밈 도감 칸에는 넣지 않고 따로 셈
+  t_cloud: { name: '구름 정원사', tier: 'f', extra: true, cond: '구글 드라이브에 정원을 맡기기', hint: '정원을 구름 위에도 둔 사람' },
 };
-const TITLE_KEYS = Object.keys(TITLES);
+const TITLE_KEYS = Object.keys(TITLES).filter(k => !TITLES[k].extra);       // 모으는 칭호 19개 (덤 칭호는 EXTRA_TITLE_KEYS)
+const EXTRA_TITLE_KEYS = Object.keys(TITLES).filter(k => TITLES[k].extra);
 const chapterQuests = key => CHAPTERS.find(c => c.key === key).quests;
 const chapterDone = (st, key) => chapterQuests(key).every(q => st.journal.done[q.key] != null);
 // P19-03 장이 열리는 순서: 0장은 처음부터, 1장은 첫걸음을 마치면(1장 퀘스트를 이미 했거나 2년차여도), 2~5장은 1장을 마치면, 6장은 2년차 3월부터
@@ -1392,15 +1395,18 @@ const DECOS = {
   growlight: { name: '생장등', month: 3, months: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 14], price: 30000, func: true, gear: true, desc: '바로 옆 꽃 8포기가 1.5배 빨리 자라요' },
   greenhouse: { name: '유리 온실', month: 3, months: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 14], price: 120000, one: true, func: true, gear: true, desc: '둘레 2칸 꽃이 2배 빨리 자라요' },
   barrel: { name: '빗물 통', month: 6, months: [6, 7], price: 25000, func: true, desc: '바로 옆 꽃 8포기에 달마다 물을 줘요' },   // P25-02 기능 있는 장식 (10-24)
+  cloudstone: { name: '구름 돌', month: 0, months: [], extra: true, desc: '구름 정원사에게 온 뭉게구름 모양 돌' },   // P20-16 덤 장식 (10-27): 팔지 않음 · 꾸밈 도감 칸과 따로 셈
 };
-const DECO_KEYS = Object.keys(DECOS);
+const DECO_KEYS = Object.keys(DECOS).filter(k => !DECOS[k].extra);           // 덤 장식은 EXTRA_DECO_KEYS
+const EXTRA_DECO_KEYS = Object.keys(DECOS).filter(k => DECOS[k].extra);
 const decoInfo = key => {
   if (DECOS[key] && Object.prototype.hasOwnProperty.call(DECOS, key)) return DECOS[key];
   const tk = typeof key === 'string' && key.startsWith('t:') ? key.slice(2) : null;
-  return tk && TITLES[tk] ? { name: `${TITLES[tk].name} 문장`, title: tk, price: null, desc: '칭호를 얻은 기념 문장' } : null;
+  return tk && TITLES[tk] ? { name: `${TITLES[tk].name} 문장`, title: tk, price: null, extra: !!TITLES[tk].extra, desc: '칭호를 얻은 기념 문장' } : null;
 };
-const decoTotal = () => DECO_KEYS.length + TITLE_KEYS.length;               // 꾸밈 도감 칸 (도감 93칸과 따로 셈, P17-16-05)
-const decoCount = st => Object.keys((st.dex && st.dex.deco) || {}).filter(k => decoInfo(k)).length;
+const decoTotal = () => DECO_KEYS.length + TITLE_KEYS.length;               // 꾸밈 도감 칸 (도감 93칸과 따로 셈, P17-16-05) — 덤 장식 · 덤 칭호 문장은 빼고
+const decoCount = st => Object.keys((st.dex && st.dex.deco) || {}).filter(k => decoInfo(k) && !decoInfo(k).extra).length;
+const decoExtras = st => [...EXTRA_DECO_KEYS, ...EXTRA_TITLE_KEYS.map(k => 't:' + k)].filter(k => ((st.dex && st.dex.deco) || {})[k]);   // 가진 덤 장식 (꾸밈 도감 끝에 덧붙여 보여 줌)
 const decoMonths = k => DECOS[k].months || [DECOS[k].month];
 const decoOffer = cal => DECO_KEYS.filter(k => decoMonths(k).includes(cal.month));
 const decoAt = (st, x, y) => (st.decos || []).find(d => d.x === x && d.y === y);
@@ -1652,7 +1658,7 @@ const firstVisitOf = (...xs) => { const v = xs.map(Number).filter(x => x > 0); r
 function applyAccount(st, firstVisit, ctx) {
   if (!firstVisit) return false;
   const a = st.account || {};
-  st.account = { firstVisit: firstVisitOf(firstVisit, a.firstVisit), gave: !!a.gave };   // gave: 칭호를 계정 날짜로 받음 (도감일지에 그 날짜를 보여 줌)
+  st.account = Object.assign({}, a, { firstVisit: firstVisitOf(firstVisit, a.firstVisit), gave: !!a.gave });   // gave: 칭호를 계정 날짜로 받음 (도감일지에 그 날짜를 보여 줌) · reward(P20-16)는 그대로
   st.journal = st.journal || { done: {} }; st.titles = st.titles || {};
   if (st.titles.t_visit != null) return false;
   const cal = calendar(st.virtual);
@@ -1660,6 +1666,22 @@ function applyAccount(st, firstVisit, ctx) {
   giveTitle(st, 't_visit', cal, ctx, true); st.account.gave = true;
   addLog(st, 11, '☁️ 계정의 첫 방문 날짜로 「정원 문을 연 사람」을 이어 붙였어요', ctx);
   return true;
+}
+// P20-16 구름 정원사 (10-27): 처음 로그인해 드라이브와 맞춘 정원에 덤 칭호 + 구름 돌. 얻는 연출은 계정마다 한 번
+//  has: 이 정원이 이미 받음 · rewardedAt: 계정이 처음 받은 때(드라이브 · 이 기기 기록, 모르면 null)
+//  → { give: 이 정원에 줄지, show: 얻는 연출을 띄울지 } — 이미 받은 계정이면 새 기기 · 다시 시작한 정원에 조용히 이어 붙임
+const cloudRewardPlan = (has, rewardedAt) => ({ give: !has, show: !has && !rewardedAt });
+// 정원에 줌 (돈 · 씨앗은 주지 않음). 줬으면 { at: 계정이 받은 때(처음이면 now), show }, 이 정원이 이미 받았으면 null
+function giveCloudReward(st, rewardedAt, now, ctx) {
+  st.titles = st.titles || {};
+  const p = cloudRewardPlan(st.titles.t_cloud != null, rewardedAt);
+  if (!p.give) return null;
+  giveTitle(st, 't_cloud', calendar(st.virtual), ctx, !p.show);         // 연출 · 일지 🏅는 처음 받는 계정에서만
+  if (!(st.decos || []).some(d => d.key === 'cloudstone')) addDeco(st, 'cloudstone');
+  addLog(st, p.show ? 9 : 11, p.show ? '도감에 등록: 🪴 구름 돌' : '☁️ 계정에서 받은 「구름 정원사」와 구름 돌을 이 정원에도 이어 붙였어요', ctx);
+  const at = rewardedAt || now;
+  st.account = Object.assign({}, st.account || {}, { reward: at });
+  return { at, show: p.show };
 }
 // P20-07 앱 안 브라우저 (사용자 에이전트 → 종류). 구글 로그인은 앱 안 웹뷰에서 막힘(disallowed_useragent)
 const IN_APPS = [['kakao', /KAKAOTALK/i], ['instagram', /Instagram/i], ['facebook', /FBAN|FBAV|FB_IAB/i], ['line', /\bLine\//i], ['naver', /NAVER\(inapp/i],
@@ -1686,7 +1708,7 @@ const api = {
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, firstVisitOf, applyAccount, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, decoInfo, decoTotal, decoCount, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
