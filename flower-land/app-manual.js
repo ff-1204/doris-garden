@@ -37,7 +37,8 @@ function renderManual(force) {
         ${ico('✂️')}<span class="nm">가지치기<small>가위 5번 · 500원 · 나무와 덤불만</small></span>${bar(1, '#a8652a', '1달 품질 ↑')}
         ${ico('🌱')}<span class="nm">비료 주기<small>비료 1개 · 150원</small></span>${bar(1, '#8a6a44', '1달 품질 ↑ · 땅 넓어짐')}
         ${ico('🧺')}<span class="nm">수확<small>바구니 10번 · 500원</small></span>${bar(1, '#f2c230', '개화 중 달마다 · 꽃잠 한 번')}
-      </div><figcaption>꽃을 누르면 둘레에 단추가 떠요 · 도구가 없으면 흐린 단추를 눌러 바로 사요 · 돌보지 않아도 꽃은 죽지 않아요</figcaption></div>`),
+      </div><figcaption>꽃을 누르면 둘레에 단추가 떠요 · 도구가 없으면 흐린 단추를 눌러 바로 사요 · 돌보지 않아도 꽃은 죽지 않아요</figcaption></div>`
+      + fig(`<div class="mn-flow">${item(ico('💧'), '모두 물 주기', '목마른 꽃만')}${item(ico('🧺'), '모두 거두기', '핀 꽃만')}${arrow()}${item(ico('🧴'), '용품은 송이마다', '모자라면 되는 만큼')}</div>`, '돌볼 꽃이 두 포기 이상이면 위 숫자 칩 옆과 🌙 자리를 비운 동안 창에 떠요 · 한 송이씩 한 것과 똑같이 셈해요')),
     sec('shop', '화원과 창고', '심는 달에만 팔아요',
       fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 44, false, ''), '씨앗', '봉지 · 발아율')}${item(spriteImg('lavender', 'form', 44, false, ''), '묘목', '그루 · 뿌리내림')}${item(spriteImg('gamguk', 'form', 44, false, ''), '모종', '포기 · 뿌리내림')}${item(spriteImg('lotus', 'form', 44, false, ''), '연근', '뿌리 · 뿌리내림')}${item(spriteImg('dongbaek', 'form', 44, false, ''), '나무', '그루 · 뿌리내림')}</div>`,
         '산 것은 📦 <b>창고</b>로 와요 · 창고에서도 품질이 한 달에 5%씩 떨어져요')

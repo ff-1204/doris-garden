@@ -36,6 +36,10 @@ function careNeed(cal) {
 const CARE_COLOR = { water: '#3d8fd6', weed: '#4f9a3a', prune: '#d4466e', fert: '#9a6a3a', harvest: '#d08a12' };
 const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${a})`;
 const NEEDS = [['water', '💧', '목마른 꽃'], ['weed', '🌿', '잡초 난 꽃'], ['prune', '✂️', '가지 칠 수 있는 꽃'], ['fert', '🌱', '비료 줄 수 있는 꽃'], ['harvest', '🧺', '꽃이 핀 꽃']];
+// P28-11 한꺼번에 돌보기 (M2-5): 두 포기부터 (한 포기는 꽃 둘레 단추로). 느긋하게 보기여도 둠 — 숫자도 위 칩과 같은 돌볼 꽃 수라 그대로
+const CARE_ALL = [['water', '💧 모두 물 주기'], ['harvest', '🧺 모두 거두기']];
+const careAllBtns = (need, cls) => CARE_ALL.filter(([k]) => need[k] >= 2).map(([k, nm]) => `<button type="button" class="${cls}" style="--k:${CARE_COLOR[k]}" data-all="${k}">${nm} <b>(${need[k]})</b></button>`).join('');
+function careAllOn(k) { return after(E.careAll(st, k, ctx), k === 'water' ? 'watered' : 'harvested', k === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 function renderToolbar(force) {
   const pl = plantable(), cal = E.calendar(st.virtual), need = careNeed(cal);
   const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy, !!ui.zoom]);
@@ -43,7 +47,7 @@ function renderToolbar(force) {
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -66,6 +70,7 @@ function renderToolbar(force) {
 }
 $('#needs').addEventListener('click', e => {
   if (e.target.closest('[data-mine]')) return openMine();
+  const all = e.target.closest('[data-all]'); if (all) return careAllOn(all.dataset.all);
   if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom);
     const old = $('.zoom-hint'); if (old) old.remove();
     let hinted = ui.zoomHinted; try { hinted = hinted || localStorage.getItem(KEY + '-zoomhint') === '1'; } catch (e) { /* 무시 */ }

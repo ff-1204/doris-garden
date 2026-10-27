@@ -965,6 +965,32 @@ function care(st, tool, tiles, ctx) {            // P13 · 꽃잠에도 돌보�
   return ok(`${targets.length}${unitOf(targets)}에 ${word}`, { count: targets.length });
 }
 
+// P28-11 한꺼번에 돌보기 · 모두 거두기 (M2-5, ⏸ P13-06-01 되살림): 돌볼 꽃(canCare)만 골라 care에 한 번에 넘김 —
+// 수확 품질 · 경험치 · 주간 목표 · 도감은 한 송이씩 한 것과 같음. 용품은 송이마다, 모자라면 되는 만큼만
+const CARE_SUPPLY = { water: ['water', '물병', '개'], weed: ['hoe', '호미', '번'], prune: ['shears', '가위', '번'], fert: ['fert', '비료', '개'], harvest: ['basket', '바구니', '번'] };
+// 모자랄 때 먼저 돌볼 꽃: 물은 오래 목마른 꽃, 거두기는 품질 높은 꽃, 나머지는 지도 위에서 아래로
+function careAllTargets(st, kind, cal) {
+  cal = cal || calendar(st.virtual);
+  const pos = (a, b) => a.y - b.y || a.x - b.x;
+  const by = kind === 'water' ? (a, b) => (b.thirstH || 0) - (a.thirstH || 0) || pos(a, b) : kind === 'harvest' ? (a, b) => b.q - a.q || pos(a, b) : pos;
+  return st.flowers.filter(f => canCare(st, f, kind, cal)).sort(by);
+}
+function careAll(st, kind, ctx) {
+  const S = CARE_SUPPLY[kind];
+  if (!S) return no('돌볼 수 없어요');
+  const all = careAllTargets(st, kind);
+  if (!all.length) return no('돌볼 꽃이 없어요');
+  const have = Math.max(0, Math.floor(st[S[0]] || 0));
+  if (!have) return no(kind === 'fert' ? '비료가 없어요' : `${josa(S[1], '이/가')} 없어요. 창고에서 살 수 있어요`);
+  const pick = all.slice(0, have), p0 = st.petals.length;
+  const r = care(st, kind, pick.map(f => [f.x, f.y]), ctx);
+  if (!r.ok) return r;
+  const n = pick.length, unit = unitOf(pick), left = st[S[0]] || 0, petals = st.petals.length - p0;
+  const word = { water: '물을 줬어요', weed: '잡초를 뽑았어요', prune: '가지를 쳤어요', fert: '비료를 줬어요', harvest: `꽃잎 ${petals}장을 거뒀어요` }[kind];
+  const msg = n < all.length ? `${josa(S[1], '이/가')} 모자라 ${n}${unit}만 ${word}` : `${n}${unit}에 ${word} · ${S[1]} ${left}${S[2]} 남았어요`;
+  return ok(msg, { count: n, need: all.length, short: all.length - n, left, petals });
+}
+
 function propagate(st, flowerId, rng, ctx) {     // P06-02-05
   rng = rng || Math.random;
   const cal = calendar(st.virtual), f = st.flowers.find(x => x.id === flowerId);
@@ -2230,7 +2256,7 @@ const api = {
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
-  create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
+  create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackTick, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };

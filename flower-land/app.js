@@ -299,7 +299,7 @@ function awayDiff(b) {
   for (const t of E.autoAwayLines(st, b.auto)) lines.push({ type: E.autoLineType(t), text: t });   // 🧺 자동 장치가 한 일은 장치마다 한 줄 (P28-10)
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
-  const thirsty = cal.frozen ? 0 : st.flowers.filter(f => !f.withered && E.canCare(st, f, 'water', cal)).length;
+  const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
 }
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주, 그 이상은 건너뜀)
