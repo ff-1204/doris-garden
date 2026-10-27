@@ -1914,7 +1914,7 @@ function rackTick(st, ctx) {
     for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H, auto: true }); }
     d.n = (d.n || 0) + list.length; n += list.length;
   }
-  if (n) { bump(st, 'dried', n); addLog(st, 12, `자동 건조대가 꽃잎 ${n}장을 꽃방에 널었어요`, ctx); }
+  if (n) { bump(st, 'autoHung', n); addLog(st, 12, `자동 건조대가 꽃잎 ${n}장을 꽃방에 널었어요`, ctx); }   // 말린 수(stats.dried)는 손으로 넌 것만 — 퀘스트 · 칭호를 장치가 끝내지 않게
   return n;
 }
 function rackBag(st, d, ctx) {                     // 손으로 말린 꽃잎을 티백으로 만든 것(makeTeaDried)과 같은 티백

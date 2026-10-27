@@ -85,7 +85,7 @@ console.log('[🍂 자동 건조대 — 사기 · 오래된 꽃잎부터 하나�
   E.placeDeco(st, r.deco.id, 0, 0);
   const d0 = st.stats.dried || 0;
   check(E.rackTick(st, ctx) === 8 && st.petals.length === 2 && st.petals[0] === ps[8], '하나면 8장 — 먼저 거둔 꽃잎부터');
-  check(st.drying.length === 8 && st.drying.every(x => x.auto && x.leftH === E.DRY_H) && st.stats.dried === d0 + 8, '꽃방에 1달 · 말린 수에 셈');
+  check(st.drying.length === 8 && st.drying.every(x => x.auto && x.leftH === E.DRY_H) && (st.stats.dried || 0) === d0 && st.stats.autoHung === 8, '꽃방에 1달 · 퀘스트 · 칭호의 말린 수에는 안 셈 (손으로 넌 것만)');
   check(st.log.some(l => l.type === 12 && l.text === '자동 건조대가 꽃잎 8장을 꽃방에 널었어요'), '일지 한 줄');
   E.placeDeco(st, E.buyDeco(st, 'dryrack', ctx).deco.id, 1, 0);
   petal(st, 'rose'); petal(st, 'rose');
