@@ -1,5 +1,5 @@
 // 도리의 정원 (Dori's Garden) — 화면: 공통 · 저장 · 파일 저장하기 · 불러오기 · 화면 상태 · 짧은 알림 · 위 막대
-// 화면 코드는 app.js → app-journal → app-garden → app-shop → app-teashop → app-dex → app-manual → app-main 순서로 불려요 (index.html).
+// 화면 코드는 app.js → app-journal → app-garden → app-shop → app-teashop → app-dex → app-manual → app-cloud → app-main 순서로 불려요 (index.html).
 // 모두 같은 전역 이름 공간을 써요 (예전 한 파일 app.js를 10-24에 섹션 그대로 나눔). 불릴 때 바로 실행되는 코드는 앞 파일 것만 쓸 수 있어요
 'use strict';
 const E = window.Engine;
