@@ -11,6 +11,7 @@ const ART = {
   t_hat: ['leaf', '#22301f'], t_regular: ['stack', '#2c2620'], t_lands: ['mosaic', '#232723'], t_miracle: ['miracle', '#2e2a1c'],
   t_spring4: ['spring4', '#2e2228'], t_complete: ['wreath', '#2a2a22'],
   t_guests: ['letter', '#2e2430'], t_honey: ['honeyjar', '#2e2818'], t_deep: ['pickaxe', '#1c1f2e'], t_score: ['rosette', '#1f2b24'],   // P23-03 (10-24)
+  t_cloud: ['cloud', '#1c2a3c'],   // P20-16 덤 칭호 (10-27)
 };
 function emblem(name, P, R) {
   const ring = (cx, cy, r, c, w) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d <= r && d > r - w) P(x, y, c); } };
@@ -94,6 +95,13 @@ function emblem(name, P, R) {
       ring(8, 6, 5.5, '#5fae45', 1.6); disc((x, y) => { const d = Math.hypot(x + .5 - 8, y + .5 - 6); if (d <= 3.9) P(x, y, d <= 2 ? '#fff2b3' : '#e2b33c'); });
       R(5, 11, 2, 5, '#3f7f35'); R(9, 11, 2, 5, '#3f7f35'); P(5, 15, '#2a5a24'); P(10, 15, '#2a5a24');
       P(8, 4, '#a8781c'); P(7, 6, '#a8781c'); P(9, 7, '#a8781c'); break;
+    case 'cloud':    // 꽃 한 송이에 비를 뿌리는 뭉게구름 (구름 정원사)
+      disc((x, y) => { if (y <= 8 && ([[4.6, 6.4, 2.8], [8.4, 4.8, 3.6], [12, 6.6, 2.6]].some(([a, b, r]) => Math.hypot(x + .5 - a, y + .5 - b) <= r) || (y >= 6 && x >= 3 && x <= 13))) P(x, y, y >= 8 ? '#a9bdd3' : y >= 7 ? '#d6e2ee' : '#f2f6fa'); });
+      R(6, 2, 3, 1, '#ffffff'); R(5, 3, 2, 1, '#ffffff'); P(3, 5, '#ffffff');                                         // 볕 드는 쪽
+      R(4, 10, 1, 2, '#6fb3e8'); R(11, 10, 1, 2, '#6fb3e8'); P(6, 13, '#6fb3e8'); P(13, 13, '#6fb3e8'); P(2, 12, '#6fb3e8');   // 빗방울
+      R(8, 12, 1, 3, '#4f9a3a'); P(9, 13, '#8fd16a'); P(7, 14, '#8fd16a');                                              // 꽃대 · 잎
+      P(8, 10, '#f0a3c0'); P(7, 11, '#f0a3c0'); P(9, 11, '#f0a3c0'); P(8, 11, '#f2c624');                               // 꽃
+      R(3, 15, 11, 1, '#6e4a28'); break;
   }
 }
 function draw(x, key, tier, opt) {

@@ -119,7 +119,7 @@ function journalHTML() {
 }
 function titlesHTML() {
   // 얻은 칭호는 펼쳐 두고, 못 얻은 칭호는 접어 둠 (10-17)
-  const has = E.TITLE_KEYS.filter(k => st.titles[k] != null), not = E.TITLE_KEYS.filter(k => st.titles[k] == null);
+  const has = [...E.TITLE_KEYS, ...E.EXTRA_TITLE_KEYS].filter(k => st.titles[k] != null), not = E.TITLE_KEYS.filter(k => st.titles[k] == null);   // 덤 칭호(P20-16)는 얻었을 때만 보이고 수에는 안 셈
   return `<p class="note">칭호를 하나 골라 대표로 걸면 위 막대에 보여요. 숨은 칭호는 수수께끼를 풀어 보세요.</p>`
     + (has.length ? `<div class="ttl-grid">${has.map(titleCard).join('')}</div>` : '<p class="note">아직 얻은 칭호가 없어요. 아래 📜 퀘스트의 장을 마치면 얻어요.</p>')
     + (not.length ? foldBox('t-locked', `아직 얻지 못한 칭호 ${not.length}개`, `<div class="ttl-grid">${not.map(titleCard).join('')}</div>`) : '');
@@ -142,7 +142,7 @@ function titleCard(k) {
   const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;
   const acct = k === 't_visit' && st.account && st.account.gave && st.account.firstVisit ? new Date(st.account.firstVisit) : null;   // P20-08 계정 날짜로 받은 첫 방문
   const sub = has ? `${hidden ? `${T.cond} · ` : ''}${acct ? `${acct.getFullYear()}년 ${acct.getMonth() + 1}월 ${acct.getDate()}일 · 계정 첫 방문` : absText(st.titles[k])}` : hidden ? `“${T.hint}”` : `${ch.no}장 ${ch.name}을 마치면`;
-  return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
+  return `<div class="ttl-card t-${T.tier} ${has ? '' : 'locked'} ${on ? 'on' : ''}">${titleImg(k, 66, !has)}<b>${has || !hidden ? T.name : '???'}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.extra ? ' · 덤 칭호' : hidden ? ' · 숨은 칭호' : ''}</span><small>${sub}</small>${has ? `<button type="button" class="btn small" data-ttlon="${on ? '' : k}">${on ? '대표 내리기' : '대표로 걸기'}</button>` : ''}</div>`;
 }
 // 얻을 때 연출 (P19-05-06): 문장이 위에서 아래로 한 줄씩 그려진 뒤 테두리가 켜짐
 function showNewTitles() {
@@ -153,8 +153,8 @@ function showNewTitles() {
   }
   const k = st._newTitles.shift(), T = E.TITLES[k], ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), hb = hiddenBlendOf(k);
   openModal('🏅 새 칭호', `<div class="ttl-pop t-${T.tier}"><canvas width="22" height="22" id="ttlAnim" class="ttl-anim" role="img" aria-label="${esc(T.name)} 칭호 문장"></canvas>
-    <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? (ch.no === 0 ? '도리의 정원에 처음 왔어요' : `${ch.no}장 ${ch.name}을 마쳤어요`) : T.cond}</small>
-    ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}<p class="note">🪴 「${T.name} 문장」 장식이 📦 창고에 들어왔어요</p></div>`,
+    <b>${T.name}</b><span class="ttl-tier">${TIER_NAME[T.tier]}${T.extra ? ' · 덤 칭호' : T.chapter ? '' : ' · 숨은 칭호'}</span><small>${ch ? (ch.no === 0 ? '도리의 정원에 처음 왔어요' : `${ch.no}장 ${ch.name}을 마쳤어요`) : T.cond}</small>
+    ${hb ? `<p class="note">📖 숨은 레시피 「${E.BLENDS[hb].name}」이(가) 제다실 레시피에 생겼어요</p>` : ''}<p class="note">🪴 「${T.name} 문장」${k === 't_cloud' ? ' · 구름 돌' : ''} 장식이 📦 창고에 들어왔어요</p></div>`,
     [{ label: '닫기', act: () => { closeModal(); save(); showNewTitles(); } }, { label: '대표로 걸기', primary: true, act: () => { E.setTitleOn(st, k); closeModal(); save(); renderAll(true); } }]);
   const x = $('#ttlAnim').getContext('2d'); let r = 0;
   const tick = () => { if (!$('#ttlAnim')) return; TITLE_ART.draw(x, k, T.tier, { rows: r }); if (r++ < 16) setTimeout(tick, 38); };

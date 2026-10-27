@@ -1039,6 +1039,13 @@ img.px { image-rendering: pixelated; image-rendering: crisp-edges; flex: none; d
 @media (max-width: 640px) { .cloud-btns { flex-direction: column; align-items: stretch; } }   /* ☁️ 줄 단추 둘은 좁은 화면에서 위아래로 */
 .ia-guide { margin: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--sunk); font-size: 13px; }   /* P20-07-02 ··· › Safari로 열기 도트 그림 */
 .ia-guide svg { flex: none; image-rendering: pixelated; }
+.cloud-info { gap: 10px; font-size: 14px; line-height: 1.5; }   /* P20-16 ☁️ 자세히 */
+.cloud-info ul { margin: 2px 0 0; padding-left: 18px; }
+.cloud-info li + li { margin-top: 2px; }
+.cloud-gift { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--sunk); }
+.cloud-gift img { flex: none; }
+.cloud-gift span { display: flex; flex-direction: column; min-width: 0; }
+.cloud-gift small { color: var(--muted); font-size: 12px; }
 .sr-ic { width: 36px; height: 36px; border-radius: 11px; background: var(--sunk); display: grid; place-items: center; font-size: 17px; }
 .set-row.danger .sr-ic { background: color-mix(in srgb, var(--warn) 14%, var(--panel)); }
 .sr-t { display: grid; gap: 1px; min-width: 0; }

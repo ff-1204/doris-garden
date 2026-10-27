@@ -7,7 +7,7 @@
 const GOOGLE_CLIENT_ID = '15931935276-vdbrlr9rn4koe7nfpk7v0edf2dd9sn1v.apps.googleusercontent.com';
 const CLOUD_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';   // P20-04-01 드라이브는 앱 전용 숨김 폴더만
 const CLOUD_SCOPES = `${CLOUD_SCOPE} openid email profile`;              // + 계정 이름 표시
-const CLOUD_KEY = KEY + '-cloud';   // 이 기기 기록 { email, base: { gardenId, savedAt }, lastAt, firstVisit } — 토큰은 넣지 않음
+const CLOUD_KEY = KEY + '-cloud';   // 이 기기 기록 { email, base: { gardenId, savedAt }, lastAt, firstVisit, reward } — 토큰은 넣지 않음
 // 토큰은 따로 끝날 때까지(약 1시간)만 기억 { token, exp, email } — 새로고침해도 창 없이 이어지게 (P20-04-03, 10-27 변경 · 사용자 요청)
 // 정원 저장 · 💾 파일 · 드라이브 파일에는 넣지 않음. 로그아웃 · 401 · 끝남 · 다른 계정 · 기록이 지워지면 지움
 const CLOUD_TOKEN_KEY = KEY + '-cloud-token';
@@ -102,7 +102,8 @@ function cloudRows(row) {
     return row('☁️', '구글 드라이브에 저장', '앱 안의 브라우저에서는 구글 로그인이 안 돼요. Chrome이나 Safari로 열어 주세요 · 여기 정원은 💾 저장하기로 옮길 수 있어요',
       `<span class="row cloud-btns" style="gap:6px"><button type="button" class="btn small" data-cloud="copy">주소 복사</button><button type="button" class="btn small" data-cloud="${url ? 'outside' : 'guide'}">${url ? (cloud.inApp.app === 'kakao' ? '바깥 브라우저로' : 'Chrome으로 열기') : '여는 법'}</button></span>`);
   }
-  if (!cloudIn()) return row('☁️', '구글 드라이브에 저장', '로그인하면 내 구글 드라이브의 앱 전용 숨김 폴더에 정원을 저장해요 · 다른 기기에서 이어 할 수 있어요', '<button type="button" class="btn small" data-cloud="login">구글로 로그인</button>');
+  if (!cloudIn()) return row('☁️', '구글 드라이브에 저장', `정원을 내 구글 드라이브에도 저장해요${st.titles && st.titles.t_cloud != null ? '' : ' · 로그인하면 🏅 구름 정원사'}`,   // P20-16 설명 · 보상 안내
+    '<span class="row cloud-btns" style="gap:6px"><button type="button" class="btn small" data-cloud="info">자세히</button><button type="button" class="btn small" data-cloud="login">구글로 로그인</button></span>');
   const m = cloud.meta, s = cloud.state, warn = ['offline', 'error', 'relogin', 'ask'].includes(s);
   const prev = cloud.remote && cloud.remote.garden && cloud.remote.prev;
   return row('☁️', '구글 드라이브', `<span class="cloud-mail">${esc(m.email)}</span> · ${m.lastAt ? `마지막 저장 ${whenText(m.lastAt)}` : '아직 드라이브에 저장하지 않았어요'}${s === 'saving' ? ' · 저장 중' : ''}${warn ? ` · <b class="val-down">${CLOUD_LABEL[s]}</b>` : ''}`,
@@ -113,6 +114,20 @@ function cloudPaint() {
   const el = $('#cloudRows'); if (!el) return;
   el.innerHTML = cloudRows();
   el.hidden = !el.innerHTML;
+}
+// ☁️ 자세히 (P20-16, 10-27): 무엇을 하고 무엇을 안 하는지 · 안 해도 됨 · 지우는 법 · 보상
+function cloudInfo() {
+  const got = st.titles && st.titles.t_cloud != null;
+  openModal('☁️ 구글 드라이브 저장', `<div class="stack cloud-info">
+    <p style="margin:0">구글로 로그인하면 정원을 <b>내 구글 드라이브</b>에도 저장해요.</p>
+    <div><b>하는 일</b><ul><li>드라이브의 <b>앱 전용 숨김 폴더</b>에 정원 파일 하나(+ 직전 저장본)를 저장해요</li><li>브라우저 데이터를 지워도, 휴대폰과 PC를 오가도 이어서 할 수 있어요</li></ul></div>
+    <div><b>안 하는 일</b><ul><li>드라이브의 다른 파일은 보지도 만지지도 않아요</li><li>운영자에게는 아무것도 보내지 않아요 (서버가 없어요)</li></ul></div>
+    <div><b>꼭 해야 하나요?</b><ul><li>아니요. 로그인하지 않아도 이 브라우저에 저장하며 끝까지 할 수 있어요</li></ul></div>
+    <div><b>그만두거나 지우려면</b><ul><li>⚙️ 설정 › ☁️ <b>로그아웃</b> — 이 브라우저의 정원은 그대로예요</li><li>드라이브 설정 › <b>앱 관리</b> › 도리의 정원 › 숨겨진 앱 데이터 삭제</li></ul></div>
+    <div class="cloud-gift">${titleImg('t_cloud', 44, !got)}${decoImg('cloudstone', 2)}<span><b>🏅 구름 정원사</b><small>${got ? '이 정원은 받았어요' : '처음 로그인해 드라이브에 저장하면 칭호와 🪴 구름 돌을 받아요'} · 돈 · 씨앗은 없어요</small></span></div>
+    <p class="note">자세한 내용은 <a href="privacy.html">개인정보처리방침</a>에 있어요.</p></div>`,
+    cloudIn() ? [{ label: '닫기', primary: true, act: closeModal }]
+      : [{ label: '닫기', act: closeModal }, { label: '구글로 로그인', primary: true, act: () => { closeModal(); cloudLogin(); } }]);
 }
 // 설정에 ☁️ 줄이 그려진 뒤: 로그인 단추가 바로 팝업을 열 수 있게 구글 스크립트를 미리 불러 둠
 function cloudPrep() { if (cloud.on && !cloud.inApp) cloudLib().catch(() => null); }
@@ -181,11 +196,15 @@ async function cloudSync(why) {
     const fv = E.firstVisitOf(remote && remote.firstVisit, cur.prev && cur.prev.firstVisit, cloud.meta.firstVisit, st.account && st.account.firstVisit) || now;
     if (fv !== cloud.meta.firstVisit) { cloud.meta.firstVisit = fv; cloudSaveMeta(); }
     E.applyAccount(st, fv, ctx); save();
+    // P20-16 계정이 「구름 정원사」를 받은 때: 드라이브 · 이 기기가 아는 가장 이른 때 (모르면 처음 받는 계정)
+    const rw = E.firstVisitOf(remote && remote.reward, cur.prev && cur.prev.reward, cloud.meta.reward);
+    if (rw && rw !== cloud.meta.reward) { cloud.meta.reward = rw; cloudSaveMeta(); }
     const d = E.cloudDecide({ gardenId: st.gardenId, actAt: st.actAt }, cloud.meta.base || null, remote);
     if (d.act !== 'local' && document.hidden) { cloud.recheck = true; return cloudSet('idle'); }   // 화면이 숨어 있으면 돌아왔을 때 (덮어쓰지 않음)
     if (d.act === 'remote') return await cloudTake(remote);
     if (d.act === 'ask') return await cloudAsk(remote, d.why);
-    if (why === 'open' && d.why === 'mine' && (st.actAt || 0) <= (cloud.meta.lastAt || 0)) return cloudSet(cloud.meta.lastAt ? 'saved' : 'idle');   // 양쪽 다 새것이 없음
+    const gave = cloudGift();                                                                  // 맞춘 정원(이 기기 것)에 보상 → 바로 올림
+    if (!gave && why === 'open' && d.why === 'mine' && (st.actAt || 0) <= (cloud.meta.lastAt || 0)) return cloudSet(cloud.meta.lastAt ? 'saved' : 'idle');   // 양쪽 다 새것이 없음
     await cloudPut(cur, why);
   } catch (e) { cloudFail(e); }
   finally {
@@ -206,8 +225,8 @@ async function cloudPut(cur, why) {
   const now = Date.now();
   save();
   const d = E.makeSave(st, now);
-  d.account = { firstVisit: cloud.meta.firstVisit || null };                                   // P20-08-01
-  cloud.remote = await cloudDrive.write(JSON.stringify(d), { gardenId: st.gardenId, savedAt: now, firstVisit: cloud.meta.firstVisit }, cur, { keepalive: why === 'close' });
+  d.account = { firstVisit: cloud.meta.firstVisit || null, reward: cloud.meta.reward || null };   // P20-08-01 · P20-16 계정이 구름 정원사를 받은 때
+  cloud.remote = await cloudDrive.write(JSON.stringify(d), { gardenId: st.gardenId, savedAt: now, firstVisit: cloud.meta.firstVisit, reward: cloud.meta.reward }, cur, { keepalive: why === 'close' });
   cloud.meta.base = { gardenId: st.gardenId, savedAt: now }; cloud.meta.lastAt = now; cloudSaveMeta();
   cloudSet('saved');
   if (why === 'now') feedback('☁️ 드라이브에 저장했어요');
@@ -225,7 +244,17 @@ function cloudUse(meta, data, msg) {
   cloud.meta.base = { gardenId: meta.gardenId, savedAt: meta.savedAt }; cloudSaveMeta();
   swapGarden(game, msg);
   if (cloud.meta.firstVisit) { E.applyAccount(st, cloud.meta.firstVisit, ctx); save(); }
+  if (cloudGift()) { if (cloud.busy) cloud.pending = 'pick'; else setTimeout(() => cloudSync('pick'), 0); }   // 받은 정원에 보상 → 드라이브에도 적음
   cloudSeen();
+}
+// P20-16 구름 정원사 (10-27): 드라이브와 맞춘 정원에 덤 칭호 + 구름 돌. 이미 받은 계정이면 연출 없이 (판단은 E.giveCloudReward). 줬으면 true
+function cloudGift() {
+  const r = E.giveCloudReward(st, cloud.meta.reward || null, Date.now(), ctx);
+  if (!r) return false;
+  if (!cloud.meta.reward) { cloud.meta.reward = r.at; cloudSaveMeta(); }
+  st.actAt = Date.now(); save(); cloudSeen();
+  if (ui.tab === 'settings') renderSettings();
+  return true;
 }
 // 같은 정원 · 드라이브가 새로움 → 자동으로 + 알림 (P20-06-02)
 async function cloudTake(meta) {
@@ -293,6 +322,7 @@ function cloudTick() {
 function cloudNewGarden() {
   if (!cloudIn() || !cloud.meta.firstVisit) return;
   E.applyAccount(st, cloud.meta.firstVisit, ctx);
+  if (cloud.meta.reward) E.giveCloudReward(st, cloud.meta.reward, Date.now(), ctx);   // P20-16 받은 계정이면 구름 정원사도 조용히
   st.actAt = Date.now();
 }
 // 화면이 다 불린 뒤(app-main) 한 번
@@ -319,6 +349,7 @@ $('#p-settings').addEventListener('click', e => {
   const b = e.target.closest('[data-cloud]'); if (!b) return;
   const k = b.dataset.cloud;
   if (k === 'login') return cloudLogin();
+  if (k === 'info') return cloudInfo();
   if (k === 'logout') return cloudLogout();
   if (k === 'relogin') return cloudReconnect();
   if (k === 'ask') return cloudAskOpen();
