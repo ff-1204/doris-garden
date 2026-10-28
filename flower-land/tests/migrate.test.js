@@ -94,13 +94,21 @@ const zm = E.migrateSave(zero);
 check(zm.grade.xp === (E.gradeDexCount(zm) - 1) * 5 && E.gradeOf(zm).grade >= 1, '기록이 없으면 도감 칸만 셈');
 
 console.log('[🎁 첫 방문 꾸러미 firstGuest (P22-05)]');
-{ const FG = E.MIGRATIONS.length - 1;
+{ const FG = E.MIGRATIONS.findIndex(x => x[0].includes('firstGuest'));
   const got = copy(st); got.onboarded = true; got.gift = 2; delete got.firstGuest; got.mig = FG;
   const gm = E.migrateSave(got);
   check(gm.firstGuest === false && !E.firstGuestReady(gm) && !E.giftPot(gm, ctx).ok && !gm.letterBox.some(b => b.k === 'welcome'), '화분을 받은 예전 정원은 꾸러미 · 첫 손님 없음');
   const yet = copy(st); yet.gift = null; delete yet.firstGuest; yet.mig = FG;
   const ym = E.migrateSave(yet); ym.onboarded = true; E.giftPot(ym, ctx);
   check(ym.firstGuest === true && ym.letterBox.some(b => b.k === 'welcome') && ym.dried.length === 2, '아직 화분을 받지 않은 예전 정원은 화분과 함께 받음'); }
+
+console.log('[📮 운영자 편지 받은 기록 mailGot (P29)]');
+{ const MG = E.MIGRATIONS.findIndex(x => x[0].includes('mailGot'));
+  check(MG === E.MIGRATIONS.length - 1 && E.create(MON, () => 0.5).mailGot && JSON.stringify(m.mailGot) === '{}', '새 정원 · 예전 정원 모두 빈 기록으로 시작 (맨 끝 보정)');
+  const old = copy(st); delete old.mailGot; old.mig = MG; const om = E.migrateSave(old);
+  check(JSON.stringify(om.mailGot) === '{}' && om.mig === E.MIGRATIONS.length, 'mailGot이 없는 정원은 빈 기록으로');
+  const got = copy(st); got.mailGot = { 'a-1': 123 }; got.mig = MG;
+  check(E.migrateSave(got).mailGot['a-1'] === 123, '이미 받은 기록은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

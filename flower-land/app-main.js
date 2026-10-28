@@ -142,12 +142,21 @@ function frame() {
   if (real - lastSave > 3000) { save(); lastSave = real; }
   requestAnimationFrame(frame);
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+// 📮 운영자 편지 (P29-04): 열 때 · 화면이 다시 보일 때 같은 사이트의 mail.json을 읽기만 함 (아무것도 보내지 않음). 못 읽으면(오프라인) 조용히 넘어감
+async function mailFetch() {
+  let list;
+  try { const r = await fetch('mail.json?v=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return -1; list = await r.json(); } catch (e) { return -1; }
+  const n = E.mailDeliver(st, list, Date.now(), ctx);
+  if (n) { save(); renderAll(true); }
+  return n;
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else mailFetch(); });
 window.addEventListener('pagehide', save);
 
 resize(); renderAll(true);
 if (window.__brokenSave) brokenNotice(() => { if (!st.onboarded) onboarding(); });
 else if (!st.onboarded) onboarding();
 else showAway();
+mailFetch();                                      // 📮 운영자 편지 (P29-04)
 cloudStart();                                     // ☁️ 구글 드라이브 (P20-04 ~ 06, 클라이언트 ID가 없으면 아무것도 안 함)
 requestAnimationFrame(frame);

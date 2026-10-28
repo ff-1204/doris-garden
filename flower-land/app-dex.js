@@ -93,7 +93,7 @@ function renderDex(force) {
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#9a8f7a"><span class="dc-art">${on ? decoImg(k, info.title ? 2 : 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? esc(info.name) : '???'}</span><span class="dc-sub">${on ? '' : info.title ? '칭호를 얻으면' : info.craft ? '⛏️ 광산에서 만들기' : info.gear ? '🔆 화원 정원 장치' : info.auto ? `🧺 화원 자동 장치 · 정원 등급 ${info.need}` : info.grade ? `🌱 정원 등급 ${info.grade}` : `화원 ${E.decoMonths(k).map(monthName).join('·')}`}</span></div>`; }).join('')}</div>` },
       { key: 'honey', ic: '🍯', title: '꿀', got: E.honeyCount(st), total: E.HONEY_KEYS.length, grid: `<div class="dexgrid big">${E.HONEY_KEYS.map(k => { const on = !!(st.dex.honey || {})[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#d99a2b"><span class="dc-art">${on ? honeyImg(k, 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? E.honeyName(k) : '???'}</span><span class="dc-sub">${on ? '' : k === 'wild' ? '여러 꽃이 고루 피면' : st.dex.flower[k] ? `벌통 둘레에 ${FLOWERS[k].name}` : '벌통 둘레에 핀 꽃'}</span></div>`; }).join('')}</div>` },
-      { key: 'letter', ic: '✉️', title: '편지', got: E.letterCount(st), total: E.LETTER_KEYS.length, grid: `<div class="dexgrid big">${(st.dex.letter || {}).welcome ? `<button type="button" class="dexcard" style="--pc:#e3a3b3" data-letter="welcome"><span class="dc-art"><span class="dc-memo">💌</span></span><span class="dc-name">${E.LETTERS.welcome.from}</span><span class="dc-sub">첫 방문 편지</span></button>` : ''}${E.LETTER_KEYS.map(k => { const on = !!(st.dex.letter || {})[k], L = E.LETTERS[k];
+      { key: 'letter', ic: '✉️', title: '편지', got: E.letterCount(st), total: E.LETTER_KEYS.length, grid: `<div class="dexgrid big">${(st.letterBox || []).filter(b => b.mail).reverse().map(b => `<button type="button" class="dexcard" style="--pc:#c96f5b" data-mail="${esc(b.mail.id)}"><span class="dc-art"><span class="dc-memo">📮</span></span><span class="dc-name">${esc(b.mail.from)}</span><span class="dc-sub">${b.took ? esc(b.mail.title) : '🎁 받기 전'}</span></button>`).join('')}${(st.dex.letter || {}).welcome ? `<button type="button" class="dexcard" style="--pc:#e3a3b3" data-letter="welcome"><span class="dc-art"><span class="dc-memo">💌</span></span><span class="dc-name">${E.LETTERS.welcome.from}</span><span class="dc-sub">첫 방문 편지</span></button>` : ''}${E.LETTER_KEYS.map(k => { const on = !!(st.dex.letter || {})[k], L = E.LETTERS[k];
         return `<button type="button" class="dexcard ${on ? '' : 'locked'}" style="--pc:#d9c6a4" ${on ? `data-letter="${k}"` : 'tabindex="-1" aria-disabled="true"'}><span class="dc-art"><span class="dc-memo">${on ? '✉️' : '?'}</span></span><span class="dc-name">${on ? L.from : '???'}</span><span class="dc-sub">${on ? '눌러서 읽기' : '💐 이웃에게 선물하면'}</span></button>`; }).join('')}</div>` },
       { key: 'memento', ic: '💌', title: '기념품', got: E.mementoCount(st), total: E.MEMENTO_KEYS.length, grid: `<div class="dexgrid big">${E.MEMENTO_KEYS.map(k => { const on = !!(st.dex.memento || {})[k], M = E.MEMENTOS[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#c8a2b0"><span class="dc-art"><span class="dc-memo">${on ? M.ic : '?'}</span></span><span class="dc-name">${on ? M.name : '???'}</span><span class="dc-sub">${on ? '' : '손님 주문을 들어주면'}</span></div>`; }).join('')}</div>` },
@@ -139,6 +139,7 @@ $('#p-dex').addEventListener('click', e => {
   const fd = e.target.closest('details.fold > summary'); if (fd) { const d = fd.parentElement; ui.fold[d.dataset.fold] = !d.open; return; }   // 펼침 상태 기억
   const es = e.target.closest('[data-es]'); if (es) { ui.econSort = es.dataset.es; return renderDex(true); }
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
+  const ml = e.target.closest('[data-mail]'); if (ml) { const b = E.mailOf(st, ml.dataset.mail); return b && openMail(b); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
@@ -192,10 +193,24 @@ function openLetter(b, fresh) {
   const btns = fresh && b.pack ? [{ label: '닫기', act: () => closeModal() }, { label: '🌿 제다실로', primary: true, act: () => { closeModal(); setTab('tearoom'); } }] : [{ label: '닫기', act: () => closeModal() }];
   openModal(`✉️ ${from}${fresh ? (L && L.welcome ? '의 편지' : '의 답장') : ''}`, `<div class="letter-pop"><p>${esc(text)}</p><p class="letter-from">— ${esc(from)}</p></div>${gift}${pack}`, btns);
 }
+// 📮 운영자 편지 창 (P29-06): 선물 줄 + 🎁 받기. 받으면 그 자리에 "창고에 넣었어요" 한 줄 (done)
+function openMail(b, done) {
+  const M = b.mail, gifts = M.gifts || [];
+  const line = !gifts.length ? '' : `<p class="letter-gift">🎁 ${b.took ? '받은 선물' : '선물'}: <b>${esc(E.mailGiftText(gifts))}</b>${done ? ` · <b>${esc(done.replace(/^🎁 /, ''))}</b>` : ''}</p>`;
+  const btns = [{ label: '닫기', act: () => closeModal() }];
+  if (!b.took) btns.push({ label: '🎁 받기', primary: true, act: () => {
+    const r = E.mailTake(st, M.id, ctx);
+    if (r.ok) st.actAt = Date.now();
+    save(); renderAll(true);
+    if (!r.ok) { closeModal(); return feedback(r.msg, true); }
+    openMail(b, r.msg);
+  } });
+  openModal(`📮 ${M.from}`, `<div class="letter-pop"><p><b>${esc(M.title)}</b></p><p>${esc(M.text)}</p><p class="letter-from">— ${esc(M.from)}</p></div>${line}`, btns);
+}
 function showLetters() {                           // 받은 편지함에서 아직 안 띄운 편지를 하나씩 (다른 창이 닫히면 그다음에)
   if ($('#modalRoot').innerHTML || !st.onboarded) return;
   const b = (st.letterBox || []).find(x => !x.read); if (!b) return;
-  b.read = true; openLetter(b, true); save();
+  b.read = true; if (b.mail) openMail(b); else openLetter(b, true); save();
 }
 function openModal(title, html, buttons) {
   ui.onDismiss = null;                            // 닫기(✕ · 바깥 · Esc)에 할 일은 창마다 새로 (QA 15회차)
