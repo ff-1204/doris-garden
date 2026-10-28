@@ -39,11 +39,11 @@ check(m.settings.slow === false && !E.slowView(m), '🐢 느긋하게 보기는 
 check(m.grade && m.grade.xp >= 0 && m.grade.dex === E.gradeDexCount(m) && E.gradeOf(m).grade >= 1, '🌱 정원 등급 칸 · 지금 도감 칸 수를 센 것으로 (P28-05-01)');
 check(m.yearPace && m.yearPace.xp0 === null && m.yearPace.last === null && E.yearPace(m) === null, '📈 그래프 견줌 칸 · 올해 시작 값은 몰라 견줌 없음 (P28-07-02)');
 check(m.weekly === null || (m.weekly && m.weekly.week === E.calendar(m.virtual).week), '🗓️ 주간 목표 칸 — 비어 있다가 다음 확인 때 이번 주 목표를 뽑음 (P28-09)');
-const wk = copy(st); delete wk.weekly; wk.mig = E.MIGRATIONS.length - 2; const wm = E.migrateSave(wk);
+const wk = copy(st); delete wk.weekly; wk.mig = E.MIGRATIONS.findIndex(m => m[0].includes("weekly")); const wm = E.migrateSave(wk);
 check(wm.weekly === null && wm.mig === E.MIGRATIONS.length, '🗓️ 주간 목표 보정 · 예전 정원은 null로 (P28-09)');
 check(m.pantry && m.pantry.items.length === 0 && m.pantry.h === 0 && m.pantry.n === 0, '🧺 정원 저장고 칸 · 예전 정원은 빈 저장고 (P28-04)');
-const pn = copy(st); delete pn.pantry; pn.mig = E.MIGRATIONS.length - 1; const pm = E.migrateSave(pn);
-check(pm.pantry && pm.pantry.items.length === 0 && pm.mig === E.MIGRATIONS.length, '🧺 정원 저장고 보정은 맨 끝 (P28-04)');
+const pn = copy(st); delete pn.pantry; pn.mig = E.MIGRATIONS.findIndex(m => m[0].includes("pantry")); const pm = E.migrateSave(pn);
+check(pm.pantry && pm.pantry.items.length === 0 && pm.mig === E.MIGRATIONS.length, '🧺 정원 저장고 보정 (P28-04)');
 const pk = copy(st); pk.pantry = { h: 1.5, n: 7, items: [{ k: 'water' }], got: 3 }; pk.mig = E.MIGRATIONS.length - 1;
 check(JSON.stringify(E.migrateSave(pk).pantry) === JSON.stringify({ h: 1.5, n: 7, items: [{ k: 'water' }], got: 3 }), '🧺 쌓인 저장고는 보정이 건드리지 않음');
 wm.onboarded = true; E.advance(wm, wm.virtual + H, ctx);
@@ -92,6 +92,15 @@ check(E.migrateSave(has).grade.xp === 777, '이미 등급이 있는 정원은 �
 const zero = copy(st); delete zero.grade; zero.mig = GR; zero.stats = {}; zero.journal = { done: {} }; zero.yearLog = []; zero.yearNow = { income: 0, sold: 0, harvest: 0 }; zero.records = [];
 const zm = E.migrateSave(zero);
 check(zm.grade.xp === (E.gradeDexCount(zm) - 1) * 5 && E.gradeOf(zm).grade >= 1, '기록이 없으면 도감 칸만 셈');
+
+console.log('[🎁 첫 방문 꾸러미 firstGuest (P22-05)]');
+{ const FG = E.MIGRATIONS.length - 1;
+  const got = copy(st); got.onboarded = true; got.gift = 2; delete got.firstGuest; got.mig = FG;
+  const gm = E.migrateSave(got);
+  check(gm.firstGuest === false && !E.firstGuestReady(gm) && !E.giftPot(gm, ctx).ok && !gm.letterBox.some(b => b.k === 'welcome'), '화분을 받은 예전 정원은 꾸러미 · 첫 손님 없음');
+  const yet = copy(st); yet.gift = null; delete yet.firstGuest; yet.mig = FG;
+  const ym = E.migrateSave(yet); ym.onboarded = true; E.giftPot(ym, ctx);
+  check(ym.firstGuest === true && ym.letterBox.some(b => b.k === 'welcome') && ym.dried.length === 2, '아직 화분을 받지 않은 예전 정원은 화분과 함께 받음'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

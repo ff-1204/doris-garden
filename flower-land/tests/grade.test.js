@@ -40,7 +40,7 @@ check(by(st, 'dex') - d0 >= 5 && (by(st, 'dex') - d0) % 5 === 0, `도감 새 칸
 check(until(st, () => E.teaShopOpen(E.calendar(st.virtual)), 24 * 7), '찻집이 열림 (12월)');
 const s0 = by(st, 'sell');
 for (let i = 0; i < 3; i++) st.teas.push({ id: 90000 + i, type: 'chamomile', q: 1, seasonKey: -1, hat: false });
-E.brew(st, st.teas.map(t => t.id), []);
+E.brew(st, [90000, 90001, 90002], []);   // 꾸러미 티백(P22-05)은 빼고
 st.orders = { abs: E.calendar(st.virtual).abs, list: [{ kind: 'any', done: false }] };
 const o0 = by(st, 'order');
 check(E.sellCups(st, st.cups.map(c => c.id), gctx).ok && by(st, 'sell') - s0 === 3 * 2, '찻잔 한 잔 팔 때 2 (3잔 → 6)');

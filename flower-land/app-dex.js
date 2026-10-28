@@ -93,7 +93,7 @@ function renderDex(force) {
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#9a8f7a"><span class="dc-art">${on ? decoImg(k, info.title ? 2 : 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? esc(info.name) : '???'}</span><span class="dc-sub">${on ? '' : info.title ? '칭호를 얻으면' : info.craft ? '⛏️ 광산에서 만들기' : info.gear ? '🔆 화원 정원 장치' : info.auto ? `🧺 화원 자동 장치 · 정원 등급 ${info.need}` : info.grade ? `🌱 정원 등급 ${info.grade}` : `화원 ${E.decoMonths(k).map(monthName).join('·')}`}</span></div>`; }).join('')}</div>` },
       { key: 'honey', ic: '🍯', title: '꿀', got: E.honeyCount(st), total: E.HONEY_KEYS.length, grid: `<div class="dexgrid big">${E.HONEY_KEYS.map(k => { const on = !!(st.dex.honey || {})[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#d99a2b"><span class="dc-art">${on ? honeyImg(k, 3) : '<span class="dc-q">?</span>'}</span><span class="dc-name">${on ? E.honeyName(k) : '???'}</span><span class="dc-sub">${on ? '' : k === 'wild' ? '여러 꽃이 고루 피면' : st.dex.flower[k] ? `벌통 둘레에 ${FLOWERS[k].name}` : '벌통 둘레에 핀 꽃'}</span></div>`; }).join('')}</div>` },
-      { key: 'letter', ic: '✉️', title: '편지', got: E.letterCount(st), total: E.LETTER_KEYS.length, grid: `<div class="dexgrid big">${E.LETTER_KEYS.map(k => { const on = !!(st.dex.letter || {})[k], L = E.LETTERS[k];
+      { key: 'letter', ic: '✉️', title: '편지', got: E.letterCount(st), total: E.LETTER_KEYS.length, grid: `<div class="dexgrid big">${(st.dex.letter || {}).welcome ? `<button type="button" class="dexcard" style="--pc:#e3a3b3" data-letter="welcome"><span class="dc-art"><span class="dc-memo">💌</span></span><span class="dc-name">${E.LETTERS.welcome.from}</span><span class="dc-sub">첫 방문 편지</span></button>` : ''}${E.LETTER_KEYS.map(k => { const on = !!(st.dex.letter || {})[k], L = E.LETTERS[k];
         return `<button type="button" class="dexcard ${on ? '' : 'locked'}" style="--pc:#d9c6a4" ${on ? `data-letter="${k}"` : 'tabindex="-1" aria-disabled="true"'}><span class="dc-art"><span class="dc-memo">${on ? '✉️' : '?'}</span></span><span class="dc-name">${on ? L.from : '???'}</span><span class="dc-sub">${on ? '눌러서 읽기' : '💐 이웃에게 선물하면'}</span></button>`; }).join('')}</div>` },
       { key: 'memento', ic: '💌', title: '기념품', got: E.mementoCount(st), total: E.MEMENTO_KEYS.length, grid: `<div class="dexgrid big">${E.MEMENTO_KEYS.map(k => { const on = !!(st.dex.memento || {})[k], M = E.MEMENTOS[k];
         return `<div class="dexcard ${on ? '' : 'locked'}" style="--pc:#c8a2b0"><span class="dc-art"><span class="dc-memo">${on ? M.ic : '?'}</span></span><span class="dc-name">${on ? M.name : '???'}</span><span class="dc-sub">${on ? '' : '손님 주문을 들어주면'}</span></div>`; }).join('')}</div>` },
@@ -187,7 +187,10 @@ function openLetter(b, fresh) {
   const L = b.k ? E.LETTERS[b.k] : null, G = E.GIFTS[b.gift];
   const text = L ? L.text : `${josa(G ? G.name : '선물', '을/를')} 잘 받았어요. 정말 고마워요.`, from = L ? L.from : '이웃';
   const gift = b.re ? `<p class="letter-gift">🎁 ${fresh ? '답례품' : '그때 받은 답례품'}: <b>${esc(E.returnText(b.re))}</b>${fresh ? ` · ${E.RETURN_WHERE[b.re.cat]}에 넣었어요` : ''}</p>` : '';
-  openModal(`✉️ ${from}${fresh ? '의 답장' : ''}`, `<div class="letter-pop"><p>${esc(text)}</p><p class="letter-from">— ${esc(from)}</p></div>${gift}`, [{ label: '닫기', act: () => closeModal() }]);
+  // P22-05 꽃집 할머니의 첫 편지: 꾸러미 내용 · 막 왔으면 제다실로 바로
+  const pack = b.pack ? `<p class="letter-gift">🎁 ${fresh ? '꾸러미' : '그때 받은 꾸러미'}: <b>${esc(E.starterText(b.pack))}</b>${fresh ? ' · 말린 꽃잎은 🌿 제다실, 티백은 🍵 찻집에 있어요' : ''}</p>` : '';
+  const btns = fresh && b.pack ? [{ label: '닫기', act: () => closeModal() }, { label: '🌿 제다실로', primary: true, act: () => { closeModal(); setTab('tearoom'); } }] : [{ label: '닫기', act: () => closeModal() }];
+  openModal(`✉️ ${from}${fresh ? (L && L.welcome ? '의 편지' : '의 답장') : ''}`, `<div class="letter-pop"><p>${esc(text)}</p><p class="letter-from">— ${esc(from)}</p></div>${gift}${pack}`, btns);
 }
 function showLetters() {                           // 받은 편지함에서 아직 안 띄운 편지를 하나씩 (다른 창이 닫히면 그다음에)
   if ($('#modalRoot').innerHTML || !st.onboarded) return;

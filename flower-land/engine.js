@@ -320,7 +320,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null,   // P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null,   // P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -1213,6 +1213,10 @@ function sellCups(st, ids, ctx) {
   if (!teaShopOpen(cal)) return no('찻집은 겨울(12월)부터 열어요');
   const list = (st.cups || []).filter(c => ids.includes(c.id));
   if (!list.length) return no('팔 찻잔이 없어요');
+  const sum = sellCupList(st, cal, list, ctx);
+  return ok(`찻잔 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
+}
+function sellCupList(st, cal, list, ctx) {        // 찻잔 팔기 (찻집이 열렸는지는 부르는 쪽이 봄 — sellCups · 첫 손님 P22-05)
   let sum = 0;
   for (const c of list) {
     sum += cupValue(st, c, cal); st.cups.splice(st.cups.indexOf(c), 1);
@@ -1223,7 +1227,7 @@ function sellCups(st, ids, ctx) {
     }
   }
   st.money += sum; yearAdd(st, 'income', sum);
-  return ok(`찻잔 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
+  return sum;
 }
 function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백을 우려 한 잔씩 팔아요
   const cal = calendar(st.virtual);
@@ -1244,6 +1248,7 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
 const bump = (st, k, n) => { st.stats = st.stats || {}; st.stats[k] = (st.stats[k] || 0) + (n || 1); };
 // 찻잔이 팔릴 때마다: 전체 · 손님(자동) · 갓 우린 · 햇차 · 블렌드 잔 수 (P19-07-01: 판매 잔 수 · 햇차 수만 새로 셈)
 function countCup(st, c, cal, auto, ctx) {
+  if (st.firstGuest) st.firstGuest = false;       // P22-05 첫 잔이 팔리면 🍵 첫 손님 표는 끝
   if (fillOrder(st, c)) { addXp(st, 'order', 1, ctx); weekNote(st, 'order', null, 1, ctx); }   // P23-01 손님 주문 · P28-05-01 등급 경험치 · P28-09
   bump(st, 'cups'); if (auto) bump(st, 'autoCups');
   yearAdd(st, 'sold', 1); addXp(st, 'sell', 1, ctx);   // P28-07-01 올해 판 잔 수 · P28-05-01
@@ -1463,9 +1468,11 @@ const LETTERS = {
   teacher: { from: '학교 선생님', likes: 'seed', text: '아이들과 정원 이야기를 나눴어요. 꽃이 땅을 바꾼다는 말에 다들 눈이 반짝였어요.' },
   photo: { from: '사진관 주인', likes: 'deco', gift: 'party', text: '잔치 때 찍은 사진을 한 장 넣었어요. 모두 웃고 있네요.' },
   faraway: { from: '바다 건너 친구', likes: 'seed', gift: null, text: '멀리서도 정원 소식이 반가워요. 저도 창가에 작은 화분을 하나 두었어요.' },
+  // P22-05 첫 방문 꾸러미와 함께 오는 편지 — 답장이 아니라 답장 뽑기 · 편지 수(12통)에 넣지 않음
+  welcome: { from: '꽃집 할머니', welcome: true, text: '정원에 온 걸 환영해요. 화분과 함께 말린 꽃잎과 티백을 넣었어요. 두 꽃잎을 섞어 차를 만들고, 찻집 문을 한 번 열어 첫 손님을 맞아 보세요.' },
 };
-const LETTER_KEYS = Object.keys(LETTERS);
-const letterCount = st => Object.keys((st.dex && st.dex.letter) || {}).filter(k => LETTERS[k]).length;
+const LETTER_KEYS = Object.keys(LETTERS).filter(k => !LETTERS[k].welcome);
+const letterCount = st => Object.keys((st.dex && st.dex.letter) || {}).filter(k => LETTER_KEYS.includes(k)).length;
 const giftsOf = st => { const y = yearOf(st, calendar(st.virtual)); if (!st.gifts || st.gifts.year !== y) st.gifts = { year: y, sent: {} }; return st.gifts; };
 function sendGift(st, k, ctx) {
   const G = Object.prototype.hasOwnProperty.call(GIFTS, k) ? GIFTS[k] : null;
@@ -1753,14 +1760,47 @@ function giftPot(st, ctx, want) {                // want: 안내 창에서 보�
   const tl = st.tiles[f.y * W + f.x]; tl.t = F.t; tl.m = F.m;          // 화분 흙째 옮겨 심음
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
-  if (cal.frozen) {                               // 꽃잠엔 거둘 수 없으니 티백 2개도 (QA 7회차: 첫 쪽지를 들어줄 수 있게)
+  if (cal.frozen) {                               // 꽃잠엔 거둘 수 없으니 티백 2개도 (QA 7회차: 첫 쪽지를 들어줄 수 있게) — P22-05 꾸러미 티백 1개는 이 둘 중 하나로 셈
     for (let i = 0; i < 2; i++) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false, gift: true });   // gift: 첫걸음 수확으로 치지 않음
     st.dex.teabag = st.dex.teabag || {}; st.dex.teabag[type] = true;
   }
   if (teaShopOpen(cal)) makeOrders(st, cal);      // 쪽지는 화분 꽃을 알고 나서 다시 (QA 6회차 높음)
   st.dex.form = st.dex.form || {}; st.dex.form[type] = true;
   addLog(st, 3, `이웃이 ${josa(F.name, '을/를')} 화분째 나눠 줬어요 · 정원 가운데에 심었어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께` : ''}`, ctx);
-  return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께 받았어요` : ''}`, { flower: f });
+  starterPack(st, type, cal, ctx);
+  return ok(`이웃이 ${josa(F.name, '을/를')} 나눠 줬어요${cal.frozen ? ` · ${F.name} 티백 2개도 함께 받았어요` : ''} · 꽃집 할머니의 꾸러미도 왔어요`, { flower: f });
+}
+// ---------------------------------------------------------------- 첫 방문 꾸러미 (P22-05, 10-28)
+// 화분과 함께 꽃집 할머니의 편지 + 꾸러미: 말린 꽃잎 2장(이름 있는 레시피 두 재료) · 화분 꽃 티백 1개 · 🍵 첫 손님 한 번. 돈은 주지 않음
+// 화분 꽃이 들어가는 공개 레시피가 있으면 그 짝, 없으면(동백) 겨울에 어울리는 「겨울 매화향」. 화분 꽃잎은 거두고 1달 말려야 하니 두 재료를 모두 줌
+const STARTER_BLEND = { maehwa: 'plumwinter', napmae: 'plumwinter', dongbaek: 'plumwinter', rose: 'springfield', lavender: 'sleepnight', jasmine: 'pondmorning', gamguk: 'autumngarden' };
+function starterPack(st, type, cal, ctx) {
+  const recipe = STARTER_BLEND[type] || 'springfield';
+  for (const p of BLENDS[recipe].parts) st.dried.push({ id: nid(st), type: p, q: 0.8, gift: true });   // gift: 거의 새 정원 판단에서 뺌 · 말린 수 · 꽃잎 도감엔 넣지 않음
+  // 꽃잠엔 위 티백 2개가 꾸러미 티백을 겸함. 도감 티백엔 넣지 않아 1장 "○○ 티백 만들기"는 직접 만들어야 끝남
+  if (!cal.frozen) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false, gift: true });
+  st.firstGuest = true;
+  st.dex.letter = st.dex.letter || {}; st.dex.letter.welcome = true;
+  (st.letterBox = st.letterBox || []).push({ k: 'welcome', gift: null, re: null, pack: { recipe, tea: type }, y: yearOf(st, cal), m: cal.month, read: false });
+  addLog(st, 17, `꽃집 할머니에게서 편지와 꾸러미가 왔어요 · 말린 ${BLENDS[recipe].parts.map(k => FLOWERS[k].name).join(' · ')} 꽃잎 · ${FLOWERS[type].name} 티백 · 🍵 첫 손님 한 번`, ctx);
+}
+const starterText = pack => `말린 ${BLENDS[pack.recipe].parts.map(k => FLOWERS[k].name).join(' · ')} 꽃잎 (섞으면 「${BLENDS[pack.recipe].name}」) · ${FLOWERS[pack.tea].name} 티백 · 🍵 첫 손님 한 번`;
+// P22-05-03 🍵 첫 손님: 찻집이 닫혀 있어도 딱 한 번, 티백(꽃 · 블렌드) 하나를 우려 그 찻잔을 바로 팖. 닫힌 찻집의 예외는 여기 한 곳 (brew · sellCups는 그대로)
+// 표는 찻잔이 한 잔이라도 팔리면(찻집이 열린 때 · 손님 · 일손 포함) 사라짐 — countCup
+const firstGuestReady = st => !!st.firstGuest && !teaShopOpen(calendar(st.virtual));
+function firstGuest(st, id, ctx) {
+  if (!st.firstGuest) return no('첫 손님은 한 번만 와요');
+  const cal = calendar(st.virtual);
+  if (teaShopOpen(cal)) return no('찻집이 열려 있어요 · 🫖 우림으로 우려 팔아요');
+  const t = st.teas.find(x => x.id === id), b = t ? null : st.blends.find(x => x.id === id && x.bagged);
+  if (!t && !b) return no('우릴 티백이 없어요');
+  if (t) st.teas.splice(st.teas.indexOf(t), 1); else st.blends.splice(st.blends.indexOf(b), 1);
+  const { gift, ...src } = t || b, c = { ...src, id: nid(st), kind: t ? 'tea' : 'blend', brewAbs: cal.abs };
+  st.cups = st.cups || []; st.cups.push(c);
+  const sum = sellCupList(st, cal, [c], ctx);
+  st.firstGuest = false;
+  const nm = t ? FLOWERS[t.type].tea : b.name;
+  return ok(`🍵 첫 손님이 ${josa(nm, '을/를')} 사 갔어요 · +${sum.toLocaleString('ko-KR')}원`, { sum });
 }
 
 // ---------------------------------------------------------------- 첫걸음 (P11-01-05 · P04-05 · P22-02)
@@ -2127,12 +2167,12 @@ const EMPTY_DEX = ['petal', 'tea', 'teabag', 'bagBlend', 'blend', 'honey', 'mine
 function freshGarden(st) {
   if (!st) return false;
   if (!st.onboarded) return true;
-  const none = a => !a || a.length === 0, sh = st.shop || newShop();
+  const none = a => !a || a.every(x => x.gift === true || x.k === 'welcome'), sh = st.shop || newShop();   // P22-05 꾸러미(gift) · 꽃집 할머니 편지는 받은 것이라 빼고 봄
   return (st.flowers || []).every(f => f.origin === '이웃')
     && ['items', 'reservations', 'pending', 'petals', 'teas', 'drying', 'dried', 'blends', 'cups', 'letterBox'].every(k => none(st[k]))
     && (st.decos || []).every(d => { const i = decoInfo(d.key); return !!(i && (i.title || i.extra)); })        // 칭호 문장 · 덤 장식만 (산 장식 없음)
     && Object.values(st.stats || {}).every(v => !v)                                                               // 판매 · 찻잔 · 주문 · 선물 · 광산
-    && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).length === 0)
+    && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).every(x => k === 'letter' && x === 'welcome'))
     && st.water === 10 && st.shears === 5 && st.hoe === 10 && st.basket === 10 && !st.fert
     && sh.seats === 1 && (sh.cups || []).length <= 1 && (sh.signs || []).length <= 1;
 }
@@ -2236,6 +2276,7 @@ const MIGRATIONS = [
   ['📈 그래프 견줌 yearPace (P28-07-02, 10-28): 달마다 쌓인 수입 · 경험치 — 예전 정원은 올해 시작 값을 몰라(xp0 null) 다음 쉼달 기록부터 셈', s => { if (!s.yearPace) s.yearPace = newYearPace(null); }],
   ['🗓️ 주마다 바뀌는 목표 weekly (P28-09, 10-28): 예전 정원은 null — 다음 확인 때 이번 주 목표를 뽑음', s => { if (s.weekly === undefined) s.weekly = null; }],
   ['🧺 정원 저장고 pantry (P28-04, 10-28): 예전 정원은 빈 저장고 — 연 뒤부터 쌓임 (지난 시간을 거슬러 채우지 않음)', s => { if (!s.pantry) s.pantry = newPantry(); }],
+  ['🎁 첫 방문 꾸러미 · 🍵 첫 손님 firstGuest (P22-05, 10-28): 예전 정원은 꾸러미 없음(false) — 아직 화분을 받지 않은 정원은 화분과 함께 받음', s => { if (s.firstGuest === undefined) s.firstGuest = false; }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2344,7 +2385,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackTick, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady,MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackTick, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

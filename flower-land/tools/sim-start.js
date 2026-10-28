@@ -33,7 +33,9 @@ function run(startT) {
     }
     if (st.flowers.some(f => f.stage === 'bloom')) mark('bloom', t);
     if (st.dex.flower.chamomile) mark('chamomile', t);
+    if (st.dried.filter(p => p.gift).length >= 2) { const b = E.blend(st, st.dried.filter(p => p.gift).map(p => p.id), ctx); if (b.ok) { E.bagBlends(st, [b.blend.id], ctx); did = true; mark('blend', t); } }   // P22-05 꾸러미 꽃잎은 블렌딩
     if (st.dried.length) { E.makeTeaDried(st, st.dried.map(d => d.id), ctx); did = true; mark('teabag', t); }
+    if (E.firstGuestReady && E.firstGuestReady(st) && st.teas.length) { const f = E.firstGuest(st, st.teas[0].id, ctx); if (f.ok) { did = true; mark('sell', t); } }   // P22-05 🍵 첫 손님
     if (E.teaShopOpen(cal) && st.teas.length) { E.brew(st, st.teas.map(x => x.id), []); did = true; }
     if (st.cups && st.cups.length && E.teaShopOpen(cal)) { E.sellCups(st, st.cups.map(c => c.id), ctx); did = true; mark('sell', t); }
     if (E.chapterDone && E.chapterDone(st, 'c1')) mark('c1', t);
@@ -42,9 +44,9 @@ function run(startT) {
   }
   return { first, idle: idle / steps, money: st.money, dex: E.dexCount(st), titles: Object.keys(st.titles).length };
 }
-console.log(['시작', '처음 심기', '첫 개화', '첫 수확', '첫 티백', '첫 판매', '캐모마일 개화', '1장 끝', '할 일 없는 시간', '1주 뒤 돈', '도감'].join('\t'));
+console.log(['시작', '처음 심기', '첫 개화', '첫 수확', '첫 티백', '첫 판매', '첫 블렌딩', '캐모마일 개화', '1장 끝', '할 일 없는 시간', '1주 뒤 돈', '도감'].join('\t'));
 for (let slot = 0; slot < 14; slot++) for (const off of [0.5, 9]) {          // 그 달이 막 시작했을 때 · 거의 끝날 때 (한 달 = 12시간)
   const t0 = weekStart + slot * 12 * H + off * H, c = E.calendar(t0), r = run(t0);
   const hAll = 6 + slot * 12 + Math.floor(off), hh = hAll % 24, day = Math.floor(hAll / 24) % 7;   // 월 06시부터 센 현실 시각
-  console.log([`${DAY[day]} ${String(hh).padStart(2, '0')}시 (${E.monthName(c.month)})`, fmt(r.first.plant), fmt(r.first.bloom), fmt(r.first.harvest), fmt(r.first.teabag), fmt(r.first.sell), fmt(r.first.chamomile), fmt(r.first.c1), `${Math.round(r.idle * 100)}%`, r.money, r.dex].join('\t'));
+  console.log([`${DAY[day]} ${String(hh).padStart(2, '0')}시 (${E.monthName(c.month)})`, fmt(r.first.plant), fmt(r.first.bloom), fmt(r.first.harvest), fmt(r.first.teabag), fmt(r.first.sell), fmt(r.first.blend), fmt(r.first.chamomile), fmt(r.first.c1), `${Math.round(r.idle * 100)}%`, r.money, r.dex].join('\t'));
 }

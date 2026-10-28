@@ -172,7 +172,7 @@ function renderCab(force) {
   const dried = groupType(st.dried, p => p.type);
   ui.blendSel = (ui.blendSel || []).filter(id => st.dried.some(p => p.id === id));
   const sig = JSON.stringify([st.money, cal.frozen, cal.idx >= 10, E.teaShopOpen(cal) ? 0 : realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1)), petals.map(p => [p.type, E.pct(p.q), p.ids.length]), teas.map(t => [t.type, E.pct(t.q), t.fresh, t.ids.length]),
-    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal), c.honey]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab, st.honey, st.orders]);
+    st.drying.map(d => [d.id, flowH(Math.max(0, d.leftH))]), dried.map(d => [d.type, E.pct(d.q), d.ids.length]), st.blends.map(b => [b.id, !!b.bagged]), (st.cups || []).map(c => [c.id, E.cupCold(c, cal), c.honey]), Math.floor((st.cupTimerH || 0) * 60), ui.blendSel, ui.dryTab, st.honey, st.orders, st.firstGuest]);
   if (!force && ui.sigs.cab === sig) return;
   ui.sigs.cab = sig;
   const shopOpen = E.teaShopOpen(cal);   // P17-09 찻집은 겨울(12월)부터 꽃잠까지
@@ -263,6 +263,7 @@ function renderCab(force) {
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
       <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`} · 🏷️ 티백은 품질이 그대로예요</small></span>
 </div><span class="news-side">${wallet()}<button type="button" class="btn small" data-act="shopUp">🪑 찻집 가꾸기</button></span></div>
+    ${firstGuestHTML(bagged)}
     ${ordersHTML()}
     ${cupSection}
     ${honeyShelf}
@@ -284,6 +285,21 @@ ${blendBox}
 }
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('toggle', e => { if (e.target.matches('.bl-book')) ui.bookOpen = e.target.open; }, true));   // 레시피 펼침 기억
 ['#p-cab', '#p-tearoom'].forEach(sel => $(sel).addEventListener('click', cabClick));
+// P22-05 🍵 첫 손님: 찻집이 닫혀 있을 때 한 번 — 티백 하나를 골라 우리면 바로 팔림. 팔고 나면 이 줄은 사라지고 간판만 남음
+function firstGuestHTML(bagged) {
+  if (!E.firstGuestReady(st)) return '';
+  const n = st.teas.length + bagged.length;
+  return `<div class="cab-empty first-guest"><span>🍵</span><div><b>첫 손님이 기다려요</b> <span class="muted">${n ? '문이 닫혀 있어도 이번 한 번은 티백 하나를 우려 팔 수 있어요' : '🌿 제다실에서 티백을 만들면 이번 한 번은 문이 닫혀 있어도 팔 수 있어요'}</span></div>
+    <button type="button" class="btn primary" data-firstguest="1" ${n ? '' : 'disabled'}>🍵 첫 손님 맞기</button></div>`;
+}
+function openFirstGuest() {                       // 어느 티백을 우릴지 고르기 (꽃 티백 · 블렌드 티백)
+  const cal = E.calendar(st.virtual), teas = groupType(st.teas, t => [t.type, E.isFresh(st, t, cal), !!t.hat, !!t.raw].join('|')), bagged = st.blends.filter(b => b.bagged);
+  const tile = (id, art, nm, q, v) => `<button type="button" class="up-tile" data-fg="${id}">${art}<b>${nm}</b><small><span class="stars">${starStr(q)}</span></small><span class="up-price">${won(v)}</span></button>`;
+  const tiles = teas.map(t => tile(t.ids[0], spriteImg(t.type, 'tea', 48, false, ''), FLOWERS[t.type].tea, t.q, E.teaItemValue(st, st.teas.find(x => x.id === t.ids[0]), cal))).join('')
+    + bagged.map(b => tile(b.id, spriteImg(b.parts[0], 'tea', 48, false, ''), `${b.recipe ? '✨ ' : ''}${b.name}`, b.q, E.blendValue(b))).join('');
+  openModal('🍵 첫 손님', `<p class="muted" style="margin-bottom:8px">우릴 티백을 하나 골라요 · 바로 우려 첫 손님에게 팔아요 · 이번 한 번만이에요</p><div class="up-grid">${tiles}</div>`, [{ label: '닫기', act: () => closeModal() }]);
+  $('#modalRoot').querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { closeModal(); after(E.firstGuest(st, +b.dataset.fg, ctx), 'sold'); });
+}
 // P23-01 💌 손님 주문 쪽지: 찻집이 열린 달마다 3장, 맞는 찻잔이 팔리면 ✓와 기념품
 function ordersHTML() {
   const os = st.orders && st.orders.list; if (!os || E.slowView(st)) return '';   // 🐢 느긋하게 보기면 쪽지를 숨김 — 맞는 찻잔이 팔리면 기념품은 그대로 (P28-02)
@@ -331,6 +347,7 @@ function openHoneyPick(ids) {
 }
 function cabClick(e) {
   if (e.target.closest('[data-act="shopUp"]')) return openShopUp();
+  if (e.target.closest('[data-firstguest]:not([disabled])')) return openFirstGuest();
   const hc = e.target.closest('[data-honeycup]'); if (hc) return openHoneyPick(hc.dataset.honeycup.split(',').map(Number));
   const jp = e.target.closest('[data-jump]'); if (jp) { const t = document.getElementById(jp.dataset.jump); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70); return; }
   const tb = e.target.closest('[data-drt]'); if (tb) { ui.dryTab = tb.dataset.drt; return renderCab(true); }
