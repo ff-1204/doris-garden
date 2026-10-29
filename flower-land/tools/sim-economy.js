@@ -4,11 +4,12 @@
 // --auto: 🧺 자동 장치(P28-10)를 사서 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 장치가 더 벌어 주지 않아서). 바구니 3 · 건조대 2 · 일손 1까지, 맡긴 일은 손으로 안 함
 // --bonus: 🌟 등급 보너스(P28-05-02) 4칸을 처음부터 모두 끝까지 켠 정원사 (손길 점과 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry와 함께 써야 바구니 · 건조대 · 저장고 칸이 일함. --bonus=rack,basket처럼 몇 칸만 켤 수도 있음
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
+// --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
+const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
@@ -19,7 +20,8 @@ st.onboarded = true;   // 첫 안내를 마친 정원사 — 🗓️ 주간 목�
 const ctx = { live: false, rng };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
 const ledger = {}; const add = (yr, k, v) => { (ledger[yr] = ledger[yr] || {})[k] = (ledger[yr][k] || 0) + v; };
 const spots = []; for (let y = 2; y < E.H - 1; y += 3) for (let x = 2; x < E.W - 1; x += 3) spots.push([x, y]);
-const yearNow = () => E.yearOf(st, E.calendar(st.virtual));
+const ykey = (n, y) => n > 1 ? n * 100 + y : y, ylabel = k => k >= 100 ? `${Math.floor(k / 100)}철 ${k % 100}` : k;   // P28-08 --season: 2철부터 해 칸을 나눔
+const yearNow = () => ykey(E.seasonN(st), E.yearOf(st, E.calendar(st.virtual)));
 const KEEP = { water: 8, hoe: 6, basket: 6, shears: 4 };
 function spend(k, fn) { const m = st.money, r = fn(); if (r && r.ok) add(yearNow(), k, st.money - m); return r; }
 function act() {
@@ -101,7 +103,7 @@ function act() {
     }
   }
 }
-const end = st.virtual + YEARS * 7 * 24 * H;
+let end = st.virtual + YEARS * 7 * 24 * H, seasonAt = null;
 let lastIdx = E.calendar(st.virtual).idx, help0 = st.helpYear;
 const weeks = {};
 while (st.virtual < end) {
@@ -114,17 +116,28 @@ while (st.virtual < end) {
   if (st.helpYear !== help0) { add(yr, '막힘 방지', 5000); help0 = st.helpYear; }
   lastIdx = c.idx;
   add(yr, '_기타', st.money - m0);
-  if (st.records[0] && st.records[0].score != null && !(ledger[st.records[0].year] || {})['점수']) (ledger[st.records[0].year] = ledger[st.records[0].year] || {})['점수'] = st.records[0].score;   // P23-02 쉼달 정원 점수
+  const rk = st.records[0] && ykey(st.records[0].season || 1, st.records[0].year);
+  if (st.records[0] && st.records[0].score != null && !(ledger[rk] || {})['점수']) (ledger[rk] = ledger[rk] || {})['점수'] = st.records[0].score;   // P23-02 쉼달 정원 점수
   ledger[yr]['연말 돈'] = st.money;   // 해마다 마지막으로 덮어쓴 값 = 그해 끝의 돈
   ledger[yr]['_등급'] = E.gradeOf(st); ledger[yr]['_by'] = Object.assign({}, st.grade.by);   // P28-05-01 그 주(해) 끝 등급
   if (st.weekly) weeks[st.weekly.week] = JSON.parse(JSON.stringify(st.weekly));   // P28-09 그 주 목표 (마지막 모습)
+  // 🌸 새 철 (P28-08, --season): 해 수만큼 지난 꽃잠에 한 번 — 다음 월요일 3월부터 다시 해 수만큼
+  if (SEASON && seasonAt == null && c.frozen && E.seasonRows(st).length >= YEARS) {
+    const rd = E.seasonReady(st), money = st.money;
+    // 시뮬 정원사는 값비싼 나무 · 연꽃을 다 피우지 못해(씨앗 7: 4년에 8종) 꽃 도감만 채운 것으로 봄 — 늘어난 도감 칸 경험치는 주지 않음(grade.dex를 맞춤)
+    for (const k of E.FLOWER_KEYS) st.dex.flower[k] = true;
+    st.grade.dex = E.gradeDexCount(st);
+    const r = E.seasonStart(st, ctx);
+    seasonAt = { ok: r.ok, msg: r.msg, years: rd.years, flowers: rd.flowers, money, end: r.ended || null };
+    if (r.ok) { end = c.ws + 7 * 24 * H + 0.1 * H + YEARS * 7 * 24 * H; help0 = st.helpYear; }
+  }
 }
 // 표
 const keys = ['하루 용돈', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['카운터 판매'] : []), ...(PANTRY ? ['저장고', '저장고 꽃잎'] : []), '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), '선물', '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
-  console.log([yr, ...keys.map(k => Math.round(L[k] || 0))].join('\t'));
+  console.log([ylabel(+yr), ...keys.map(k => Math.round(L[k] || 0))].join('\t'));
 }
 // 🌱 정원 등급 (P28-05-01): 주(= 한 해, 월요일 3월부터)마다 끝 등급 · 그 주에 오른 등급 · 그 주 경험치와 어디서 왔는지
 console.log('\n주마다 정원 등급');
@@ -132,7 +145,7 @@ console.log(['주', '등급', '이름', '+등급', '경험치', '+경험치', ..
 { let pg = 1, px = 0, pb = {};
   for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
     const g = ledger[yr]._등급, by = ledger[yr]._by; if (!g) continue;
-    console.log([yr, g.grade, g.name, g.grade - pg, g.xp, g.xp - px, ...Object.keys(E.XP).map(k => (by[k] || 0) - (pb[k] || 0))].join('\t'));
+    console.log([ylabel(+yr), g.grade, g.name, g.grade - pg, g.xp, g.xp - px, ...Object.keys(E.XP).map(k => (by[k] || 0) - (pb[k] || 0))].join('\t'));
     pg = g.grade; px = g.xp; pb = by;
   } }
 if (AUTO) console.log(`자동 장치: ${st.decos.filter(d => E.DECOS[d.key] && E.DECOS[d.key].auto).map(d => `${E.DECOS[d.key].name}(${d.x},${d.y}) ${d.n || 0}`).join(' · ') || '없음'} · 거둠 ${st.stats.autoHarvest || 0} · 티백 ${st.stats.autoBags || 0} · 우림 ${st.stats.autoBrew || 0}`);
@@ -143,4 +156,22 @@ console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');
 console.log(['해', '수입', '판 잔', '꽃잎', '주문', '점수', '등급', '도감'].join('\t'));
-for (const r of E.yearLogOf(st)) console.log([r.year, r.income, r.sold, r.harvest, r.orders, r.score, r.grade == null ? '-' : r.grade, `${r.dex}/${r.dexTotal}`].join('\t'));
+for (const r of E.yearLogOf(st)) console.log([(r.season || 1) > 1 ? `${r.season}철 ${r.year}` : r.year, r.income, r.sold, r.harvest, r.orders, r.score, r.grade == null ? '-' : r.grade, `${r.dex}/${r.dexTotal}`].join('\t'));
+if (SEASON) {   // 🌸 새 철 (P28-08): 1철 · 2철 같은 해끼리 연말 돈 · 잔 수 견줌 (자동 장치 · 찻집 가꾸기 · 보너스는 이어지고 수입 배율은 없음)
+  console.log('\n새 철 (--season)');
+  if (!seasonAt || !seasonAt.ok) console.log(`새 철을 시작하지 못함: ${seasonAt ? `${seasonAt.msg} (해 ${seasonAt.years} · 꽃 ${seasonAt.flowers}종)` : '해 수가 모자람'}`);
+  else {
+    console.log(`1철 ${seasonAt.end.years}해 · 끝 등급 ${seasonAt.end.grade} · 판 잔 ${seasonAt.end.sold} · 시작할 때 돈 ${seasonAt.money}원 → 15,000원 · 꽃 ${seasonAt.flowers}종`);
+    console.log(['해', '1철 연말 돈', '2철 연말 돈', '1철 찻집 수입', '2철 찻집 수입', '1철 잔 수', '2철 잔 수', '1철 장치 · 가꾸기 · 장식', '2철 장치 · 가꾸기 · 장식'].join('\t'));
+    const spent = L => -((L['자동 장치'] || 0) + (L['찻집 가꾸기'] || 0) + (L['장식'] || 0) + (L['등급 장식'] || 0));
+    const income = L => ['찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', '카운터 판매'].reduce((a, k) => a + (L[k] || 0), 0);
+    const sum = { a: [0, 0], b: [0, 0] };
+    for (let y = 1; y <= YEARS; y++) {
+      const a = ledger[y] || {}, b = ledger[200 + y] || {};
+      sum.a[0] += income(a); sum.a[1] += spent(a); sum.b[0] += income(b); sum.b[1] += spent(b);
+      console.log([y, a['연말 돈'], b['연말 돈'], income(a), income(b), a['잔 수'] || 0, b['잔 수'] || 0, spent(a), spent(b)].map(v => v == null ? '-' : Math.round(v)).join('\t'));
+    }
+    console.log(`${YEARS}해 합: 찻집 수입 1철 ${Math.round(sum.a[0])} · 2철 ${Math.round(sum.b[0])} (${sum.a[0] ? Math.round((sum.b[0] - sum.a[0]) / sum.a[0] * 1000) / 10 : 0}%) · 장치 · 가꾸기 · 장식에 쓴 돈 1철 ${Math.round(sum.a[1])} · 2철 ${Math.round(sum.b[1])}`);
+    console.log(`철: ${E.seasonN(st)} · 칭호 ${E.SEASON_TITLES.filter(k => st.titles[k] != null).map(k => E.TITLES[k].name).join(' · ') || '없음'}`);
+  }
+}

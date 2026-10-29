@@ -12,6 +12,7 @@ const ART = {
   t_spring4: ['spring4', '#2e2228'], t_complete: ['wreath', '#2a2a22'],
   t_guests: ['letter', '#2e2430'], t_honey: ['honeyjar', '#2e2818'], t_deep: ['pickaxe', '#1c1f2e'], t_score: ['rosette', '#1f2b24'],   // P23-03 (10-24)
   t_cloud: ['cloud', '#1c2a3c'],   // P20-16 덤 칭호 (10-27)
+  t_season2: ['stump', '#1f2620'], t_season3: ['pinwheel', '#262433'], t_season5: ['stepping', '#1a2426'],   // P28-08-04 철마다 숨은 칭호 (M3-3 10-30)
 };
 function emblem(name, P, R) {
   const ring = (cx, cy, r, c, w) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d <= r && d > r - w) P(x, y, c); } };
@@ -102,6 +103,21 @@ function emblem(name, P, R) {
       R(8, 12, 1, 3, '#4f9a3a'); P(9, 13, '#8fd16a'); P(7, 14, '#8fd16a');                                              // 꽃대 · 잎
       P(8, 10, '#f0a3c0'); P(7, 11, '#f0a3c0'); P(9, 11, '#f0a3c0'); P(8, 11, '#f2c624');                               // 꽃
       R(3, 15, 11, 1, '#6e4a28'); break;
+    case 'stump':    // 나이테 그루터기에서 다시 돋은 가지와 흰 꽃 한 송이 (두 번째 봄)
+      R(3, 11, 10, 4, '#8c6b4f'); R(2, 15, 12, 1, '#5e4532'); R(3, 9, 10, 2, '#d8b98e'); R(4, 9, 8, 1, '#e8d2ac');   // 밑동 · 잘린 면
+      R(5, 10, 6, 1, '#b0895f'); R(7, 9, 2, 1, '#b0895f'); P(4, 12, '#6f523b'); P(11, 13, '#6f523b'); P(8, 12, '#a3815f');   // 나이테 · 껍질
+      R(10, 4, 1, 5, '#9ccc4a'); P(11, 3, '#9ccc4a'); P(9, 6, '#c8ec7a'); R(8, 5, 1, 1, '#c8ec7a'); P(12, 5, '#c8ec7a');   // 새 가지 · 잎
+      R(11, 1, 3, 1, '#fdf3f6'); R(12, 0, 1, 3, '#fdf3f6'); P(12, 1, '#e6a23c');                                          // 흰 꽃
+      P(2, 3, '#e8f4d4'); P(5, 1, '#e8f4d4'); break;                                                                      // 봄볕
+    case 'pinwheel': // 세 날개 바람개비 (세 철의 정원사) — 날개마다 한 철
+      R(7, 8, 1, 8, '#cfc6b0'); P(6, 15, '#a89f88');                                                                      // 막대
+      R(7, 1, 2, 6, '#5fb8a8'); R(9, 2, 2, 3, '#5fb8a8'); P(8, 1, '#9fe0d4');                                             // 위 날개
+      for (let i = 0; i < 5; i++) { R(9 + i, 7 + Math.floor(i / 2), 1, 2, '#e8c25a'); R(6 - i, 7 + Math.floor(i / 2), 1, 2, '#d0674a'); }   // 오른쪽 · 왼쪽 날개
+      P(13, 9, '#f5df98'); P(2, 9, '#e8957c'); R(7, 6, 2, 2, '#f4f0e4'); break;                                          // 가운데 못
+    case 'stepping': // 물 위를 건너는 징검돌 다섯 개 (다섯 철을 건넌 사람)
+      R(0, 3, 16, 13, '#2c5a6a'); for (const [x, y] of [[1, 5], [9, 4], [3, 13], [11, 12], [6, 9]]) R(x, y, 3, 1, '#5b9fb0');   // 물결
+      [[1, 13], [4, 10], [7, 8], [10, 6], [13, 3]].forEach(([x, y]) => { R(x, y, 3, 2, '#c7c2b8'); R(x, y + 1, 3, 1, '#8f8a80'); P(x, y, '#e6e2da'); });   // 돌 다섯
+      R(14, 0, 2, 3, '#7aa35a'); P(13, 2, '#7aa35a'); break;                                                             // 건너편 풀
   }
 }
 function draw(x, key, tier, opt) {
