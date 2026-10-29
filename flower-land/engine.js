@@ -320,7 +320,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {},   // P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {}, bonus: newBonus(),   // P28-05-02 🌟 고른 등급 보너스 · P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -2059,8 +2059,17 @@ const AUTO_KEYS = Object.keys(DECOS).filter(k => DECOS[k].auto);
 const AUTO_R = 1, AUTO_Q = 0.9;                  // 바구니 둘레 · 자동으로 거둔 꽃잎은 손으로 거둔 것의 90% 품질
 const placedOf = (st, key) => (st.decos || []).filter(d => d.key === key && d.x != null);
 const inReach = (f, d, r) => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= r;
+// P28-05-02-02 🧺 바구니 넓게: 기본은 바로 옆(1칸) 8포기, 보너스를 켜면 둘레 2칸에서 가까운 꽃부터 12 · 16 · 20포기 (거두는 양 · 품질은 그대로)
+const basketReach = st => bonusVal(st, 'basket') > 8 ? 2 : AUTO_R;
+function basketFlowers(st, d) {                  // 바구니가 맡은 꽃 (시든 꽃은 자리를 차지하지 않음) — 가까운 순, 같으면 심은 순
+  const n = bonusVal(st, 'basket'), near = st.flowers.filter(f => !f.withered && inReach(f, d, basketReach(st)));
+  if (near.length <= n) return near;
+  const dist = f => { const dx = Math.abs(f.x - d.x), dy = Math.abs(f.y - d.y); return Math.max(dx, dy) * 10 + dx + dy; };
+  const pick = new Set(near.slice().sort((a, b) => dist(a) - dist(b)).slice(0, n));
+  return near.filter(f => pick.has(f));
+}
 // 바구니 둘레에서 이 달에 거둘 꽃: 손으로 거두는 규칙(canCare) 그대로 — 그 달에 이미 거둔 꽃은 빼고
-const basketBlooms = (st, d, cal) => st.flowers.filter(f => inReach(f, d, AUTO_R) && canCare(st, f, 'harvest', cal));
+const basketBlooms = (st, d, cal) => basketFlowers(st, d).filter(f => canCare(st, f, 'harvest', cal));
 // P28-10-01 꽃잠이 아닌 달이 끝날 때(ended = 끝난 달). 바구니 용품은 쓰지 않음 (빗물 통이 물병을 안 쓰는 것과 같음) · 화분 첫 수확 덤 없음
 function basketTick(st, ended, ctx) {
   let n = 0;
@@ -2082,10 +2091,11 @@ function basketTick(st, ended, ctx) {
 // P28-10-02 자동 건조대: 꽃잠이 아닌 달이 끝날 때 제다실 생화를 오래된 것부터(먼저 거둔 것 = 품질이 먼저 줄어든 것) 건조대 하나에 RACK_N장씩 꽃방에 넒
 // 다 마르면(1달, 흐르는 시간) 말린 꽃잎 칸을 거치지 않고 바로 티백 — 블렌드 · 레시피는 사람 몫으로 남김. 손으로 넌 꽃잎은 그대로
 const RACK_N = 8;
+const rackN = st => bonusVal(st, 'rack');        // P28-05-02-02 🍂 건조대 넉넉히: 8 → 10 · 12 · 14장 (꽃잎은 손으로도 말릴 수 있는 양)
 function rackTick(st, ctx) {
   let n = 0;
   for (const d of placedOf(st, 'dryrack')) {
-    const list = st.petals.slice(0, RACK_N);
+    const list = st.petals.slice(0, rackN(st));
     for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H, auto: true }); }
     d.n = (d.n || 0) + list.length; n += list.length;
   }
@@ -2174,7 +2184,7 @@ const PANTRY_KEYS = Object.keys(PANTRY_ITEMS);
 const newPantry = () => ({ h: 0, n: 0, items: [], got: 0 });
 const pantryOn = st => !!st.onboarded;            // 첫 안내를 마친 정원부터
 const pantryOf = st => (st.pantry = st.pantry || newPantry());
-const pantryCap = st => { const g = gradeOf(st).grade; let c = PANTRY_CAPS[0][1]; for (const [need, cap] of PANTRY_CAPS) if (g >= need) c = cap; return c; };
+const pantryCap = st => { const g = gradeOf(st).grade; let c = PANTRY_CAPS[0][1]; for (const [need, cap] of PANTRY_CAPS) if (g >= need) c = cap; return c + bonusVal(st, 'pantry'); };   // P28-05-02-02 🧺 저장고 한 칸 더 (하루 12칸은 그대로)
 // 하루(흐르는 24시간 = 12칸) 동안 쌓일 수 있는 것의 값 — 떨어진 꽃잎은 핀 꽃이 없을 때의 흙으로 셈 (가장 많은 쪽)
 const pantryDayValue = () => { let v = 0; for (let i = 0; i < 24 / PANTRY_H; i++) { const k = PANTRY_CYCLE[i % PANTRY_CYCLE.length]; v += PANTRY_ITEMS[k === 'petal' ? 'dirt' : k].won; } return v; };
 function pantryDrop(st, k, cal) {
@@ -2231,6 +2241,54 @@ function storeDeco(st, id) {
   if (hn) takeHoney(st, d.id);                   // 벌통에 모인 꿀은 함께 거둠 (QA 2회차)
   d.x = null; d.y = null;
   return ok(`${josa(decoInfo(d.key).name, '을/를')} 창고에 넣었어요${hn ? ` · 꿀 ${hn}병은 찻집 꿀 선반으로` : ''}`);
+}
+
+// ---------------------------------------------------------------- 🌟 등급 보너스 (P28-05-02, M3-1 10-29)
+// P28-05-02-01 🌟 손길 점: 정원 등급 5등급마다 1점 (5 · 10 · 15 …, 끝없음). 등급 = 평생 경험치라 돈 · 아이템으로는 못 얻고 되풀이 꼼수도 없음
+// P28-05-02-02 고르는 보너스 4칸: 시간 · 손만 덜어 줌 — 값 · 품질 · 꽃 수 · 생산 배율은 넣지 않음 (P17-14). 단계 값 1 · 2 · 3점 (한 칸을 끝까지 = 6점)
+//   💧 물 오래(2달 → 3달)는 뺌 (10-29 시뮬): 물병을 덜 써서 목마른 꽃이 줄어 품질 · 수입이 올랐음 — 3달 +5~9%, 2.25달도 +3~7% (5씨앗 4년 찻집 수입)
+// P28-05-02-03 언제든 올리고 내림 — 내리면 점이 그대로 돌아옴 (벌칙 없음, P07). 느긋하게 보기(P28-02) 숨김은 화면 몫 (E.slowView)
+const BONUS_PER = 5;                              // 몇 등급마다 1점
+const BONUS_COST = [1, 2, 3];                    // 1 · 2 · 3단계에 드는 점
+const BONUS = {                                  // vals[단계] = 그 단계에서 규칙이 읽는 값 (0단계 = 보너스 없을 때)
+  basket: { name: '바구니 넓게', icon: '🧺', vals: [8, 12, 16, 20], desc: v => `자동 수확 바구니가 꽃 ${v}포기까지 거둬요` },           // basketFlowers
+  rack: { name: '건조대 넉넉히', icon: '🍂', vals: [8, 10, 12, 14], desc: v => `자동 건조대가 달마다 꽃잎 ${v}장을 널어요` },           // rackN
+  pantry: { name: '저장고 한 칸 더', icon: '🧺', vals: [0, 1, 2, 3], desc: v => v ? `정원 저장고에 ${v}칸 더 쌓여요` : '정원 저장고 칸 그대로예요' },   // pantryCap
+  catchup: { name: '따라잡기 길게', icon: '🌙', vals: [3, 4, 5], desc: v => `오래 비워도 ${v}주까지 따라잡아요` },                     // catchUpH (app.js catchUp이 읽음 — M3-2)
+};
+const BONUS_KEYS = Object.keys(BONUS);
+const newBonus = () => Object.fromEntries(BONUS_KEYS.map(k => [k, 0]));
+const bonusMax = k => BONUS[k].vals.length - 1;
+const bonusLevel = (st, k) => clamp(Math.floor(+(((st && st.bonus) || {})[k]) || 0), 0, bonusMax(k));
+const bonusVal = (st, k) => BONUS[k].vals[bonusLevel(st, k)];
+const bonusCostTo = lv => BONUS_COST.slice(0, lv).reduce((a, b) => a + b, 0);   // 0단계에서 lv단계까지 드는 점
+const bonusPoints = st => Math.floor(gradeOf(st).grade / BONUS_PER);
+const bonusUsed = st => BONUS_KEYS.reduce((a, k) => a + bonusCostTo(bonusLevel(st, k)), 0);
+const bonusLeft = st => bonusPoints(st) - bonusUsed(st);
+const bonusMaxed = (st, k) => !!BONUS[k] && bonusLevel(st, k) === bonusMax(k);   // P28-05-02-04 이정표: 끝까지 올린 칸은 장치 그림이 한 단계 바뀜 (그림은 M3-2)
+const catchUpH = st => bonusVal(st, 'catchup') * 7 * 24;   // 자리를 비운 동안 따라잡는 가장 긴 시간 (현실 시간)
+function bonusSet(st, key, level) {
+  if (!BONUS[key]) return no('없는 보너스예요');
+  if (!Number.isInteger(level) || level < 0 || level > bonusMax(key)) return no('그 단계는 없어요');
+  const B = BONUS[key], from = bonusLevel(st, key);
+  st.bonus = Object.assign(newBonus(), st.bonus);
+  if (level === from) return ok(`${B.icon} ${B.name} ${level}단계 그대로예요`, { level });
+  if (level > from) {
+    const short = bonusCostTo(level) - bonusCostTo(from) - bonusLeft(st);
+    if (short > 0) return no(`🌟 손길 점이 ${short}점 모자라요`);
+    st.bonus[key] = level;
+    return ok(`${B.icon} ${josa(B.name, '을/를')} ${level}단계로 올렸어요`, { level });
+  }
+  st.bonus[key] = level;                          // 내리기는 늘 됨 — 점이 그대로 돌아옴
+  return ok(`${B.icon} ${josa(B.name, '을/를')} ${level}단계로 내렸어요 · 🌟 ${bonusCostTo(from) - bonusCostTo(level)}점이 돌아왔어요`, { level });
+}
+function bonusView(st) {                          // 고르기 화면(M3-2)이 읽음 — 느긋하게 보기 판단은 넣지 않음
+  const points = bonusPoints(st), used = bonusUsed(st);
+  const rows = BONUS_KEYS.map(key => {
+    const B = BONUS[key], level = bonusLevel(st, key), max = bonusMax(key);
+    return { key, name: B.name, icon: B.icon, level, max, maxed: level === max, costNext: level < max ? BONUS_COST[level] : null, desc: B.desc(B.vals[level]), nextDesc: level < max ? B.desc(B.vals[level + 1]) : null };
+  });
+  return { points, used, left: points - used, per: BONUS_PER, nextAt: (points + 1) * BONUS_PER, rows };
 }
 
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
@@ -2371,6 +2429,7 @@ const MIGRATIONS = [
   ['🧺 정원 저장고 pantry (P28-04, 10-28): 예전 정원은 빈 저장고 — 연 뒤부터 쌓임 (지난 시간을 거슬러 채우지 않음)', s => { if (!s.pantry) s.pantry = newPantry(); }],
   ['🎁 첫 방문 꾸러미 · 🍵 첫 손님 firstGuest (P22-05, 10-28): 예전 정원은 꾸러미 없음(false) — 아직 화분을 받지 않은 정원은 화분과 함께 받음', s => { if (s.firstGuest === undefined) s.firstGuest = false; }],
   ['📮 운영자 편지 받은 기록 mailGot (P29, 10-28): 예전 정원은 빈 기록 — 지금 기간인 편지는 다음에 열 때 받음', s => { s.mailGot = s.mailGot || {}; }],
+  ['🌟 등급 보너스 bonus (P28-05-02, M3-1 10-29): 예전 정원은 모든 칸 0단계 — 🌟 손길 점은 지금 등급으로 바로 셈', s => { s.bonus = Object.assign(newBonus(), s.bonus); }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2479,7 +2538,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackTick, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
