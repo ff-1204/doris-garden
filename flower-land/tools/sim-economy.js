@@ -2,17 +2,19 @@
 // --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
 // --no-grade-deco: 🌱 등급 장식(P28-05-01)만 사지 않음 (등급 장식 전과 비교할 때)
 // --auto: 🧺 자동 장치(P28-10)를 사서 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 장치가 더 벌어 주지 않아서). 바구니 3 · 건조대 2 · 일손 1까지, 맡긴 일은 손으로 안 함
+// --bonus: 🌟 등급 보너스(P28-05-02) 4칸을 처음부터 모두 끝까지 켠 정원사 (손길 점과 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry와 함께 써야 바구니 · 건조대 · 저장고 칸이 일함. --bonus=rack,basket처럼 몇 칸만 켤 수도 있음
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry');
+const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
 const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 1000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
 const st = E.create(mon + 0.1 * H, rng); st.gardenId = `sim-${SEED}`;   // 광산 판 · 주문 쪽지 · 기념품이 이름표로 정해져서 고정 (QA 7회차: 매번 같은 값)
+if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, BONUS === 'all' || BONUS.split(',').includes(k) ? E.bonusMax(k) : 0]));   // P28-05-02 --bonus
 st.onboarded = true;   // 첫 안내를 마친 정원사 — 🗓️ 주간 목표(P28-09)는 첫 안내 뒤부터 뽑혀서 (0장 첫 방문 퀘스트 10점도 이때)
 const ctx = { live: false, rng };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
 const ledger = {}; const add = (yr, k, v) => { (ledger[yr] = ledger[yr] || {})[k] = (ledger[yr][k] || 0) + v; };
@@ -40,7 +42,7 @@ function act() {
   if (AUTO) for (const [k, max] of [['autobasket', 3], ['dryrack', 2], ['teahelper', 1]]) {
     const D = E.DECOS[k];
     if (st.decos.filter(d => d.key === k).length >= max || E.gradeOf(st).grade < D.need || st.money < D.price + 20000) continue;
-    const free = (x, y) => !E.flowerAt(st, x, y) && !E.decoAt(st, x, y), near = (f, x, y) => Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= E.AUTO_R;
+    const free = (x, y) => !E.flowerAt(st, x, y) && !E.decoAt(st, x, y), near = (f, x, y) => Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= E.basketReach(st);
     let best = null;
     if (k === 'autobasket') for (let y = 0; y < E.H; y++) for (let x = 0; x < E.W; x++) {   // 바구니는 다른 바구니가 안 맡은 꽃이 둘레에 가장 많은 빈칸 (없으면 사지 않음)
       if (!free(x, y)) continue;
@@ -69,11 +71,11 @@ function act() {
     }
     // 돌보기
     const tiles = st.flowers.map(f => [f.x, f.y]);
-    const byBasket = ([x, y]) => baskets.some(d => Math.max(Math.abs(x - d.x), Math.abs(y - d.y)) <= E.AUTO_R);   // 바구니 둘레는 맡김 (--auto)
+    const kept = new Set(baskets.flatMap(d => E.basketFlowers(st, d)).map(f => f.x + ',' + f.y)), byBasket = ([x, y]) => kept.has(x + ',' + y);   // 바구니가 맡은 꽃은 맡김 (--auto, --bonus면 둘레 2칸에서 20포기까지)
     for (const t of ['water', 'weed', 'prune', 'harvest', 'fert']) for (const tl of tiles) if (t !== 'harvest' || !byBasket(tl)) E.care(st, t, [tl], ctx);
     for (const f of st.flowers) E.propagate(st, f.id, rng, ctx);
     // 꽃잎은 모두 꽃방에 (--auto: 건조대가 달 끝에 가져갈 만큼 오래된 것은 남김)
-    const leave = racks * E.RACK_N;
+    const leave = racks * E.rackN(st);
     if (st.petals.length > leave) E.dryPetals(st, st.petals.slice(leave).map(p => p.id));
   }
   // 찻집이 열리면: 레시피 블렌드 → 블렌드 티백 → 남은 말린 꽃잎 티백 → 우려서 바로 판매

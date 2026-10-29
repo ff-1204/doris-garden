@@ -104,11 +104,20 @@ console.log('[🎁 첫 방문 꾸러미 firstGuest (P22-05)]');
 
 console.log('[📮 운영자 편지 받은 기록 mailGot (P29)]');
 { const MG = E.MIGRATIONS.findIndex(x => x[0].includes('mailGot'));
-  check(MG === E.MIGRATIONS.length - 1 && E.create(MON, () => 0.5).mailGot && JSON.stringify(m.mailGot) === '{}', '새 정원 · 예전 정원 모두 빈 기록으로 시작 (맨 끝 보정)');
+  check(MG >= 0 && E.create(MON, () => 0.5).mailGot && JSON.stringify(m.mailGot) === '{}', '새 정원 · 예전 정원 모두 빈 기록으로 시작');
   const old = copy(st); delete old.mailGot; old.mig = MG; const om = E.migrateSave(old);
   check(JSON.stringify(om.mailGot) === '{}' && om.mig === E.MIGRATIONS.length, 'mailGot이 없는 정원은 빈 기록으로');
   const got = copy(st); got.mailGot = { 'a-1': 123 }; got.mig = MG;
   check(E.migrateSave(got).mailGot['a-1'] === 123, '이미 받은 기록은 그대로'); }
+
+console.log('[🌟 등급 보너스 bonus (P28-05-02)]');
+{ const BN = E.MIGRATIONS.findIndex(x => x[0].includes('등급 보너스 bonus'));
+  const zero = b => b && E.BONUS_KEYS.every(k => b[k] === 0) && Object.keys(b).length === E.BONUS_KEYS.length;
+  check(BN === E.MIGRATIONS.length - 1 && zero(E.create(MON, () => 0.5).bonus) && zero(m.bonus), '새 정원 · 예전 정원 모두 모든 칸 0단계 (맨 끝 보정)');
+  const old = copy(st); delete old.bonus; old.mig = BN; old.grade.xp = 5000; const om = E.migrateSave(old);
+  check(zero(om.bonus) && om.mig === E.MIGRATIONS.length && E.bonusPoints(om) === Math.floor(E.gradeOf(om).grade / 5) && E.bonusLeft(om) === E.bonusPoints(om), 'bonus가 없는 정원은 0단계로 · 손길 점은 지금 등급으로 바로 셈');
+  const got = copy(st); got.bonus = { rack: 2 }; got.mig = BN; const gm = E.migrateSave(got);
+  check(gm.bonus.rack === 2 && gm.bonus.basket === 0 && Object.keys(gm.bonus).length === E.BONUS_KEYS.length, '이미 고른 칸은 그대로, 빠진 칸만 0'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
