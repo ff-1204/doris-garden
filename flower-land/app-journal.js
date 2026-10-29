@@ -258,6 +258,8 @@ function renderTop() {
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
   const tt = $('#topTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호
   if (tt.dataset.k !== tk) { tt.dataset.k = tk; tt.hidden = !tk; tt.innerHTML = tk ? `${titleImg(tk, 22, false)}<span>${E.TITLES[tk].name}</span>` : ''; }
+  const sb = E.seasonBadge(st), ts = $('#topSeason'), sk = sb ? String(sb.n) : '';   // 🌸 새 철 (P28-08-05): 1철이면 없음 · 느긋하게 보기여도 보임(숫자가 아니라 이름) · 640px 이하는 "🌸 2"
+  if (ts.dataset.k !== sk) { ts.dataset.k = sk; ts.hidden = !sb; ts.title = sb ? `${sb.n}철 정원` : ''; ts.innerHTML = sb ? `<span class="ts-l">${sb.text}</span><span class="ts-s">🌸 ${sb.n}</span>` : ''; }
   const gb = E.gradeBadge(st), tg = $('#topGrade'), gk = gb ? `${gb.grade}|${gb.pct}` : '';   // 🌱 정원 등급 (P28-05-01, M1-4) · 느긋하게 보기면 null → 숨김
   if (tg.dataset.k !== gk) { tg.dataset.k = gk; tg.hidden = !gb; tg.title = gb ? `정원 등급 ${gb.grade} · ${gb.name} · 다음 등급까지 ${gb.pct}% · 눌러서 등급 보기` : ''; tg.innerHTML = gb ? `🌱<span class="tg-name">${gb.name}</span><span class="tg-n">${gb.grade}</span><i class="tg-bar" aria-hidden="true"><b style="width:${gb.pct}%"></b></i>` : ''; }
   if (document.documentElement.dataset.season !== String(cal.season)) { document.documentElement.dataset.season = cal.season; requestAnimationFrame(() => document.documentElement.classList.add('season-anim')); }   // 계절 바탕색
