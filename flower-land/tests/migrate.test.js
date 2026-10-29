@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -113,11 +113,26 @@ console.log('[📮 운영자 편지 받은 기록 mailGot (P29)]');
 console.log('[🌟 등급 보너스 bonus (P28-05-02)]');
 { const BN = E.MIGRATIONS.findIndex(x => x[0].includes('등급 보너스 bonus'));
   const zero = b => b && E.BONUS_KEYS.every(k => b[k] === 0) && Object.keys(b).length === E.BONUS_KEYS.length;
-  check(BN === E.MIGRATIONS.length - 1 && zero(E.create(MON, () => 0.5).bonus) && zero(m.bonus), '새 정원 · 예전 정원 모두 모든 칸 0단계 (맨 끝 보정)');
+  check(BN >= 0 && zero(E.create(MON, () => 0.5).bonus) && zero(m.bonus), '새 정원 · 예전 정원 모두 모든 칸 0단계');
   const old = copy(st); delete old.bonus; old.mig = BN; old.grade.xp = 5000; const om = E.migrateSave(old);
   check(zero(om.bonus) && om.mig === E.MIGRATIONS.length && E.bonusPoints(om) === Math.floor(E.gradeOf(om).grade / 5) && E.bonusLeft(om) === E.bonusPoints(om), 'bonus가 없는 정원은 0단계로 · 손길 점은 지금 등급으로 바로 셈');
   const got = copy(st); got.bonus = { rack: 2 }; got.mig = BN; const gm = E.migrateSave(got);
   check(gm.bonus.rack === 2 && gm.bonus.basket === 0 && Object.keys(gm.bonus).length === E.BONUS_KEYS.length, '이미 고른 칸은 그대로, 빠진 칸만 0'); }
+
+console.log('[🌸 새 철 season (P28-08-03)]');
+{ const SN = E.MIGRATIONS.findIndex(x => x[0].includes('새 철 season'));
+  const nw = E.create(MON, () => 0.5);
+  check(SN === E.MIGRATIONS.length - 1 && nw.season.n === 1 && nw.season.startedAt === MON && nw.season.path === null && nw.season.log.length === 0, '새 정원은 1철 · 시작한 때를 앎 (맨 끝 보정)');
+  check(m.season && m.season.n === 1 && m.season.startedAt === null && m.season.path === null && JSON.stringify(m.season.log) === '[]', '가장 옛 정원도 1철 · 시작한 때는 모름(null)');
+  const old = copy(st); delete old.season; old.mig = SN;
+  old.yearLog = [{ year: 1, income: 5, sold: 1, harvest: 1, orders: 0, score: 9, grade: 2, dex: 1, dexTotal: 93 }, { year: 2, income: 6, sold: 2, harvest: 1, orders: 0, score: 10, grade: 3, dex: 2, dexTotal: 93 }];
+  old.records = [{ year: 2, score: 10 }, { year: 1, score: 9 }];
+  const om = E.migrateSave(old);
+  check(om.season.n === 1 && om.season.startedAt === null && om.mig === E.MIGRATIONS.length, 'season이 없는 정원은 1철로');
+  check(om.yearLog.every(r => r.season === 1) && om.records.every(r => r.season === 1) && E.seasonRows(om).length === 2, '해마다 기록 줄 · 한 해 기록 카드는 1철 — 새 철 조건의 해 수로 셈');
+  const s2 = copy(st); s2.season = { n: 3, startedAt: 7, path: null, log: [{ n: 1 }, { n: 2 }] }; s2.yearLog = [{ year: 1, season: 3, score: 1 }]; s2.mig = SN;
+  const sm = E.migrateSave(s2);
+  check(sm.season.n === 3 && sm.season.log.length === 2 && sm.yearLog[0].season === 3, '이미 있는 철 · 줄의 철 번호는 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

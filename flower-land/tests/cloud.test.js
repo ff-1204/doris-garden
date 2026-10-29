@@ -95,5 +95,25 @@ check(!E.cloudTokenUse(tok, '', T) && !E.cloudTokenUse(tok, undefined, T), '로�
 check(!E.cloudTokenUse(null, 'a@b.c', T) && !E.cloudTokenUse({ exp: T + H, email: 'a@b.c' }, 'a@b.c', T) && !E.cloudTokenUse({ token: 'x', email: 'a@b.c' }, 'a@b.c', T), '없거나 깨진 기록은 안 씀');
 check(E.cloudAutoOk({ on: true, email: 'a@b.c', tokenOk: E.cloudTokenUse(tok, 'a@b.c', T), ready: true, tried: null, exp: tok.exp }) === false, '기억한 토큰을 쓰면 첫 누름 창도 안 뜸');
 
+console.log('[🌸 철 수가 다른 두 정원 (P28-08 열린 질문 ③)]');
+{ const g = E.create(MON, () => 0.5);
+  check(E.saveSummary(g).season === 1 && E.makeSave(g, T).summary.season === 1, '저장 요약에 몇 철 (season)');
+  const other = D({ gardenId: 'b', actAt: T, season: 1 }, null, { gardenId: 'a', savedAt: T - H, season: 3 });
+  check(other.act === 'ask' && other.why === 'other' && other.first === 'remote' && other.seasons.local === 1 && other.seasons.remote === 3, '다른 정원 · 철이 다름 → 묻고, 철이 큰 쪽(드라이브)을 먼저');
+  const flip = D({ gardenId: 'b', actAt: T, season: 2 }, null, { gardenId: 'a', savedAt: T - H, season: 1 });
+  check(flip.first === 'local', '이 기기 정원이 철이 크면 이 기기 것을 먼저');
+  const firstSync = D({ gardenId: 'a', actAt: T + H, season: 1 }, null, { gardenId: 'a', savedAt: T, season: 2 });
+  check(firstSync.act === 'ask' && firstSync.why === 'season' && firstSync.first === 'remote', '같은 정원(새 철은 이름표 그대로)을 처음 맞추는데 철이 다르면 늦은 쪽을 자동으로 고르지 않고 묻기');
+  const sameS = D({ gardenId: 'a', actAt: T + H, season: 2 }, null, { gardenId: 'a', savedAt: T, season: 2 });
+  check(sameS.act === 'local' && sameS.why === 'older' && !sameS.first && sameS.seasons.local === 2, '철이 같으면 전처럼 늦은 쪽 (먼저 보일 쪽 없음)');
+  check(D({ gardenId: 'a', actAt: T - H, season: 1 }, { gardenId: 'a', savedAt: T }, { gardenId: 'a', savedAt: T + 2 * H, season: 2 }).act === 'remote', '다른 기기가 새 철을 시작해 저장했고 이 기기는 그 뒤로 손대지 않음 → 드라이브 것을 자동으로');
+  const both = D({ gardenId: 'a', actAt: T + H, season: 1 }, { gardenId: 'a', savedAt: T }, { gardenId: 'a', savedAt: T + 2 * H, season: 2 });
+  check(both.act === 'ask' && both.why === 'both' && both.first === 'remote', '두 기기 모두 손댔으면 묻고 새 철 쪽을 먼저');
+  const noS = D({ gardenId: 'a', actAt: T + H }, null, { gardenId: 'a', savedAt: T });
+  check(noS.act === 'local' && !('seasons' in noS), '철을 모르는 예전 요약이면 전과 같음');
+  // 완전 초기화(resetAt)와 다름: 새 철 정원은 계정 칭호를 이어 붙이는 규칙 그대로 (resetAt을 건드리지 않음)
+  const sz = E.create(MON, () => 0.5); sz.season.n = 2;
+  check(sz.resetAt === null && E.applyAccount(sz, MON - H, ctx) === true && sz.titles.t_visit != null, '새 철 정원엔 계정 첫 방문을 그대로 이어 붙임 (완전 초기화만 막힘)'); }
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
 process.exit(fails ? 1 : 0);
