@@ -302,10 +302,10 @@ function awayDiff(b) {
   const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
 }
-// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주, 그 이상은 건너뜀)
+// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)
 function catchUp() {
   ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
-  const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = 21 * 24 * HOUR;
+  const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = E.catchUpH(st) * HOUR;
   if (gap > CAP) { E.advance(st, st.virtual + CAP, ctx); st.virtual += gap - CAP; st.lastAbs = E.calendar(st.virtual).abs; }
   else E.advance(st, st.virtual + gap, ctx);
   st.lastReal = now;

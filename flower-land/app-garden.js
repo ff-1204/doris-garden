@@ -422,12 +422,12 @@ function openDecoTile(d) {
   }
   if (d.key === 'autobasket') {                   // P28-10-01 자동 수확 바구니: 이 달이 끝나면 거둘 꽃 · 지도에 범위
     const cal = E.calendar(st.virtual), bl = E.basketBlooms(st, d, cal);
-    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : '지금 바로 옆에 거둘 핀 꽃이 없어요'} · 둘레 ${E.AUTO_R}칸 · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : `지금 ${E.basketReach(st) > 1 ? '둘레' : '바로 옆'}에 거둘 핀 꽃이 없어요`} · 둘레 ${E.basketReach(st)}칸 ${E.bonusVal(st, 'basket')}포기까지 ·바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
   if (d.key === 'dryrack') {                      // P28-10-02 자동 건조대: 이 달이 끝나면 널 꽃잎 · 꽃방에서 마르는 중
-    const racks = E.placedOf(st, 'dryrack').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.RACK_N);
-    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 건조대도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.RACK_N}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+    const racks = E.placedOf(st, 'dryrack').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.rackN(st));   // P28-05-02 🍂 건조대 넉넉히면 10 · 12 · 14장
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 건조대도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.rackN(st)}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
   }
   if (d.key === 'teahelper') {                    // P28-10-03 찻집 일손: 열려 있으면 카운터를 채움 · 남은 티백
     const cal = E.calendar(st.virtual), open = E.teaShopOpen(cal), bags = st.teas.length;
@@ -448,11 +448,11 @@ function openDecoTile(d) {
   if (tb) tb.onclick = () => { closeModal(); after(E.takeHoney(st, d.id, ctx), null, { label: '🍵 찻집', fn: () => setTab('cab') }); };
 }
 // 지도에 범위를 그리는 장식의 둘레 칸 수 (P27 장치 · P28-10 자동 수확 바구니), 없으면 null
-function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : key === 'autobasket' ? E.AUTO_R : null; }
-// 상태창 한 줄: 자동 수확 바구니 둘레의 꽃 (P28-10-01)
+function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : key === 'autobasket' ? E.basketReach(st) : null; }   // P28-05-02 🧺 바구니 넓게면 둘레 2칸
+// 상태창 한 줄: 자동 수확 바구니가 맡은 꽃 (P28-10-01 · P28-05-02 바구니 넓게: 둘레 2칸에서 가까운 꽃부터 n포기 — 엔진 basketFlowers 그대로)
 function basketNote(f) {
   const cal = E.calendar(st.virtual);
-  if (cal.frozen || !E.placedOf(st, 'autobasket').some(d => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= E.AUTO_R)) return '';
+  if (cal.frozen || !E.placedOf(st, 'autobasket').some(d => E.basketFlowers(st, d).includes(f))) return '';
   return E.canCare(st, f, 'harvest', cal) ? ' · 🧺 달이 끝나면 저절로 거둬요' : ' · 🧺 자동 바구니 둘레';
 }
 function select(id) { ui.selected = id; ui.selTile = null; ui.sheetOpen = true; renderStatus(true); }
