@@ -40,6 +40,11 @@ function yearGraphHTML() {
 // 지난해 견줌 한 줄: "수입 +12% · 점수 +8" (없는 칸은 뺌)
 const vsText = d => [d.income != null ? `수입 ${signed(d.income, '%')}` : '', d.score != null ? `점수 ${signed(d.score)}` : ''].filter(Boolean).join(' · ') || '기록이 비슷해요';
 // 한 해 기록 카드 (꽃잠): 지난해보다 얼마나 · 그래프 보기. 느긋하게 보기면 숫자 없이 그래프 링크만
+// 🌙 꽃잠 한 해 평가 뒤 (P23-02 · P28-05-02-03, M3-2): 가장 최근 기록 카드 끝에 쓸 수 있는 손길 점 한 줄 → 도감일지 손길 점 칸 (느긋하게 보기면 없음)
+function bonusRecHTML() {
+  const left = E.bonusView(st).left;
+  return left >= 1 && !E.slowView(st) ? `<div class="rec-bonus"><span>🌟 손길 점 ${left}점을 쓸 수 있어요</span><button type="button" class="btn small" data-bgo="1">고르러 가기</button></div>` : '';
+}
 function recVsHTML(r) {
   if ((st.yearLog || []).length < 2) return '';
   const d = E.slowView(st) ? null : E.yearDiffOf(st, r.year);
@@ -67,7 +72,7 @@ function econHTML() {
     <p class="muted ec-note">레시피 블렌드로 팔면 더 받아요. 아직 못 본 꽃은 피우면 보여요.</p></div>`;
 }
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, st.bonus, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
@@ -111,7 +116,7 @@ function renderDex(force) {
   } else if (ui.dexTab === 'journal') {
     body = journalHTML();
   } else {
-    body = st.records.length ? st.records.map(r => {
+    body = st.records.length ? st.records.map((r, ri) => {
       const total = W * H, order = LAND_KEYS.filter(k => r.counts[k]).sort((a, b) => (a === 'barren') - (b === 'barren') || r.counts[b] - r.counts[a]);
       // 한 해 카드: 왼쪽 그해 정원 그림 (없으면 점선 자리) · 오른쪽 제목과 두 칩(가장 좋은 차 · 도감) · 땅 막대 · 일지
       const land = order.filter(k => k !== 'barren').length;
@@ -120,7 +125,7 @@ function renderDex(force) {
         <div class="stack" style="gap:10px">
           <div class="rec-head"><h3>${r.year}년차 정원</h3><span class="muted">땅 ${land}가지</span></div>
           ${r.score != null && !E.slowView(st) ? `<div class="rec-score"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders'], ['선물', 'gifts']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${r.scoreParts[k]}`).join(' · ')}</small></div>` : ''}
-          ${recVsHTML(r)}
+          ${recVsHTML(r)}${ri === 0 ? bonusRecHTML() : ''}
           <div class="rec-chips">
             <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
             ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
@@ -141,6 +146,8 @@ $('#p-dex').addEventListener('click', e => {
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
   const ml = e.target.closest('[data-mail]'); if (ml) { const b = E.mailOf(st, ml.dataset.mail); return b && openMail(b); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
+  const bn = e.target.closest('[data-bonus]'); if (bn) { return after(E.bonusSet(st, bn.dataset.bonus, +bn.dataset.lv)); }   // 🌟 손길 점 고르기 (P28-05-02-03) — 다른 단추와 같은 알림 줄 (모자라면 경고)
+  const bg = e.target.closest('[data-bgo]'); if (bg) { ui.dexTab = 'journal'; renderDex(true); const el = $('#jBonus'); return el && el.scrollIntoView({ block: 'start' }); }   // 기록 카드 → 도감일지 손길 점 칸
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);

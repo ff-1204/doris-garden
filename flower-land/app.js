@@ -215,14 +215,18 @@ function spriteURL(key, kind, locked) {
 const formArt = (key, size) => { const F = FLOWERS[key]; return `<span class="sc-pair">${spriteImg(key, 'form', size, false, `${F.name} ${FORM[F.form].name}`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom" title="피면 ${F.name}">${spriteImg(key, 'flower', Math.round(size * 0.5), false, F.name)}</span></span>`; };
 // P17-16 정원 장식 그림: decos.js의 16×16 도트, 칭호 문장은 칭호 그림(22×22, titleURL)
 const decoCache = {}, decoBitmaps = {};
+// P28-05-02-04 이정표: 🌟 보너스 칸을 끝까지 올리면 그 장치 그림이 decos.js의 「_max」로 (정원 · 창고 · 화원 · 도감 모두)
+const DECO_MAXED = { autobasket: 'basket', dryrack: 'rack' };
+const decoArt = key => DECO_MAXED[key] && E.bonusMaxed(st, DECO_MAXED[key]) && window.DECO_SPRITES[key + '_max'] ? key + '_max' : key;
 function decoURL(key) {
-  if (decoCache[key]) return decoCache[key];
+  const art = decoArt(key);
+  if (decoCache[art]) return decoCache[art];
   const info = E.decoInfo(key); if (!info) return '';
-  if (info.title) return (decoCache[key] = titleURL(info.title, false, 0));
-  const S = window.DECO_SPRITES[key], c = document.createElement('canvas'); c.width = c.height = 16;
+  if (info.title) return (decoCache[art] = titleURL(info.title, false, 0));
+  const S = window.DECO_SPRITES[art], c = document.createElement('canvas'); c.width = c.height = 16;
   const x = c.getContext('2d');
   S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && S.pal[ch]) { x.fillStyle = S.pal[ch]; x.fillRect(i, j, 1, 1); } }));
-  return (decoCache[key] = c.toDataURL());
+  return (decoCache[art] = c.toDataURL());
 }
 // 화면에 띄우는 크기는 원본의 정수배로 (장식 16 · 칭호 문장 22, P16-14)
 const decoImg = (key, scale) => { const info = E.decoInfo(key), px = (info && info.title ? 22 : 16) * (scale || 3); return `<img class="px" src="${decoURL(key)}" width="${px}" height="${px}" alt="${esc(info ? info.name : '')}">`; };
@@ -249,8 +253,8 @@ function mineURL(k) {
 }
 const mineImg = (k, scale) => `<img class="px" src="${mineURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.mineName(k))}">`;
 function decoBitmap(key) {                         // 지도에 그릴 그림 (불러오기가 끝난 뒤부터)
-  let im = decoBitmaps[key];
-  if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[key] = im; }
+  const art = decoArt(key); let im = decoBitmaps[art];   // 끝까지 올린 장치는 따로 (P28-05-02-04)
+  if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[art] = im; }
   return im.complete && im.naturalWidth ? im : null;
 }
 const px16 = size => 16 * Math.max(1, size >= 48 ? Math.floor(size / 16 + 0.49) : Math.round(size / 16));   // 도트 그림은 16px의 정수배로만 (P16-14, 10-24)
@@ -302,10 +306,10 @@ function awayDiff(b) {
   const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
   return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
 }
-// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주, 그 이상은 건너뜀)
+// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)
 function catchUp() {
   ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
-  const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = 21 * 24 * HOUR;
+  const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = E.catchUpH(st) * HOUR;
   if (gap > CAP) { E.advance(st, st.virtual + CAP, ctx); st.virtual += gap - CAP; st.lastAbs = E.calendar(st.virtual).abs; }
   else E.advance(st, st.virtual + gap, ctx);
   st.lastReal = now;
@@ -529,7 +533,11 @@ function showToast(msg, ms) {
 }
 toastEl.addEventListener('click', () => { toastEl.classList.remove('show'); openLog(); });
 // 🌱 정원 등급이 오를 때 (P28-05-01, M1-4): 등급 한 줄 → 열린 장식 한 줄, 따로따로 (큰 창은 없음 · 느긋하게 보기면 E.gradeAlerts가 빈 목록)
-function gradeToasts(e) { E.gradeAlerts(st, e).forEach((t, i) => setTimeout(() => queueToast(t), i * 400)); }
+// 🌟 5의 배수를 넘으면 손길 점 한 줄을 그 다음에 (P28-05-02-03, M3-2) — gradeAlerts는 그대로, 점은 오르기 전 등급 → 지금 bonusPoints로 견줌
+function gradeToasts(e) {
+  const pts = e && !E.slowView(st) ? E.bonusPoints(st) - Math.floor(e.from / E.BONUS_PER) : 0;
+  [...E.gradeAlerts(st, e), ...(pts > 0 ? [`🌟 손길 점이 ${pts}점 생겼어요 · 📔 도감일지에서 골라요`] : [])].forEach((t, i) => setTimeout(() => queueToast(t), i * 400));
+}
 
 // ---------------------------------------------------------------- 위 막대
 const SEASON_IC = ['🌸', '☀️', '🍁', '❄️', '🌙'];
