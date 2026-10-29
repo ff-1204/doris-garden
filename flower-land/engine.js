@@ -2288,7 +2288,7 @@ function bonusView(st) {                          // 고르기 화면(M3-2)이 �
     const B = BONUS[key], level = bonusLevel(st, key), max = bonusMax(key);
     return { key, name: B.name, icon: B.icon, level, max, maxed: level === max, costNext: level < max ? BONUS_COST[level] : null, desc: B.desc(B.vals[level]), nextDesc: level < max ? B.desc(B.vals[level + 1]) : null };
   });
-  return { points, used, left: points - used, per: BONUS_PER, nextAt: (points + 1) * BONUS_PER, rows };
+  return { points, used, left: Math.max(0, points - used), per: BONUS_PER, nextAt: (points + 1) * BONUS_PER, rows };
 }
 
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)

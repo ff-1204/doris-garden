@@ -192,7 +192,9 @@ console.log('[🌟 bonusView · bonusMaxed — 화면(M3-2)이 읽는 것]');
   check(b.name === '바구니 넓게' && b.icon === '🧺' && b.level === 3 && b.max === 3 && b.maxed && b.costNext === null && b.desc === '자동 수확 바구니가 꽃 20포기까지 거둬요', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
   check(r.level === 0 && r.costNext === 1 && r.desc === '자동 건조대가 달마다 꽃잎 8장을 널어요' && r.nextDesc === '자동 건조대가 달마다 꽃잎 10장을 널어요', '0단계 칸: 다음 단계 값 1점 · 지금 / 다음 설명');
   check(row('catchup').desc === '오래 비워도 5주까지 따라잡아요' && row('pantry').desc === '정원 저장고 칸 그대로예요', '따라잡기 끝 · 저장고 0단계 설명');
-  check(E.bonusMaxed(s, 'basket') && E.bonusMaxed(s, 'catchup') && !E.bonusMaxed(s, 'rack') && !E.bonusMaxed(s, 'gold'), 'bonusMaxed: 끝까지 올린 칸만 (P28-05-02-04 이정표, 그림은 M3-2)'); }
+  check(E.bonusMaxed(s, 'basket') && E.bonusMaxed(s, 'catchup') && !E.bonusMaxed(s, 'rack') && !E.bonusMaxed(s, 'gold'), 'bonusMaxed: 끝까지 올린 칸만 (P28-05-02-04 이정표, 그림은 M3-2)');
+  s.grade.xp = E.gradeXpAt(5);   // 저장 파일을 손으로 고쳐 쓴 점이 총점보다 많은 경우
+  check(E.bonusLeft(s) < 0 && E.bonusView(s).left === 0 && E.bonusSet(s, 'basket', 2).ok, '쓴 점이 총점보다 많아도 화면 left는 0 · 내리기는 됨'); }
 
 console.log('[🌟 규칙이 실제로 바뀜]');
 { const ring = s => { put(s, 'autobasket', 10, 10); for (let y = 8; y <= 12; y++) for (let x = 8; x <= 12; x++) if (x !== 10 || y !== 10) fl(s, 'chamomile', x, y); };   // 둘레 2칸에 24포기
