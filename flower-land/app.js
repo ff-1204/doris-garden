@@ -533,7 +533,11 @@ function showToast(msg, ms) {
 }
 toastEl.addEventListener('click', () => { toastEl.classList.remove('show'); openLog(); });
 // 🌱 정원 등급이 오를 때 (P28-05-01, M1-4): 등급 한 줄 → 열린 장식 한 줄, 따로따로 (큰 창은 없음 · 느긋하게 보기면 E.gradeAlerts가 빈 목록)
-function gradeToasts(e) { E.gradeAlerts(st, e).forEach((t, i) => setTimeout(() => queueToast(t), i * 400)); }
+// 🌟 5의 배수를 넘으면 손길 점 한 줄을 그 다음에 (P28-05-02-03, M3-2) — gradeAlerts는 그대로, 점은 오르기 전 등급 → 지금 bonusPoints로 견줌
+function gradeToasts(e) {
+  const pts = e && !E.slowView(st) ? E.bonusPoints(st) - Math.floor(e.from / E.BONUS_PER) : 0;
+  [...E.gradeAlerts(st, e), ...(pts > 0 ? [`🌟 손길 점이 ${pts}점 생겼어요 · 📔 도감일지에서 골라요`] : [])].forEach((t, i) => setTimeout(() => queueToast(t), i * 400));
+}
 
 // ---------------------------------------------------------------- 위 막대
 const SEASON_IC = ['🌸', '☀️', '🍁', '❄️', '🌙'];

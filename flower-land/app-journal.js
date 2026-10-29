@@ -112,7 +112,7 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return gradeHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return gradeHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -131,6 +131,21 @@ function gradeHTML() {
       ${src}${decos}
       <p class="note">🪴 ${next} · 열린 장식은 💐 화원에서 언제든 사요</p>
       ${slow ? '' : '<p class="note muted">정원에서 한 일만큼 쌓여요 · 돈으로 산 것은 세지 않아요</p>'}</div>`;
+}
+// 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
+// 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)
+function bonusHTML() {
+  const v = E.bonusView(st), slow = E.slowView(st);
+  const rows = v.rows.map(r => {
+    const can = !r.maxed && r.costNext <= v.left;
+    const why = r.maxed || can || slow ? '' : `<small class="bn-why">🌟 ${r.costNext - v.left}점이 더 있어야 올려요</small>`;
+    return `<div class="bn-row ${r.maxed ? 'maxed' : ''}"><span class="bn-ic" aria-hidden="true">${r.icon}</span>
+      <span class="bn-txt"><b>${esc(r.name)}${slow ? '' : ` <span class="bn-lv data">${r.level} / ${r.max}단계</span>`}${r.maxed ? ' <span class="bn-max">✨ 끝까지</span>' : ''}</b><small>${esc(r.desc)}</small>${!slow && r.nextDesc ? `<small class="bn-next">다음 단계: ${esc(r.nextDesc)}</small>` : ''}${why}</span>
+      <span class="bn-btns">${r.maxed ? '' : `<button type="button" class="btn small primary" data-bonus="${r.key}" data-lv="${r.level + 1}"${can ? '' : ' disabled'}>올리기${slow ? '' : ` (🌟 ${r.costNext}점)`}</button>`}${r.level ? `<button type="button" class="btn small" data-bonus="${r.key}" data-lv="${r.level - 1}">내리기</button>` : ''}</span></div>`;
+  }).join('');
+  return `<div class="cab-head dex-head j-head" id="jBonus"><span class="sb-title">🌟 손길 점</span>${slow ? '' : `<span class="dh-count data">${v.left} / ${v.points}점</span>`}</div>
+    <div class="card bn-card">${slow ? '' : `<p class="bn-sum"><b>남은 점 ${v.left}점</b><small class="data">모은 점 ${v.points}점 · ${v.nextAt}등급에 1점 더</small></p>`}${rows}
+      <p class="note muted">${slow ? '정원이 자라면 손을 덜어 주는 보너스를 골라요' : `정원 등급 ${v.per}마다 1점 · 돈으로는 못 얻어요`} · 언제든 내리면 점이 돌아와요</p></div>`;
 }
 // 🗓️ 이번 주 목표 (P28-09, 10-28): 등급 쪽 바로 아래 — 끝내면 등급 경험치라 같은 자리에. 🐢 느긋하게 보기면 통째로 숨김 (E.weeklyView가 null)
 const weekLeft = h => h >= 24 ? `${Math.floor(h / 24)}일` : h >= 1 ? `${Math.floor(h)}시간` : '곧';

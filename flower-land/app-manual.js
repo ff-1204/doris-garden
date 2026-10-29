@@ -84,6 +84,8 @@ function renderManual(force) {
         `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」는 따로' : ''} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요 · 퀘스트 · 주문 · 점수가 숙제 같으면 ⚙️ 설정 › 🐢 느긋하게 보기`)
       + fig(`<div class="mn-flow">${item(ico('🧺'), '거두기 · 팔기', '꽃잎 · 한 잔 2')}${item(ico('💌'), '주문 · 퀘스트', '15 · 10')}${item(ico('📖'), '도감 · 한 해 평가', '새 칸 5 · 1점에 1')}${arrow()}${item(ico('🌱'), '정원 등급', '씨앗 정원 1 → … 숲 정원')}${arrow()}${item(decoImg('sproutsign', 2), '등급 장식', '5등급마다 화원에')}</div>`,   // P28-05-01 🌱 정원 등급 (M1-4)
         '정원에서 한 일만큼 등급이 올라요 · 돈으로 산 것은 세지 않아요 · 끝이 없어요 · 위 막대 🌱를 누르면 📔 도감일지 맨 위에서 봐요 · 🐢 느긋하게 보기면 위 막대 · 알림 · 숫자가 숨어요')
+      + fig(`<div class="mn-flow">${item(ico('🌱'), '정원 등급', `${E.BONUS_PER}등급마다`)}${arrow()}${item(ico('🌟'), '손길 점', '1점')}${arrow()}${E.BONUS_KEYS.map(k => item(ico(E.BONUS[k].icon), E.BONUS[k].name, `${E.BONUS_COST.join(' · ')}점`)).join('')}</div>`,   // P28-05-02 🌟 손길 점 (M3-2)
+        '📔 도감일지 등급 아래에서 골라요 · 바구니 · 건조대 · 저장고 · 따라잡기가 손을 덜어 줄 뿐 더 벌지는 않아요 · 언제든 내리면 점이 돌아와요 · 끝까지 올린 장치는 그림이 바뀌어요')
       + fig(`<div class="mn-flow">${item(ico('🗓️'), '월요일 아침', '목표 3개')}${arrow()}${item(ico('🌿'), '쉬움 · 보통 · 어려움', `🌱 +${E.WEEKLY_XP.join(' · +')}`)}${arrow()}${item(ico('🎉'), '셋 다', `덤 🌱 +${E.WEEKLY_BONUS}`)}</div>`,   // P28-09 🗓️ 주간 목표
         '이번 주 목표는 📔 도감일지 등급 아래에 있어요 · 주 안에 언제 해도 되고 꽃잠에도 돼요 · 못 끝낸 목표는 그냥 사라져요 · 돈은 주지 않아요')
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
@@ -116,7 +118,7 @@ function renderSettings() {
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
   $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
     ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
-      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
+      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
     ${group('🔔', '알림', '꺼도 정원 일지에는 그대로 남아요',
       [[3, '📦', '예약 배송', '예약한 꽃이 창고에 왔을 때'], [8, '🌸', '개화와 수확', '꽃이 피어 거둘 수 있을 때'], [9, '📖', '도감 등록', '새 꽃·차·땅을 처음 만났을 때']].map(([t, ic, nm, d]) => row(ic, nm, d, tog(`data-toast="${t}"`, s.toast[t]))).join('')
       + row('🌙', '수면 시간', '이 시간의 알림은 모았다가 끝날 때 한 번에 (휴대폰 푸시용, 웹은 저장만)', tog('id="sleepOn"', s.sleep.on))

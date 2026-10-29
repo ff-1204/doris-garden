@@ -444,6 +444,22 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .wguide .gd-now .data { font-size: 12px; color: var(--muted); margin-left: 4px; }
 .wguide .btn.small { white-space: nowrap; }
 #jWeekly { scroll-margin-top: 84px; }   /* 정원 띠 "보기"로 올 때 위 막대에 가리지 않게 */
+/* P28-05-02-03 🌟 손길 점 (M3-2): 등급 쪽 아래 4칸 — 아이콘 · 이름 · 설명 | 올리기 · 내리기, 좁으면 단추가 아래 줄로 */
+.bn-card { display: grid; gap: 8px; }
+.bn-sum { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
+.bn-sum small { color: var(--muted); font-size: 12.5px; }
+.bn-row { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.bn-ic { font-size: 18px; text-align: center; }
+.bn-txt { display: grid; gap: 2px; min-width: 0; }
+.bn-txt small { color: var(--muted); font-size: 12.5px; }
+.bn-txt .bn-next { color: color-mix(in srgb, var(--good) 70%, var(--muted)); }
+.bn-txt .bn-why { color: var(--warn); }
+.bn-lv { font-weight: 400; font-size: 12px; color: var(--muted); }
+.bn-max { font-size: 12px; font-weight: 600; }
+.bn-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+#jBonus { scroll-margin-top: 84px; }
+@media (max-width: 480px) { .bn-btns { grid-column: 2 / -1; justify-content: flex-start; } }
+.rec-bonus { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
 .wk-card { display: grid; gap: 8px; }
 .wk-row { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; grid-template-areas: "ic name n" "ic bar bar"; align-items: center; gap: 2px 8px; }
 .wk-ic { grid-area: ic; font-size: 18px; text-align: center; }
