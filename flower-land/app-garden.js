@@ -422,7 +422,7 @@ function openDecoTile(d) {
   }
   if (d.key === 'autobasket') {                   // P28-10-01 자동 수확 바구니: 이 달이 끝나면 거둘 꽃 · 지도에 범위
     const cal = E.calendar(st.virtual), bl = E.basketBlooms(st, d, cal);
-    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : `지금 ${E.basketReach(st) > 1 ? '둘레' : '바로 옆'}에 거둘 핀 꽃이 없어요`} · 둘레 ${E.basketReach(st)}칸 ${E.bonusVal(st, 'basket')}포기까지 ·바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 바구니도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : `지금 ${E.basketReach(st) > 1 ? '둘레' : '바로 옆'}에 거둘 핀 꽃이 없어요`} · 둘레 ${E.basketReach(st)}칸 ${E.bonusVal(st, 'basket')}포기까지 · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
   if (d.key === 'dryrack') {                      // P28-10-02 자동 건조대: 이 달이 끝나면 널 꽃잎 · 꽃방에서 마르는 중
