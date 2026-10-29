@@ -11,11 +11,11 @@ const FIELDS = 'id,name,modifiedTime,appProperties';
 
 // 실패 종류: offline(연결 안 됨) · auth(토큰이 안 맞음, 다시 받아야 함) · quota(너무 잦음) · fail(그 밖)
 function driveError(kind, status, detail) { const e = new Error(`drive ${kind} ${status || ''}`.trim()); e.kind = kind; e.status = status || 0; e.detail = detail || ''; return e; }
-// 드라이브 파일 → { id, savedAt, gardenId, firstVisit, reward } (appProperties 값은 글자라 숫자로)
+// 드라이브 파일 → { id, savedAt, gardenId, firstVisit, reward, season } (appProperties 값은 글자라 숫자로)
 function metaOf(f) {
   if (!f) return null;
   const p = f.appProperties || {};
-  return { id: f.id, name: f.name, gardenId: p.gardenId || null, savedAt: +p.savedAt || Date.parse(f.modifiedTime) || 0, firstVisit: +p.firstVisit || null, reward: +p.reward || null };   // reward: 계정이 구름 정원사를 받은 때 (P20-16)
+  return { id: f.id, name: f.name, gardenId: p.gardenId || null, savedAt: +p.savedAt || Date.parse(f.modifiedTime) || 0, firstVisit: +p.firstVisit || null, reward: +p.reward || null, season: +p.season || null };   // reward: 계정이 구름 정원사를 받은 때 (P20-16) · season: 몇 철 (P28-08-05, 예전 파일은 null — 철 비교를 하지 않음)
 }
 const newest = list => list.slice().sort((a, b) => b.savedAt - a.savedAt);
 
@@ -43,7 +43,7 @@ function makeDrive(fetchFn, tokenFn) {
   async function read(id) { return (await call(`${API}/${encodeURIComponent(id)}?alt=media`)).text(); }
   // 저장: 지금 garden.json은 이름을 garden.prev.json으로 바꿔 직전 저장본이 되고(예전 직전본은 지움), 새 garden.json을 만듦.
   // garden.json이 없고 직전본만 있으면(지난번 저장이 중간에 끊김) 직전본은 그대로 두고 새로 만들기만 함
-  // props: { gardenId, savedAt, firstVisit, reward } → appProperties. opt.keepalive: 닫을 때 (브라우저가 64KB까지만 받아 줌)
+  // props: { gardenId, savedAt, firstVisit, reward, season } → appProperties. opt.keepalive: 닫을 때 (브라우저가 64KB까지만 받아 줌)
   async function write(text, props, cur, opt) {
     cur = cur || await list();
     const ka = !!(opt && opt.keepalive) && text.length < 60000;

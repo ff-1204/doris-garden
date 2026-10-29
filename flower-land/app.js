@@ -386,9 +386,10 @@ async function shareSave() {
   renderSettings();
 }
 // 요약 한 칸: 대표 칭호 문장 · 년차 달 · 돈 · 도감 · 칭호 · 저장한 때
-function summaryCol(label, sm, when) {
+// showSeason: 두 정원의 철이 다를 때 "🌸 2철 · 3년차" (P28-08-05 — 철이 같으면 전처럼 년차만)
+function summaryCol(label, sm, when, showSeason) {
   return `<div class="imp-col"><small class="imp-l">${label}</small>${sm.titleOn && E.TITLES[sm.titleOn] ? titleImg(sm.titleOn, 44, false) : '<span class="imp-ph">🌱</span>'}
-    <b>${yearWord(sm.year)} ${monthName(sm.month)}</b>
+    <b>${showSeason ? `🌸 ${sm.season || 1}철 · ` : ''}${yearWord(sm.year)} ${monthName(sm.month)}</b>
     <dl class="kv"><dt>돈</dt><dd class="data">${won(sm.money)}</dd><dt>도감</dt><dd class="data">${sm.dex} / ${sm.dexTotal}</dd><dt>칭호</dt><dd class="data">${sm.titles}개</dd><dt>시작한 날</dt><dd>${sm.born ? whenText(sm.born) : '—'}</dd><dt>심은 꽃</dt><dd class="data">${sm.flowers != null ? `${sm.flowers}포기` : '—'}</dd><dt>저장한 때</dt><dd>${when}</dd></dl></div>`;   // 시작한 날 · 심은 꽃 (P20-06-06, 10-27)
 }
 function readImport(file) {
@@ -396,9 +397,9 @@ function readImport(file) {
   file.text().then(text => {
     const r = E.parseSave(text);
     if (!r.ok) return feedback(r.msg, true);
-    const d = r.data, sm = E.saveSummary(d.game);                        // 요약은 파일에 적힌 값 대신 정원에서 다시 셈
+    const d = r.data, sm = E.saveSummary(d.game), now = E.saveSummary(st), sd = now.season !== sm.season;   // 요약은 파일에 적힌 값 대신 정원에서 다시 셈 · 철이 다르면 철도 (P28-08-05)
     openModal('📂 불러오기', `<div class="stack" style="gap:10px">
-      <div class="imp-cmp">${summaryCol('지금 정원', E.saveSummary(st), '이 브라우저')}<span class="imp-arrow" aria-hidden="true">›</span>${summaryCol('불러올 정원', sm, d.savedAt ? whenText(d.savedAt) : '알 수 없음')}</div>
+      <div class="imp-cmp">${summaryCol('지금 정원', now, '이 브라우저', sd)}<span class="imp-arrow" aria-hidden="true">›</span>${summaryCol('불러올 정원', sm, d.savedAt ? whenText(d.savedAt) : '알 수 없음', sd)}</div>
       <label class="imp-opt"><input type="checkbox" id="impSettings"> 설정도 불러오기 <small class="muted">(알림 · 수면 시간)</small></label>
       <p class="note">지금 정원은 ↩︎ 되돌리기 칸에 한 번 보관돼요. 저장한 뒤 흐른 시간은 최대 3주까지 따라잡아요.</p></div>`,
       [{ label: '취소', act: closeModal }, { label: '불러오기', primary: true, act: () => applyImport(d.game, $('#impSettings').checked) }]);
