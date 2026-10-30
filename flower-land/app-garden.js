@@ -439,27 +439,41 @@ function showVisitorBubble(v) {
 }
 // ---------------------------------------------------------------- ⛏️ 광산 탭 (P24, 10-24 · 10-30 창 → 탭, 사용자 요청 "창고 밑에 광산 메뉴 따로"): 층 · 기력 · 8×6 판 · 가방 · 만들기
 function renderMine(force) {
-  const m = E.mineOf(st), b = m.board; ui.mineTab = ui.mineTab || 'bag';
-  const nextE = m.energy >= E.MINE_MAX_E ? '가득 찼어요' : `다음 기력 ${realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1))} 뒤`;
+  const m = E.mineOf(st), b = m.board;
+  const wait = realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1));
+  const nextE = m.energy >= E.MINE_MAX_E ? '가득 찼어요' : `다음 기력 ${wait} 뒤`;
   const stairsFound = b.cells.some(c => c.dug && c.stairs), allDug = b.cells.every(c => c.dug);
-  const cell = (c, i) => c.dug ? `<span class="mc dug" title="${E.mineName(c.k)}${c.stairs ? ' · 계단' : ''}">${c.k === 'dirt' ? '' : mineImg(c.k, 2)}${c.stairs ? `<span class="mc-st">${mineImg('stairs', 1)}</span>` : ''}</span>`
+  // P24 UI (10-30): 칸 그림은 32px로 넣고 칸 크기에 따라 CSS가 ×1 · ×2로만 보여 줌 (정수배). 빈 흙 칸의 계단은 가운데에 크게, 광석 칸의 계단은 귀퉁이에
+  const cell = (c, i) => c.dug ? `<span class="mc dug${c.stairs ? ' st' : ''}" title="${E.mineName(c.k)}${c.stairs ? ' · 계단' : ''}">${c.k === 'dirt' ? (c.stairs ? mineImg('stairs', 2) : '') : mineImg(c.k, 2)}${c.stairs && c.k !== 'dirt' ? `<span class="mc-st">${mineImg('stairs', 1)}</span>` : ''}</span>`
     : `<button type="button" class="mc" data-dig="${i}" aria-label="${Math.floor(i / E.MINE_W) + 1}번째 줄 ${i % E.MINE_W + 1}번째 칸 파기" ${m.energy < 1 ? 'disabled' : ''}></button>`;
+  // P24 UI (10-30): 재료마다 "어디에 쓰나" — 숨긴 찻잔 만들기는 빼고 이름 셋까지
+  const usesOf = k => { const n = E.CRAFT_KEYS.filter(c => !E.CRAFTS[c].cup && E.CRAFTS[c].need[k]).map(c => E.CRAFTS[c].name); return n.length > 3 ? n.slice(0, 3).join(' · ') + ' …' : n.join(' · '); };
   const bagKeys = ['dirt', 'stone', ...E.ORE_KEYS, ...E.FOSSIL_KEYS, 'oldseed'].filter(k => m.bag[k] > 0);
-  const bag = bagKeys.length ? `<div class="mine-bag">${bagKeys.map(k => `<span class="hj">${mineImg(k, 2)}<small>${E.mineName(k)} <b class="data">×${m.bag[k]}</b></small></span>`).join('')}</div>` : '<p class="muted">아직 판 게 없어요 · 칸을 눌러 파 보세요</p>';
-  const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
+  const bag = bagKeys.length ? `<div class="mine-bag">${bagKeys.map(k => { const u = usesOf(k); return `<span class="mine-it">${mineImg(k, 2)}<small>${E.mineName(k)} <b class="data">×${m.bag[k]}</b></small>${u ? `<small class="mine-use">${u}</small>` : ''}</span>`; }).join('')}</div>` : '<p class="muted">아직 판 게 없어요 · 칸을 눌러 파 보세요</p>';
+  // P24 UI (10-30): 재료 진행 막대(가장 모자란 재료 기준) · 만들 수 있는 것을 맨 위로
+  const craftRows = E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], have = C.cup && E.shopOf(st).cups.includes(C.cup), can = E.canCraft(st, k) && !have;
+    const pct = Math.floor(100 * Math.min(...Object.entries(C.need).map(([n, q]) => Math.min(1, (m.bag[n] || 0) / q))));
     const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
-    return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
-  const sig = JSON.stringify([m, nextE, ui.mineTab, st.money, E.shopOf(st).cups, st.jar]);
+    return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
+  const crafts = `<div class="mine-crafts">${[...craftRows.filter(r => r.can), ...craftRows.filter(r => !r.can)].map(r => r.html).join('')}</div>`;
+  const sig = JSON.stringify([m, nextE, st.money, E.shopOf(st).cups, st.jar]);
   if (!force && ui.sigs.mine === sig) return;
   ui.sigs.mine = sig;
+  const downBtn = stairsFound && m.depth < E.MINE_DEEPEST;
   $('#p-mine').innerHTML = `<div class="cab-head"><span class="sb-title">⛏️ 정원 뒤 광산</span><span class="muted">기다리는 동안 조금씩 파요</span></div>
     <div class="card mine-pop">
+    <div class="mine-main">
     <div class="mine-head"><b>지하 ${m.depth}층</b><span class="muted">가장 깊이 ${m.deepest}층</span></div>
-    <div class="mine-energy" title="${nextE}"><span>⛏️ 기력</span><span class="me-bar">${Array.from({ length: E.MINE_MAX_E }, (_, i) => `<i class="${i < m.energy ? 'on' : ''}"></i>`).join('')}</span><small class="muted">${m.energy} / ${E.MINE_MAX_E} · ${nextE}</small></div>
+    <div class="mine-energy" title="${nextE}"><span>⛏️ 기력</span><span class="me-bar">${Array.from({ length: E.MINE_MAX_E }, (_, i) => `<i class="${i < m.energy ? 'on' : ''}"></i>`).join('')}</span><small class="muted"><b class="data">${m.energy} / ${E.MINE_MAX_E}</b> · ${nextE}</small></div>
+    ${m.energy < 1 && !allDug ? `<p class="mine-wait">기력이 차면 팔 수 있어요 · ${wait} 뒤</p>` : ''}
     <div class="mine-grid" style="--mw:${E.MINE_W}">${b.cells.map(cell).join('')}</div>
-    <div class="mine-acts">${stairsFound && m.depth < E.MINE_DEEPEST ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${m.depth < m.deepest ? `<button type="button" class="btn small" data-mact="deep" ${m.energy < 3 ? 'disabled' : ''}>🪜 지하 ${m.deepest}층으로 · 기력 3</button>` : ''}${allDug ? '<button type="button" class="btn small" data-mact="fresh">🔄 새 굴</button>' : ''}</div>
-    <div class="seg" role="group"><button type="button" data-mtab="bag" aria-pressed="${ui.mineTab === 'bag'}">🎒 가방</button><button type="button" data-mtab="craft" aria-pressed="${ui.mineTab === 'craft'}">🔨 만들기</button></div>
-    ${ui.mineTab === 'craft' ? crafts : bag}
+    ${allDug ? `<p class="mine-done">이 판은 다 팠어요 · ${downBtn ? '아래층으로 가거나 ' : ''}새 굴을 파요</p>` : ''}
+    <div class="mine-acts">${downBtn ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${m.depth < m.deepest ? `<button type="button" class="btn small" data-mact="deep" ${m.energy < 3 ? 'disabled' : ''}>🪜 지하 ${m.deepest}층으로 · 기력 3</button>` : ''}${allDug ? `<button type="button" class="btn small ${downBtn ? '' : 'primary'}" data-mact="fresh">🔄 새 굴</button>` : ''}</div>
+    </div>
+    <div class="mine-side">
+    <section class="mine-sec"><h3 class="mine-sub">🎒 가방</h3>${bag}</section>
+    <section class="mine-sec"><h3 class="mine-sub">🔨 만들기</h3>${crafts}</section>
+    </div>
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
 }
 $('#p-mine').addEventListener('click', e => {
@@ -470,8 +484,7 @@ $('#p-mine').addEventListener('click', e => {
     if (a !== 'up') return go();
     return openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => closeModal() }, { label: '올라가기', primary: true, act: go }]);
   }
-  const t = e.target.closest('[data-mtab]'); if (t) { ui.mineTab = t.dataset.mtab; return renderMine(true); }
-  const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const r = E.craft(st, c.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); ui.mineTab = 'craft'; return renderAll(true); }
+  const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const r = E.craft(st, c.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); return renderAll(true); }
 });
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
 // 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
