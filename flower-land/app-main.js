@@ -96,6 +96,7 @@ function renderAll(force) {
   if (ui.tab === 'cab' || ui.tab === 'tearoom') renderCab(force);
   forestTabSync();                                // P30-01-03 🌳 숲 탭은 4층이 열린 정원에만
   if (ui.tab === 'forest') renderForest(force);
+  if (ui.tab === 'mine') renderMine(force);        // ⛏️ 광산 (10-30 창 → 탭)
   if (ui.tab === 'farm') renderFarm(force);        // P32-03 🐝 곤충농장
   if (ui.tab === 'dex') renderDex(force);
   if (ui.tab === 'manual') renderManual(force);

@@ -864,9 +864,8 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .away-log li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; }
 .away-long { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }   /* P30-07 🍃 그동안 */
 /* P24 광산 (10-24) */
-.mine-chip { --k: #7a6a58; }
-.mine-chip.full b { color: var(--accent); }
 .mine-pop { display: grid; gap: 10px; }
+#p-mine .mine-pop { max-width: 560px; }   /* 탭이 넓어도 판 칸이 커지지 않게 (예전 창 폭) */
 .mine-head { display: flex; justify-content: space-between; align-items: baseline; }
 .mine-energy { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: calc(13 * var(--u)); }
 .me-bar { display: inline-flex; gap: 2px; }
@@ -1456,6 +1455,7 @@ body { margin: 0; }
 @media (max-width: 640px) {
   :root { --nav-h: 112px; }
   nav.tabs { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  nav.tabs:has(button[data-tab="forest"]:not([hidden])) { grid-template-columns: repeat(6, minmax(0, 1fr)); }   /* ⛏️ 광산 탭(10-30)으로 10칸 · 🌳 숲까지 11칸이면 6 + 5 (세 줄이 되지 않게) */
   nav.tabs button { padding: 6px 2px 7px; }
   nav.tabs button[aria-selected="true"] { box-shadow: none; background: color-mix(in srgb, var(--accent) 18%, transparent); }
 }
@@ -1463,6 +1463,7 @@ body { margin: 0; }
 @media (max-width: 640px) {
   :root[data-big] { --nav-h: 140px; }
   :root[data-big] nav.tabs { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  :root[data-big] nav.tabs:has(button[data-tab="forest"]:not([hidden])) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   :root[data-big] nav.tabs button[aria-selected="true"] { box-shadow: none; background: color-mix(in srgb, var(--accent) 18%, transparent); }   /* 두 줄이면 윗줄 표시가 위 칸과 헷갈려 배경으로 */
 }
 /* P28-03 🧩 땅 무늬 범례: 색 네모 대신 16px 무늬 그림 (정수배) */
@@ -1525,6 +1526,7 @@ body { margin: 0; }
       <!-- 🍵 찻집 -->
       <section class="panel" id="p-cab" aria-label="찻집"></section>
       <!-- 📖 도감 (도감일지 · 기록 · 도감) -->
+      <section class="panel" id="p-mine" aria-label="광산"></section>
       <section class="panel" id="p-forest" aria-label="작은 숲"></section>
       <section class="panel" id="p-farm" aria-label="곤충농장"></section>
       <section class="panel" id="p-dex" aria-label="도감과 기록"></section>
@@ -1543,6 +1545,7 @@ body { margin: 0; }
       <button type="button" role="tab" data-tab="tearoom" aria-selected="false"><span class="ic">🌿</span>제다실</button>
       <button type="button" role="tab" data-tab="cab" aria-selected="false"><span class="ic">🍵</span>찻집</button>
       <button type="button" role="tab" data-tab="store" aria-selected="false"><span class="ic">📦<i class="tab-dot" id="inboxDot" hidden></i></span>창고</button>
+      <button type="button" role="tab" data-tab="mine" aria-selected="false"><span class="ic">⛏️</span>광산</button>
       <button type="button" role="tab" data-tab="farm" aria-selected="false"><span class="ic">🐝</span>곤충농장</button>
       <button type="button" role="tab" data-tab="forest" aria-selected="false" hidden><span class="ic">🌳</span>숲</button>
       <button type="button" role="tab" data-tab="dex" aria-selected="false"><span class="ic">📖</span>도감</button>

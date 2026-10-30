@@ -60,7 +60,7 @@ function renderToolbar(force) {
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip() + `<button type="button" class="nd mine-chip ${E.mineOf(st).energy >= E.MINE_MAX_E ? 'full' : ''}" data-mine="1" title="⛏️ 정원 뒤 광산 · 기력 ${E.mineOf(st).energy} / ${E.MINE_MAX_E}"><span>⛏️</span><b>${E.mineOf(st).energy}</b></button>` + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // P24 광산 입구 · 모바일 확대 (QA 6회차)
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip() + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // 모바일 확대 (QA 6회차) · ⛏️ 광산 입구는 10-30 탭으로 옮김
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -82,7 +82,6 @@ function renderToolbar(force) {
   renderHint();
 }
 $('#needs').addEventListener('click', e => {
-  if (e.target.closest('[data-mine]')) return openMine();
   if (e.target.closest('[data-pantry]')) return takePantryOn();
   const all = e.target.closest('[data-all]'); if (all) return careAllOn(all.dataset.all);
   if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom);
@@ -436,9 +435,9 @@ function showVisitorBubble(v) {
   el.style.setProperty('--tail', Math.max(12, Math.min(w - 12, cx - left)) + 'px'); el.classList.toggle('below', below);
   clearTimeout(visitorBubbleT); visitorBubbleT = setTimeout(hideVisitorBubble, 8000);
 }
-// ---------------------------------------------------------------- ⛏️ 광산 창 (P24, 10-24): 층 · 기력 · 8×6 판 · 가방 · 만들기
-function openMine(tab) {
-  const m = E.mineOf(st), b = m.board; ui.mineTab = tab || ui.mineTab || 'bag';
+// ---------------------------------------------------------------- ⛏️ 광산 탭 (P24, 10-24 · 10-30 창 → 탭, 사용자 요청 "창고 밑에 광산 메뉴 따로"): 층 · 기력 · 8×6 판 · 가방 · 만들기
+function renderMine(force) {
+  const m = E.mineOf(st), b = m.board; ui.mineTab = ui.mineTab || 'bag';
   const nextE = m.energy >= E.MINE_MAX_E ? '가득 찼어요' : `다음 기력 ${realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1))} 뒤`;
   const stairsFound = b.cells.some(c => c.dug && c.stairs), allDug = b.cells.every(c => c.dug);
   const cell = (c, i) => c.dug ? `<span class="mc dug" title="${E.mineName(c.k)}${c.stairs ? ' · 계단' : ''}">${c.k === 'dirt' ? '' : mineImg(c.k, 2)}${c.stairs ? `<span class="mc-st">${mineImg('stairs', 1)}</span>` : ''}</span>`
@@ -448,7 +447,11 @@ function openMine(tab) {
   const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
     const art = C.deco ? decoImg(C.deco, 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
     return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
-  const body = `<div class="mine-pop">
+  const sig = JSON.stringify([m, nextE, ui.mineTab, st.money, E.shopOf(st).cups]);
+  if (!force && ui.sigs.mine === sig) return;
+  ui.sigs.mine = sig;
+  $('#p-mine').innerHTML = `<div class="cab-head"><span class="sb-title">⛏️ 정원 뒤 광산</span><span class="muted">기다리는 동안 조금씩 파요</span></div>
+    <div class="card mine-pop">
     <div class="mine-head"><b>지하 ${m.depth}층</b><span class="muted">가장 깊이 ${m.deepest}층</span></div>
     <div class="mine-energy" title="${nextE}"><span>⛏️ 기력</span><span class="me-bar">${Array.from({ length: E.MINE_MAX_E }, (_, i) => `<i class="${i < m.energy ? 'on' : ''}"></i>`).join('')}</span><small class="muted">${m.energy} / ${E.MINE_MAX_E} · ${nextE}</small></div>
     <div class="mine-grid" style="--mw:${E.MINE_W}">${b.cells.map(cell).join('')}</div>
@@ -456,17 +459,18 @@ function openMine(tab) {
     <div class="seg" role="group"><button type="button" data-mtab="bag" aria-pressed="${ui.mineTab === 'bag'}">🎒 가방</button><button type="button" data-mtab="craft" aria-pressed="${ui.mineTab === 'craft'}">🔨 만들기</button></div>
     ${ui.mineTab === 'craft' ? crafts : bag}
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
-  openModal('⛏️ 정원 뒤 광산', body, [{ label: '닫기', act: () => { closeModal(); renderToolbar(true); } }]);
-  const root = $('#modalRoot');
-  root.querySelectorAll('[data-dig]').forEach(x => x.onclick = () => { const r = E.dig(st, +x.dataset.dig, ctx); if (!r.ok) return feedback(r.msg, true); save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg); openMine(); });
-  root.querySelectorAll('[data-mact]').forEach(x => x.onclick = () => {
-    const a = x.dataset.mact, go = () => { const r = a === 'down' ? E.descend(st) : a === 'up' ? E.mineUp(st) : a === 'deep' ? E.toDeepest(st) : E.freshBoard(st); feedback(r.msg, !r.ok); save(); openMine(); };
-    if (a !== 'up') return go();
-    openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => openMine() }, { label: '올라가기', primary: true, act: go }]);
-  });
-  root.querySelectorAll('[data-mtab]').forEach(x => x.onclick = () => openMine(x.dataset.mtab));
-  root.querySelectorAll('[data-craft]').forEach(x => x.onclick = () => { const r = E.craft(st, x.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openMine('craft'); });
 }
+$('#p-mine').addEventListener('click', e => {
+  const d = e.target.closest('[data-dig]'); if (d && !d.disabled) { const r = E.dig(st, +d.dataset.dig, ctx); if (!r.ok) return feedback(r.msg, true); save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg); return renderAll(true); }
+  const x = e.target.closest('[data-mact]');
+  if (x && !x.disabled) {
+    const a = x.dataset.mact, m = E.mineOf(st), go = () => { closeModal(); const r = a === 'down' ? E.descend(st) : a === 'up' ? E.mineUp(st) : a === 'deep' ? E.toDeepest(st) : E.freshBoard(st); feedback(r.msg, !r.ok); save(); renderAll(true); };
+    if (a !== 'up') return go();
+    return openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => closeModal() }, { label: '올라가기', primary: true, act: go }]);
+  }
+  const t = e.target.closest('[data-mtab]'); if (t) { ui.mineTab = t.dataset.mtab; return renderMine(true); }
+  const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const r = E.craft(st, c.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); ui.mineTab = 'craft'; return renderAll(true); }
+});
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
 // 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
 const ageText = h => { const m = Math.floor(h / E.MONTH_H); return m >= 14 ? `${Math.floor(m / 14)}년 ${m % 14 ? `${m % 14}달` : ''}`.trim() : flowH(h); };
