@@ -22,11 +22,11 @@ function renderToday(force) {
       <button type="button" class="x" data-do="hideGuide" aria-label="첫걸음 안내 닫기" title="안내 닫기">✕</button></div>`;
   } else if (nq) {
     const n = nq.c.quests.filter(q => st.journal.done[q.key] != null).length;
-    html += `<div class="guide jguide"><span class="gd-t">📜 ${nq.c.no}장 ${nq.c.name} <span class="data">${n} / ${nq.c.quests.length}</span></span>
+    html += `<div class="guide jguide"><span class="gd-t">📜 퀘스트 · ${nq.c.no}장 ${nq.c.name} <span class="data">${n} / ${nq.c.quests.length}</span></span>
       <span class="gd-now"><b>${E.questName(nq.q, st)}</b><small>${nq.w.now ? '지금 할 수 있어요' : nq.w.label || '때가 되면'}${nextReason()}</small></span>
       <button type="button" class="x" data-do="hideJournal" aria-label="퀘스트 안내 닫기" title="안내 닫기 (도감일지에서는 계속 보여요)">✕</button></div>`;
   }
-  if (wv) html += `<div class="guide wguide"><span class="gd-t">🗓️ 이번 주 목표 <span class="data">${wv.done} / ${wv.goals.length}</span></span>
+  if (wv) html += `<div class="guide wguide"><span class="gd-t">🗓️ 이번 주 목표</span>
       <span class="gd-now">${wg ? `<b>${wg.ic} ${esc(wg.text)} <span class="data">${wg.got} / ${wg.n}</span></b>` : `<b>🎉 셋 다 끝냈어요</b>`}</span>
       <button type="button" class="btn small" data-do="weekly">보기</button></div>`;
   $('#today').innerHTML = html;
