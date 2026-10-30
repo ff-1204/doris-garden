@@ -114,16 +114,29 @@ function renderShop(force) {
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
 }
+// 사기 전에 한 번 더 묻는 창 (10-30 사용자 요청 "모든 물건은 사기전에 한번더 팝업으로") — 화원 · 곤충농장 · 숲 · 찻집 가꾸기가 같이 씀
+// 용품 · 예약은 원래 수량 · 영수증 창에서 사기 단추를 눌러 사니 그 창이 확인 창
+function askBuy(o, go, back) {
+  const after0 = st.money - o.price;
+  openModal(o.title || '💰 살까요?', `<div class="buy-ask">${o.art ? `<span class="ba-art">${o.art}</span>` : ''}<p><b>${esc(o.name)}</b>${o.note ? `<br><small class="muted">${esc(o.note)}</small>` : ''}</p>
+    <div class="rc-pay"><div><span class="muted">값</span><b class="data">${won(o.price)}</b></div><div><span class="muted">가진 돈</span><span class="data">${won(st.money)}</span></div><div><span class="muted">산 뒤</span><b class="data">${won(after0)}</b></div></div></div>`, [
+    { label: '취소', act: () => { closeModal(); if (back) back(); } },
+    { label: `${o.verb || '사기'} · ${won(o.price)}`, primary: true, act: () => { closeModal(); go(); } },
+  ]);
+}
+const decoBuyGo = k => () => after(E.buyDeco(st, k, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
+const askDeco = (k, back) => askBuy({ name: E.DECOS[k].name, note: E.DECOS[k].desc, price: E.DECOS[k].price, art: decoImg(k, 3) }, decoBuyGo(k), back);
 $('#p-shop').addEventListener('change', e => { if (e.target.id === 'shopFilter') { ui.shopFilter = e.target.checked; renderShop(true); } });
 $('#p-shop').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
   const k = b.dataset.key;
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
-  if (b.dataset.treebuy) return after(E.plantTree(st, b.dataset.treebuy, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') });   // P30-03
+  if (b.dataset.treebuy) { const T = E.TREES[b.dataset.treebuy], k2 = b.dataset.treebuy; return askBuy({ name: `${T.icon} ${T.name} 묘목`, note: '숲의 첫 빈 자리에 바로 심어요', price: T.price, art: treeImg(k2, 0, 3, 1), verb: '심기' }, () => after(E.plantTree(st, k2, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') })); }   // P30-03
   if (b.dataset.gofarm) return setTab('farm');   // P32-03
-  if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
-  if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1; ui.shopQty[key] = 1; return after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = key; setTab('garden', true); } }); }
+  if (b.dataset.decobuy) return askDeco(b.dataset.decobuy);
+  if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1, F = FLOWERS[key];
+    return askBuy({ name: `${F.name} ${FORM[F.form].name} ${n}${FORM[F.form].unit}`, price: F.price * n, art: formArt(key, 48) }, () => { ui.shopQty[key] = 1; after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = key; setTab('garden', true); } }); }); }
   if (b.dataset.cart) {
     const w = +b.dataset.win; ui.cart[k] = ui.cart[k] || {};
     ui.cart[k][w] = Math.max(0, (ui.cart[k][w] || 0) + (b.dataset.cart === '+' ? 1 : -1));
