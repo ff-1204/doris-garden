@@ -117,7 +117,7 @@ function showAway() {
   const acts = careAllBtns(careNeed(E.calendar(st.virtual)), 'btn small care') + pantryAllBtn('btn small care');   // P28-11 모두 물 주기 · 모두 거두기 · P28-04 🧺 저장고 모두 거두기
   openModal(`🌙 자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
     ${acts ? `<div class="away-acts">${acts}</div>` : ''}
-    ${pick ? `<ul class="away-log">${pick}</ul>${a.lines.length > 8 ? `<p class="muted">그 밖에 ${a.lines.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : '<p class="muted">조용히 시간이 흘렀어요</p>'}</div>`,
+    ${pick ? `<ul class="away-log">${pick}</ul>${a.lines.length > 8 ? `<p class="muted">그 밖에 ${a.lines.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : '<p class="muted">조용히 시간이 흘렀어요</p>'}${awayLongHTML(a.long)}</div>`,
     [{ label: '닫기', act: () => closeModal() }, ...(a.thirsty ? [{ label: '💧 정원으로', primary: true, act: () => { closeModal(); setTab('garden'); ui.flash = { t: 'water', until: performance.now() + 2400 }; } }] : [])]);
   const box = $('#modalRoot .away-acts');
   if (box) box.onclick = e => {                   // 누르면 그 자리에 결과 한 줄 (창은 그대로)
@@ -126,6 +126,12 @@ function showAway() {
     b.outerHTML = `<span class="chip${r.ok ? '' : ' warn'}">${r.ok ? '✓' : '⚠️'} ${esc(r.msg)}</span>`;
     after(r, b.dataset.pantry ? null : b.dataset.all === 'water' ? 'watered' : 'harvested');
   };
+}
+// P30-07 🍃 그동안: 1해(1주) 넘게 비웠으면 창 아래 세 줄 — 지나간 해 수 · 놓친 올해만 것 · 다음 층까지 (문구는 E.awayLinesText, 느긋하게 보기면 숫자 없이)
+function awayLongHTML(t) {
+  if (!t) return '';
+  const row = (ic, text, cls) => `<li${cls ? ` class="${cls}"` : ''}><span aria-hidden="true">${ic}</span>${esc(text)}</li>`;
+  return `<div class="away-long"><b>${t.title}</b><ul class="away-log">${row('🗓️', t.years)}${t.skipped ? row('🌿', t.skipped, 'muted') : ''}${row('🔁', t.missed)}${t.layer ? row('🪜', t.layer) : ''}</ul></div>`;
 }
 function frame() {
   const real = Date.now(), dt = real - st.lastReal;
