@@ -1400,7 +1400,6 @@ body { margin: 0; }
 [hidden] { display: none !important; }   /* 예전엔 serve.js가 씌우던 문서 틀의 기본 스타일 (10-17 Pages 배포용으로 옮김) */
 /* 📘 매뉴얼 (P21): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄 */
 #p-manual .stack { max-width: 760px; margin-inline: auto; }   /* 넓은 화면에선 매뉴얼을 가운데로 (10-30) */
-.ib-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }   /* 📦 창고 맨 위 ✉️ 편지함 (10-30) */
 .topinbox-btn { position: relative; }
 .topinbox-btn.on::after { content: ''; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--panel); }
 .bn-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }   /* 📔 도감일지 손길 점 한 줄 → 🐝 곤충농장 (10-30) */
@@ -1567,8 +1566,8 @@ body { margin: 0; }
       <button type="button" role="tab" data-tab="garden" aria-selected="true"><span class="ic">🌱</span>정원</button>
       <button type="button" role="tab" data-tab="shop" aria-selected="false"><span class="ic">💐</span>화원</button>
       <button type="button" role="tab" data-tab="tearoom" aria-selected="false"><span class="ic">🌿</span>제다실</button>
-      <button type="button" role="tab" data-tab="cab" aria-selected="false"><span class="ic">🍵</span>찻집</button>
-      <button type="button" role="tab" data-tab="store" aria-selected="false"><span class="ic">📦<i class="tab-dot" id="inboxDot" hidden></i></span>창고</button>
+      <button type="button" role="tab" data-tab="cab" aria-selected="false"><span class="ic">🍵<i class="tab-dot" id="inboxDot" hidden></i></span>찻집</button>
+      <button type="button" role="tab" data-tab="store" aria-selected="false"><span class="ic">📦</span>창고</button>
       <button type="button" role="tab" data-tab="mine" aria-selected="false"><span class="ic">⛏️</span>광산</button>
       <button type="button" role="tab" data-tab="farm" aria-selected="false"><span class="ic">🐝</span>곤충농장</button>
       <button type="button" role="tab" data-tab="forest" aria-selected="false" hidden><span class="ic">🌳</span>숲</button>

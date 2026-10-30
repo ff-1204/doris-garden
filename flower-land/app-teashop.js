@@ -262,7 +262,7 @@ function renderCab(force) {
     <div class="news-row"><div class="shop-sign ${shopOpen ? 'open' : 'closed'} sign-${E.shopOf(st).sign}">
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
       <span class="ss-txt"><b>${shopOpen ? '☕ 오늘도 찻집이 열려요' : '🔒 오늘은 쉬어요'}</b><small>${shopOpen ? (E.teaPriceText(st, cal) ? `${E.teaPriceText(st, cal)} · 찻값이 올라요` : '매달 열려요 · 겨울 · 꽃잠엔 찻값이 올라요') : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 티백을 모아 두세요`}</small></span>
-</div><span class="news-side">${wallet()}</span></div>
+</div><span class="news-side"><button type="button" class="btn small topinbox-btn ${E.inboxUnread(st) ? 'on' : ''}" id="cabInbox" data-inbox="1">✉️ 편지함</button></span></div>
     ${firstGuestHTML(bagged)}
     ${ordersHTML()}
     ${cupSection}
@@ -348,6 +348,7 @@ function openHoneyPick(ids) {
   $('#modalRoot').querySelectorAll('[data-hk]').forEach(b => b.onclick = () => { closeModal(); after(E.honeyCup(st, c.id, b.dataset.hk)); });
 }
 function cabClick(e) {
+  if (e.target.closest('[data-inbox]')) return openInbox();   // ✉️ 편지함 (10-31 창고 → 찻집)
   if (e.target.closest('[data-act="shopUp"]')) return openShopUp();
   if (e.target.closest('[data-firstguest]:not([disabled])')) return openFirstGuest();
   const hc = e.target.closest('[data-honeycup]'); if (hc) return openHoneyPick(hc.dataset.honeycup.split(',').map(Number));
