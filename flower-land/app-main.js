@@ -20,10 +20,12 @@ function renderToday(force) {
       <span class="gd-now"><b>${nl}</b>${guideSub(nk, need)}</span>
       <button type="button" class="x" data-do="hideGuide" aria-label="첫걸음 안내 닫기" title="안내 닫기">✕</button></div>`;
   }   // 10-30 사용자: 📜 퀘스트 띠는 뺌 — 퀘스트는 📔 도감일지에서만
-  if (wv) html += `<div class="guide wguide"><span class="gd-t">🗓️ 이번 주 목표</span>
+  let whtml = '';
+  if (wv) whtml += `<div class="guide wguide"><span class="gd-t">🗓️ 이번 주 목표</span>
       <span class="gd-now">${wg ? `<b>${wg.ic} ${esc(wg.text)} <span class="data">${wg.got} / ${wg.n}</span></b>` : `<b>🎉 셋 다 끝냈어요</b>`}</span>
       <button type="button" class="btn small" data-do="weekly">보기</button></div>`;
-  $('#today').innerHTML = html;
+  $('#guideBox').innerHTML = html;   // 🌱 첫걸음 안내는 지도 위 칸 (10-30)
+  $('#today').innerHTML = whtml;      // 🗓️ 이번 주 목표는 꽃 상태창 아래 (휴대폰에서도)
 }
 // "다음에 올 이유" (QA 6회차): 곧 필 꽃 · 광산 기력이 다 차는 때
 function nextReason() {
@@ -40,7 +42,7 @@ function nextReason() {
   else out.push('⛏️ 광산 기력이 가득해요');
   return out.length && !cal.frozen ? ` · 다음: ${out.join(' · ')}` : (out.length ? ` · ${out.join(' · ')}` : '');
 }
-$('#today').addEventListener('click', e => {
+for (const sel of ['#guideBox', '#today']) $(sel).addEventListener('click', e => {
   const b = e.target.closest('[data-do]'); if (!b) return;
   const d = b.dataset.do;
   if (d === 'hideGuide') { guideState().hidden = true; save(); return renderToday(true); }

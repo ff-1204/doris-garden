@@ -299,7 +299,7 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .status { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; align-content: start; }
 .sidecol { display: grid; gap: 14px; align-content: start; min-width: 0; }
 @media (min-width: 1180px) { .sidecol { position: sticky; top: 64px; align-self: start; max-height: calc(100vh - 76px); overflow-y: auto; scrollbar-width: thin; } }   /* 넓은 화면: 지도를 내려도 상태창이 보임 */
-@media (max-width: 1179px) { .sidecol { display: contents; }   /* .sidecol 기본 규칙 뒤에 있어야 이김 */ .today { order: -1; } }   /* 10-30: 퀘스트 · 주간 목표 띠는 오른쪽 칸(상태창 아래)으로 — 한 칸 화면에선 전처럼 지도 위에 */
+@media (max-width: 1179px) { .sidecol { display: contents; } }   /* .sidecol 기본 규칙 뒤에 있어야 이김 · 10-30 사용자: 🗓️ 이번 주 목표는 휴대폰에서도 지도 아래 */   /* 10-30: 퀘스트 · 주간 목표 띠는 오른쪽 칸(상태창 아래)으로 — 한 칸 화면에선 전처럼 지도 위에 */
 /* 정원 일지: 상태창과 같은 카드 머리 */
 .gardenlog summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
 .gardenlog summary::-webkit-details-marker { display: none; }
@@ -1481,6 +1481,7 @@ body { margin: 0; }
       <section class="panel on" id="p-garden" aria-label="정원">
         <div class="garden">
           <div class="stack" style="min-width:0">
+            <div id="guideBox" class="today"></div>
             <div class="tray" id="tray" hidden></div>
             <div class="hintbar">
               <span class="msg" id="hint"></span>
