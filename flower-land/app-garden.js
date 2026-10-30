@@ -558,7 +558,7 @@ function renderStatus(force) {
     el.innerHTML = `
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${FLOWERS[qf].petal} 16%, var(--sunk))">${spriteImg(qf, 'flower', 56, false, '')}</div>
-      <div class="sx-title"><p class="sx-quote">${mw ? mw.w : GARDEN_WORDS[qi]}</p>${mw ? `<div class="sx-lang">${monthName(cal0.month)}의 꽃 · <b>${FLOWERS[mw.k].name}</b> · ${FLOWER_WORDS[mw.k].own ? '정원의 꽃말' : '꽃말'} 「${FLOWER_WORDS[mw.k].lang}」</div>` : ''}<div class="muted" style="font-size:calc(11.5 * var(--u))">꽃이나 빈 칸을 누르면 여기에 자세히 나와요</div></div>
+      <div class="sx-title"><p class="sx-quote">${mw ? mw.w : GARDEN_WORDS[qi]}</p>${mw ? `<div class="sx-lang">${monthName(cal0.month)}의 꽃 · <b>${FLOWERS[mw.k].name}</b> · ${FLOWER_WORDS[mw.k].own ? '정원의 꽃말' : '꽃말'} 「${FLOWER_WORDS[mw.k].lang}」</div>` : ''}</div>
     </div>`;
     return;
   }
