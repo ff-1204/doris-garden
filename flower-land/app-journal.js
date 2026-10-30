@@ -297,8 +297,8 @@ function monthWord(cal) {          // 그달 꽃들의 한 마디를 게임 하�
 function renderTop() {
   const cal = E.calendar(st.virtual);
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
-  const bb = $('#brandBtn'), bt = $('#brandTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호 — 로고 자리에 그림, 작은 글씨엔 이름 (10-30: 위 막대 단추 대신)
-  if (bt.dataset.k !== tk) { bt.dataset.k = tk; bt.hidden = !tk; bt.innerHTML = tk ? titleImg(tk, 22, false) : ''; bb.classList.toggle('has-ttl', !!tk); $('#brandSub').textContent = tk ? E.TITLES[tk].name : "Dori's Garden"; bb.title = tk ? `${E.TITLES[tk].name} · 정원으로` : '정원으로'; }
+  const bb = $('#brandBtn'), bt = $('#brandTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호 — 로고 자리에 그림만 (10-30: 위 막대 단추 대신 · 작은 글씨 Dori's Garden은 그대로, 이름은 title에)
+  if (bt.dataset.k !== tk) { bt.dataset.k = tk; bt.hidden = !tk; bt.innerHTML = tk ? titleImg(tk, 22, false) : ''; bb.classList.toggle('has-ttl', !!tk); bb.title = tk ? `${E.TITLES[tk].name} · 정원으로` : '정원으로'; }
   const sb = E.seasonBadge(st), pb = E.pathBadge(st), ts = $('#topSeason'), sk = sb ? `${sb.n}|${pb ? pb.key : ''}` : '';   // 🌸 새 철 (P28-08-05): 1철이면 없음 · 느긋하게 보기여도 보임(숫자가 아니라 이름) · 640px 이하는 "🌸 2" · 🛤️ 철의 길(P30-04-02) "🌸 2철 · 🍵 찻길"
   if (ts.dataset.k !== sk) { ts.dataset.k = sk; ts.hidden = !sb; ts.title = sb ? `${sb.n}철 정원${pb ? ` · ${pb.name}로 걸어요` : ''}` : ''; ts.innerHTML = sb ? `<span class="ts-l">${sb.text}${pb ? ` · ${pb.text}` : ''}</span><span class="ts-s">🌸 ${sb.n}${pb ? ` ${pb.icon}` : ''}</span>` : ''; }
   const gb = E.gradeBadge(st), tg = $('#topGrade'), gk = gb ? `${gb.grade}|${gb.pct}` : '';   // 🌱 정원 등급 (P28-05-01, M1-4) · 느긋하게 보기면 null → 숨김
