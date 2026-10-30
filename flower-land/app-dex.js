@@ -221,7 +221,7 @@ $('#p-dex').addEventListener('click', e => {
   const ml = e.target.closest('[data-mail]'); if (ml) { const b = E.mailOf(st, ml.dataset.mail); return b && openMail(b); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
   const gf = e.target.closest('[data-gofarm]'); if (gf) return setTab('farm');   // 🌼 꽃가루는 🐝 곤충농장에서 (10-30 · P37)
-  const bn = e.target.closest('[data-bonus]');   const bg = e.target.closest('[data-bgo]'); if (bg) return setTab('farm');   // 기록 카드 → 🐝 곤충농장 (P37)
+  const bg = e.target.closest('[data-bgo]'); if (bg) return setTab('farm');   // 기록 카드 → 🐝 곤충농장 (P37)
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);
