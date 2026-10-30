@@ -6,6 +6,7 @@
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
 // --path 꽃길|찻길|흙길 (또는 flower|tea|earth): 🛤️ 철의 길(P30-04-01) — 1철부터 그 길을 걷는 정원으로 봄(실제로는 2철부터 고름) · --season이면 2철도 그 길. 돈 · 수확은 길 없이와 같아야 함 (P17-14)
+// --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도, 달 끝마다 숲 바람이 잡초를 걷어 감. 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
@@ -21,6 +22,8 @@ const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 100
 const st = E.create(mon + 0.1 * H, rng); st.gardenId = `sim-${SEED}`;   // 광산 판 · 주문 쪽지 · 기념품이 이름표로 정해져서 고정 (QA 7회차: 매번 같은 값)
 if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, BONUS === 'all' || BONUS.split(',').includes(k) ? E.bonusMax(k) : 0]));   // P28-05-02 --bonus
 if (PATH) st.season.path = PATH;   // P30-04-01 --path
+const LAYER4 = process.argv.includes('--layer4') || process.argv.includes('--forest');
+if (LAYER4) { E.LAYERS[2].test = E.LAYERS[3].test = () => true; st.layers.at[4] = 0; }   // P30-02 --layer4: 2 · 3층은 연 것으로(시뮬 정원사는 광산을 파지 않음) · 4층 연 해를 미리 적어 둠 — 층은 다른 값에 닿지 않음
 st.onboarded = true;   // 첫 안내를 마친 정원사 — 🗓️ 주간 목표(P28-09)는 첫 안내 뒤부터 뽑혀서 (0장 첫 방문 퀘스트 10점도 이때)
 const ctx = { live: false, rng, path: PATH };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
 const ledger = {}; const add = (yr, k, v) => { (ledger[yr] = ledger[yr] || {})[k] = (ledger[yr][k] || 0) + v; };

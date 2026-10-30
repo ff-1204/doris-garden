@@ -25,8 +25,8 @@ function forestTabSync() {
   if (!open && ui.tab === 'forest') setTab('garden');
 }
 function renderForest(force) {
-  const cal = E.calendar(st.virtual), f = E.forestOf(st), season = treeSeason(), vs = E.forestVisitors(st, cal), slow = f.slow;
-  const sig = JSON.stringify([st.forest, season, slow, st.money, vs.map(v => [v.key, v.slot, v.line])]);
+  const cal = E.calendar(st.virtual), f = E.forestOf(st), season = treeSeason(), vs = E.forestVisitors(st, cal), slow = f.slow, weed = E.forestWeedOf(st);   // P30-02 숲 바람 한 줄
+  const sig = JSON.stringify([st.forest, season, slow, st.money, vs.map(v => [v.key, v.slot, v.line]), weed && weed.text]);
   if (!force && ui.sigs.forest === sig) return;
   ui.sigs.forest = sig;
   if (!f.open) { $('#p-forest').innerHTML = '<div class="cab-empty"><span>🌳</span><div><b>작은 숲은 4층이 열리면 생겨요</b></div></div>'; return; }
@@ -40,7 +40,7 @@ function renderForest(force) {
   const guests = vs.map(v => `<p class="note">${v.icon} ${esc(josa(v.name, '이/가'))} ${esc(v.where)}에 있어요 · “${esc(v.line)}”</p>`).join('');
   $('#p-forest').innerHTML = `<div class="stack">
     <div class="cab-head"><span class="sb-title">🌳 작은 숲</span>${slow ? '' : `<span class="dh-count data">숲 도감 ${f.dex} / ${f.total}</span>`}</div>
-    <div class="fo-grid">${cells}</div>${guests}
+    ${weed ? `<p class="note">${weed.text}</p>` : ''}<div class="fo-grid">${cells}</div>${guests}
     <p class="note muted">${slow ? '나무는 해가 바뀔 때마다 천천히 자라요' : '해가 바뀔 때마다(새해 3월 아침) 한 단계씩 자라요 · 묘목 → 어린나무 → 나무 → 큰 나무'} · 물 · 돌봄 없이 자라고 시들지 않아요 · 심은 나무는 그 자리에 있어요</p></div>`;
 }
 // 빈 자리 → 묘목 고르기 (값은 E.TREES, 심기는 E.plantTree — 돈만 나감)
