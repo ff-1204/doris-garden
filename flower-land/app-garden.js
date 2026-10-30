@@ -440,7 +440,7 @@ function renderMine(force) {
     : `<button type="button" class="mc" data-dig="${i}" aria-label="${Math.floor(i / E.MINE_W) + 1}번째 줄 ${i % E.MINE_W + 1}번째 칸 파기" ${m.energy < 1 ? 'disabled' : ''}></button>`;
   const bagKeys = ['dirt', 'stone', ...E.ORE_KEYS, ...E.FOSSIL_KEYS, 'oldseed'].filter(k => m.bag[k] > 0);
   const bag = bagKeys.length ? `<div class="mine-bag">${bagKeys.map(k => `<span class="hj">${mineImg(k, 2)}<small>${E.mineName(k)} <b class="data">×${m.bag[k]}</b></small></span>`).join('')}</div>` : '<p class="muted">아직 판 게 없어요 · 칸을 눌러 파 보세요</p>';
-  const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
+  const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
     const art = C.deco ? decoImg(C.deco, 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
     return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
   const sig = JSON.stringify([m, nextE, ui.mineTab, st.money, E.shopOf(st).cups]);
