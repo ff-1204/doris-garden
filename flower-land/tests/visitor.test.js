@@ -16,15 +16,18 @@ const run = (s, from, n) => { const out = []; for (let a = from; a < from + n; a
 const swingGarden = id => { const s = fresh(id); put(s, 'swing', 10, 10); return s; };
 
 console.log('[표 8명 · 기념품 8가지]');
-check(E.VISITOR_KEYS.length === 8 && E.VISITOR_KEYS.every(k => { const V = E.VISITORS[k]; return V.name && V.icon && V.where && V.lines.length >= 2 && V.lines.length <= 3 && E.MEMENTOS[V.memento] && E.MEMENTOS[V.memento].visitor === k; }), '8명 · 이름 · 아이콘 · 말 둘셋 · 기념품이 서로 짝');
-check(E.MEMENTO_KEYS.length === 20 && E.ORDER_MEMENTO_KEYS.length === 12 && E.ORDER_MEMENTO_KEYS.every(k => !E.MEMENTOS[k].visitor), '기념품 12 → 20 · 주문 기념품 뽑기는 12가지 그대로');
-check(new Set(E.VISITOR_KEYS.map(k => E.VISITORS[k].memento)).size === 8, '손님마다 기념품이 다름');
+check(E.VISITOR_KEYS.length === 11 && E.VISITOR_KEYS.every(k => { const V = E.VISITORS[k]; return V.name && V.icon && V.where && V.lines.length >= 2 && V.lines.length <= 3 && E.MEMENTOS[V.memento] && E.MEMENTOS[V.memento].visitor === k; }), '11명(길 손님 3 · P30-04-01) · 이름 · 아이콘 · 말 둘셋 · 기념품이 서로 짝');
+check(E.MEMENTO_KEYS.length === 23 && E.ORDER_MEMENTO_KEYS.length === 12 && E.ORDER_MEMENTO_KEYS.every(k => !E.MEMENTOS[k].visitor), '기념품 12 → 23 (길 손님 3) · 주문 기념품 뽑기는 12가지 그대로');
+check(new Set(E.VISITOR_KEYS.map(k => E.VISITORS[k].memento)).size === 11, '손님마다 기념품이 다름');
 check(E.VISITORS.hedgehog.name === '고슴도치 할머니' && E.MEMENTOS[E.VISITORS.hedgehog.memento].name === '도토리 찻잔 받침', '🦔 고슴도치 할머니 → 도토리 찻잔 받침');
 
 console.log('[조건 — 놓은 장식 · 핀 꽃 · 올해만 것]');
 { const s = fresh('v-cond');
   check(E.VISITOR_KEYS.every(k => !E.visitorOk(s, k)), '빈 정원엔 아무 조건도 안 맞음');
   check(run(copy(s), 100, 60).length === 0, '장식 · 꽃이 없으면 60달 동안 아무도 안 옴');
+  { const p = copy(s); p.season.path = 'tea'; check(E.visitorOk(p, 'squirrel') === false, '🐿️ 찻길 손님도 앉을 장식 · 꽃이 없으면 안 옴 (P30-04-01)');
+    p.flowers.push({ id: 99, type: 'rose', x: 5, y: 5, stage: 'bloom', q: 1, ageH: 1, lifeH: 999, waterH: 0, thirstH: 0 });
+    check(E.visitorOk(p, 'squirrel') && !E.visitorOk(Object.assign(copy(p), { season: Object.assign(copy(p.season), { path: null }) }), 'squirrel'), '찻길 철에 꽃이 있으면 옴 · 길 없이면 안 옴'); }
   const w = copy(s); w.decos.push({ id: 1, key: 'swing', x: null, y: null });
   check(!E.visitorOk(w, 'hedgehog'), '창고에 있는 그네로는 안 옴 (놓아야 함)');
   put(w, 'swing', 5, 5); check(E.visitorOk(w, 'hedgehog'), '🦔 나무 그네를 놓으면');

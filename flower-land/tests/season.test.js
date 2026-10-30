@@ -114,6 +114,13 @@ check(r5.ok && r5.title === 't_season5' && s5.titles.t_season5 != null, '5철에
 check(E.SEASON_TITLES.join() === 't_season2,t_season3,t_season5' && E.SEASON_TITLES.every(k => E.TITLES[k].extra && E.TITLES[k].name), '칭호 셋은 덤 칭호 (모으는 칭호 수에 넣지 않음)');
 check(new Set(E.SEASON_TITLES.map(k => E.TITLES[k].name)).size === 3, '이름이 겹치지 않음');
 
+console.log('[05 철의 길 (P30-04-01)]');
+{ const p = at(2), rp = E.seasonStart(p, Object.assign({}, ctx, { path: 'earth' }));
+  check(rp.ok && p.season.path === 'earth' && rp.path === 'earth' && p.season.n === 3 && p.season.log[p.season.log.length - 1].path === null, '고른 길은 새 철 season.path · 끝난 철 줄에는 그 철 길 (null)');
+  const q = copy(p); q.yearLog.forEach(x => { x.season = 3; }); const rq = E.seasonStart(q, Object.assign({}, ctx, { path: 'flower' }));
+  check(rq.ok && rq.pathTitle === 't_path_earth' && q.season.log[q.season.log.length - 1].path === 'earth' && q.season.path === 'flower', '흙길로 3철을 마치면 「흙길을 걸은 사람」 · 4철은 꽃길');
+  check(E.seasonStart(copy(before), Object.assign({}, ctx, { path: 'x' })).ok === false, '없는 길은 거부'); }
+
 console.log('[저장 · 다시 열기]');
 const sv = E.makeSave(st, st.virtual), back = E.parseSave(JSON.stringify(sv)), mg = back.ok && E.migrateSave(back.data.game);
 check(back.ok && sv.summary.season === 2 && mg && mg.season.n === 2 && same(mg.season, st.season) && E.yearLogOf(mg).length === 4, '저장 파일 · 요약에 철 · 다시 열어도 그대로');

@@ -153,7 +153,7 @@ console.log('[🌳 정원의 층 layers (P30-01-01)]');
 console.log('[🗓️ 올해만 오는 것 yearly (P30-05-01)]');
 { const YN = E.MIGRATIONS.findIndex(x => x[0].includes('올해만 오는 것 yearly'));
   const nw = E.create(MON, () => 0.5);
-  check(YN === E.MIGRATIONS.length - 2 && JSON.stringify(nw.yearly) === '{"at":null,"years":[],"missed":[],"got":{}}', '새 정원은 빈 달력 (36번째 보정)');
+  check(YN === 35 && JSON.stringify(nw.yearly) === '{"at":null,"years":[],"missed":[],"got":{}}', '새 정원은 빈 달력 (36번째 보정)');
   check(m.yearly && m.yearly.at === null && m.yearly.missed.length === 0, '가장 옛 정원: 빈 달력 — 지난 계절을 놓친 것으로 치지 않음');
   const old = copy(st); delete old.yearly; old.mig = YN; old.yearLog = Array.from({ length: 6 }, (_, i) => ({ year: i + 1, season: 1, score: 1 }));
   const om = E.migrateSave(old), cal = E.calendar(om.virtual);
@@ -166,13 +166,24 @@ console.log('[🗓️ 올해만 오는 것 yearly (P30-05-01)]');
 console.log('[🐾 특별 손님 visitors (P30-06-01)]');
 { const VN = E.MIGRATIONS.findIndex(x => x[0].includes('특별 손님 visitors'));
   const nw = E.create(MON, () => 0.5);
-  check(VN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.visitors) === '{"now":[],"times":{},"gift":{},"call":null}', '새 정원은 아무도 안 온 정원 (맨 끝 보정 · 37번째)');
+  check(VN === 36 && JSON.stringify(nw.visitors) === '{"now":[],"times":{},"gift":{},"call":null}', '새 정원은 아무도 안 온 정원 (37번째 보정)');
   check(m.visitors && m.visitors.now.length === 0 && JSON.stringify(m.visitors.times) === '{}', '가장 옛 정원: 손님 칸이 생김');
   const old = copy(st); delete old.visitors; old.mig = VN; const om = E.migrateSave(old);
   check(om.visitors && om.mig === E.MIGRATIONS.length && om.visitors.call === null, '바로 앞 판 정원도 손님 칸이 생김');
   const has = copy(st); has.visitors = { now: [{ k: 'hedgehog', x: 3, y: 3, at: 1, left: 2 }], times: { hedgehog: 2 }, gift: {}, call: null }; has.mig = VN;
   const hm = E.migrateSave(has);
   check(hm.visitors.times.hedgehog === 2 && hm.visitors.now[0].k === 'hedgehog', '이미 있는 손님 기록은 그대로'); }
+
+console.log('[🛤️ 철의 길 season.path (P30-04-01)]');
+{ const PN = E.MIGRATIONS.findIndex(x => x[0].includes('철의 길 season.path'));
+  check(PN === 37 && PN === E.MIGRATIONS.length - 1, '맨 끝 보정 (38번째)');
+  check(m.season && m.season.path === null && m.season.n === 1, '가장 옛 정원: 1철 · 길 없이');
+  const old = copy(st); old.mig = PN; old.season = { n: 3, startedAt: 5, path: 'tea', log: [{ n: 1, years: 3, grade: 9, sold: 10 }, { n: 2, years: 4, grade: 12, sold: null, path: 'flower' }] };
+  const om = E.migrateSave(old);
+  check(om.season.path === 'tea' && om.season.log[0].path === null && om.season.log[1].path === 'flower' && om.mig === E.MIGRATIONS.length, '고른 길은 그대로 · 길이 없던 끝난 철 줄은 길 없이');
+  const bad = copy(st); bad.mig = PN; bad.season = { n: 2, startedAt: 5, path: 'gold', log: [{ n: 1, years: 3, path: 'x' }] };
+  const bm = E.migrateSave(bad);
+  check(bm.season.path === null && bm.season.log[0].path === null, '모르는 길 이름은 길 없이'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

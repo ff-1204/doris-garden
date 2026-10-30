@@ -540,7 +540,7 @@ function recordYear(st, cal, ctx) {
   const yr = yearOf(st, cal);
   flushPending(st, ctx); gradeDexSync(st, ctx);                              // P28-05-01 늘어난 도감 칸은 기록 앞에
   const sc = yearScore(st), prevBest = st.bestScore || 0;   // P23-02 한 해 정원 평가
-  const rec = { year: yr, season: seasonN(st), counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, giftsTotal: sc.giftsTotal, prevBest };
+  const rec = { year: yr, season: seasonN(st), path: seasonPath(st), counts: landCounts(st), best: st.yearBest, dex: dexCount(st), dexTotal: dexTotal(st), titleOn: st.titleOn || null, log: st.log.slice(), snapshot: null, score: sc.total, scoreParts: sc.parts, orders: sc.orders, giftsTotal: sc.giftsTotal, prevBest };
   const row = yearRow(st, rec, sc); addYearLog(st, row);                      // P28-07-01
   st.yearNow = newYearNow();
   st.bestScore = Math.max(prevBest, sc.total);
@@ -726,10 +726,11 @@ const WEEKLY = {
 const WEEKLY_KEYS = Object.keys(WEEKLY);
 const weeklyText = g => WEEKLY[g.k].text(g);
 function weeklyRoll(st, cal) {   // 이번 주 목표 3개 (어려움부터 뽑아 같은 fam은 한 번 — 고를 게 적은 쪽이 먼저, 보여 줄 땐 쉬움 → 어려움)
-  const prev = st.weekly || {}, rnd = mineRng(hashStr(`${st.gardenId || 'g'}|weekly|${cal.week}`)), goals = [], fams = [];
+  const prev = st.weekly || {}, rnd = mineRng(hashStr(`${st.gardenId || 'g'}|weekly|${cal.week}`)), goals = [], fams = [], pathFams = (PATHS[seasonPath(st)] || {}).fams;
   for (let t = 2; t >= 0; t--) {
-    const ks = WEEKLY_KEYS.filter(k => WEEKLY[k].tier === t && !fams.includes(WEEKLY[k].fam) && WEEKLY[k].open(st));
+    let ks = WEEKLY_KEYS.filter(k => WEEKLY[k].tier === t && !fams.includes(WEEKLY[k].fam) && WEEKLY[k].open(st));
     if (!ks.length) continue;
+    const pk = pathFams && ks.filter(k => pathFams.includes(WEEKLY[k].fam)); if (pk && pk.length) ks = pk;   // P30-04-01 철의 길: 그 길 쪽 목표가 있으면 그중에서 (연 기능만 — 없으면 그대로)
     const k = ks[Math.floor(rnd() * ks.length)], K = WEEKLY[k];
     goals.push(Object.assign({ k, tier: t, n: K.n, got: 0, done: false }, K.pick ? K.pick(st, rnd) : {}));
     fams.push(K.fam);
@@ -1351,6 +1352,10 @@ const TITLES = {
   t_season2: { name: '두 번째 봄', tier: 'f', extra: true, season: 2, cond: '새 철을 처음 시작 (2철)', hint: '비운 정원에 다시 씨앗을 뿌린 사람' },
   t_season3: { name: '세 철의 정원사', tier: 'g', extra: true, season: 3, cond: '3철을 시작', hint: '바람개비가 세 번 돈 정원' },
   t_season5: { name: '다섯 철을 건넌 사람', tier: 'g', extra: true, season: 5, cond: '5철을 시작', hint: '징검돌 다섯 개를 건너온 사람' },
+  // P30-04-01 길 칭호 (L2-1 10-30): 그 길로 한 철을 마치면(다음 철을 시작할 때) seasonStart가 줌 — 고르는 것이라 덤 칭호
+  t_path_flower: { name: '꽃길을 걸은 사람', tier: 'f', extra: true, path: 'flower', cond: '🌸 꽃길로 한 철을 마치기', hint: '꽃잎 깔린 길을 끝까지 걸은 사람' },
+  t_path_tea: { name: '찻길을 걸은 사람', tier: 'f', extra: true, path: 'tea', cond: '🍵 찻길로 한 철을 마치기', hint: '찻집 등불 아래 한 철을 보낸 사람' },
+  t_path_earth: { name: '흙길을 걸은 사람', tier: 'f', extra: true, path: 'earth', cond: '⛏️ 흙길로 한 철을 마치기', hint: '흙을 갈고 굴을 판 한 철' },
 };
 const TITLE_KEYS = Object.keys(TITLES).filter(k => !TITLES[k].extra);       // 모으는 칭호 19개 (덤 칭호는 EXTRA_TITLE_KEYS)
 const EXTRA_TITLE_KEYS = Object.keys(TITLES).filter(k => TITLES[k].extra);
@@ -1414,6 +1419,8 @@ const MEMENTOS = {
   // P30-06-03 🐾 특별 손님이 세 번째로 온 날 남기는 기념품 (L1-8 10-30) — visitor: 그 손님 키. 주문 기념품 뽑기에는 넣지 않음
   coaster: { name: '도토리 찻잔 받침', ic: '🪵', visitor: 'hedgehog' }, titstring: { name: '박새 깃털 끈', ic: '🪢', visitor: 'tit' }, honeycomb: { name: '벌집 조각', ic: '🍯', visitor: 'beekid' }, yarn: { name: '털실 방울', ic: '🧶', visitor: 'cat' },
   wingmark: { name: '나비 날개 책갈피', ic: '📑', visitor: 'butterfly' }, lotusbrella: { name: '연잎 우산', ic: '☂️', visitor: 'frog' }, snowbutton: { name: '눈 결정 단추', ic: '❄️', visitor: 'snowkid' }, quill: { name: '부엉이 깃털 펜', ic: '🖋️', visitor: 'owl' },
+  // P30-04-01 길 손님 기념품 (L2-1 10-30)
+  dewjar: { name: '이슬 유리병', ic: '🫙', visitor: 'snail' }, teaspoon: { name: '나무 찻숟가락', ic: '🥄', visitor: 'squirrel' }, pebble: { name: '반짝 조약돌', ic: '🪨', visitor: 'badger' },
 };
 const MEMENTO_KEYS = Object.keys(MEMENTOS);
 const ORDER_MEMENTO_KEYS = MEMENTO_KEYS.filter(k => !MEMENTOS[k].visitor);   // 손님 주문이 두고 가는 12가지 (특별 손님 것은 빼고 — 주문 뽑기 차례 그대로)
@@ -2310,7 +2317,31 @@ function bonusView(st) {                          // 고르기 화면(M3-2)이 �
 //   꽃잠(쉼달 · 꽃샘달)에만 시작 → 그 꽃잠은 새 철 0년차, 다음 월요일 3월이 1년차 (P04-05 꽃잠 시작과 같은 꼴)
 const SEASON_YEARS = 3;
 const SEASON_TITLES = Object.keys(TITLES).filter(k => TITLES[k].season);   // P28-08-04 2 · 3 · 5철 숨은 칭호
-const newSeason = () => ({ n: 1, startedAt: null, path: null, log: [] });   // path: P30-04 철의 길 자리 · log: 끝난 철마다 { n, startedAt, endedAt, years, grade, sold } (P30-04-03 철마다 표)
+const newSeason = () => ({ n: 1, startedAt: null, path: null, log: [] });   // path: P30-04 철의 길 (PATHS 키 | null) · log: 끝난 철마다 { n, startedAt, endedAt, years, grade, sold, path } (P30-04-03 철마다 표)
+// ---------------------------------------------------------------- 🛤️ 철의 길 (P30-04-01, L2-1 10-30)
+// 새 철을 시작할 때 하나 고름(1철은 길 없이) · 철 가운데엔 안 바뀜. 길이 바꾸는 것은 넷뿐: ① 주간 목표 뽑는 쪽(fams) ② 그 길에만 오는 손님(VISITORS path)
+//   ③ 그 길로 한 철을 마치면 길 칭호(TITLES path) ④ 그 철 한 해 기록 카드 테두리(color). 돈 · 수확 · 꽃 값 · 경험치 배율은 없음 (P17-14 — path.test.js · 시뮬 --path)
+const PATHS = {
+  flower: { name: '꽃길', icon: '🌸', color: '#d98aa8', fams: ['petal', 'tidy', 'prop'], desc: '꽃잎 · ★ 품질 · 번식 쪽 주간 목표와 꽃길 손님' },
+  tea: { name: '찻길', icon: '🍵', color: '#8faa6c', fams: ['cup', 'teabag', 'blend', 'order'], desc: '찻잔 · 블렌드 · 손님 주문 쪽 주간 목표와 찻길 손님' },
+  earth: { name: '흙길', icon: '⛏️', color: '#b08a5a', fams: ['dig'], desc: '광산 파기 · 계단 쪽 주간 목표와 흙길 손님' },
+};
+const PATH_KEYS = Object.keys(PATHS);
+const PATH_NONE = { name: '길 없이', icon: '🌿', color: null, desc: '지금처럼 — 어느 쪽에도 쏠리지 않아요' };
+const seasonPath = st => (st && st.season && PATHS[st.season.path]) ? st.season.path : null;
+const pathInfo = k => PATHS[k] || PATH_NONE;
+const pathTitle = k => Object.keys(TITLES).find(t => TITLES[t].path === k) || null;
+// 화면이 읽음: 지금 길 (길 없이면 null). 느긋하게 보기여도 보임 (숫자가 아님)
+const pathBadge = st => { const k = seasonPath(st); return k ? { key: k, icon: PATHS[k].icon, name: PATHS[k].name, color: PATHS[k].color, text: `${PATHS[k].icon} ${PATHS[k].name}` } : null; };
+// P30-04-03 철마다 표: 끝난 철(log) + 지금 철(now: true "진행 중"). 2철부터 · 느긋하게 보기면 null (P30-08)
+function seasonTable(st) {
+  const n = seasonN(st); if (n < 2 || slowView(st)) return null;
+  const row = e => { const P = pathInfo(e.path); return { n: e.n, path: PATHS[e.path] ? e.path : null, pathName: P.name, pathIcon: P.icon, years: e.years, grade: e.grade == null ? null : e.grade, sold: typeof e.sold === 'number' ? e.sold : null, now: false }; };
+  const rows = ((st.season && st.season.log) || []).map(row), cur = seasonRows(st, n);
+  const sold = cur.some(x => typeof x.sold === 'number') ? cur.reduce((a, x) => a + (x.sold || 0), 0) : null;
+  rows.push(Object.assign(row({ n, path: seasonPath(st), years: cur.length, grade: gradeOf(st).grade, sold }), { now: true }));
+  return rows;
+}
 const seasonN = st => Math.max(1, Math.floor(+((st && st.season && st.season.n) || 1)));
 const seasonRows = (st, n) => ((st && st.yearLog) || []).filter(r => rowSeason(r) === (n || seasonN(st)));
 function seasonReady(st) {
@@ -2332,18 +2363,21 @@ const SEASON_KEEP = ['grade', 'bonus', 'titles', 'titleOn', 'dex', 'journal', 's
   'shop', 'decos', 'onboarded', 'guide', 'gift', 'firstFlower', 'ownBloom', 'firstGuest', 'starterGift', 'startedInSleep', 'weekly', 'restClosed', 'lastExport', 'lastReal', 'actAt', 'speed', 'nextId', '_newTitles', 'layers', 'yearly', 'visitors'];   // layers: P30-01-01 정원의 층 (연 해는 누적 해 수라 철을 넘겨도 그대로) · yearly: P30-05-01 올해만 오는 것 (해 번호가 누적이라 달력 · 본 것 · 놓친 것 그대로) · visitors: P30-06 특별 손님 (온 횟수 · 기념품은 이어지고 앉은 손님은 seasonStart가 비움)
 function seasonStart(st, ctx) {
   ctx = ctx || {};
+  const path = ctx.path == null ? null : ctx.path;                           // P30-04-01 고른 길 (null = 길 없이)
+  if (path != null && !PATHS[path]) return no('없는 길이에요');
   const cal = calendar(st.virtual);
   if (!cal.frozen) return no('새 철은 꽃잠에만 시작할 수 있어요');
   const r = seasonReady(st);
   if (!r.ready) return no(r.years < SEASON_YEARS ? `이번 철에 ${SEASON_YEARS}해를 지나야 해요 (${r.years}해)` : `꽃 도감 ${FLOWER_KEYS.length}종을 모두 피워야 해요 (${r.flowers}종)`);
   const n = seasonN(st), old = st.season || newSeason(), now = st.virtual, rows = seasonRows(st, n);
   const sold = rows.some(x => typeof x.sold === 'number') ? rows.reduce((a, x) => a + (x.sold || 0), 0) : null;   // 판 잔은 아는 해만 (예전 정원은 모름)
-  const ended = { n, startedAt: old.startedAt == null ? null : old.startedAt, endedAt: now, years: rows.length, grade: gradeOf(st).grade, sold };
+  const oldPath = seasonPath(st);
+  const ended = { n, startedAt: old.startedAt == null ? null : old.startedAt, endedAt: now, years: rows.length, grade: gradeOf(st).grade, sold, path: oldPath };
   const keep = {}; for (const k of SEASON_KEEP) if (k in st) keep[k] = st[k];
   const mine = st.mine || newMine();
   for (const k of Object.keys(st)) delete st[k];                             // 화면이 같은 st를 쥐고 있어 제자리에서 바꿈
   Object.assign(st, _create(now, ctx.rng || Math.random, cal), keep);        // 땅 600칸은 황무지로 새로 (create와 같은 뽑기)
-  st.season = { n: n + 1, startedAt: now, path: null, log: [...(old.log || []), ended] };
+  st.season = { n: n + 1, startedAt: now, path, log: [...(old.log || []), ended] };
   st.mine = Object.assign(newMine(), { deepest: mine.deepest || 1, boards: mine.boards || 0 });   // ⛏️ 주머니 · 지금 층은 비우고, 가장 깊이 간 층은 이어짐
   for (const d of st.decos || []) {
     if (d.honey) d.honey = [];                                                // 벌통에 모인 꿀도 비움
@@ -2351,10 +2385,12 @@ function seasonStart(st, ctx) {
   }
   if (st.visitors) { st.visitors.now = []; st.visitors.call = null; }        // P30-06-01 앉아 있던 손님은 떠남 (장식이 창고로 감) — 온 횟수 · 기념품은 이어짐
   st.yearPace.xp0 = (st.grade && st.grade.xp) || 0;                         // P28-07-02 새 철 0년차부터 견줌 (경험치는 이어짐)
-  addLog(st, 7, `🌸 ${n + 1}철을 시작했어요 · 다음 월요일 3월이 새 철 1년차예요`, ctx);
+  addLog(st, 7, `🌸 ${n + 1}철을 시작했어요${path ? ` · ${PATHS[path].icon} ${PATHS[path].name}로 걸어요` : ''} · 다음 월요일 3월이 새 철 1년차예요`, ctx);
   const title = SEASON_TITLES.find(k => TITLES[k].season === n + 1) || null;   // 새 철 보상은 이 칭호뿐 — 🌟 손길 점은 더 주지 않음 (열린 질문 ②)
   if (title) giveTitle(st, title, cal, ctx);
-  return ok(`🌸 ${n + 1}철을 시작했어요`, { season: n + 1, title, ended });
+  const pathT = oldPath ? pathTitle(oldPath) : null;                          // P30-04-01 지난 철을 길로 마쳤으면 길 칭호
+  if (pathT) giveTitle(st, pathT, cal, ctx);
+  return ok(`🌸 ${n + 1}철을 시작했어요`, { season: n + 1, title, pathTitle: pathT, path, ended });
 }
 
 // ---------------------------------------------------------------- 🌳 정원의 층 (P30-01-01, L1-1 10-30)
@@ -2558,6 +2594,13 @@ const VISITORS = {
     lines: ['첫눈 오던 날 생각나요', '동백이 빨개서 따뜻해 보여요', '녹기 전에 놀다 갈게요'], cond: st => yearlySeen(st, 'firstsnow'), spots: st => blooming(st, 'dongbaek') },
   owl: { name: '부엉이', icon: '🦉', memento: 'quill', where: '해시계 옆', need: '🌕 큰 달을 본 정원에 해시계를 놓으면',
     lines: ['큰 달 뜨던 밤이 그리워요', '해시계는 밤엔 쉬어요', '부엉, 조용한 정원이 좋아요'], cond: st => yearlySeen(st, 'bigmoon'), spots: st => placedOf(st, 'sundial') },
+  // P30-04-01 길 손님: 그 길을 걷는 철에만 옴 (path — 그 밖은 다른 손님과 같음)
+  snail: { name: '달팽이 할아버지', icon: '🐌', memento: 'dewjar', path: 'flower', where: '꽃 옆', need: '🌸 꽃길을 걷는 철에 꽃이 피면',
+    lines: ['꽃길은 천천히 걸어야 제맛이에요', '이슬 맺힌 꽃잎이 좋아요', '느릿느릿, 구경 잘하고 가요'], cond: st => seasonPath(st) === 'flower', spots: st => blooming(st) },
+  squirrel: { name: '다람쥐 단골', icon: '🐿️', memento: 'teaspoon', path: 'tea', where: '정원 한쪽', need: '🍵 찻길을 걷는 철에',
+    lines: ['찻집 냄새 따라 왔어요', '따뜻한 차 한 잔이면 충분해요', '다음엔 친구도 데려올게요'], cond: st => seasonPath(st) === 'tea', spots: st => [...(st.decos || []).filter(d => d.x != null), ...(st.flowers || []).filter(f => !f.withered)] },
+  badger: { name: '오소리 광부', icon: '🦡', memento: 'pebble', path: 'earth', where: '정원 한쪽', need: '⛏️ 흙길을 걷는 철에',
+    lines: ['흙냄새가 좋은 정원이에요', '굴 파다 잠깐 쉬러 왔어요', '이 땅은 잘 갈려 있네요'], cond: st => seasonPath(st) === 'earth', spots: st => [...(st.decos || []).filter(d => d.x != null), ...(st.flowers || []).filter(f => !f.withered)] },
 };
 const VISITOR_KEYS = Object.keys(VISITORS);
 const VISITOR_MAX = 2, VISITOR_P = 1 / 3, VISITOR_GIFT_AT = 3;   // 한꺼번에 앉는 손님 · 달마다 올 확률 · 몇 번째 온 날 기념품
@@ -2776,6 +2819,10 @@ const MIGRATIONS = [
   }],
   ['🗓️ 올해만 오는 것 yearly (P30-05-01, L1-3 10-30): 예전 정원은 빈 달력 — 다음에 열 때부터 셈 (지난 계절을 놓친 것으로 치지 않음)', s => { if (!s.yearly) s.yearly = newYearly(); }],
   ['🐾 특별 손님 visitors (P30-06-01, L1-6 10-30): 예전 정원은 아무도 안 온 정원 — 다음 달부터 조건이 맞으면 옴', s => { if (!s.visitors) s.visitors = newVisitors(); }],
+  ['🛤️ 철의 길 season.path (P30-04-01, L2-1 10-30): 예전 정원 · 끝난 철은 길 없이(null) — 모르는 길 이름도 길 없이', s => {
+    s.season = Object.assign(newSeason(), s.season); if (!PATHS[s.season.path]) s.season.path = null;
+    for (const e of s.season.log || []) if (!PATHS[e.path]) e.path = null;
+  }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2894,7 +2941,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, layerYears, layerNow, layerOf, layerSync, layerCheck, YEARLY, YEARLY_KEYS, YEARLY_ROWS, newYearly, yearlyNo, yearlyOf, yearlyTick, yearlyMark, yearlyNow, yearlyMissedAll, yearlySeen, yearlyCount, yearlyDex, yearlyPast, yearlyBloom, VISITORS, VISITOR_KEYS, VISITOR_MAX, VISITOR_P, VISITOR_GIFT_AT, newVisitors, visitorOk, visitorCells, visitorTick, visitorsOf, visitorAt, visitorTimes, visitorCall, ORDER_MEMENTO_KEYS, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, PATHS, PATH_KEYS, PATH_NONE, seasonPath, pathInfo, pathTitle, pathBadge, seasonTable, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, layerYears, layerNow, layerOf, layerSync, layerCheck, YEARLY, YEARLY_KEYS, YEARLY_ROWS, newYearly, yearlyNo, yearlyOf, yearlyTick, yearlyMark, yearlyNow, yearlyMissedAll, yearlySeen, yearlyCount, yearlyDex, yearlyPast, yearlyBloom, VISITORS, VISITOR_KEYS, VISITOR_MAX, VISITOR_P, VISITOR_GIFT_AT, newVisitors, visitorOk, visitorCells, visitorTick, visitorsOf, visitorAt, visitorTimes, visitorCall, ORDER_MEMENTO_KEYS, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
