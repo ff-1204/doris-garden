@@ -470,8 +470,6 @@ function openMine(tab) {
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
 // 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
 const ageText = h => { const m = Math.floor(h / E.MONTH_H); return m >= 14 ? `${Math.floor(m / 14)}년 ${m % 14 ? `${m % 14}달` : ''}`.trim() : flowH(h); };
-// P33-03 🪴 장식의 작은 버프 한 줄 (화원 · 창고 카드 · 정원 장식 창이 같이 씀) — 놓이지 않았으면 "놓으면 …", 느긋하게 보기면 숫자 없이
-const decoBuffHTML = (k, tag) => { const t = E.decoBuffLine(st, k); return t ? `<${tag || 'small'} class="dk-buff">${esc(t)}</${tag || 'small'}>` : ''; };
 function openDecoTile(d) {
   const info = E.decoInfo(d.key);
   let extra = '';
@@ -502,7 +500,7 @@ function openDecoTile(d) {
     extra = `<p class="muted">${frozen ? '🌙 꽃잠엔 장치도 쉬어요' : n ? `지금 ${n}포기가 빨리 자라는 중이에요` : '지금 둘레에 빨리 자랄 꽃이 없어요'} · 둘레 ${E.GEAR[d.key].r}칸 (창을 닫으면 지도에 잠깐 보여요)</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
-  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${decoBuffHTML(d.key, 'p')}${extra}</div>`, [
+  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${extra}</div>`, [
     { label: '📦 창고에', act: () => { closeModal(); after(E.storeDeco(st, d.id)); } },
     { label: '↔ 옮기기', primary: true, act: () => { closeModal(); ui.tool = 'deco'; ui.decoId = d.id; renderToolbar(true); } },
   ]);

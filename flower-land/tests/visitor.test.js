@@ -72,12 +72,12 @@ console.log('[자리 · 한꺼번에 둘까지 · 빈 칸]');
 console.log('[2~3달 뒤 떠남 · 온 횟수]');
 { const s = swingGarden('v-stay'); s.visitors.call = 'hedgehog';
   const e = E.visitorTick(s, calAt(s, 1000), quiet), stay = s.visitors.now[0].left;
-  check(e && e.times === 1 && E.visitorTimes(s, 'hedgehog') === 1 && (stay === 3 || stay === 4), `부르면 다음 달에 꼭 옴 (DEV) · 온 횟수 1 · 머물 달 ${stay} (P33-02 그네 옆이라 +1)`);
+  check(e && e.times === 1 && E.visitorTimes(s, 'hedgehog') === 1 && (stay === 2 || stay === 3), `부르면 다음 달에 꼭 옴 (DEV) · 온 횟수 1 · 머물 달 ${stay}`);
   let leftAt = null; for (let a = 1001; a < 1010 && leftAt == null; a++) { E.visitorTick(s, calAt(s, a), quiet); if (!s.visitors.now.some(v => v.k === 'hedgehog')) leftAt = a - 1000; }
   check(leftAt === stay, `${stay}달 뒤 떠남`);
   check(s.log.some(l => l.text === '🦔 고슴도치 할머니가 다녀갔어요'), '일지 "🦔 고슴도치 할머니가 다녀갔어요"');
   const lens = new Set(); for (let i = 0; i < 40; i++) { const g = swingGarden('v-len-' + i); g.visitors.call = 'hedgehog'; E.visitorTick(g, calAt(g, 50), quiet); lens.add(g.visitors.now[0].left); }
-  check([...lens].sort().join() === '3,4', '머무는 달은 2 또는 3 · 그네 옆이라 +1 → 3 또는 4 (P33-02)');
+  check([...lens].sort().join() === '2,3', '머무는 달은 2 또는 3');
   const m = swingGarden('v-move'); m.visitors.call = 'hedgehog'; E.visitorTick(m, calAt(m, 60), quiet); const v = m.visitors.now[0];
   bloom(m, 'rose', v.x, v.y);
   check(E.visitorsOf(m, calAt(m, 60)).length === 0, '앉은 칸에 꽃을 심으면 보이지 않고');
