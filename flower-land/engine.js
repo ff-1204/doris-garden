@@ -1775,7 +1775,9 @@ const CRAFTS = {
   cheongja: { name: '청자 찻잔', need: { jade: 2 }, cup: 'cheongja' },               // 비취는 9층부터라 2개로
   buncheong: { name: '분청 찻잔', need: { feldspar: 4, mica: 2 }, cup: 'buncheong' },
   kkot: { name: '꽃무늬 찻잔', need: { amethyst: 2, quartz: 4 }, cup: 'kkot' },
-  jar: { name: '유리 관', need: { quartz: 15, stone: 9 }, item: 'jar', desc: '석영 15 · 돌 9 → 🫙 유리 관 1' },   // P36-04 변이 꽃을 담는 용품 (사용자 결정 ① 그대로)
+  jar: { name: '유리 관', need: { quartz: 15, stone: 9 }, item: 'jar', desc: '석영 15 · 돌 9 → 🫙 유리 관 1' },
+  hoe: { name: '호미', need: { stone: 3, feldspar: 1 }, supply: 'hoe', desc: '돌 3 · 장석 1 → ⛏️ 호미 1개(잡초 10번)' },      // 10-31 사용자 요청: 광산에서 호미 · 가위 만들기 (화원 값 400 · 500원 — 돌 · 광석으로 대신)
+  shears: { name: '가위', need: { stone: 2, mica: 1 }, supply: 'shears', desc: '돌 2 · 운모 1 → ✂️ 가위 1개(가지치기 5번)' },   // P36-04 변이 꽃을 담는 용품 (사용자 결정 ① 그대로)
 };
 const CRAFT_KEYS = Object.keys(CRAFTS);
 const canCraft = (st, k) => { const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null, bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
@@ -1787,6 +1789,7 @@ function craft(st, k, ctx) {
   const bag = st.mine.bag;
   for (const [n, q] of Object.entries(C.need)) bag[n] -= q;
   if (C.deco) { const first = !(st.dex.deco || {})[C.deco]; addDeco(st, C.deco); if (first) addLog(st, 9, `도감에 등록: 🪴 ${DECOS[C.deco].name}`, ctx); return ok(`${josa(C.name, '을/를')} 만들었어요 · 창고에 있어요`); }
+  if (C.supply) { const S = SUPPLIES[C.supply]; st[C.supply] = (st[C.supply] || 0) + S.per; return ok(`${josa(C.name, '을/를')} 만들었어요 · ${S.name} ${S.per}${S.unit} (${st[C.supply]}${S.unit} 남음)`); }   // 10-31 호미 · 가위
   if (C.item) { st[C.item] = (st[C.item] || 0) + 1; return ok(`${josa(C.name, '을/를')} 만들었어요 · 창고 용품에 있어요 (${st[C.item]}개)`); }   // P36-04 🫙 유리 관
   if (C.cup) { shopOf(st).cups.push(C.cup); return ok(`${josa(C.name, '을/를')} 구웠어요 · 찻집 가꾸기에서 고를 수 있어요`); }
   addFert(st, 1); st._fertNew = Math.max(0, st._fertNew - 1);

@@ -60,6 +60,15 @@ cm.bag.jade = 3;
 check(!E.craft(cs, 'cheongja').ok && cm.bag.jade === 3, '이미 있는 찻잔은 다시 안 구움');
 check(!E.craft(cs, 'toString').ok, '없는 만들기 거절');
 
+console.log('[호미 · 가위 만들기 (10-31)]');
+{
+  const s = E.create(at(c => c.month === 3), () => 0.5); s.mine.bag.stone = 5; s.mine.bag.feldspar = 1; s.mine.bag.mica = 1;
+  const h0 = s.hoe, sh0 = s.shears, m0 = s.money;
+  const r1 = E.craft(s, 'hoe', {}); check(r1.ok && s.hoe === h0 + E.SUPPLIES.hoe.per && s.mine.bag.stone === 2 && s.mine.bag.feldspar === 0, '돌 3 · 장석 1 → 호미 10번');
+  const r2 = E.craft(s, 'shears', {}); check(r2.ok && s.shears === sh0 + E.SUPPLIES.shears.per && s.mine.bag.stone === 0 && s.mine.bag.mica === 0, '돌 2 · 운모 1 → 가위 5번');
+  check(!E.canCraft(s, 'hoe') && !E.craft(s, 'hoe', {}).ok && s.money === m0, '재료가 모자라면 안 됨 · 돈은 그대로');
+}
+
 console.log('[도감 · 돈]');
 const money = st.money;
 m.energy = 10; { const oi = m.board.cells.findIndex(c => !c.dug && E.ORE_KEYS.includes(c.k)); if (oi >= 0) E.dig(st, oi); }

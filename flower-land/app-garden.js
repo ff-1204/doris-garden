@@ -453,7 +453,7 @@ function renderMine(force) {
   // P24 UI (10-30): 재료 진행 막대(가장 모자란 재료 기준) · 만들 수 있는 것을 맨 위로
   const craftRows = E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], have = C.cup && E.shopOf(st).cups.includes(C.cup), can = E.canCraft(st, k) && !have;
     const pct = Math.floor(100 * Math.min(...Object.entries(C.need).map(([n, q]) => Math.min(1, (m.bag[n] || 0) / q))));
-    const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
+    const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.supply ? `<span class="mn-ico">${E.SUPPLIES[C.supply].icon}</span>` : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
     return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
   const crafts = `<div class="mine-crafts">${[...craftRows.filter(r => r.can), ...craftRows.filter(r => !r.can)].map(r => r.html).join('')}</div>`;
   const sig = JSON.stringify([m, nextE, st.money, E.shopOf(st).cups, st.jar]);
