@@ -304,6 +304,7 @@ function renderTop() {
   const gb = E.gradeBadge(st), tg = $('#topGrade'), gk = gb ? `${gb.grade}|${gb.pct}` : '';   // 🌱 정원 등급 (P28-05-01, M1-4) · 느긋하게 보기면 null → 숨김
   if (tg.dataset.k !== gk) { tg.dataset.k = gk; tg.hidden = !gb; tg.title = gb ? `정원 등급 ${gb.grade} · ${gb.name} · 다음 등급까지 ${gb.pct}% · 눌러서 등급 보기` : ''; tg.innerHTML = gb ? `🌱<span class="tg-name">${gb.name}</span><span class="tg-n">${gb.grade}</span><i class="tg-bar" aria-hidden="true"><b style="width:${gb.pct}%"></b></i>` : ''; }
   if (document.documentElement.dataset.season !== String(cal.season)) { document.documentElement.dataset.season = cal.season; requestAnimationFrame(() => document.documentElement.classList.add('season-anim')); }   // 계절 바탕색
+  inboxTop();                                       // ✉️ 편지함 점 (P31-02)
   cloudTop();                                       // ☁️ 드라이브 저장 표시 (P20-04-02, 로그인했을 때만)
 }
 
