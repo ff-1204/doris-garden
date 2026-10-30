@@ -723,4 +723,72 @@ window.VISITOR_ART = {
     '..kgwwgwwgk.....', '..kwekwwekw.....', '..kgwwwwwwgk....', '...kgwkkwgkkkk..',
     '...kgGgggGgGgGk.', '..kgGgGgGgGgGgk.', '..kgggggggggggk.', '..kGgGgGgGgGgGk.',
     '...kk.kk..kk.kk.', '................', '................', '................'] },
+  // P30-03 🌳 숲 손님 — 큰 나무 아래 (회갈색 · 긴 귀 · 흰 꼬리)
+  rabbit: { pal: { k: '#45392f', b: '#9c8a76', B: '#bcaa94', w: '#eee8dc', p: '#cf9fa0', e: '#2a2220' }, grid: [
+    '................', '....kk..kk......', '...kBpk.kpBk....', '...kBpk.kpBk....',
+    '...kBpk.kpBk....', '....kBkkkBk.....', '...kBBBBBBBk....', '..kBBeBBBeBBk...',
+    '..kBBBBpBBBBk...', '...kBBwwwBBk....', '..kbbBBBBBbbbk..', '.kbbbbBBBbbbbwk.',
+    '.kbbbbbbbbbbbwwk', '.kbbbbbbbbbbbbk.', '..kkbk..kkbkkk..', '................'] },
 };
+// P30-03 🌳 작은 숲 나무 6가지 × 4단계 — 묘목 · 어린나무 16×16, 나무 · 큰 나무 32×32 (모두 16의 배수, 화면은 정수배로만). 이름 · 값은 engine.js TREES
+//   모양은 셋(넓은 잎 · 바늘잎 · 자작)을 원 · 세모로 찍고 칸마다 정해진 무늬(해시)로 밝음 · 그늘 — Math.random 없음, 늘 같은 그림
+//   계절 색은 L1 날씨처럼 단순히: 봄 벚꽃 · 가을 단풍 · 은행 노랑 · 감 열매 · 겨울 맨가지(bare — 잎 칸은 안 찍고 가지 b만 줄기 색). 소나무는 사철 그대로
+//   글자: t · T 줄기, w · k 자작 줄기, l · L · d 잎(보통 · 밝음 · 그늘), x 꽃 · 열매(없으면 l), b 가지(잎 사이, 없으면 d), g · G 흙
+window.TREE_ART = (() => {
+  const hash = (x, y, s) => { let h = (x * 374761393 + y * 668265263 + s * 2147483647) >>> 0; h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
+  const leafAt = (g, x, y, c) => { if (g[y] && g[y][x] !== undefined && g[y][x] === '.') g[y][x] = c; };
+  const put = (g, x, y, c) => { if (g[y] && g[y][x] !== undefined) g[y][x] = c; };
+  const shade = (dx, dy, r, x, y, seed) => { const s = (dx + dy) / r, h = hash(x, y, seed) % 9; return s < -0.55 || (h === 0 && s < 0.3) ? 'L' : s > 0.6 || (h === 1 && s > -0.3) ? 'd' : 'l'; };
+  const disc = (g, cx, cy, r, seed, ry) => { ry = ry || r; for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) { const dx = x - cx, dy = y - cy; if ((dx * dx) / (r * r) + (dy * dy) / (ry * ry) <= 1) leafAt(g, x, y, shade(dx, dy, Math.max(r, ry), x, y, seed)); } };
+  const tri = (g, cx, top, h, w, seed) => { for (let j = 0; j < h; j++) { const half = Math.round((j + 1) / h * w); for (let x = Math.round(cx - half); x <= Math.round(cx + half - 1); x++) leafAt(g, x, top + j, x < cx - half * 0.4 ? 'L' : x > cx + half * 0.3 ? 'd' : hash(x, top + j, seed) % 7 === 0 ? 'd' : 'l'); } };
+  const line = (g, x0, y0, x1, y1, c) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let i = 0; i <= n; i++) put(g, Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), c); };
+  const trunk = (g, x0, w, y0, y1, birch) => { for (let y = y0; y <= y1; y++) for (let x = x0; x < x0 + w; x++) leafAt(g, x, y, birch ? (hash(x, y, 7) % 5 === 0 ? 'k' : 'w') : x === x0 && w > 1 ? 'T' : 't'); };
+  const ground = (g, cx, y, half) => { for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) put(g, x, y, Math.abs(x - cx) < half - 1 ? 'G' : 'g'); for (let x = Math.round(cx - half + 1); x <= Math.round(cx + half - 1); x++) put(g, x, y + 1, 'g'); };
+  const accents = (g, seed, every) => g.forEach((row, y) => row.forEach((c, x) => { if ((c === 'l' || c === 'L') && hash(x, y, seed + 3) % every === 0) row[x] = 'x'; }));
+  function build(shape, stage, seed) {
+    const N = stage < 2 ? 16 : 32, g = Array.from({ length: N }, () => Array(N).fill('.'));
+    const birch = shape === 'birch', pine = shape === 'pine';
+    if (stage === 0) {   // 묘목: 흙 둔덕 + 줄기 + 잎 두 장 (바늘잎은 작은 세모)
+      ground(g, 7.5, 13, 4); line(g, 7, 12, 7, 8, birch ? 'w' : 't');
+      if (pine) tri(g, 7.5, 5, 5, 3, seed); else { disc(g, 5.5, 7.5, 1.6, seed, 1.1); disc(g, 9.5, 6.5, 1.6, seed, 1.1); put(g, 7, 7, 'l'); }
+    } else if (stage === 1) {   // 어린나무
+      ground(g, 7.5, 14, 4);
+      if (pine) { tri(g, 7.5, 1, 5, 3, seed); tri(g, 7.5, 4, 6, 5, seed); }
+      else if (birch) disc(g, 7.5, 5.5, 3.2, seed, 4.6);
+      else { disc(g, 7.5, 5.5, 4.6, seed, 4.2); line(g, 7, 9, 5, 6, 'b'); line(g, 8, 9, 10, 5, 'b'); }
+      trunk(g, 7, 2, 9, 13, birch);
+    } else if (stage === 2) {   // 나무
+      ground(g, 15.5, 29, 7);
+      if (pine) { tri(g, 15.5, 2, 7, 4, seed); tri(g, 15.5, 6, 8, 7, seed); tri(g, 15.5, 11, 8, 9, seed); }
+      else if (birch) { disc(g, 15.5, 10.5, 5.6, seed, 8.4); line(g, 15, 18, 13, 9, 'b'); line(g, 16, 18, 18, 8, 'b'); }
+      else { disc(g, 15.5, 11.5, 8.2, seed, 7.4); disc(g, 10, 15, 4, seed); disc(g, 21, 15, 4, seed); line(g, 15, 18, 10, 12, 'b'); line(g, 16, 18, 21, 11, 'b'); line(g, 16, 17, 16, 6, 'b'); }
+      trunk(g, 15, 2, 17, 28, birch);
+    } else {   // 큰 나무: 줄기 넷 · 뿌리 · 넓은 잎
+      ground(g, 15.5, 29, 11);
+      if (pine) { tri(g, 15.5, 0, 7, 4, seed); tri(g, 15.5, 4, 8, 8, seed); tri(g, 15.5, 9, 9, 11, seed); tri(g, 15.5, 14, 8, 13, seed); }
+      else if (birch) { disc(g, 15.5, 10.5, 7.6, seed, 10.2); disc(g, 10.5, 14, 4, seed, 5); disc(g, 20.5, 13, 4, seed, 5); line(g, 15, 19, 11, 9, 'b'); line(g, 16, 19, 20, 7, 'b'); line(g, 15, 19, 15, 3, 'b'); }
+      else { disc(g, 15.5, 10.5, 10, seed, 9); disc(g, 8.5, 14.5, 6, seed, 5); disc(g, 22.5, 14.5, 6, seed, 5); line(g, 15, 19, 8, 12, 'b'); line(g, 16, 19, 23, 12, 'b'); line(g, 15, 19, 14, 3, 'b'); line(g, 16, 19, 18, 5, 'b'); }
+      trunk(g, 14, 4, 18, 28, birch); for (let x = 12; x <= 19; x++) put(g, x, 29, x < 13 || x > 18 ? 'g' : birch ? 'w' : 't');
+    }
+    if (stage >= 1) accents(g, seed, stage === 1 ? 9 : 7);
+    return g.map(r => r.join(''));
+  }
+  const T = { t: '#6b4f3a', T: '#8a6a4e', g: '#7a5a40', G: '#9a7454', w: '#e9e6dc', k: '#4a4440' };
+  const green = { l: '#6f9a5a', L: '#93b878', d: '#4f7a44' }, fresh = { l: '#8fb468', L: '#b2cf8e', d: '#6a8f4e' }, bare = { bare: true };
+  const trees = {   // seasons: 0 봄 · 1 여름 · 2 가을 · 3 겨울 (꽃잠은 겨울)
+    cherry: { shape: 'leaf', seed: 11, seasons: [{ l: '#e8b4c4', L: '#f4d4de', d: '#c98ea2', x: '#fbeef2' }, green, { l: '#c98a6a', L: '#ddb08e', d: '#a86a50' }, bare] },
+    ginkgo: { shape: 'leaf', seed: 23, seasons: [fresh, green, { l: '#e2c25a', L: '#efd88a', d: '#c0a040' }, bare] },
+    maple: { shape: 'leaf', seed: 37, seasons: [fresh, green, { l: '#c8624e', L: '#de8a6e', d: '#a04a3c' }, bare] },
+    pine: { shape: 'pine', seed: 41, seasons: [{ l: '#4f7f5a', L: '#6f9a72', d: '#36603f' }] },
+    persimmon: { shape: 'leaf', seed: 53, seasons: [fresh, green, { l: '#a08a4a', L: '#bca86a', d: '#7a6a3a', x: '#e08a3a' }, bare] },
+    birch: { shape: 'birch', seed: 67, seasons: [fresh, { l: '#7fa862', L: '#a2c486', d: '#5f8a4a' }, { l: '#d8c070', L: '#e8d498', d: '#b49c50' }, bare] },
+  };
+  const cache = {};
+  return {
+    trees,
+    grid: (k, stage) => cache[k + stage] || (cache[k + stage] = build(trees[k].shape, stage, trees[k].seed)),
+    // 칸 글자 → 색 (없으면 그리지 않음). 묘목은 계절 없이 늘 푸름, 겨울 맨가지는 잎 칸을 비우고 가지만 줄기 색
+    pal: (k, stage, season) => { const S = trees[k].seasons, s = stage === 0 ? (k === 'pine' ? S[0] : green) : S[Math.min(S.length - 1, season >= 3 ? 3 : season)] || S[0];
+      return s.bare ? Object.assign({}, T, { b: T.t }) : Object.assign({}, T, s, { x: s.x || s.l, b: s.d }); },
+  };
+})();

@@ -98,6 +98,8 @@ function renderAll(force) {
   if (ui.tab === 'shop') renderShop(force);
   if (ui.tab === 'store') renderStore(force);
   if (ui.tab === 'cab' || ui.tab === 'tearoom') renderCab(force);
+  forestTabSync();                                // P30-01-03 🌳 숲 탭은 4층이 열린 정원에만
+  if (ui.tab === 'forest') renderForest(force);
   if (ui.tab === 'dex') renderDex(force);
   if (ui.tab === 'manual') renderManual(force);
   if (ui.tab === 'settings' && force) renderSettings();   // 입력 중에 다시 그려지지 않게, 들어올 때만

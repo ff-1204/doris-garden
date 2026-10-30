@@ -22,7 +22,7 @@ function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.i
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);
-  const sig = JSON.stringify([E.gradeOf(st).grade, cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
+  const sig = JSON.stringify([st.forest && st.forest.trees, E.forestOpen(st), E.gradeOf(st).grade, cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, st.reservations.map(r => [r.id, r.done])]);
   if (!force && ui.sigs.shop === sig) { updateCountdowns(); return; }
   ui.sigs.shop = sig;
   const onSale = FLOWER_KEYS.filter(k => !cal.frozen && FLOWERS[k].sow.includes(cal.month));
@@ -123,8 +123,15 @@ function renderShop(force) {
       return `<div class="decocard"><span class="dk-art"><span class="gift-ic">${G.ic}</span></span>
         <span class="dk-main"><b>${G.name}</b><small>${G.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(G.price)}</span>${sent ? '<span class="muted">✓ 올해 보냈어요 · 3월에 다시</span>' : `<button type="button" class="btn primary" data-gift="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '보내기'}</button>`}</span></div>`; }).join('')}</div>`;
+  // P30-03 🌳 숲: 4층이 열린 뒤에만 · 묘목 6가지를 돈으로 (나무는 팔지 않고 열매 · 수입 없음) — 사면 바로 숲의 첫 빈 자리에 심음 (꽃잠에도)
+  const fo = E.forestOpen(st) ? E.forestOf(st) : null;
+  const forestSection = !fo ? '' : `<div class="cab-head"><span class="sb-title">🌳 숲</span><span class="muted">묘목을 사면 숲 빈 자리에 심어요 · 해가 바뀔 때마다 자라요 · 열매 · 돈은 나오지 않아요${fo.slow ? '' : ` · 빈 자리 ${fo.empty} / ${E.FOREST_N}`}</span></div>
+    <div class="decoshop">${E.TREE_KEYS.map(k => { const T = E.TREES[k], short = st.money < T.price, own = fo.slots.filter(t => t && t.key === k).length;
+      return `<div class="decocard"><span class="dk-art">${treeImg(k, 0, 4, 1)}${own ? `<span class="sc-own" title="숲에 ${own}그루">🌳 ${own}</span>` : ''}</span>
+        <span class="dk-main"><b>${T.icon} ${T.name} 묘목</b><small>${T.desc}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(T.price)}</span>${!fo.empty ? '<span class="muted">자리가 다 찼어요</span>' : `<button type="button" class="btn primary" data-treebuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '심기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${decoSection}${gradeSection}${autoSection}${gearSection}${giftSection}</div>`;
+    ${cal.frozen ? rvView : saleView}${forestSection}${decoSection}${gradeSection}${autoSection}${gearSection}${giftSection}</div>`;
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
@@ -136,6 +143,7 @@ $('#p-shop').addEventListener('click', e => {
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
   if (b.dataset.gift) { const G = E.GIFTS[b.dataset.gift]; return openModal(`${G.ic} ${G.name} 보내기`, `<p>이웃에게 ${josa(G.name, '을/를')} 보내요 · <b class="data">${won(G.price)}</b></p><p class="muted">종류마다 한 해에 한 번 · 다음 달(오전 · 오후 6시)에 ${E.letterLeftFor(st, b.dataset.gift) ? '답장 편지와' : '고맙다는 답장과'} 함께 🎁 답례품이 와요 · 무엇이 올지는 몰라요</p><p class="muted">💰 가진 돈 ${won(st.money)} → ${won(st.money - G.price)}</p>`, [{ label: '취소', act: () => closeModal() }, { label: `보내기 · ${won(G.price)}`, primary: true, act: () => { closeModal(); after(E.sendGift(st, b.dataset.gift, ctx)); } }]); }
+  if (b.dataset.treebuy) return after(E.plantTree(st, b.dataset.treebuy, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') });   // P30-03
   if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
   if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1; ui.shopQty[key] = 1; return after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = key; setTab('garden', true); } }); }
   if (b.dataset.cart) {
