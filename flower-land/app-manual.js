@@ -4,7 +4,7 @@
 const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['inbox', '✉️ 편지함'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
-  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st), E.seasonPath(st)]);   // 🌸 새 철 카드 (P28-08-05)
+  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st), E.seasonPath(st), E.patternView(st)]);   // 🌸 새 철 카드 (P28-08-05)
   if (!force && ui.sigs.manual === sig) return;
   ui.sigs.manual = sig;
   const sec = (k, title, sub, inner) => `<section class="mn-sec" id="mn-${k}"><h2 class="mn-h">${title}${sub ? `<small>${sub}</small>` : ''}</h2>${inner}</section>`;
@@ -22,7 +22,7 @@ function renderManual(force) {
       + `<div class="mn-icons">${item(ico('☀️'), '낮', '06–18시')}${item(ico('🌙'), '밤', '18–06시')}${item(ico('📅'), '한 달', '15일 · 48분')}${item(ico('🎁'), '용돈', '매일 6시 500원')}</div>`),
     sec('land', '꽃이 땅을 만들어요', '사람은 꽃만 돌봐요',
       fig(landPixel(), '처음엔 모두 <b>황무지</b>. 심은 꽃 둘레 2칸이 그 꽃이 좋아하는 땅으로 천천히 바뀌어요')
-      + `<div class="mn-lands">${LAND_KEYS.map(k => { const L = LANDS[k], mk = makers(k); return `<span class="mn-land"><span class="sw" style="background:${L.color}">${mk[0] ? spriteImg(mk[0], 'flower', 24, false, '') : ''}</span>${L.name}</span>`; }).join('')}</div>
+      + `<div class="mn-lands">${LAND_KEYS.map(k => { const L = LANDS[k], mk = makers(k), pv = E.patternView(st); return `<span class="mn-land"><span class="sw${pv ? ' pat' : ''}" style="background:${L.color}${pv ? `;background-image:url(${patURL(k)})` : ''}">${mk[0] ? spriteImg(mk[0], 'flower', 24, false, '') : ''}</span>${L.name}${pv ? `<small>${window.LAND_PATTERNS[k].name}</small>` : ''}</span>`; }).join('')}</div>
       <p class="note" style="text-align:center">비료로 품질이 오르면 땅이 더 넓게 바뀌어요 · 옆 꽃과 좋아하는 땅이 너무 다르면 기운이 떨어져요</p>`),
     sec('flower', '꽃 한 포기의 흐름', '꽃을 눌러 바꿔 보세요',
       `<div class="mn-pick" role="group" aria-label="꽃 고르기">${FLOWER_KEYS.map(k => `<button type="button" data-mf="${k}" aria-pressed="${k === mf}" title="${FLOWERS[k].name}">${spriteImg(k, 'flower', 28, false, FLOWERS[k].name)}</button>`).join('')}</div>`
@@ -120,6 +120,10 @@ function renderManual(force) {
         '편지 칸엔 📮 운영자 편지 · ✉️ 이웃 답장 · 💌 꽃집 할머니의 첫 편지가 최근 것부터 있어요 · 누르면 그 편지를 다시 읽어요 · 🎁가 붙은 편지는 아직 선물을 안 받은 것이에요')
       + fig(`<div class="mn-icons">${[['🗓️', '올해만 것'], ['🐾', '특별 손님'], ['🌳', '층 열림'], ['🌸', '새 철'], ['💌', '기념품'], ['🌿', '숲 바람'], ['🏅', '칭호']].map(([i, n]) => item(ico(i), n, '')).join('')}</div>`,
         '소식 칸엔 알림 한 줄로 지나간 일이 최근 것부터 모여요 · 창을 열면 점이 사라져요 · 재촉하지 않고 수도 세지 않아요 · 더 지난 일은 📜 정원 일지 · 📖 기록에 · 🐢 느긋하게 보기면 숫자 없는 문장만')),
+    // P28-01 · P28-02 · P28-03 보기 설정: 보는 것만 바뀌고 얻는 것 · 돈은 그대로
+    sec('view', '보기 설정', '⚙️ 설정 › 👀 보기',
+      fig(`<div class="mn-icons">${item(ico('🐢'), '느긋하게 보기', '숫자 · 목표를 숨겨요')}${item(ico('🔠'), '큰 글씨', '글자 · 단추가 커져요')}${item(ico('🧩'), '땅 무늬 보기', '땅마다 다른 무늬')}</div>`,
+        '🔠 큰 글씨는 글자를 1.25배로 키우고 단추를 손가락으로 누르기 쉽게 넓혀요 · 🧩 땅 무늬 보기는 색이 비슷해 보이는 땅도 무늬로 알아보게 지도 · 범례에 무늬를 겹쳐요 · 셋 다 보는 것만 바뀌어요')),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       (cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
         ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
@@ -130,7 +134,7 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(ico('🌙'), '자리를 비운 동안', '3시간 넘게 비우면')}${arrow()}${item(ico('🍃'), '그동안', '1주(1해) 넘게 비우면')}</div>`,
         '오래 쉬었다 와도 꽃은 그대로 기다려요 · 지나간 해 · 못 본 올해만 것(다음 해 그 계절에 다시 와요) · 다음 층까지 남은 것을 세 줄로 알려 줘요')),
   ].join('');
-  $('#p-manual').innerHTML = `<div class="stack"><div class="sectionhead"><span class="sb-title" style="font-family:var(--font-display);font-weight:700;font-size:16px">📘 매뉴얼</span><span class="muted">그림으로 보는 정원 규칙</span></div>
+  $('#p-manual').innerHTML = `<div class="stack"><div class="sectionhead"><span class="sb-title" style="font-family:var(--font-display);font-weight:700;font-size:calc(16 * var(--u))">📘 매뉴얼</span><span class="muted">그림으로 보는 정원 규칙</span></div>
     <nav class="mn-chips" aria-label="매뉴얼 차례">${MN_SECS.map(([k, l]) => `<a href="#mn-${k}" data-mn="${k}">${l}</a>`).join('')}</nav>${body}</div>`;
 }
 $('#p-manual').addEventListener('click', e => {
@@ -138,6 +142,18 @@ $('#p-manual').addEventListener('click', e => {
   const g = e.target.closest('[data-mn]'); if (g) { e.preventDefault(); const el = $('#mn-' + g.dataset.mn); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 });
 function openSettings() { setTab('settings'); }
+// 👁️ 색약 흉내 (P28-03 확인용 · DEV만): 화면 전체에 SVG feColorMatrix — Machado 2009 심한 정도 1.0 행렬. 저장 안 함 (새로고침하면 꺼짐)
+let devCvdOn = '';
+const CVD = {
+  protan: '0.152286 1.052583 -0.204868 0 0 0.114503 0.786281 0.099216 0 0 -0.003882 -0.048116 1.051998 0 0 0 0 0 1 0',
+  deutan: '0.367322 0.860646 -0.227968 0 0 0.280085 0.672501 0.047413 0 0 -0.011820 0.042940 0.968881 0 0 0 0 0 1 0',
+  tritan: '1.255528 -0.076749 -0.178779 0 0 -0.078411 0.930809 0.147602 0 0 0.004733 0.691367 0.303900 0 0 0 0 0 1 0',
+};
+function devCvd(k) {
+  if (!DEV) return;
+  if (!$('#cvdDefs')) document.body.insertAdjacentHTML('beforeend', `<svg id="cvdDefs" width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(CVD).map(([id, m]) => `<filter id="cvd-${id}"><feColorMatrix type="matrix" values="${m}"/></filter>`).join('')}</svg>`);
+  devCvdOn = CVD[k] ? k : ''; document.body.style.filter = ''; requestAnimationFrame(() => { document.body.style.filter = devCvdOn ? `url(#cvd-${devCvdOn})` : ''; });   // 한 번 비운 뒤 걸어야 필터를 바꿀 때 다시 그려짐   // <html>에 걸면 화면에 안 먹는 브라우저가 있어 body에 (휴대폰 폭에선 아래 탭 줄이 페이지 끝으로 감 — 개발용이라 그대로)
+}
 function renderSettings() {
   const s = st.settings, hours = Array.from({ length: 24 }, (_, h) => h);
   const opt = (v, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${String(v).padStart(2, '0')}:00</option>`;
@@ -152,7 +168,9 @@ function renderSettings() {
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
   $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
     ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
-      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 층 조건 숫자 · 달력 숫자 · 숲 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요. ✉️ 편지함 소식은 숫자 없는 문장만', tog('id="slowOn"', s.slow)))}
+      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 층 조건 숫자 · 달력 숫자 · 숲 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요. ✉️ 편지함 소식은 숫자 없는 문장만', tog('id="slowOn"', s.slow))
+      + row('🔠', '큰 글씨', '글자를 1.25배로 키우고 단추 · 탭을 넓혀요. 그림 크기는 그대로예요', tog('id="bigOn"', s.big))   // P28-01
+      + /* P28-03 */ row('🧩', '땅 무늬 보기', `땅마다 다른 무늬를 지도 · 범례에 겹쳐요. 색이 비슷해 보이는 땅을 무늬로 알아봐요${s.pattern ? `<span class="pat-key">${LAND_KEYS.map(k => `<span>${landSw(k)}${LANDS[k].name}</span>`).join('')}</span>` : ''}`, tog('id="patOn"', s.pattern)))}
     ${group('🔔', '알림', '꺼도 정원 일지에는 그대로 남아요',
       [[3, '📦', '예약 배송', '예약한 꽃이 창고에 왔을 때'], [8, '🌸', '개화와 수확', '꽃이 피어 거둘 수 있을 때'], [9, '📖', '도감 등록', '새 꽃·차·땅을 처음 만났을 때']].map(([t, ic, nm, d]) => row(ic, nm, d, tog(`data-toast="${t}"`, s.toast[t]))).join('')
       + row('🌙', '수면 시간', '이 시간의 알림은 모았다가 끝날 때 한 번에 (휴대폰 푸시용, 웹은 저장만)', tog('id="sleepOn"', s.sleep.on))
@@ -170,6 +188,7 @@ function renderSettings() {
       + row('🛤️', '철의 길', '철의 길 확인용 (P30-04) · 새 철 조건을 채우고 길 카드 확인 창을 엶 · 지금 길의 손님을 다음 흐르는 달에 부름', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devPath">새 철 창</button><button type="button" class="btn small" id="devPathVisitor">길 손님</button></span>')
       + row('✉️', '소식 채우기', '편지함 확인용 (P31) · 올해만 것 · 손님 · 층 · 숲 바람 · 칭호 소식을 일지에 쓰고 읽은 때를 그 앞으로 → 위 막대 점', '<button type="button" class="btn small" id="devInbox">채우기</button>')
       + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
+      + row('👁️', '색약 흉내', '땅 무늬 확인용 (P28-03) · 화면 전체에 색약 필터를 씌워요 · 저장하지 않아요', `<select id="devCvd" class="plantsel">${[['', '꺼짐'], ['protan', '적색약'], ['deutan', '녹색약'], ['tritan', '청색약']].map(([v, l]) => `<option value="${v}" ${v === devCvdOn ? 'selected' : ''}>${l}</option>`).join('')}</select>`)
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
       return group('💾', '저장', files ? '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요' : '진행은 이 브라우저와 내 구글 드라이브에 저장돼요',
@@ -200,12 +219,15 @@ function renderSettings() {
   if ($('#copyAddrBtn')) $('#copyAddrBtn').addEventListener('click', copyAddress);
   cloudPrep();
   $('#slowOn').addEventListener('change', e => { s.slow = e.target.checked; save(); renderAll(true); feedback(s.slow ? '🐢 느긋하게 볼게요' : '다시 다 보여요'); });
+  $('#bigOn').addEventListener('change', e => { s.big = e.target.checked; save(); renderAll(true); feedback(s.big ? '🔠 크게 볼게요' : '글씨를 되돌렸어요'); });   // P28-01
+  $('#patOn').addEventListener('change', e => { s.pattern = e.target.checked; save(); renderAll(true); feedback(s.pattern ? '🧩 땅 무늬를 겹쳐요' : '땅 무늬를 껐어요'); });   // P28-03
   root.querySelectorAll('[data-toast]').forEach(i => i.addEventListener('change', () => { s.toast[i.dataset.toast] = i.checked; save(); }));
   // 수면 시간은 바꾸면 막대와 선택 칸을 다시 그림
   $('#sleepOn').addEventListener('change', e => { s.sleep.on = e.target.checked; save(); renderSettings(); });
   $('#sleepFrom').addEventListener('change', e => { s.sleep.from = +e.target.value; save(); renderSettings(); });
   $('#sleepTo').addEventListener('change', e => { s.sleep.to = +e.target.value; save(); renderSettings(); });
   if (DEV) root.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { st.speed = +b.dataset.speed; save(); renderTop(); root.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  if (DEV) $('#devCvd').addEventListener('change', e => devCvd(e.target.value));
   if (DEV) $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
   if (DEV) $('#devWeekly').addEventListener('click', () => { const w = E.weeklyOf(st), i = w ? w.goals.findIndex(g => !g.done) : -1; const r = E.weeklyFinish(st, i, ctx); if (!r.ok) feedback(r.msg, true); save(); renderAll(true); });   // 개발용 (P28-09)
   if (DEV) $('#devWeek').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.ws + 7 * 24 * E.HOUR + 1000, ctx); save(); renderAll(true); feedback('다음 주 월요일 아침이 되었어요'); });

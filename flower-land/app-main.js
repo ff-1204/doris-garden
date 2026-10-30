@@ -60,12 +60,12 @@ $('#today').addEventListener('click', e => {
   after(r, d === 'water' ? 'watered' : d === 'harvest' ? 'harvested' : null, d === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null);
 });
 function renderLegend() {
-  const c = E.landCounts(st), sig = JSON.stringify(c);
+  const c = E.landCounts(st), sig = JSON.stringify([c, E.patternView(st)]);   // P28-03 땅 무늬를 켜고 끄면 다시
   if (ui.sigs.legend === sig) return;
   ui.sigs.legend = sig;
   // 땅 범례: 넓은 땅부터, 칸 수와 함께 작은 칩으로 (황무지는 맨 뒤)
   const keys = LAND_KEYS.filter(k => c[k]).sort((a, b) => (a === 'barren') - (b === 'barren') || c[b] - c[a]);
-  $('#legend2').innerHTML = keys.map(k => `<span class="lg-chip ${k === 'barren' ? 'barren' : ''}"><span class="sw" style="background:${LANDS[k].color}"></span>${LANDS[k].name} <span class="data">${c[k]}</span></span>`).join('');
+  $('#legend2').innerHTML = keys.map(k => `<span class="lg-chip ${k === 'barren' ? 'barren' : ''}">${landSw(k)}${LANDS[k].name} <span class="data">${c[k]}</span></span>`).join('');
 }
 function renderEmpty(force) {
   const cal = E.calendar(st.virtual), live = st.flowers.some(f => !f.withered), el = $('#emptyMap');
@@ -81,7 +81,7 @@ function renderEmpty(force) {
   const btn = cal.frozen ? '<button type="button" class="btn primary" data-go="shop">💐 예약</button>'
     : pl ? '<button type="button" class="btn primary" data-start-plant="1">🌰 심기</button>'
     : '<button type="button" class="btn primary" data-go="shop">💐 화원</button>';
-  el.innerHTML = `<div class="box"><b>${cal.frozen ? '꽃잠이에요' : '아직 꽃이 없어요'}</b><span class="muted" style="font-size:13px">${text}</span>${btn}</div>`;
+  el.innerHTML = `<div class="box"><b>${cal.frozen ? '꽃잠이에요' : '아직 꽃이 없어요'}</b><span class="muted" style="font-size:calc(13 * var(--u))">${text}</span>${btn}</div>`;
 }
 $('#emptyMap').addEventListener('click', e => {
   if (!e.target.closest('[data-start-plant]')) return;

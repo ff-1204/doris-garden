@@ -197,13 +197,22 @@ console.log('[🌳 작은 숲 forest (P30-03)]');
 
 console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
 { const MN = E.MIGRATIONS.findIndex(x => x[0].includes('편지함 mailSeenAt'));
-  check(MN === 39 && MN === E.MIGRATIONS.length - 1, '맨 끝 보정 (40번째)');
+  check(MN === 39, '40번째 보정');
   check(m.mailSeenAt === m.virtual && !E.inboxUnread(m), '가장 옛 정원: 지금 연 것으로 — 처음엔 점 없음');
   const old = copy(st); delete old.mailSeenAt; old.mig = MN; old.letterBox = [{ k: 'teacher', y: 1, m: 3, read: true }]; old.log.push({ y: 1, m: 3, d: 1, type: 9, text: '🏅 새 칭호: 시험' });
   const om = E.migrateSave(old);
   check(om.mailSeenAt === om.virtual && om.mig === E.MIGRATIONS.length && !E.inboxUnread(om) && E.inboxOf(om).unread === 0, '바로 앞 판 정원: 시각 없는 편지 · 일지 줄은 읽은 것');
   const has = copy(st); has.mailSeenAt = 123; has.mig = MN;
   check(E.migrateSave(has).mailSeenAt === 123, '이미 있는 읽은 때는 그대로'); }
+
+console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 · P28-03)]');
+{ const BN = E.MIGRATIONS.findIndex(x => x[0].includes('settings.big'));
+  check(BN === 40 && BN === E.MIGRATIONS.length - 1, '맨 끝 보정 (41번째)');
+  check(m.settings.big === false && m.settings.pattern === false, '가장 옛 정원: 둘 다 꺼짐');
+  const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN; const om = E.migrateSave(old);
+  check(om.settings.big === false && om.settings.pattern === false && om.mig === E.MIGRATIONS.length, '바로 앞 판 정원도 둘 다 꺼짐');
+  const has = copy(st); has.settings.big = true; has.settings.pattern = true; has.mig = BN; const hm = E.migrateSave(has);
+  check(hm.settings.big === true && hm.settings.pattern === true, '이미 켠 값은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
