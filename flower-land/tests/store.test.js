@@ -31,8 +31,8 @@ console.log('[🧺 상한 — 가득 차면 멈춤 · 놓친 벌칙 없음]');
   check(st.pantry.items.length === 4 && E.pantryView(st).full && E.pantryView(st).next === null, '8시간이면 4칸이 가득 (1~9등급)');
   const n0 = st.pantry.n; go(st, 30);
   check(st.pantry.items.length === 4 && st.pantry.n === n0 && st.pantry.h === 0, '오래 비워도 더 쌓이지 않음 (차례도 그대로)');
-  check(E.PANTRY_CAPS.map(c => c.join(':')).join() === '1:4,10:5,20:6', '상한 표: 1등급 4칸 · 10등급 5칸 · 20등급 6칸 (8 · 10 · 12시간)');
-  for (const [g, cap] of [[9, 4], [10, 5], [19, 5], [20, 6], [45, 6]]) { const s = garden(c => c.idx === 0); s.grade.xp = E.gradeXpAt(g); go(s, 30); check(E.pantryCap(s) === cap && s.pantry.items.length === cap, `${g}등급: ${cap}칸에서 멈춤`); }
+  check(E.PANTRY_CAPS.map(c => c.join(':')).join() === '1:4,5:7,10:10,15:13,20:16,25:19,30:22', '상한 표: 기본 4칸 · 등급 장식이 들어오는 5 · 10 · … · 30등급마다 +3칸 (10-30)');
+  for (const [g, cap] of [[4, 4], [5, 7], [9, 7], [10, 10], [20, 16], [30, 22], [45, 22]]) { const s = garden(c => c.idx === 0); s.grade.xp = E.gradeXpAt(g); go(s, 2 * cap + 6); check(E.pantryCap(s) === cap && s.pantry.items.length === cap, `${g}등급: ${cap}칸에서 멈춤`); }
   const r = E.takePantry(st, ctx);
   check(r.ok && st.pantry.items.length === 0, '거두면 비고');
   go(st, 2.05);
