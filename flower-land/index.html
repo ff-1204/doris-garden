@@ -860,6 +860,8 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 /* P24 광산 (10-24) · P24 UI (10-30): 화면 폭에 맞는 판 · PC 두 칸(왼쪽 판 · 오른쪽 가방 · 만들기) */
 .mine-pop { display: grid; gap: 14px; min-width: 0; }
 #p-mine .mine-pop { max-width: 560px; }   /* 좁은 화면 · 보통 폭: 한 칸 (예전 창 폭) */
+.mine-extra { display: grid; gap: 14px; max-width: 560px; margin-top: 14px; }   /* 🧺 입구 선반 · 🔆 공방 (10-31 곤충농장에서 옮김) */
+@media (min-width: 1100px) { .mine-extra { max-width: 1040px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .mine-main, .mine-side { display: grid; gap: 10px; align-content: start; min-width: 0; }
 .mine-side { gap: 14px; }
 .mine-pop > .note { margin: 0; }

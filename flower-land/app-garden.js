@@ -439,6 +439,20 @@ function showVisitorBubble(v) {
 }
 // ---------------------------------------------------------------- ⛏️ 광산 탭 (P24, 10-24 · 10-30 창 → 탭, 사용자 요청 "창고 밑에 광산 메뉴 따로"): 층 · 기력 · 8×6 판 · 가방 · 만들기
 const mineFrom = n => E.ORES[n] ? E.ORES[n].from : E.FOSSILS[n] ? E.FOSSILS[n].from : n === 'oldseed' ? 8 : 1;   // 10-31 QA: 광석 · 화석 · 옛 씨앗(8층부터) 모두 "n층부터"
+function mineGearHTML() {   // 10-31 사용자: 🔆 정원 장치를 곤충농장에서 ⛏️ 광산 "공방"으로 (규칙 · 값 그대로)
+  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear);
+  return `<div class="cab-head"><span class="sb-title">🔆 광산 공방 · 정원 장치</span><span class="muted">광부들이 만든 장치 · 다 자라기까지만 빨라져요 · 피는 달 · 품질 · 땅 · 꽃잠은 그대로</span></div>
+    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
+      return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
+}
+function minePantryHTML(v, slow) {   // 10-31 사용자: 🧺 정원 저장고를 곤충농장에서 ⛏️ 광산 "입구 선반"으로 (규칙 그대로)
+  if (!v) return '<p class="note muted">첫 안내를 마치면 저장고가 열려요</p>';
+  const has = v.has ? `<p class="note">${slow ? v.list.map(x => `${x.ic} ${x.name}`).join(' · ') : pantryText(v)}</p>` : `<p class="note muted">${slow ? '조금씩 쌓여요' : `광산 입구 선반에 2시간마다 하나씩 올라와요${v.full ? '' : ` · 다음 것까지 ${Math.ceil(v.next)}시간`}`}</p>`;
+  return `<div class="cab-head"><span class="sb-title">🧺 입구 선반 · 정원 저장고</span>${slow ? '' : `<span class="dh-count data">${v.n} / ${v.cap}${v.full ? ' · 가득' : ''}</span>`}</div>
+    <div class="card fm-pantry mine-pantry">${has}${pantryAllBtn('btn small care') || ''}</div>`;
+}
 function renderMine(force) {
   const m = E.mineOf(st), b = m.board;
   const wait = realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1));
@@ -455,9 +469,10 @@ function renderMine(force) {
   const craftRows = E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], have = C.cup && E.shopOf(st).cups.includes(C.cup), can = E.canCraft(st, k) && !have;
     const pct = Math.floor(100 * Math.min(...Object.entries(C.need).map(([n, q]) => Math.min(1, (m.bag[n] || 0) / q))));
     const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.supply ? `<span class="mn-ico">${E.SUPPLIES[C.supply].icon}</span>` : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
-    return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && mineFrom(n) > 1 ? ` (${mineFrom(n)}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
-  const crafts = `<div class="mine-crafts">${[...craftRows.filter(r => r.can), ...craftRows.filter(r => !r.can)].map(r => r.html).join('')}</div>`;
-  const sig = JSON.stringify([m, nextE, st.money, E.shopOf(st).cups, st.jar]);
+    return { can, tool: !!C.supply || k === 'fert', html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && mineFrom(n) > 1 ? ` (${mineFrom(n)}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
+  const order = rows => [...rows.filter(r => r.can), ...rows.filter(r => !r.can)];   // 만들 수 있는 것 위로
+  const crafts = `<div class="mine-crafts">${[...order(craftRows.filter(r => r.tool)), ...order(craftRows.filter(r => !r.tool))].map(r => r.html).join('')}</div>`;   // 10-31 사용자: 🧺 정원 용품(비료 · 호미 · 가위) 묶음이 먼저, 그다음 장식 · 유리 관
+  const sig = JSON.stringify([m, nextE, E.pantryView(st), st.money, (st.decos || []).map(d => d.key + (d.x == null ? 0 : 1)).join(), st.money, E.shopOf(st).cups, st.jar]);
   if (!force && ui.sigs.mine === sig) return;
   ui.sigs.mine = sig;
   const downBtn = stairsFound && m.depth < E.MINE_DEEPEST;
@@ -475,7 +490,8 @@ function renderMine(force) {
     <section class="mine-sec"><h3 class="mine-sub">🎒 가방</h3>${bag}</section>
     <section class="mine-sec"><h3 class="mine-sub">🔨 만들기</h3>${crafts}</section>
     </div>
-    <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
+    <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>
+    <div class="mine-extra"><div class="stack">${minePantryHTML(E.pantryView(st), E.slowView(st))}</div><div class="stack">${mineGearHTML()}</div></div>`;   // 10-31 🧺 선반 · 🔆 공방
 }
 // 10-31 QA: 광산은 눌릴 때마다 통째로 다시 그려 키보드 포커스가 BODY로 떨어짐 → 같은 자리(판 칸은 그 칸부터 다음 안 판 칸)로 되돌림
 function mineRefocus(sel, kind) {
@@ -496,6 +512,8 @@ $('#p-mine').addEventListener('click', e => {
     if (a !== 'up') return go();
     return openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => closeModal() }, { label: '올라가기', primary: true, act: go }]);
   }
+  if (e.target.closest('[data-pantry]')) return takePantryOn();   // 🧺 입구 선반 (10-31)
+  const db = e.target.closest('[data-decobuy]'); if (db && !db.disabled) return askDeco(db.dataset.decobuy);   // 🔆 공방 장치 (화원과 같은 흐름, 10-31)
   const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const k = c.dataset.craft, r = E.craft(st, k, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); return mineRefocus(`[data-craft="${k}"]`); }
 });
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)

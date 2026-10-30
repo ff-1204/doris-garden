@@ -34,26 +34,12 @@ function farmCard(w, slow) {
     <span class="dk-main"><b>${w.icon} ${esc(w.name)}${sub}</b>${slow ? (working ? '' : say) : `<small>${esc(w.desc)}</small>`}${info}</span>
     <span class="dk-buy">${act}</span></div>`;
 }
-function farmPantryHTML(v, slow) {
-  if (!v) return '<p class="note muted">첫 안내를 마치면 저장고가 열려요</p>';
-  const has = v.has ? `<p class="note">${slow ? v.list.map(x => `${x.ic} ${x.name}`).join(' · ') : pantryText(v)}</p>` : `<p class="note muted">${slow ? '조금씩 쌓여요' : `2시간마다 한 칸씩 쌓여요${v.full ? '' : ` · 다음 칸까지 ${Math.ceil(v.next)}시간`}`}</p>`;
-  return `<div class="cab-head"><span class="sb-title">🧺 정원 저장고</span>${slow ? '' : `<span class="dh-count data">${v.n} / ${v.cap}${v.full ? ' · 가득' : ''}</span>`}</div>
-    <div class="card fm-pantry">${has}${pantryAllBtn('btn small care') || ''}</div>`;
-}
 function farmAwayHTML(c, slow) {
   const last = c.last ? `<button type="button" class="btn small" data-faway="1">🌙 지난번 비운 동안 다시 보기${slow ? '' : ` <span class="muted">(${c.last.h >= 48 ? `${Math.round(c.last.h / 24)}일` : `${Math.round(c.last.h)}시간`})</span>`}</button>` : '<p class="note muted">3시간 넘게 비웠다 오면 그동안 한 일을 한 장으로 보여 줘요</p>';
   return `<div class="cab-head"><span class="sb-title">🌙 자리를 비운 동안</span></div>
     <div class="card fm-away"><p class="note">${slow ? '오래 비워도 다시 열면 그동안 흐른 시간을 따라잡아요' : `오래 비워도 다시 열면 ${c.weeks}주까지 따라잡아요 · 🌟 따라잡기 길게로 늘려요`}</p>${last}</div>`;
 }
 // P27 🔆 정원 장치 (10-30 화원에서 옮김): 늘 팖 · 다 자라기까지 걸리는 시간만 줄임
-function farmGearHTML() {
-  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear);
-  return `<div class="cab-head"><span class="sb-title">🔆 정원 장치</span><span class="muted">다 자라기까지만 빨라져요 · 피는 달 · 품질 · 땅 · 꽃잠은 그대로</span></div>
-    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
-      return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
-}
 function renderFarm(force) {
   const f = E.farmOf(st), slow = f.slow;
   const sig = JSON.stringify([f, st.money]);
@@ -63,17 +49,13 @@ function renderFarm(force) {
     <div class="cab-head"><span class="sb-title">🐝 곤충농장</span><span class="muted">정원 일을 도와주는 작은 일꾼들</span></div>
     <p class="note fm-month">${esc(f.month)}</p>
     <div class="decoshop fm-grid">${f.workers.map(w => farmCard(w, slow)).join('')}</div>
-    ${farmGearHTML()}
-    ${farmPantryHTML(f.pantry, slow)}
     ${bonusHTML('fBonus')}
     ${farmAwayHTML(f.catchup, slow)}
-    <p class="note muted fm-foot">일꾼은 사람이 하던 손을 덜 뿐, 더 벌지는 않아요 · 켜 두지 않아도 일해요</p></div>`;
+    <p class="note muted fm-foot">일꾼은 사람이 하던 손을 덜 뿐, 더 벌지는 않아요 · 켜 두지 않아도 일해요 · 🧺 저장고 · 🔆 장치는 ⛏️ 광산에 있어요</p></div>`;
 }
 $('#p-farm').addEventListener('click', e => {
   const b = e.target.closest('[data-fbuy]'); if (b && !b.disabled) return askDeco(b.dataset.fbuy);   // 사기 전 확인 (askBuy, app-shop)
-  const db = e.target.closest('[data-decobuy]'); if (db && !db.disabled) return askDeco(db.dataset.decobuy);   // 🔆 정원 장치 (화원과 같은 흐름)
   const p = e.target.closest('[data-fplace]'); if (p) { ui.tool = 'deco'; ui.decoId = +p.dataset.fplace; return setTab('garden', true); }   // 창고 🪴 놓기와 같은 흐름
-  if (e.target.closest('[data-pantry]')) return takePantryOn();
   const bn = e.target.closest('[data-bonus]'); if (bn) return after(E.bonusSet(st, bn.dataset.bonus, +bn.dataset.lv));   // 🌟 손길 점 — 도감일지와 같은 엔진 함수
   if (e.target.closest('[data-faway]') && st.awayLast) { awayInfo = Object.assign({}, st.awayLast, { again: true }); showAway(); }
 });

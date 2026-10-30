@@ -39,7 +39,7 @@ function renderManual(force) {
         ${ico('🧺')}<span class="nm">수확<small>바구니 10번 · 500원</small></span>${bar(1, '#f2c230', '개화 중 달마다 · 꽃잠 한 번')}
       </div><figcaption>꽃을 누르면 둘레에 단추가 떠요 · 도구가 없으면 흐린 단추를 눌러 바로 사요 · 돌보지 않아도 꽃은 죽지 않아요</figcaption></div>`
       + fig(`<div class="mn-flow">${item(ico('💧'), '모두 물 주기', '목마른 꽃만')}${item(ico('🧺'), '모두 거두기', '핀 꽃만')}${arrow()}${item(ico('🧴'), '용품은 송이마다', '모자라면 되는 만큼')}</div>`, '돌볼 꽃이 두 포기 이상이면 위 숫자 칩 옆과 🌙 자리를 비운 동안 창에 떠요 · 한 송이씩 한 것과 똑같이 셈해요')
-      + fig(`<div class="mn-flow">${item(ico('⏳'), '2시간마다 한 칸', '꽃잠엔 멈춰요')}${arrow()}${item(ico('🧺'), '정원 저장고', `기본 ${E.PANTRY_BASE}칸 · 등급 장식마다 +${E.PANTRY_PER_DECO}`)}${arrow()}${item(ico('💧'), '물병 · 비료', '창고로')}${item(ico('🟫'), '흙 · 석영', '광산 주머니로')}${item(ico('🍂'), '떨어진 꽃잎', '제다실로')}</div>`, '위 숫자 칩 줄의 🧺를 누르면 모두 거둬요 · 가득 차면 더 쌓이지 않지만 놓쳐도 괜찮아요 · 떨어진 꽃잎은 아직 안 거둔 핀 꽃에서 바구니로 거둔 거예요 · 칸 수는 정원 등급 10 · 20에 하나씩 늘어요')),
+      + fig(`<div class="mn-flow">${item(ico('⏳'), '2시간마다 한 칸', '꽃잠엔 멈춰요')}${arrow()}${item(ico('🧺'), '정원 저장고', `⛏️ 광산 입구 선반 · 기본 ${E.PANTRY_BASE}칸 · 등급 장식마다 +${E.PANTRY_PER_DECO}`)}${arrow()}${item(ico('💧'), '물병 · 비료', '창고로')}${item(ico('🟫'), '흙 · 석영', '광산 주머니로')}${item(ico('🍂'), '떨어진 꽃잎', '제다실로')}</div>`, '위 숫자 칩 줄의 🧺를 누르면 모두 거둬요 · 가득 차면 더 쌓이지 않지만 놓쳐도 괜찮아요 · 떨어진 꽃잎은 아직 안 거둔 핀 꽃에서 바구니로 거둔 거예요 · 칸 수는 정원 등급 10 · 20에 하나씩 늘어요')),
     sec('shop', '화원과 창고', '심는 달에만 팔아요',
       fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 44, false, ''), '씨앗', '봉지 · 발아율')}${item(spriteImg('lavender', 'form', 44, false, ''), '묘목', '그루 · 뿌리내림')}${item(spriteImg('gamguk', 'form', 44, false, ''), '모종', '포기 · 뿌리내림')}${item(spriteImg('lotus', 'form', 44, false, ''), '연근', '뿌리 · 뿌리내림')}${item(spriteImg('dongbaek', 'form', 44, false, ''), '나무', '그루 · 뿌리내림')}</div>`,
         '산 것은 📦 <b>창고</b>로 와요 · 창고에서도 품질이 한 달에 5%씩 떨어져요')
@@ -62,13 +62,15 @@ function renderManual(force) {
       `<div class="mn-farm">${E.FARM.map(w => { const D = w.wild ? null : E.DECOS[w.key];
         const when = w.wild ? '데려오지 않아요 · 저절로 와요' : `${won(D.price)} · ${D.need ? `정원 등급 ${D.need}부터` : `${E.decoMonths(w.key).map(monthName).join('·')}에`}${D.one ? ' · 하나만' : ''}`;
         return `<div class="mn-frow">${insectImg(w.key, 2)}<span><b>${w.icon} ${w.name}${D && D.name !== w.name ? ` <small class="muted">· ${D.name}</small>` : ''}</b><small>${esc(w.desc || D.desc)}</small><small class="muted">${when}</small></span></div>`; }).join('')}</div>`
-      + fig(`<div class="mn-icons">${item(ico('🧺'), '정원 저장고', '2시간마다 한 칸')}${item(ico('🌟'), '손길 점', '등급이 오를 때마다 1점')}${item(ico('🌙'), '따라잡기', `최대 ${E.bonusVal(st, 'catchup')}주`)}</div>`,
-        '탭 줄 🐝 곤충농장에서 일꾼을 데려오고(💐 화원과 같은 값) · 창고에서 쉬는 일꾼을 정원에 놓고 · 지난달 한 일과 말 한 줄을 봐요 · 🧺 저장고 모두 거두기 · 🌟 손길 점 고르기 · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 일꾼은 사람이 하던 손을 덜 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 켜 두지 않아도 일해요 · 정원 지도엔 바구니 · 건조대 같은 장식 그림으로 보여요')),
+      + fig(`<div class="mn-icons">${item(ico('🌟'), '손길 점', '등급이 오를 때마다 1점')}${item(ico('🌙'), '따라잡기', `최대 ${E.bonusVal(st, 'catchup')}주`)}</div>`,
+        '탭 줄 🐝 곤충농장에서 일꾼을 데려오고(💐 화원과 같은 값) · 창고에서 쉬는 일꾼을 정원에 놓고 · 지난달 한 일과 말 한 줄을 봐요  · 🌟 손길 점 고르기 · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 일꾼은 사람이 하던 손을 덜 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 켜 두지 않아도 일해요 · 정원 지도엔 바구니 · 건조대 같은 장식 그림으로 보여요')),
     sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',
       fig(`<div class="mn-flow">${item(ico('⛏️'), '기력 12', '30분마다 1칸')}${arrow()}${item(mineImg('stone', 2), '파기', '한 칸에 1')}${arrow()}${item(mineImg('stairs', 2), '계단', '아래층으로')}${arrow()}${item(mineImg('amber', 2), '깊을수록', '드문 광물')}</div>`,
         '탭 줄 ⛏️ 광산에서 들어가요 · 꺼 둔 동안에도 기력이 차고 꽃잠에도 팔 수 있어요')
       + fig(`<div class="mn-flow">${item(mineImg('dirt', 2), '흙 5', '🌱 비료')}${item(mineImg('stone', 2), '돌', '징검돌 · 물확 · 석등')}${item(mineImg('jade', 2), '비취 2', '청자 찻잔')}${item(mineImg('fossil', 2), '화석', '광산 도감')}</div>`,
-        '광산에서 나온 것은 팔지 않아요 · 🔨 만들기로 장식과 찻잔을 돈 없이 만들어요')),
+        '광산에서 나온 것은 팔지 않아요 · 🔨 만들기로 정원 용품(비료 · 호미 · 가위)과 장식 · 유리 관을 돈 없이 만들어요')
+      + fig(`<div class="mn-icons">${item(ico('🧺'), '입구 선반', '정원 저장고')}${item(ico('🔆'), '공방', '정원 장치')}</div>`,
+        '⛏️ 광산 탭 아래 — 🧺 선반엔 2시간마다 하나씩 쌓여 모두 거두기로 받고, 🔆 공방은 다 자라기까지만 빨라지는 장치를 팔아요(💐 화원과 같은 값)')),
     sec('guest', '손님 주문과 한 해 평가', '오래 하는 정원사에게',
       fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '달마다 · 등급 장식마다 +1')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '🌙 꽃잠 주문만')}</div>`,
         '손으로 팔든 손님이 사 가든 맞으면 ✓ · 기념품(12가지 · 도감)은 🌙 꽃잠에 들어준 주문에만 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
