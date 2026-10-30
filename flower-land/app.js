@@ -214,7 +214,8 @@ function spriteURL(key, kind, locked) {
 }
 // P36-03 🧬 돌연변이 꽃빛: 꽃 팔레트 위에 변이 팔레트(decos.js MUTANT_ART) → 단계 효과(MUT_SHADE — 2 · 3단계 어둡게 · 채도 ↓)
 const mutPal = (key, stage) => { const p = Object.assign({}, SPR.pal[key], window.MUTANT_ART[key].pal); for (const k in p) p[k] = window.MUT_SHADE(p[k], stage); return p; };
-const mutPetal = (key, stage) => { const A = window.MUTANT_ART[key]; return { petal: window.MUT_SHADE(A.petal, stage), center: window.MUT_SHADE(A.center, stage) }; };
+const mutPetalCache = {};   // 지도가 프레임마다 그려서 (종, 단계)로 한 번만 바꿈 (검토 반영 10-30)
+const mutPetal = (key, stage) => mutPetalCache[key + stage] || (mutPetalCache[key + stage] = (A => ({ petal: window.MUT_SHADE(A.petal, stage), center: window.MUT_SHADE(A.center, stage) }))(window.MUTANT_ART[key]));
 function mutRim(x, grid) {                          // 그림 둘레 빈 도트에 1px 테두리 (16px 안에서)
   const on = (i, j) => j >= 0 && j < 16 && i >= 0 && i < 16 && grid[j][i] !== '.';
   x.fillStyle = window.MUT_RIM;

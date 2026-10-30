@@ -677,7 +677,7 @@ window.MUTANT_ART = {
   chamomile: { name: '납작한 흙빛', petal: '#b9a888', center: '#7f6838', pal: { w: '#c4b494', W: '#8a7656', y: '#9a8040', Y: '#6a5222', g: '#6a7044', G: '#4a4e2e', l: '#8a8a5a' } },
   rose: { name: '흰 꽃잎 끝 핏빛', petal: '#f2ece6', center: '#b0202c', pal: { r: '#f2ece6', R: '#b0202c', s: '#faf6f2' } },
   lavender: { name: '검보라 · 그늘 줄기', petal: '#3e2e52', center: '#22182e', pal: { p: '#3e2e52', P: '#22182e', q: '#5c4a74', g: '#2e3a2a', G: '#1a2418', l: '#3e4a34' } },
-  jasmine: { name: '달빛 은백', petal: '#e2e8f2', center: '#9fa9c2', pal: { w: '#e2e8f2', W: '#9fa9c2', y: '#c6d0e4' } },
+  jasmine: { name: '달빛 은백', petal: '#b8c8e4', center: '#6f7fa4', pal: { w: '#b8c8e4', W: '#6f7fa4', y: '#dfe6f4' } },   // 검토 반영: 보통 흰 재스민과 더 멀게 (푸른 은빛)
   lotus: { name: '꽃 속 빛 한 점', petal: '#efe0ea', center: '#fff7c0', pal: { k: '#efe0ea', K: '#c9a8c0', Y: '#fffbe0' } },
   bpea: { name: '보라 ↔ 분홍', petal: '#b85aa8', center: '#f2d24a', pal: { b: '#b85aa8', B: '#7a3486', w: '#f6d8ee' } },
   hibiscus: { name: '재 묻은 검붉은 테', petal: '#6a1a20', center: '#2a1e1e', pal: { r: '#6a1a20', R: '#4a4446', d: '#1e1414', y: '#8a8282' } },
@@ -685,16 +685,17 @@ window.MUTANT_ART = {
   celosia: { name: '검붉은 볏 · 금테', petal: '#5a0e1c', center: '#caa040', pal: { c: '#5a0e1c', C: '#caa040' } },
   gamguk: { name: '이슬 방울', petal: '#e6de6e', center: '#bfe2ec', pal: { y: '#e6de6e', o: '#bfe2ec', O: '#7fb2c4' } },
   dongbaek: { name: '밤빛', petal: '#2c2148', center: '#c9b862', pal: { r: '#2c2148', R: '#140e28', y: '#c9b862', Y: '#8e8040' } },
-  maehwa: { name: '비스듬한 흰빛', petal: '#f4f6f8', center: '#d6c070', pal: { m: '#f4f6f8', M: '#c2ccd6', y: '#d6c070' } },
-  napmae: { name: '녹아내리는 노랑', petal: '#e8c23e', center: '#a0781e', pal: { a: '#e8c23e', A: '#f6e8a6', C: '#a0781e' } },
+  maehwa: { name: '비스듬한 흰빛', petal: '#bcd6d2', center: '#6e8c88', pal: { m: '#bcd6d2', M: '#7e9a96', y: '#6e8c88' } },   // 검토 반영: 분홍기 없는 서늘한 흰빛 · 짙은 꽃술
+  napmae: { name: '녹아내리는 노랑', petal: '#d0902a', center: '#6e4010', pal: { a: '#d0902a', A: '#f2d690', C: '#6e4010' } },   // 검토 반영: 녹아 짙어진 촛농빛
 };
-// 단계 효과: 색 하나를 1 · 2 · 3단계 빛으로 (HSL — 2단계 채도 ×0.65 · 밝기 ×0.78, 3단계 채도 ×0.45 · 밝기 ×0.58). 1단계는 그대로
+// 단계 효과: 색 하나를 1 · 2 · 3단계 빛으로 (HSL). 2 · 3단계 모두 색상을 +40° 돌림(틀어짐) — 2단계 채도 ×0.7 · 밝기는 가운데(0.4) 쪽으로 절반(밝은 빛은 어두워지고 이미 어두운 빛은 조금 떠서 1단계와 갈림), 3단계 채도 ×0.45 · 밝기 ×0.58. 1단계는 그대로 (검토 반영 10-30)
 window.MUT_SHADE = (hex, stage) => {
   if (!stage || stage < 2 || typeof hex !== 'string' || hex[0] !== '#') return hex;
   const n = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255), mx = Math.max(...n), mn = Math.min(...n), l = (mx + mn) / 2, d = mx - mn;
   let h = 0, s = 0;
   if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === n[0] ? ((n[1] - n[2]) / d) % 6 : mx === n[1] ? (n[2] - n[0]) / d + 2 : (n[0] - n[1]) / d + 4; h *= 60; if (h < 0) h += 360; }
-  const s2 = s * (stage >= 3 ? 0.45 : 0.65), l2 = l * (stage >= 3 ? 0.58 : 0.78), c = (1 - Math.abs(2 * l2 - 1)) * s2, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l2 - c / 2;
+  h = (h + 40) % 360;
+  const s2 = s * (stage >= 3 ? 0.45 : 0.7), l2 = stage >= 3 ? l * 0.58 : l + (0.4 - l) * 0.5, c = (1 - Math.abs(2 * l2 - 1)) * s2, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l2 - c / 2;
   const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
   return '#' + [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
 };

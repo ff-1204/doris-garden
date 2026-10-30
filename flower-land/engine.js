@@ -2132,7 +2132,7 @@ function monthDecoLift(st, it, cal) {
 }
 // 장식 카드 한 줄 (화원 · 창고 · 정원 장식 창): text 숫자 있는 줄 · plain 느긋하게 보기 줄 (P33 표를 다시 씀 — P33 효과는 빠져 있어 지금은 P35 · P36 줄만)
 const DECO_BUFF = Object.fromEntries(MONTH_DECO_KEYS.map(k => { const m = monthName(DECOS[k].month); return [k, { text: `🌸 ${m} 꽃을 심으면 품질 ${pct(MONTH_DECO_Q)}%부터`, plain: `🌸 ${m} 꽃을 반겨요` }]; }));
-DECO_BUFF.moonlamp = DECO_BUFF.pavilion = { text: '🧬 꽃잠에 놓아 두면 새해 돌연변이가 조금 더 자주', plain: '🧬 꽃잠에 놓아 두면 새해 돌연변이가 조금 더 자주' };   // P36-01
+DECO_BUFF.moonlamp = DECO_BUFF.pavilion = { text: '🧬 새해 3월 아침까지 놓아 두면 새해 돌연변이가 조금 더 자주', plain: '🧬 새해 3월 아침까지 놓아 두면 새해 돌연변이가 조금 더 자주' };   // P36-01 — 판정은 꽃잠이 끝나는 새해 3월 아침 (검토 반영 10-30)
 DECO_BUFF.mutjar = { text: '🧬 이 꽃의 돌연변이가 더 자주', plain: '🧬 이 꽃의 돌연변이가 더 자주' };
 // ---------------------------------------------------------------- 🧬 돌연변이 꽃 (P36, 10-30)
 // P36-01 꽃이 처음 필 때 한 번 굴림: 기본 1% + 🏮 달 초롱 · 🏯 정자가 꽃잠 동안 놓여 있었으면 그 해 각 +1% + 그 종의 🫙 유리 관이 정원에 있으면 그 종만 +5%, 최대 8%.

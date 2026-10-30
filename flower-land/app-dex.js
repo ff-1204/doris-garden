@@ -77,7 +77,7 @@ function openSeasonStart() {
   openModal(`🌸 ${n}철 시작`, `<div class="season-pop stack" style="gap:10px">
     <p class="sp-lead"><b>정원을 비우고 새 철을 시작할까요?</b><br><span class="muted">다음 월요일 3월이 새 철 1년차예요</span></p>
     <div class="sp-row keep"><b>🌿 이어져요</b><span>정원 등급 · 🌟 손길 점 · 칭호 · 도감 · 🐝 곤충 일꾼 · 🪑 찻집 가꾸기 · 기록</span></div>
-    <div class="sp-row clear"><b>🍂 비워져요</b><span>땅 · 꽃 · 돈(15,000원부터) · 씨앗 · 꽃잎 · 티백 · 찻잔 · 용품${st.jar > 0 ? '(🫙 유리 관은 남아요)' : ''}${E.mutDexCount(st) ? ' · 🧬 변이 꽃(유리 관에 담은 것은 남아요)' : ''} · 놓은 장식은 📦 창고로</span></div>
+    <div class="sp-row clear"><b>🍂 비워져요</b><span>땅 · 꽃 · 돈(15,000원부터) · 씨앗 · 꽃잎 · 티백 · 찻잔 · 용품${st.jar > 0 ? '(🫙 유리 관은 남아요)' : ''}${st.flowers.some(E.mutShown) ? ' · 🧬 변이 꽃(유리 관에 담은 것은 남아요)' : ''} · 놓은 장식은 📦 창고로</span></div>
     ${files ? '<div class="sp-save"><span>시작 전에 💾 저장 파일을 받아 두면 좋아요</span><button type="button" class="btn small" id="seasonSave">저장</button></div>' : '<p class="note">☁️ 구글 드라이브에 저장된 직전 정원은 ⚙️ 설정에서 볼 수 있어요</p>'}
     ${seasonPathPickHTML()}
     <p class="note">안 해도 괜찮아요. 지금 정원을 그대로 이어 가도 잃는 건 없어요.</p></div>`,

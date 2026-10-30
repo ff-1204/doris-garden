@@ -42,6 +42,7 @@ const k2000 = roll('a', 2000);
 check(k2000 >= 8 && k2000 <= 40, `2000번에 1% 근처 (${k2000}번)`);
 { // 실제 피는 길: 처음 필 때만 굴림 · 이미 굴린 꽃은 다시 안 굴림
   const s = mk(4, 'bloomroll'); const before = s.flowers.length;
+  s.decos.push({ id: s.nextId++, key: 'mutjar', x: 29, y: 19, mut: { k: 'rose', stage: 1 } }); s.mutBoost = { week: E.calendar(s.virtual).week, n: 2 };   // 8%로 올려 변이가 꼭 몇 포기 나오게 (검토 반영 — 일지 · 품질을 실제로 견줌)
   for (let i = 0; i < 400; i++) s.flowers.push({ id: 5000 + i, type: 'rose', x: i % 30, y: Math.floor(i / 30), q: 0.9, startQ: 0.9, origin: '화원', stage: 'mature', withered: false, bloomed: false, ageH: 9999, lifeH: 9999, waterH: 999, weedH: 999, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 });
   let cal = E.calendar(s.virtual); while (cal.month !== 5) { E.advance(s, cal.slotEnd + 1000, { live: false, rng: () => 0.5 }); cal = E.calendar(s.virtual); }
   E.advance(s, s.virtual + H, { live: false, rng: () => 0.5 });
@@ -50,7 +51,9 @@ check(k2000 >= 8 && k2000 <= 40, `2000번에 1% 근처 (${k2000}번)`);
   const snap = s.flowers.map(f => f.mut).join();
   E.advance(s, E.calendar(s.virtual).slotEnd + 1000, { live: false, rng: () => 0.5 });
   check(s.flowers.map(f => f.mut).join() === snap, '다음 달(6월)에 다시 피어도 다시 굴리지 않음');
-  check(muts === 0 || s.log.some(l => l.text.startsWith('🧬 뭔가 다른 꽃이 피었어요')), '변이가 피면 일지 한 줄 (알림 type 9)');
+  check(muts > 0 && s.log.filter(l => l.text.startsWith('🧬 뭔가 다른 꽃이 피었어요')).length === muts, `변이 꽃마다 처음 필 때 일지 한 줄 (알림 type 9 · ${muts}줄)`);
+  const mf = s.flowers.find(f => f.mut), nf2 = s.flowers.find(f => f.mut === false);
+  check(mf.q === nf2.q && mf.harvestKey === -1, `같게 돌본 보통 꽃과 품질이 똑같이 변함 (${E.pct(mf.q)}% = ${E.pct(nf2.q)}%) · 거둔 적 없음`);
   { const s3 = mk(4, 'seen'); s3.flowers.push({ id: 9001, type: 'rose', x: 1, y: 1, q: 0.9, startQ: 0.9, origin: '화원', stage: 'mature', withered: false, bloomed: false, ageH: 9999, lifeH: 9999, waterH: 999, weedH: 999, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1, mut: true });
     let c = E.calendar(s3.virtual); while (c.month !== 5) { E.advance(s3, c.slotEnd + 1000, { live: false, rng: () => 0.5 }); c = E.calendar(s3.virtual); } E.advance(s3, s3.virtual + H, { live: false, rng: () => 0.5 });
     check(!(s3.yearSeen && s3.yearSeen.bloom && s3.yearSeen.bloom.rose) && !s3.dex.flower.rose && s3.dex.mutant.rose && s3.log.some(l => l.text.includes('피 한 방울 장미')), '씨앗으로 이어진 변이 장미가 피면: 올해 본 꽃 · 꽃 도감엔 안 셈 · 🧬 도감 · 알림 줄'); }
@@ -94,7 +97,8 @@ f1.q = 0.5; E.mutSync(st, null); check(st.dex.mutant.dongbaek === 2 && E.mutDexC
 f1.q = 0.95; E.mutSync(st, null); check(st.dex.mutant.dongbaek === 2, '돌봐서 1단계로 돌아가도 본 칸은 그대로');
 check(E.dexCount(st) === dex0 && E.dexTotal(st) === tot0 && E.DEX_TOTAL === 93 && E.gradeDexCount(st) === gdx0, '기본 도감 · 93칸 · 등급 도감 칸 그대로');
 check(!st.dex.flower.dongbaek, '변이 꽃은 꽃 도감에 등록하지 않음');
-E.checkJournal(st, null); check(JSON.stringify(st.journal.done) === q0 || !Object.keys(st.journal.done).some(k => /mut/.test(k)), '퀘스트는 그대로');
+{ const tw = mk(7); bloomF(tw, 'dongbaek', 4, 4, 0.9); E.checkJournal(st, null); E.checkJournal(tw, null);   // 같은 자리에 보통 꽃을 둔 쌍둥이 정원과 견줌
+  check(JSON.stringify(Object.keys(st.journal.done).sort()) === JSON.stringify(Object.keys(tw.journal.done).sort()), '퀘스트는 그대로 (변이로 끝나는 퀘스트 없음)'); }
 check(E.mutDex(st).length === 13 && E.mutDex(st).find(d => d.k === 'rose').name === null && E.mutDex(st).find(d => d.k === 'dongbaek').lore, '안 본 종은 이름 · 괴담 없음');
 check(Object.keys(E.MUTANTS).length === 13 && E.MUTANT_KEYS.every(k => E.MUTANTS[k].name && E.MUTANTS[k].lore), '13종 이름 · 괴담 한 줄');
 { // 씨앗으로 이어진 변이는 처음 필 때 드러남
@@ -121,7 +125,7 @@ check(!E.jarCapture(st, fm2.id).ok && E.jarCapture(st, fm2.id).msg.includes('유
 check(E.placeDeco(st, jd.id, 12, 12).ok && E.storeDeco(st, jd.id).ok && E.placeDeco(st, jd.id, 13, 12).ok, '창고 ↔ 정원 자유');
 check(E.decoCount(st) === Object.keys(st.dex.deco).filter(k => E.decoInfo(k) && !E.decoInfo(k).extra).length && !st.dex.deco.mutjar && !E.DECO_KEYS.includes('mutjar') && E.decoTotal() === 50, '꾸밈 도감 셈 · 칸(50)에 안 섞음');
 check(!E.buyDeco(st, 'mutjar').ok, '화원에서 살 수 없음');
-check(E.decoBuffLine(st, E.decoKey(jd)) === '🧬 이 꽃의 돌연변이가 더 자주' && E.decoBuffLine(st, 'moonlamp').includes('꽃잠에 놓아 두면'), '카드 한 줄 (🫙 · 🏮)');
+check(E.decoBuffLine(st, E.decoKey(jd)) === '🧬 이 꽃의 돌연변이가 더 자주' && E.decoBuffLine(st, 'moonlamp').includes('새해 3월 아침까지 놓아 두면'), '카드 한 줄 (🫙 · 🏮)');
 check(E.mutChance(st, 'dongbaek') === 0.06 && E.mutChance(st, 'rose') === 0.01, '놓인 동백 유리 관 → 동백만 +5%');
 
 console.log('[번식 · 채종 50%]');
