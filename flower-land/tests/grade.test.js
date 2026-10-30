@@ -189,8 +189,8 @@ console.log('[🌟 bonusView · bonusMaxed — 화면(M3-2)이 읽는 것]');
   const v = E.bonusView(s), row = k => v.rows.find(r => r.key === k);
   check(v.points === 9 && v.used === 9 && v.left === 0 && v.rows.length === 4 && !('slow' in v), `points · used · left · 4줄 — 느긋하게 보기 판단은 없음 (${v.points}/${v.used}/${v.left})`);
   const b = row('basket'), r = row('rack');
-  check(b.name === '바구니 넓게' && b.icon === '🧺' && b.level === 3 && b.max === 3 && b.maxed && b.costNext === null && b.desc === '자동 수확 바구니가 꽃 20포기까지 거둬요', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
-  check(r.level === 0 && r.costNext === 1 && r.desc === '자동 건조대가 달마다 꽃잎 8장을 널어요' && r.nextDesc === '자동 건조대가 달마다 꽃잎 10장을 널어요', '0단계 칸: 다음 단계 값 1점 · 지금 / 다음 설명');
+  check(b.name === '바구니 넓게' && b.icon === '🧺' && b.level === 3 && b.max === 3 && b.maxed && b.costNext === null && b.desc === '개미 일꾼이 꽃 20포기까지 거둬요', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
+  check(r.level === 0 && r.costNext === 1 && r.desc === '누에 일꾼이 달마다 꽃잎 8장을 널어요' && r.nextDesc === '누에 일꾼이 달마다 꽃잎 10장을 널어요', '0단계 칸: 다음 단계 값 1점 · 지금 / 다음 설명');
   check(row('catchup').desc === '오래 비워도 5주까지 따라잡아요' && row('pantry').desc === '정원 저장고 칸 그대로예요', '따라잡기 끝 · 저장고 0단계 설명');
   check(E.bonusMaxed(s, 'basket') && E.bonusMaxed(s, 'catchup') && !E.bonusMaxed(s, 'rack') && !E.bonusMaxed(s, 'gold'), 'bonusMaxed: 끝까지 올린 칸만 (P28-05-02-04 이정표, 그림은 M3-2)');
   s.grade.xp = E.gradeXpAt(5);   // 저장 파일을 손으로 고쳐 쓴 점이 총점보다 많은 경우

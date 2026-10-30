@@ -50,7 +50,7 @@ console.log('[🧺 달이 끝날 때 · 창고에선 쉼 · 꽃잠엔 쉼]');
   const p0 = st.petals.length;
   monthEnd(st);
   check(st.petals.length === p0 + 1 && f.harvestKey === E.calendar(st.virtual).abs - 1, '6월이 끝나면 저절로 꽃잎 한 장');
-  check(st.log.some(l => l.type === 18 && l.text === '자동 수확 바구니가 꽃잎 1장을 거뒀어요'), '일지 한 줄');
+  check(st.log.some(l => l.type === 18 && l.text === '개미 일꾼이 꽃잎 1장을 물어 왔어요'), '일지 한 줄');
   const sto = garden(c => c.month === 6 && !c.frozen); const sd = E.buyDeco(sto, 'autobasket', ctx).deco; fl(sto, 'lavender', 0, 0);
   monthEnd(sto);
   check(sto.petals.length === 0 && sd.x == null, '창고의 바구니는 쉼');
@@ -67,9 +67,9 @@ console.log('[🧺 따라잡기 3주 · 꽃잠을 건너뜀]');
   check(d.n === 3 * 3 * 2, '동백 2그루 × (12월 · 1월 · 2월) × 3주 = 18장 — 꽃잠 · 피지 않는 달엔 0');
   check(st.stats.autoHarvest === 18, '모두 센 수 (stats.autoHarvest)');
   const lines = E.autoAwayLines(st, { autoHarvest: 4 });
-  check(lines.length === 1 && lines[0] === '자동 수확 바구니가 꽃잎 14장을 거뒀어요' && E.isAutoLine(lines[0]), '자리를 비운 동안: 그사이 거둔 수를 한 줄로');
+  check(lines.length === 1 && lines[0] === '개미 일꾼이 꽃잎 14장을 물어 왔어요' && E.isAutoLine(lines[0]), '자리를 비운 동안: 그사이 거둔 수를 한 줄로');
   st.settings.slow = true;
-  check(E.autoAwayLines(st, { autoHarvest: 4 })[0] === '자동 수확 바구니가 꽃잎을 거뒀어요', '🐢 느긋하게 보기면 숫자 없이');
+  check(E.autoAwayLines(st, { autoHarvest: 4 })[0] === '개미 일꾼이 꽃잎을 물어 왔어요', '🐢 느긋하게 보기면 숫자 없이');
   check(E.autoAwayLines(st, E.autoStats(st)).length === 0, '그사이 한 일이 없으면 줄 없음');
 }
 
@@ -86,7 +86,7 @@ console.log('[🍂 자동 건조대 — 사기 · 오래된 꽃잎부터 하나�
   const d0 = st.stats.dried || 0;
   check(E.rackTick(st, ctx) === 8 && st.petals.length === 2 && st.petals[0] === ps[8], '하나면 8장 — 먼저 거둔 꽃잎부터');
   check(st.drying.length === 8 && st.drying.every(x => x.auto && x.leftH === E.DRY_H) && (st.stats.dried || 0) === d0 && st.stats.autoHung === 8, '꽃방에 1달 · 퀘스트 · 칭호의 말린 수에는 안 셈 (손으로 넌 것만)');
-  check(st.log.some(l => l.type === 12 && l.text === '자동 건조대가 꽃잎 8장을 꽃방에 널었어요'), '일지 한 줄');
+  check(st.log.some(l => l.type === 12 && l.text === '누에 일꾼이 꽃잎 8장을 꽃방에 널었어요'), '일지 한 줄');
   E.placeDeco(st, E.buyDeco(st, 'dryrack', ctx).deco.id, 1, 0);
   petal(st, 'rose'); petal(st, 'rose');
   check(E.rackTick(st, ctx) === 4 && st.petals.length === 0, '둘이면 16장까지 (있는 만큼)');
@@ -107,7 +107,7 @@ console.log('[🍂 다 마르면 티백까지 · 손으로 넌 꽃잎은 그대�
   check(bags.length === 2 && st.teas.length === teas0 + 2 && bags.some(t => t.hat && t.type === 'lavender') && bags.every(t => t.seasonKey === -1), '1달 뒤 티백 2개 (★5는 햇차) — 손으로 말려 티백을 만든 것과 같음');
   check(st.dried.length === 1 && st.dried[0].id === hand.id, '손으로 넌 꽃잎은 말린 꽃잎 칸으로 (블렌드는 사람 몫)');
   check(st.stats.autoBags === 2 && st.dex.teabag.lavender, '티백 도감 · 센 수');
-  check(st.log.some(l => l.type === 12 && l.text === '자동 건조대에서 꽃잎 2장이 말라 티백이 됐어요'), '일지 한 줄');
+  check(st.log.some(l => l.type === 12 && l.text === '누에 일꾼이 말린 꽃잎 2장이 티백이 됐어요'), '일지 한 줄');
 }
 
 console.log('[🍂 꽃잠엔 쉼 · 바구니와 이어서 · 따라잡기 3주]');
@@ -122,7 +122,7 @@ console.log('[🍂 꽃잠엔 쉼 · 바구니와 이어서 · 따라잡기 3주]
   check(st.stats.autoHarvest === 18 && st.petals.length === 0, '바구니가 거둔 꽃잎은 그 자리에서 건조대로 (제다실에 안 남음)');
   check(st.stats.autoBags === 16 && st.drying.length === 2, '티백 16개 — 마지막 2월 꽃잎은 꽃잠이 지나야 마름');
   const lines = E.autoAwayLines(st, {});
-  check(lines.length === 2 && lines[1] === '자동 건조대가 꽃잎을 말려 티백 16개를 만들었어요', '자리를 비운 동안: 장치마다 한 줄');
+  check(lines.length === 2 && lines[1] === '누에 일꾼이 꽃잎을 말려 티백 16개를 만들었어요', '자리를 비운 동안: 장치마다 한 줄');
 }
 
 const bag = (st, type, q, extra) => { const t = Object.assign({ id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: -1, hat: false }, extra); st.teas.push(t); return t; };
@@ -163,8 +163,8 @@ console.log('[🫖 닫혀 있으면 쉼 · 꽃잠엔 열려 있어 일함 · 자
   E.advance(st, st.virtual + 8 * H, ctx);
   check(st.teas.length === 0 && st.stats.autoBrew === 6 && st.stats.autoCups === 6, '쉼달에도 우려 팖 (시간은 멈춰도 찻집은 열림)');
   E.advance(st, E.calendar(st.virtual).slotEnd + 0.1 * H, ctx);
-  check(st.log.some(l => l.type === 13 && l.text === '찻집 일손이 찻잔 6잔을 우렸어요'), '일지는 달이 바뀔 때 한 줄');
-  check(E.autoAwayLines(st, b0).join() === '찻집 일손이 찻잔 6잔을 우렸어요' && E.autoLineType('찻집 일손이 찻잔 6잔을 우렸어요') === 13, '자리를 비운 동안 한 줄 (☕)');
+  check(st.log.some(l => l.type === 13 && l.text === '나비 일꾼이 찻잔 6잔을 우렸어요'), '일지는 달이 바뀔 때 한 줄');
+  check(E.autoAwayLines(st, b0).join() === '나비 일꾼이 찻잔 6잔을 우렸어요' && E.autoLineType('나비 일꾼이 찻잔 6잔을 우렸어요') === 13, '자리를 비운 동안 한 줄 (☕)');
 }
 
 // 같은 꽃 · 같은 때를 사람이 손으로(달 중간에 거둬 바로 널고, 마르면 티백, 찻집이 열리면 모두 우려 바로 팖) 한 정원과 장치 셋만 둔 정원

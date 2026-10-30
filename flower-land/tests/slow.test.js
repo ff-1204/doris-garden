@@ -76,7 +76,7 @@ console.log('[P30-08 새 화면: 느긋하게 보기면 숫자 없이 · 얻는 
   check(fo.slow === true && E.forestOf(off).slow === false, 'forestOf(...).slow');
   const wo = E.forestWeedOf(on);
   check(wo && wo.slow && wo.n === null && !/\d/.test(wo.text), 'forestWeedOf: 숫자 없음');
-  check(!on.log.some(l => l.text.startsWith('숲 바람') && /\d/.test(l.text)), '일지 숲 바람 줄에 숫자 없음');
+  check(!on.log.some(l => l.text.startsWith('무당벌레') && /\d/.test(l.text)), '일지 숲 바람 줄에 숫자 없음');
   const two = copy(off); two.season = Object.assign(two.season || {}, { n: 2 });
   const twoSlow = copy(two); twoSlow.settings.slow = true;
   check(Array.isArray(E.seasonTable(two)) && E.seasonTable(twoSlow) === null, 'seasonTable: 2철이어도 느긋하게 보기면 null');

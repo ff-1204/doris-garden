@@ -891,6 +891,17 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 :root[data-theme="dark"] .honey-chip { background: #4a3a18; color: #f3d48a; }
 /* P17-16 정원 장식 (10-24) */
 .decoshop { display: grid; gap: 8px; }
+/* P32-03 🐝 곤충농장: 일꾼 카드는 화원 장식 카드 꼴 그대로 + 말풍선 · 넓으면 두 칸 */
+@media (min-width: 900px) { .fm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fm-card .dk-main .fm-work { color: color-mix(in srgb, var(--good) 70%, var(--muted)); }
+.fm-card .fm-say { justify-self: start; margin-top: 2px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: calc(12 * var(--u)); }
+.fm-card.locked .dk-art img { filter: grayscale(1); opacity: .4; }
+.fm-card.locked .dk-main b { color: var(--muted); }
+.fm-card .fm-when { font-size: calc(12 * var(--u)); text-align: right; }
+.fm-card .dk-buy .btn { white-space: nowrap; }
+@media (max-width: 480px) { .fm-card { grid-template-columns: auto 1fr; } .fm-card .dk-buy { grid-column: 1 / -1; justify-items: stretch; } .fm-card .dk-buy:empty { display: none; } .fm-card .fm-when { text-align: left; } }
+.fm-pantry, .fm-away { display: grid; gap: 8px; justify-items: start; }
+.fm-pantry .note, .fm-away .note { margin: 0; }
 .decocard.locked .dk-art img { filter: grayscale(1); opacity: .4; }   /* 🌱 아직 안 열린 등급 장식 (P28-05-01) */
 .decocard.locked .dk-main b { color: var(--muted); }
 .decocard { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }
@@ -1389,6 +1400,11 @@ body { margin: 0; }
 .mn-bar i.fade { background: color-mix(in srgb, var(--c, var(--accent)) 35%, var(--sunk)); }
 .mn-bar small { font-size: calc(11 * var(--u)); color: var(--muted); margin-left: 4px; white-space: nowrap; }
 .mn-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+/* P32-04 🐝 곤충농장 매뉴얼 표: 일꾼 그림 32px(16×2) + 이름 · 하는 일 · 값 */
+.mn-farm { display: grid; gap: 8px; width: 100%; max-width: 560px; margin: 0 auto 10px; }
+.mn-frow { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; }
+.mn-frow span { display: grid; gap: 1px; min-width: 0; }
+.mn-frow small { font-size: calc(12 * var(--u)); line-height: 1.4; }
 .mn-icons .mn-ico { width: 40px; height: 40px; font-size: calc(22 * var(--u)); }
 .mn-icons .mn-item.off .mn-ico { opacity: .45; filter: grayscale(1); }
 .mn-blends { display: grid; grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));   /* 레시피 줄(말린 잎 24px×2 + 찻잔 28px + 기호)이 136px라 104px면 412px 휴대폰에서 3칸이 되어 겹침 (10-30) */ gap: 6px; width: 100%; }
@@ -1424,6 +1440,13 @@ body { margin: 0; }
 :root[data-big] .ob-care { display: block; }   /* 첫 안내 창: flex면 글 토막이 칸마다 갈라져 — 큰 글씨면 한 문단으로 흐르게 */
 :root[data-big] .ob-care span { vertical-align: middle; margin-right: 4px; }
 @media (min-width: 900px) { :root[data-big] .body { grid-template-columns: 108px minmax(0, 1fr); } :root[data-big] nav.tabs { top: 72px; } }
+/* P32-03 🐝 곤충농장으로 탭이 9 · 10칸 — 640px 이하(큰 글씨 두 줄과 같은 폭)는 큰 글씨가 아니어도 두 줄 (5칸씩, 이름은 지우지 않음) */
+@media (max-width: 640px) {
+  :root { --nav-h: 112px; }
+  nav.tabs { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  nav.tabs button { padding: 6px 2px 7px; }
+  nav.tabs button[aria-selected="true"] { box-shadow: none; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+}
 /* 휴대폰은 탭 줄이 두 줄 (5칸씩) — 이름은 지우지 않음 */
 @media (max-width: 640px) {
   :root[data-big] { --nav-h: 140px; }
@@ -1491,6 +1514,7 @@ body { margin: 0; }
       <section class="panel" id="p-cab" aria-label="찻집"></section>
       <!-- 📖 도감 (도감일지 · 기록 · 도감) -->
       <section class="panel" id="p-forest" aria-label="작은 숲"></section>
+      <section class="panel" id="p-farm" aria-label="곤충농장"></section>
       <section class="panel" id="p-dex" aria-label="도감과 기록"></section>
       <section class="panel" id="p-manual" aria-label="매뉴얼"></section>
       <section class="panel" id="p-settings" aria-label="설정"></section>
@@ -1502,6 +1526,7 @@ body { margin: 0; }
       <button type="button" role="tab" data-tab="tearoom" aria-selected="false"><span class="ic">🌿</span>제다실</button>
       <button type="button" role="tab" data-tab="cab" aria-selected="false"><span class="ic">🍵</span>찻집</button>
       <button type="button" role="tab" data-tab="store" aria-selected="false"><span class="ic">📦</span>창고</button>
+      <button type="button" role="tab" data-tab="farm" aria-selected="false"><span class="ic">🐝</span>곤충농장</button>
       <button type="button" role="tab" data-tab="forest" aria-selected="false" hidden><span class="ic">🌳</span>숲</button>
       <button type="button" role="tab" data-tab="dex" aria-selected="false"><span class="ic">📖</span>도감</button>
       <button type="button" role="tab" data-tab="manual" aria-selected="false"><span class="ic">📘</span>매뉴얼</button>
@@ -1525,6 +1550,7 @@ body { margin: 0; }
 <script src="app-shop.js"></script>
 <script src="app-teashop.js"></script>
 <script src="app-forest.js"></script>
+<script src="app-farm.js"></script>
 <script src="app-dex.js"></script>
 <script src="app-inbox.js"></script>
 <script src="app-manual.js"></script>
