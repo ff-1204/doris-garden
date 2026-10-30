@@ -145,7 +145,7 @@ function layerSprout(scale) {
 }
 function layerHTML() {
   const o = E.layerOf(st), slow = E.slowView(st), N = o.next;
-  const chips = `<div class="ly-chips">${o.layers.map(l => `<span class="ly-chip ${l.open ? 'on' : ''} ${l.layer === o.layer ? 'now' : ''}"><span aria-hidden="true">${l.open ? l.icon : '?'}</span>${l.open ? esc(l.name) : slow ? '' : `${l.layer}층`}</span>`).join('')}</div>`;
+  const chips = `<div class="ly-chips">${o.layers.map(l => `<span class="ly-chip ${l.open ? 'on' : ''} ${l.layer === o.layer ? 'now' : ''}"${!l.open && slow ? ' role="img" aria-label="아직 안 열린 층"' : ''}><span aria-hidden="true">${l.open ? l.icon : '?'}</span>${l.open ? esc(l.name) : slow ? '' : `${l.layer}층`}</span>`).join('')}</div>`;
   const cond = (ok, ic, text) => `<div class="ly-cond ${ok ? 'ok' : ''}"><span aria-hidden="true">${ic}</span><span>${text}</span>${ok ? '<b class="ly-ok">✔</b>' : ''}</div>`;
   let next = '';
   if (!N) next = '<p class="note">모든 층을 열었어요</p>';

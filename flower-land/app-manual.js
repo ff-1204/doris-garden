@@ -203,7 +203,7 @@ function devSeasonFill() {
 }
 // 개발용 (P30-01-02): 3층(찻집 · 광산)까지 열어 연 해를 적고, 해마다 기록 8줄(숫자 모름)을 쌓고, 꽃 도감 13종 → 📔 도감일지 층 쪽 "8해가 지났어요 · 13 / 13 ✔"
 function devLayerFill() {
-  if (!Object.keys(st.dex.tea).length) st.dex.tea[E.firstFlower(st)] = st.virtual;
+  if (!Object.keys(st.dex.tea).length) st.dex.tea[E.firstFlower(st) || 'chamomile'] = st.virtual;
   st.stats.dug = Math.max(1, st.stats.dug || 0);
   E.layerSync(st);
   const n = E.seasonN(st);
