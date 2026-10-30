@@ -314,14 +314,14 @@ function awayDiff(b) {
   const rec = st.records[0] && st.records[0] !== b.recTop ? st.records[0] : null;
   const log = rec ? [...rec.log, ...st.log] : st.log;
   let i = b.last ? log.lastIndexOf(b.last) + 1 : 0; if (b.last && i === 0) i = Math.max(0, log.length - 50);   // 일지가 600줄을 넘겨 밀렸으면 최근 50줄
+  const long = E.awayLinesText(E.awayLines(st, b.real, b.long, Date.now()));   // P30-07 🍃 그동안 세 줄 — 1해(1주) 미만이면 null
   const lines = log.slice(i).filter(l => [3, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18].includes(l.type) && !E.isAutoLine(l.text) && !l.text.startsWith('찻집에 새 주문 쪽지') && !l.text.startsWith('🏅 새 칭호')
-    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text) && !E.isWeeklyLine(l.text));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
+    && !(E.slowView(st) && l.text.startsWith('📜 퀘스트')) && !E.isGradeUpLine(l.text) && !E.isWeeklyLine(l.text) && !(long && E.isYearlyMissLine(l.text)));   // 🐢 느긋하게 보기면 퀘스트 완료 줄도 뺌 (P28-02) · 등급 줄은 아래 한 줄로
   const wl = E.weeklyAwayLine(st, b.weekly); if (wl) lines.push({ type: 9, text: wl });   // 🗓️ 그동안 끝낸 주간 목표 한 줄 (P28-09 · 느긋하게 보기면 없음)
   for (const t of E.autoAwayLines(st, b.auto)) lines.push({ type: E.autoLineType(t), text: t });   // 🧺 자동 장치가 한 일은 장치마다 한 줄 (P28-10)
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
-  const long = E.awayLinesText(E.awayLines(st, b.real, b.long, Date.now()));   // P30-07 🍃 그동안 세 줄 — 1해(1주) 미만이면 null
   return { h, lines, long, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
 }
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)

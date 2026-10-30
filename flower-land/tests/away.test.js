@@ -39,7 +39,10 @@ let t = E.awayLinesText(a);
 check(t.title === '🍃 그동안' && t.years === '정원에 13해가 지났어요', `첫 줄 "${t.years}"`);
 check(t.skipped === '그 사이 정원은 조용히 쉬었어요 · 해 번호는 따라잡은 3해만큼만 가요', `건너뜀 한 줄 "${t.skipped}"`);
 check(t.missed.endsWith('못 봤어요 · 다음 해 그 계절에 다시 와요') && t.missed.includes(a.missed[0].name), `놓친 줄 "${t.missed}"`);
-check(t.layer === '다음 층 🌳 4층 작은 숲까지 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `층 줄 "${t.layer}"`);
+check(t.layer === '다음 층 🌳 4층 작은 숲은 다음 업데이트에 열려요 · 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `층 줄 — 못 여는 층은 업데이트 한마디 · 정원 해로 "${t.layer}"`);
+{ const r = E.awayLines(st, mon - WEEK, { yl: 3, at: null }, mon); r.layer.next = { ...r.layer.next, held: false };
+  check(E.awayLinesText(r).layer === '다음 층 🌳 4층 작은 숲까지 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `열 수 있는 층이면 "…까지 정원 해로" "${E.awayLinesText(r).layer}"`); }
+check(E.isYearlyMissLine('🌈 무지개는 못 봤어요 · 다음 해 봄에 다시 와요') && !E.isYearlyMissLine('올해 봄엔 🌈 무지개가 왔어요'), '일지의 놓침 줄을 알아봄 (그동안이 있으면 창 위 일지에선 뺌)');
 
 console.log('[🐢 느긋하게 보기 — 숫자 없이 (P30-08)]');
 const slow = copy(st); slow.settings.slow = true;
