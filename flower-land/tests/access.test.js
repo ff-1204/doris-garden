@@ -20,7 +20,7 @@ const r = E.parseSave(JSON.stringify(E.makeSave(st, 12345)));
 const back = r.ok && E.migrateSave(r.data.game);
 check(back && E.bigView(back) && E.patternView(back), '파일로 저장해 열어도 켜진 그대로');
 const BN = E.MIGRATIONS.findIndex(m => m[0].includes('settings.big'));
-check(BN === 40 && E.MIGRATIONS[BN + 1][0].includes('awayLast') && E.MIGRATIONS.length === 43, 'MIGRATIONS 41번째 · 42번째는 P32 awayLast · farm (43번째 맨 끝 P36)');
+check(BN === 40 && E.MIGRATIONS[BN + 1][0].includes('awayLast') && E.MIGRATIONS.length === 44, 'MIGRATIONS 41번째 · 42번째는 P32 awayLast · farm (43번째 P36 · 44번째 맨 끝 P37)');
 const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN;
 const om = E.migrateSave(old);
 check(om.settings.big === false && om.settings.pattern === false, '예전 정원은 보정으로 둘 다 꺼짐');

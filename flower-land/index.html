@@ -524,20 +524,9 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .ly-ok { color: var(--good); }
 .ly-slow { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid var(--line); font-size: calc(14 * var(--u)); }
 #jLayer { scroll-margin-top: 84px; }
-/* P28-05-02-03 🌟 손길 점 (M3-2): 등급 쪽 아래 4칸 — 아이콘 · 이름 · 설명 | 올리기 · 내리기, 좁으면 단추가 아래 줄로 */
-.bn-card { display: grid; gap: 8px; }
-.bn-sum { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
-.bn-sum small { color: var(--muted); font-size: calc(12.5 * var(--u)); }
-.bn-row { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+/* P28-05-02-03 · P37 🌼 꽃가루 기르기 줄 (🐝 곤충농장 app-farm growHTML · 🌼 그 밖에) — 아이콘 · 먹이기 · 다시 어리게 단추 묶음 */
 .bn-ic { font-size: calc(18 * var(--u)); text-align: center; }
-.bn-txt { display: grid; gap: 2px; min-width: 0; }
-.bn-txt small { color: var(--muted); font-size: calc(12.5 * var(--u)); }
-.bn-txt .bn-next { color: color-mix(in srgb, var(--good) 70%, var(--muted)); }
-.bn-txt .bn-why { color: var(--warn); }
-.bn-lv { font-weight: 400; font-size: calc(12 * var(--u)); color: var(--muted); }
-.bn-max { font-size: calc(12 * var(--u)); font-weight: 600; }
 .bn-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-#jBonus { scroll-margin-top: 84px; }
 /* P30-05-03 🗓️ 올해 달력: 계절 4칸 (375px에서도 한 줄) · 지난 해들 작은 그림 줄. 안 온 것은 흐리게 */
 #jYearly { scroll-margin-top: 84px; }
 .yc-card { display: grid; gap: 8px; }
@@ -558,7 +547,6 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .yc-mini { display: grid; place-items: center; width: 22px; height: 22px; opacity: .3; filter: grayscale(.8); }
 .yc-mini.on { opacity: 1; filter: none; }
 .yc-mini .yc-ic { font-size: calc(15 * var(--u)); line-height: 22px; }
-@media (max-width: 480px) { .bn-btns { grid-column: 2 / -1; justify-content: flex-start; } }
 .rec-bonus { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: calc(13.5 * var(--u)); }
 /* P28-08-05 🌸 새 철: 따뜻한 꽃 색 (완전 초기화의 --warn 빨강과 다르게) — 꽃잠 기록 끝 한 줄 · 확인 창 · 위 막대 · 그래프 경계선 */
 :root { --bloom: #b8577a; --bloom-ink: #fff7fa; }
@@ -921,6 +909,20 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .fm-card .fm-when { font-size: calc(12 * var(--u)); text-align: right; }
 .fm-card .dk-buy .btn { white-space: nowrap; }
 @media (max-width: 480px) { .fm-card { grid-template-columns: auto 1fr; } .fm-card .dk-buy { grid-column: 1 / -1; justify-items: stretch; } .fm-card .dk-buy:empty { display: none; } .fm-card .fm-when { text-align: left; } }
+/* P37 🌼 일꾼 기르기: 카드 아래 한 줄(전체 폭) · 머리 단계 점 · 🌼 그 밖에 두 줄 */
+.fm-card .fm-grow { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.fm-gtxt { display: grid; gap: 2px; min-width: 0; }
+.fm-gtxt small, .fm-otxt small { color: var(--muted); font-size: calc(12.5 * var(--u)); }
+.fm-gtxt .bn-why { color: var(--warn); }
+.fm-grow.maxed .fm-gtxt small { color: color-mix(in srgb, var(--good) 70%, var(--muted)); }
+.fm-dots { font-weight: 400; font-size: calc(11 * var(--u)); letter-spacing: 1px; color: #c9a227; white-space: nowrap; }
+.fm-pollen { margin: 0; }
+.fm-others { display: grid; gap: 0; padding-top: 4px; padding-bottom: 4px; }
+.fm-other { display: grid; grid-template-columns: 1.6em minmax(0, 1fr); align-items: center; gap: 2px 8px; padding: 8px 0; }
+.fm-other + .fm-other { border-top: 1px solid var(--line); }
+.fm-otxt { display: grid; gap: 2px; min-width: 0; }
+.fm-other .fm-grow { grid-column: 2 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; }
+@media (max-width: 480px) { .fm-grow { grid-template-columns: 1fr !important; } .fm-grow .bn-btns { justify-content: flex-start; } }   /* 좁으면 단추가 글 아래로 */
 .fm-pantry, .fm-away { display: grid; gap: 8px; justify-items: start; }
 .fm-pantry .note, .fm-away .note { margin: 0; }
 .decocard.locked .dk-art img { filter: grayscale(1); opacity: .4; }   /* 🌱 아직 안 열린 등급 장식 (P28-05-01) */
@@ -1404,7 +1406,7 @@ body { margin: 0; }
 #p-manual .stack { max-width: 760px; margin-inline: auto; }   /* 넓은 화면에선 매뉴얼을 가운데로 (10-30) */
 .topinbox-btn { position: relative; }
 .topinbox-btn.on::after { content: ''; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--panel); }
-.bn-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }   /* 📔 도감일지 손길 점 한 줄 → 🐝 곤충농장 (10-30) */
+.bn-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }   /* 📔 도감일지 🌼 꽃가루 한 줄 → 🐝 곤충농장 (10-30 · P37) */
 .mn-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .mn-chips a { font-size: calc(12 * var(--u)); padding: 4px 10px; border-radius: 999px; background: var(--sunk); color: var(--ink); text-decoration: none; border: 1px solid transparent; }
 .mn-chips a:hover { border-color: var(--accent); }

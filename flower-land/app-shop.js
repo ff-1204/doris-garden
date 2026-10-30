@@ -96,7 +96,7 @@ function renderShop(force) {
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
-  // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 정원 저장고 +3칸 (장식이 아니라 정원 등급이 주는 것 · 손길 점은 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
+  // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 정원 저장고 +3칸 (장식이 아니라 정원 등급이 주는 것 · 🌼 꽃가루는 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
   const gSlow = E.slowView(st);
   const gradeGift = (g, k) => { const cap = E.PANTRY_CAPS.find(c => c[0] === g), n = E.orderMax(st) + (E.placedOf(st, k).length ? 0 : 1);   // 이 장식을 놓았을 때의 최대 쪽지 수
     const pantry = cap ? `🧺 정원 저장고 ${gSlow ? '칸이 늘어요' : `+${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`} · ` : '';

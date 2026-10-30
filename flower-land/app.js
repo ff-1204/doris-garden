@@ -225,7 +225,7 @@ function mutRim(x, grid) {                          // 그림 둘레 빈 도트�
 const formArt = (key, size) => { const F = FLOWERS[key]; return `<span class="sc-pair">${spriteImg(key, 'form', size, false, `${F.name} ${FORM[F.form].name}`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom" title="피면 ${F.name}">${spriteImg(key, 'flower', Math.round(size * 0.5), false, F.name)}</span></span>`; };
 // P17-16 정원 장식 그림: decos.js의 16×16 도트, 칭호 문장은 칭호 그림(22×22, titleURL)
 const decoCache = {}, decoBitmaps = {};
-// P28-05-02-04 이정표: 🌟 보너스 칸을 끝까지 올리면 그 장치 그림이 decos.js의 「_max」로 (정원 · 창고 · 화원 · 도감 모두)
+// P28-05-02-04 이정표: 🌼 개미 · 누에를 끝까지 기르면 그 장치 그림이 decos.js의 「_max」로 (정원 · 창고 · 화원 · 도감 모두)
 const DECO_MAXED = { autobasket: 'basket', dryrack: 'rack' };
 const decoArt = key => DECO_MAXED[key] && E.bonusMaxed(st, DECO_MAXED[key]) && window.DECO_SPRITES[key + '_max'] ? key + '_max' : key;
 function decoURL(key) {
@@ -337,7 +337,7 @@ function awayDiff(b) {
   E.awayKeep(st, a, Date.now());                  // P32-02 🐝 곤충농장에서 지난번 것을 다시 보게 (줄 · 돈 · 시간만 저장)
   return a;
 }
-// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)
+// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 늦잠(🌼 기르기)이면 4 · 5주 P28-05-02 · P37, 그 이상은 건너뜀)
 function catchUp() {
   ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
   const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = E.catchUpH(st) * HOUR;
@@ -566,10 +566,10 @@ function showToast(msg, ms) {
 }
 toastEl.addEventListener('click', () => { toastEl.classList.remove('show'); openLog(); });
 // 🌱 정원 등급이 오를 때 (P28-05-01, M1-4): 등급 한 줄 → 열린 장식 한 줄, 따로따로 (큰 창은 없음 · 느긋하게 보기면 E.gradeAlerts가 빈 목록)
-// 🌟 등급이 오르면 손길 점 한 줄을 그 다음에 (10-30 등급마다 1점) (P28-05-02-03, M3-2) — gradeAlerts는 그대로, 점은 오르기 전 등급 → 지금 bonusPoints로 견줌
+// 🌼 등급이 오르면 꽃가루 한 줄을 그 다음에 (P37 이름) (10-30 등급마다 1점) (P28-05-02-03, M3-2) — gradeAlerts는 그대로, 점은 오르기 전 등급 → 지금 bonusPoints로 견줌
 function gradeToasts(e) {
   const pts = e && !E.slowView(st) ? E.bonusPoints(st) - E.bonusPointsAt(e.from) : 0;
-  [...E.gradeAlerts(st, e), ...(pts > 0 ? [`🌟 손길 점이 ${pts}점 생겼어요 · 📔 도감일지에서 골라요`] : [])].forEach((t, i) => setTimeout(() => queueToast(t), i * 400));
+  [...E.gradeAlerts(st, e), ...(pts > 0 ? [`🌼 꽃가루 ${pts}알이 생겼어요 · 🐝 곤충농장에서 일꾼에게 먹여요`] : [])].forEach((t, i) => setTimeout(() => queueToast(t), i * 400));
 }
 
 // ---------------------------------------------------------------- 위 막대
