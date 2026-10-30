@@ -491,6 +491,8 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .wguide .gd-now b { font-weight: 600; }
 .wguide .gd-now .data { font-size: calc(12 * var(--u)); color: var(--muted); margin-left: 4px; }
 .wguide .btn.small { white-space: nowrap; }
+.wguide .gd-now { flex-basis: 100%; order: 2; }   /* 10-30 사용자: 이번 주 목표 세부 줄은 제목 · 보기 단추 아래 한 줄로 */
+.wguide .btn.small { margin-left: auto; }
 #jWeekly { scroll-margin-top: 84px; }   /* 정원 띠 "보기"로 올 때 위 막대에 가리지 않게 */
 /* P30-01-02 🌳 정원의 층 (L1-2): 등급 쪽 아래 — 지금 층 · 층 칩 줄 · 다음 층 조건 두 줄 (된 것 ✔, 안 된 것은 흐리게) */
 .ly-card { display: grid; gap: 8px; }
