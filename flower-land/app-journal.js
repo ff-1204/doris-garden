@@ -297,8 +297,8 @@ function monthWord(cal) {          // 그달 꽃들의 한 마디를 게임 하�
 function renderTop() {
   const cal = E.calendar(st.virtual);
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
-  const tt = $('#topTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호
-  if (tt.dataset.k !== tk) { tt.dataset.k = tk; tt.hidden = !tk; tt.innerHTML = tk ? `${titleImg(tk, 22, false)}<span>${E.TITLES[tk].name}</span>` : ''; }
+  const bb = $('#brandBtn'), bt = $('#brandTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호 — 로고 자리에 그림, 작은 글씨엔 이름 (10-30: 위 막대 단추 대신)
+  if (bt.dataset.k !== tk) { bt.dataset.k = tk; bt.hidden = !tk; bt.innerHTML = tk ? titleImg(tk, 22, false) : ''; bb.classList.toggle('has-ttl', !!tk); $('#brandSub').textContent = tk ? E.TITLES[tk].name : "Dori's Garden"; bb.title = tk ? `${E.TITLES[tk].name} · 정원으로` : '정원으로'; }
   const sb = E.seasonBadge(st), pb = E.pathBadge(st), ts = $('#topSeason'), sk = sb ? `${sb.n}|${pb ? pb.key : ''}` : '';   // 🌸 새 철 (P28-08-05): 1철이면 없음 · 느긋하게 보기여도 보임(숫자가 아니라 이름) · 640px 이하는 "🌸 2" · 🛤️ 철의 길(P30-04-02) "🌸 2철 · 🍵 찻길"
   if (ts.dataset.k !== sk) { ts.dataset.k = sk; ts.hidden = !sb; ts.title = sb ? `${sb.n}철 정원${pb ? ` · ${pb.name}로 걸어요` : ''}` : ''; ts.innerHTML = sb ? `<span class="ts-l">${sb.text}${pb ? ` · ${pb.text}` : ''}</span><span class="ts-s">🌸 ${sb.n}${pb ? ` ${pb.icon}` : ''}</span>` : ''; }
   const gb = E.gradeBadge(st), tg = $('#topGrade'), gk = gb ? `${gb.grade}|${gb.pct}` : '';   // 🌱 정원 등급 (P28-05-01, M1-4) · 느긋하게 보기면 null → 숨김
@@ -312,7 +312,7 @@ function renderTop() {
 // ---------------------------------------------------------------- 탭 (P16-02)
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
 $('#brandBtn').addEventListener('click', () => { setTab('garden'); window.scrollTo({ top: 0, behavior: 'smooth' }); });   // 상단 로고 → 정원 (10-17)
-$('#topTitle').addEventListener('click', () => { ui.dexTab = 'journal'; setTab('dex'); });
+// (10-30) 위 막대 칭호 단추는 뺌 — 대표 칭호는 로고 자리(#brandTitle), 로고를 누르면 전처럼 정원으로
 $('#topGrade').addEventListener('click', () => { ui.dexTab = 'journal'; setTab('dex'); window.scrollTo({ top: 0 }); });   // 🌱 → 도감일지 맨 위 등급 쪽
 $('#restBanner').addEventListener('click', e => { if (e.target.closest('[data-rest="close"]')) { st.restClosed = E.calendar(st.virtual).week; save(); $('#restBanner').hidden = true; } });
 document.addEventListener('click', e => {
