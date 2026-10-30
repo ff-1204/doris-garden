@@ -217,6 +217,7 @@ $('#p-dex').addEventListener('click', e => {
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
   const ml = e.target.closest('[data-mail]'); if (ml) { const b = E.mailOf(st, ml.dataset.mail); return b && openMail(b); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
+  const gf = e.target.closest('[data-gofarm]'); if (gf) return setTab('farm');   // 🌟 손길 점은 🐝 곤충농장에서 (10-30)
   const bn = e.target.closest('[data-bonus]'); if (bn) { return after(E.bonusSet(st, bn.dataset.bonus, +bn.dataset.lv)); }   // 🌟 손길 점 고르기 (P28-05-02-03) — 다른 단추와 같은 알림 줄 (모자라면 경고)
   const bg = e.target.closest('[data-bgo]'); if (bg) { ui.dexTab = 'journal'; renderDex(true); const el = $('#jBonus'); return el && el.scrollIntoView({ block: 'start' }); }   // 기록 카드 → 도감일지 손길 점 칸
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);

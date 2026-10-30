@@ -113,7 +113,7 @@ function journalHTML() {
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
   return head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()   // 10-30 사용자 요청: 칭호를 도감일지 맨 위로
-    + gradeHTML() + layerHTML() + yearlyCalHTML() + bonusHTML() + weeklyHTML()
+    + gradeHTML() + layerHTML() + yearlyCalHTML() + bonusLinkHTML() + weeklyHTML()   // 🌟 손길 점 칸은 🐝 곤충농장에만 (10-30 사용자: 두 곳에 있어서) — 여기엔 한 줄 안내
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -176,6 +176,11 @@ function yearlyCalHTML() {
 }
 // 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
 // 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)
+// 📔 도감일지 쪽 한 줄: 손길 점 칸은 🐝 곤충농장에 있다는 안내 (10-30 — 네 보너스가 모두 일꾼 쪽이라 거기가 본자리)
+function bonusLinkHTML() {
+  const v = E.bonusView(st), slow = E.slowView(st);
+  return `<div class="card bn-link"><span>🌟 손길 점${slow ? '' : ` · 남은 ${v.left}점`}</span><button type="button" class="btn small" data-gofarm="1">🐝 곤충농장에서 고르기</button></div>`;
+}
 function bonusHTML(hid) {                          // hid: 🐝 곤충농장(P32-03)에도 같은 칸 — 칸 id가 겹치지 않게
   const v = E.bonusView(st), slow = E.slowView(st);
   const rows = v.rows.map(r => {
