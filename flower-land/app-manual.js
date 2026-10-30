@@ -1,10 +1,10 @@
 // 도리의 정원 — 화면: 📘 매뉴얼 (app.js 다음에 순서대로 불림, 이름은 app.js 첫머리 참고)
 'use strict';
 // ---------------------------------------------------------------- 📘 매뉴얼 (P21, 10-17): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄
-const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['save', '💾 저장']];
+const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
-  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st)]);   // 🌸 새 철 카드 (P28-08-05)
+  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st), E.seasonPath(st)]);   // 🌸 새 철 카드 (P28-08-05)
   if (!force && ui.sigs.manual === sig) return;
   ui.sigs.manual = sig;
   const sec = (k, title, sub, inner) => `<section class="mn-sec" id="mn-${k}"><h2 class="mn-h">${title}${sub ? `<small>${sub}</small>` : ''}</h2>${inner}</section>`;
@@ -105,6 +105,13 @@ function renderManual(force) {
         + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 · 꽃', '모두 황무지로', 'off')}${item(ico('💰'), '돈', '15,000원부터', 'off')}${item(ico('🌰'), '씨앗 · 꽃잎', '티백 · 찻잔', 'off')}${item(ico('🧤'), '용품', '처음 것으로', 'off')}${item(ico('📦'), '놓은 장식', '창고로', 'off')}</div>`,
           '비워져요 · 2 · 3 · 5철을 시작하면 덤 칭호가 하나씩 · 위 막대에 🌸 2철')
         + `<p class="note" style="text-align:center">⚙️ 설정의 🗑️ 처음부터 다시 시작(1년차에만)과 달라요 — 그건 등급 · 칭호 · 도감까지 <b>모두 지워요</b>. 새 철은 쌓은 것을 이어 가요</p>`); })(),
+    // 🛤️ 철의 길 (P30-04-02, L2-2 10-30): 길 셋 + 길 없이 · 바꾸는 것 넷 · 돈은 같음. 숫자가 없어 느긋하게 보기여도 그대로
+    (() => { const now = E.pathBadge(st), PV = k => E.VISITOR_KEYS.find(v => E.VISITORS[v].path === k);
+      return sec('path', '철의 길', '새 철을 시작할 때 하나 · 안 골라도 괜찮아요',
+        fig(`<div class="mn-icons">${E.PATH_KEYS.map(k => item(visitorImg(PV(k), 2), `${E.PATHS[k].icon} ${E.PATHS[k].name}`, { flower: '꽃잎 · ★ · 번식', tea: '찻잔 · 블렌드 · 주문', earth: '광산 · 계단' }[k])).join('')}${item(ico(E.PATH_NONE.icon), E.PATH_NONE.name, '지금처럼')}</div>`,
+          `🌸 새 철 확인 창 아래에서 길 하나를 골라요 · 그 철 동안은 바뀌지 않고, 다음 철에 다른 길을 걸어요${now ? ` · 지금 ${now.text}` : ''}`)
+        + fig(`<div class="mn-icons">${item(ico('🗓️'), '주간 목표', '그 길 쪽이 자주')}${item(ico('🐾'), '길 손님', '그 길에만 와요')}${item(titleImg('t_path_tea', 40, st.titles.t_path_tea == null), '길 칭호', '한 철을 마치면')}${item(ico('📖'), '기록 카드', '길 색 한 줄')}</div>`,
+          '길이 바꾸는 건 이 넷뿐이에요 · 돈 · 수확 · 꽃 값 · 경험치는 어느 길이든 같아요 · 📖 도감 › 📈 해마다 아래 "철마다" 표에서 지난 철과 견줘요')); })(),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
         ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
@@ -147,6 +154,7 @@ function renderSettings() {
       + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
       + row('🌳', '해 8개 쌓기', '정원의 층 확인용 (P30-01) · 3층까지 열고 해마다 기록 8줄 · 꽃 13종 도감', '<button type="button" class="btn small" id="devLayer">쌓기</button>')
       + row('🗓️', '올해만 것', '올해만 확인용 (P30-05) · 다음 계절 첫 달로 · 열지 않은 채 한 해(그동안 계절은 놓침)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devYSeason">다음 계절</button><button type="button" class="btn small" id="devYAway">비운 채 한 해</button></span>')
+      + row('🛤️', '철의 길', '철의 길 확인용 (P30-04) · 새 철 조건을 채우고 길 카드 확인 창을 엶 · 지금 길의 손님을 다음 흐르는 달에 부름', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devPath">새 철 창</button><button type="button" class="btn small" id="devPathVisitor">길 손님</button></span>')
       + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
@@ -192,6 +200,8 @@ function renderSettings() {
   if (DEV) $('#devYSeason').addEventListener('click', () => devYearly(false));   // 개발용 (P30-05)
   if (DEV) $('#devYAway').addEventListener('click', () => devYearly(true));
   if (DEV) $('#devVisitor').addEventListener('click', devVisitor);   // 개발용 (P30-06)
+  if (DEV) $('#devPath').addEventListener('click', () => { devSeasonFill(); if (E.seasonCanStart(st, E.calendar(st.virtual))) openSeasonStart(); });   // 개발용 (P30-04-02)
+  if (DEV) $('#devPathVisitor').addEventListener('click', devPathVisitor);
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)
   if (DEV) $('#devMail').addEventListener('click', async () => { const n = await mailFetch(); renderSettings(); feedback(n < 0 ? '📮 편지 파일을 못 읽었어요' : n ? `📮 새 편지 ${n}통` : '📮 새로 받을 편지가 없어요', n < 0); });   // 개발용 (P29-08)
   if (DEV) $('#devMailForget').addEventListener('click', () => { st.mailGot = {}; st.letterBox = (st.letterBox || []).filter(b => !b.mail); save(); renderSettings(); feedback('📮 받은 기록을 지웠어요'); });
@@ -242,6 +252,17 @@ function devVisitor() {
   let t = E.calendar(st.virtual).slotEnd; while (E.calendar(t).frozen) t = E.calendar(t).slotEnd;   // 꽃잠엔 손님이 안 와서 다음 흐르는 달까지
   E.advance(st, t + 1000, ctx); save(); renderAll(true);
   const n = E.visitorTimes(st, 'hedgehog'); feedback(st.visitors.now.some(v => v.k === 'hedgehog') ? `🦔 ${n}번째로 왔어요 · 그네 옆을 눌러 보세요` : '🦔 이번엔 못 왔어요 (그네 둘레에 빈 칸이 없어요)');
+}
+// 개발용 (P30-04-01): 지금 길의 손님을 부르고 다음 흐르는 달까지 — 🐌 달팽이는 핀 꽃 옆, 🐿️ · 🦡는 놓은 장식 · 꽃 옆 (새 철 첫 달엔 🧺 자동 장치 옆)
+function devPathVisitor() {
+  const p = E.seasonPath(st), k = p && E.VISITOR_KEYS.find(v => E.VISITORS[v].path === p);
+  if (!k) return feedback('길을 고른 철에만 길 손님이 와요', true);
+  if (!E.visitorOk(st, k)) return feedback(`${E.VISITORS[k].icon} ${E.VISITORS[k].need} 와요 — 앉을 자리가 없어요`, true);
+  st.visitors.now = st.visitors.now.filter(v => v.k !== k);
+  E.visitorCall(st, k);
+  let t = E.calendar(st.virtual).slotEnd; while (E.calendar(t).frozen) t = E.calendar(t).slotEnd;
+  E.advance(st, t + 1000, ctx); save(); renderAll(true);
+  feedback(st.visitors.now.some(v => v.k === k) ? `${E.VISITORS[k].icon} ${E.visitorTimes(st, k)}번째로 왔어요` : `${E.VISITORS[k].icon} 이번엔 못 왔어요`);
 }
 // P16-12-03 처음부터 다시 시작 = 완전 초기화 (변경 10-27, 사용자 요청): 이 게임의 저장 키 전부(정원 · 설정 · 되돌리기 칸 · 보관본 · 안내 표시)를 지우고
 // 구글 로그인도 끊은 뒤(권한도 돌려줌, 드라이브 파일은 남김) 새로고침 → 처음 온 사람처럼 첫 안내 · 이웃의 화분부터. 계정 칭호는 이어 붙이지 않음 (st.resetAt)

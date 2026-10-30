@@ -40,6 +40,14 @@ function yearGraphHTML() {
     ${xrow('년차', r => `<span class="data">${r.year}</span>`)}${slow || !rows.some(r => r.grade) ? '' : xrow('🌱', r => `<span class="data">${r.grade == null ? '·' : r.grade}</span>`, 'grade')}
     ${nav}${vsLine}${table}</div>`;
 }
+// 🛤️ 철마다 표 (P30-04-03, L2-3 10-30): 📈 해마다 아래 — 철 · 길 · 걸린 해 · 그 철 끝 등급 · 판 잔, 지금 철은 "진행 중". 2철부터 · 🐢 느긋하게 보기면 숨김 (엔진 seasonTable이 null)
+function seasonTableHTML() {
+  const rows = E.seasonTable(st); if (!rows) return '';
+  const tr = r => `<tr class="${r.now ? 'now' : ''}"><th scope="row">🌸 ${r.n}철</th><td><span class="st-path" style="--pc:${(E.PATHS[r.path] || {}).color || 'var(--line)'}">${r.pathIcon} ${r.pathName}</span></td><td class="data">${r.years}해${r.now ? ' <small class="muted st-now">진행 중</small>' : ''}</td><td class="data">${r.grade == null ? '—' : r.grade}</td><td class="data">${r.sold == null ? '—' : `${r.sold.toLocaleString('ko-KR')}잔`}</td></tr>`;
+  return `<div class="card stable"><div class="yg-head"><b>🛤️ 철마다</b></div>
+    <div class="st-wrap"><table><thead><tr><th>철</th><th>길</th><th>걸린 해</th><th>🌱 등급</th><th>🍵 판 잔</th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table></div>
+    <p class="muted yg-note">걸린 해는 새 철을 시작하기까지 지난 해, 등급은 그 철을 마칠 때(지금 철은 지금)예요${rows.some(r => r.sold == null && !r.now) ? ' · — 는 기록하기 전이라 몰라요' : ''}</p></div>`;
+}
 // 지난해 견줌 한 줄: "수입 +12% · 점수 +8" (없는 칸은 뺌)
 const vsText = d => [d.income != null ? `수입 ${signed(d.income, '%')}` : '', d.score != null ? `점수 ${signed(d.score)}` : ''].filter(Boolean).join(' · ') || '기록이 비슷해요';
 // 한 해 기록 카드 (꽃잠): 지난해보다 얼마나 · 그래프 보기. 느긋하게 보기면 숫자 없이 그래프 링크만
@@ -55,24 +63,38 @@ function seasonHintHTML() {
   return t ? `<div class="rec-season"><span>${t}</span><button type="button" class="btn small" data-newseason="1">새 철 시작</button></div>` : '';
 }
 // 05 확인 창: 완전 초기화(⚙️ 설정 · 빨간 경고 · 모두 지움)와 다른 색(따뜻한 꽃 색) · 다른 자리(📖 기록 끝)
+// 🛤️ 철의 길 고르기 (P30-04-02, L2-2 10-30): 확인 창 아래 길 넷 — 기본 "길 없이", 고른 길은 그 철 동안 안 바뀜. 돈 · 수확은 길마다 같음 (엔진 PATHS)
+function seasonPathPickHTML() {
+  const cur = ui.seasonPath || '';
+  const card = (k, P) => `<button type="button" role="radio" class="sp-path" data-spath="${k}" aria-checked="${cur === k}" style="--pc:${P.color || 'var(--line)'}"><span class="spp-ic" aria-hidden="true">${P.icon}</span><span class="spp-t"><b>${P.name}</b><small>${P.desc}</small></span></button>`;
+  return `<div class="sp-paths" role="radiogroup" aria-label="이번 철에 걸을 길"><b class="spp-head">🛤️ 이번 철에 걸을 길</b>${E.PATH_KEYS.map(k => card(k, E.PATHS[k])).join('')}${card('', E.PATH_NONE)}
+    <p class="muted spp-note">길은 주간 목표 · 오는 손님 · 칭호만 바꿔요. 돈 · 수확은 같아요. 철 가운데엔 못 바꾸고 다음 철에 다른 길을 걸어요</p></div>`;
+}
 function openSeasonStart() {
   if (!E.seasonCanStart(st, E.calendar(st.virtual))) return renderDex(true);   // 그새 꽃잠이 끝났으면 줄만 걷음
+  ui.seasonPath = null;                          // 창을 열 때마다 기본 "길 없이"
   const n = E.seasonN(st) + 1, files = !cloudIn();
   openModal(`🌸 ${n}철 시작`, `<div class="season-pop stack" style="gap:10px">
     <p class="sp-lead"><b>정원을 비우고 새 철을 시작할까요?</b><br><span class="muted">다음 월요일 3월이 새 철 1년차예요</span></p>
     <div class="sp-row keep"><b>🌿 이어져요</b><span>정원 등급 · 🌟 손길 점 · 칭호 · 도감 · 🧺 자동 장치 · 🪑 찻집 가꾸기 · 기록</span></div>
     <div class="sp-row clear"><b>🍂 비워져요</b><span>땅 · 꽃 · 돈(15,000원부터) · 씨앗 · 꽃잎 · 티백 · 찻잔 · 용품 · 놓은 장식은 📦 창고로</span></div>
     ${files ? '<div class="sp-save"><span>시작 전에 💾 저장 파일을 받아 두면 좋아요</span><button type="button" class="btn small" id="seasonSave">저장</button></div>' : '<p class="note">☁️ 구글 드라이브에 저장된 직전 정원은 ⚙️ 설정에서 볼 수 있어요</p>'}
+    ${seasonPathPickHTML()}
     <p class="note">안 해도 괜찮아요. 지금 정원을 그대로 이어 가도 잃는 건 없어요.</p></div>`,
     [{ label: '그만두기', act: () => closeModal() }, { label: '새 철 시작', primary: true, act: seasonGo }]);
+  document.querySelectorAll('.sp-paths [data-spath]').forEach(b => b.addEventListener('click', () => {   // P30-04-02 라디오처럼 하나만
+    ui.seasonPath = b.dataset.spath || null;
+    document.querySelectorAll('.sp-paths [data-spath]').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+  }));
   const sb = $('#seasonSave'); if (sb) sb.addEventListener('click', () => { saveClick(); if (!IN_APP) { sb.textContent = '받았어요'; sb.disabled = true; } });
 }
 function seasonGo() {
-  const r = E.seasonStart(st, ctx);              // ctx.rng를 꼭 넘김 — 안 넘기면 땅 600칸 뽑기가 Math.random (CLAUDE.md)
+  const r = E.seasonStart(st, Object.assign({}, ctx, { path: ui.seasonPath || null }));   // ctx.rng를 꼭 넘김 — 안 넘기면 땅 600칸 뽑기가 Math.random (CLAUDE.md) · P30-04-02 고른 길
   if (!r.ok) { closeModal(); return feedback(r.msg, true); }
   ui.selected = null; ui.cart = {}; ui.sigs = {};
   closeModal(); save(); setTab('garden');          // 빈 정원 · 위 막대 🌸 · 철 칭호 창(showNewTitles)은 renderAll이
-  queueToast(`🌸 ${r.season}철이 시작됐어요 · 다음 월요일 3월부터 1년차예요`);
+  const P = r.path && E.PATHS[r.path];
+  queueToast(`🌸 ${r.season}철이 시작됐어요${P ? ` · ${P.icon} ${P.name}로 걸어요` : ''} · 다음 월요일 3월부터 1년차예요`);
   cloudSync('now');   // ☁️ 로그인했으면 새 철 정원을 바로 올림 (옛 철이 다른 기기에서 덮지 않게)
 }
 function recVsHTML(r) {
@@ -102,7 +124,7 @@ function econHTML() {
     <p class="muted ec-note">레시피 블렌드로 팔면 더 받아요. 아직 못 본 꽃은 피우면 보여요.</p></div>`;
 }
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, st.bonus, E.slowView(st), E.seasonN(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)], st.yearly && [st.yearly.at, st.yearly.missed.length, Object.keys(st.yearly.got).length, (st.yearly.years || []).map(r => r.s.join('') + r.m.join(''))]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, st.bonus, E.slowView(st), E.seasonN(st), st.season && st.season.path, (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)], st.yearly && [st.yearly.at, st.yearly.missed.length, Object.keys(st.yearly.got).length, (st.yearly.years || []).map(r => r.s.join('') + r.m.join(''))]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
@@ -145,7 +167,7 @@ function renderDex(force) {
     body = `<div class="dexchips" role="group" aria-label="도감 종류">${chip('all', '기본 도감', n, E.dexTotal(st))}${cats.map(c => chip(c.key, `${c.ic} ${c.title}`, c.got, c.total)).join('')}${econ ? chip('calc', '📊 꽃별 셈', nKnown, FLOWER_KEYS.length) : ''}</div>
       ${cat === 'calc' ? econHTML() : ''}${cats.filter(c => cat === 'all' || c.key === cat).map(c => `${cat === 'all' ? head(c.ic, c.title, c.got, c.total) : ''}${foldGrid('dex-' + c.key, c.grid)}`).join('')}`;   // 못 모은 칸은 접어 둠 (10-17)
   } else if (ui.dexTab === 'year') {
-    body = yearGraphHTML();
+    body = yearGraphHTML() + seasonTableHTML();
   } else if (ui.dexTab === 'journal') {
     body = journalHTML();
   } else {
@@ -154,10 +176,11 @@ function renderDex(force) {
       const total = W * H, order = LAND_KEYS.filter(k => r.counts[k]).sort((a, b) => (a === 'barren') - (b === 'barren') || r.counts[b] - r.counts[a]);
       // 한 해 카드: 왼쪽 그해 정원 그림 (없으면 점선 자리) · 오른쪽 제목과 두 칩(가장 좋은 차 · 도감) · 땅 막대 · 일지
       const land = order.filter(k => k !== 'barren').length;
-      return `<div class="card record">
+      const rp = E.PATHS[r.path];                    // P30-04-01 ④ 그 철 길 색 한 줄 (길 없이면 없음)
+      return `<div class="card record${rp ? ' rec-path' : ''}"${rp ? ` style="--pc:${rp.color}"` : ''}>
         <div class="rec-art">${r.snapshot ? `<img src="${r.snapshot}" alt="${r.year}년차 쉼달 아침의 정원">` : '<div class="rec-noimg"><span>🖼️</span>이 해는 정원 그림이 없어요</div>'}</div>
         <div class="stack" style="gap:10px">
-          <div class="rec-head"><h3>${seasonOn ? `🌸 ${r.season || 1}철 · ` : ''}${r.year}년차 정원</h3>${seasonOn && (r.season || 1) < sNow ? '<span class="rec-past">지난 철</span>' : ''}<span class="muted">땅 ${land}가지</span></div>
+          <div class="rec-head"><h3>${seasonOn ? `🌸 ${r.season || 1}철 · ` : ''}${r.year}년차 정원</h3>${rp ? `<span class="rec-pathname">${rp.icon} ${rp.name}</span>` : ''}${seasonOn && (r.season || 1) < sNow ? '<span class="rec-past">지난 철</span>' : ''}<span class="muted">땅 ${land}가지</span></div>
           ${r.score != null && !E.slowView(st) ? `<div class="rec-score"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders'], ['선물', 'gifts']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${r.scoreParts[k]}`).join(' · ')}</small></div>` : ''}
           ${recVsHTML(r)}${ri === 0 ? bonusRecHTML() + seasonHintHTML() : ''}
           <div class="rec-chips">

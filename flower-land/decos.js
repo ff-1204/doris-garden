@@ -707,4 +707,20 @@ window.VISITOR_ART = {
     '..kbffffffffbk..', '..kfyyfbbfyyfk..', '..kfyefoofeyfk..', '..kbfffoofffbk..',
     '..kbBbBbbBbBbk..', '..kbbBBBBBBbbk..', '..kbBbBbbBbBbk..', '..kbbBBBBBBbbk..',
     '...kbbbbbbbbk...', '....kokkkokk....', '................', '................'] },
+  // P30-04-01 🛤️ 길 손님 3명 (L2-1 10-30): 🐌 꽃길 달팽이 할아버지(잿빛 장밋빛 껍데기 · 흰 눈썹) · 🐿️ 찻길 다람쥐 단골(밤색 · 큰 꼬리 · 찻잔) · 🦡 흙길 오소리 광부(회색 · 흰 줄 · 등불 모자)
+  snail: { pal: { k: '#3e3436', s: '#b08a92', S: '#cfb0b6', d: '#7e6268', b: '#c8bca0', B: '#a89a7c', e: '#2a2220', w: '#eeeae4' }, grid: [
+    '................', '................', '................', '.....kkkk.......',
+    '....kSSSSk......', '...kSsddsSk.....', '...kSdSSdsk.....', '...kSdSdSsk..w.w',
+    '...kSsddSsk..k.k', '....kSssSk...kbk', '.....kkkk...kbek', '..kkbbbbbbbbbbbk',
+    '.kBbbbbbbbbbbbk.', '..kkkkkkkkkkkk..', '................', '................'] },
+  squirrel: { pal: { k: '#3a2e28', r: '#9a6a48', R: '#b88a64', c: '#e2d2b8', e: '#2a2220', t: '#c8c4bc', T: '#8a9a7a' }, grid: [
+    '................', '..........kk....', '...kk....kRRk...', '..kRRk..kRrrRk..',
+    '..kRrRk.krek.k..', '..kRrRkkrrrrk...', '...kRrRkkrcck...', '...kRrRkkrcck...',
+    '....kRRkrrcck...', '.....kRkrrcckk..', '......krrrrktTk.', '......krrrrkttk.',
+    '.....kkrkkrkkk..', '................', '................', '................'] },
+  badger: { pal: { k: '#2e2e30', g: '#7e7c78', G: '#a4a29c', w: '#e8e6e0', e: '#22201e', y: '#d8b46a', h: '#8a6a3e' }, grid: [
+    '................', '.....hhhh.......', '....hhyyhh......', '...kkkkkkkk.....',
+    '..kgwwgwwgk.....', '..kwekwwekw.....', '..kgwwwwwwgk....', '...kgwkkwgkkkk..',
+    '...kgGgggGgGgGk.', '..kgGgGgGgGgGgk.', '..kgggggggggggk.', '..kGgGgGgGgGgGk.',
+    '...kk.kk..kk.kk.', '................', '................', '................'] },
 };
