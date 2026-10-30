@@ -444,6 +444,22 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .wguide .gd-now .data { font-size: 12px; color: var(--muted); margin-left: 4px; }
 .wguide .btn.small { white-space: nowrap; }
 #jWeekly { scroll-margin-top: 84px; }   /* 정원 띠 "보기"로 올 때 위 막대에 가리지 않게 */
+/* P30-01-02 🌳 정원의 층 (L1-2): 등급 쪽 아래 — 지금 층 · 층 칩 줄 · 다음 층 조건 두 줄 (된 것 ✔, 안 된 것은 흐리게) */
+.ly-card { display: grid; gap: 8px; }
+.ly-head { display: flex; align-items: center; gap: 8px; }
+.ly-head b { font-family: var(--font-display); font-size: 17px; }
+.ly-ic { font-size: 22px; }
+.ly-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ly-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 12.5px; border: 1px solid var(--line); color: var(--muted); opacity: .6; }
+.ly-chip.on { opacity: 1; color: inherit; }
+.ly-chip.now { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--panel)); font-weight: 600; }
+.ly-next { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line); }
+.ly-next small { color: var(--muted); font-size: 12.5px; }
+.ly-cond { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); opacity: .7; }
+.ly-cond.ok { color: inherit; opacity: 1; }
+.ly-ok { color: var(--good); }
+.ly-slow { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 14px; }
+#jLayer { scroll-margin-top: 84px; }
 /* P28-05-02-03 🌟 손길 점 (M3-2): 등급 쪽 아래 4칸 — 아이콘 · 이름 · 설명 | 올리기 · 내리기, 좁으면 단추가 아래 줄로 */
 .bn-card { display: grid; gap: 8px; }
 .bn-sum { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
