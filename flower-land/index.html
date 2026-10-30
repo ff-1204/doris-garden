@@ -1354,6 +1354,7 @@ input.tog:checked::before { transform: translateX(17px); }
 body { margin: 0; }
 [hidden] { display: none !important; }   /* 예전엔 serve.js가 씌우던 문서 틀의 기본 스타일 (10-17 Pages 배포용으로 옮김) */
 /* 📘 매뉴얼 (P21): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄 */
+#p-manual .stack { max-width: 760px; margin-inline: auto; }   /* 넓은 화면에선 매뉴얼을 가운데로 (10-30) */
 .mn-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .mn-chips a { font-size: calc(12 * var(--u)); padding: 4px 10px; border-radius: 999px; background: var(--sunk); color: var(--ink); text-decoration: none; border: 1px solid transparent; }
 .mn-chips a:hover { border-color: var(--accent); }
