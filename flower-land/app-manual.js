@@ -180,6 +180,7 @@ function renderSettings() {
       + row('🗓️', '올해만 것', '올해만 확인용 (P30-05) · 다음 계절 첫 달로 · 열지 않은 채 한 해(그동안 계절은 놓침)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devYSeason">다음 계절</button><button type="button" class="btn small" id="devYAway">비운 채 한 해</button></span>')
       + row('⏪', '비운 채 열기', '그동안 확인용 (P30-07) · 마지막으로 연 때를 13주(13해) 또는 3시간 전으로 돌리고 새로고침 (따라잡기는 상한까지만)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devAway13">13해</button><button type="button" class="btn small" id="devAway3h">3시간</button></span>')
       + row('🛤️', '철의 길', '철의 길 확인용 (P30-04) · 새 철 조건을 채우고 길 카드 확인 창을 엶 · 지금 길의 손님을 다음 흐르는 달에 부름', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devPath">새 철 창</button><button type="button" class="btn small" id="devPathVisitor">길 손님</button></span>')
+      + row('🧬', '변이 꽃 피우기', '돌연변이 확인용 (P36) · 정원 첫 꽃(핀 꽃 먼저)을 변이 꽃으로 · 🫙 유리 관 +3 — 품질을 낮추면 2 · 3단계', '<button type="button" class="btn small" id="devMutant">피우기</button>')
       + row('✉️', '소식 채우기', '편지함 확인용 (P31) · 올해만 것 · 손님 · 층 · 무당벌레 · 칭호 소식을 일지에 쓰고 읽은 때를 그 앞으로 → 위 막대 점', '<button type="button" class="btn small" id="devInbox">채우기</button>')
       + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
       + row('👁️', '색약 흉내', '땅 무늬 확인용 (P28-03) · 화면 전체에 색약 필터를 씌워요 · 저장하지 않아요', `<select id="devCvd" class="plantsel">${[['', '꺼짐'], ['protan', '적색약'], ['deutan', '녹색약'], ['tritan', '청색약']].map(([v, l]) => `<option value="${v}" ${v === devCvdOn ? 'selected' : ''}>${l}</option>`).join('')}</select>`)
@@ -236,6 +237,7 @@ function renderSettings() {
   if (DEV) $('#devAway3h').addEventListener('click', () => devAwayOpen(3 * HOUR + 60e3));
   if (DEV) $('#devVisitor').addEventListener('click', devVisitor);   // 개발용 (P30-06)
   if (DEV) $('#devInbox').addEventListener('click', devInboxFill);   // 개발용 (P31)
+  if (DEV) $('#devMutant').addEventListener('click', () => { const r = E.mutDev(st, ctx); save(); renderAll(true); feedback(r.msg, !r.ok); });   // 개발용 (P36)
   if (DEV) $('#devPath').addEventListener('click', () => { devSeasonFill(); if (E.seasonCanStart(st, E.calendar(st.virtual))) openSeasonStart(); });   // 개발용 (P30-04-02)
   if (DEV) $('#devPathVisitor').addEventListener('click', devPathVisitor);
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)

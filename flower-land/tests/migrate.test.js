@@ -208,12 +208,24 @@ console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
 console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 · P28-03)]');
 { const BN = E.MIGRATIONS.findIndex(x => x[0].includes('settings.big'));
   const FN = E.MIGRATIONS.findIndex(x => x[0].includes('awayLast'));
-  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 1, '41번째 보정 · 바로 뒤 42번째가 맨 끝 P32 awayLast · farm');
+  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 2, '41번째 보정 · 바로 뒤 42번째 P32 awayLast · farm');
   check(m.settings.big === false && m.settings.pattern === false, '가장 옛 정원: 둘 다 꺼짐');
   const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN; const om = E.migrateSave(old);
   check(om.settings.big === false && om.settings.pattern === false && om.mig === E.MIGRATIONS.length, '바로 앞 판 정원도 둘 다 꺼짐');
   const has = copy(st); has.settings.big = true; has.settings.pattern = true; has.mig = BN; const hm = E.migrateSave(has);
   check(hm.settings.big === true && hm.settings.pattern === true, '이미 켠 값은 그대로'); }
+
+console.log('[🧬 돌연변이 mut · dex.mutant · dex.mutjar · jar · mutBoost (P36)]');
+{ const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
+  check(MN === 42 && MN === E.MIGRATIONS.length - 1, '43번째 보정 (맨 끝)');
+  check(m.jar === 0 && m.mutBoost === null && JSON.stringify(m.dex.mutant) === '{}' && JSON.stringify(m.dex.mutjar) === '{}', '가장 옛 정원: 유리 관 0 · 빈 돌연변이 도감');
+  const old = copy(st); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
+  old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 12 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
+  const om = E.migrateSave(old);
+  check(om.mig === E.MIGRATIONS.length && om.flowers[0].mut === false && om.flowers[1].mut === undefined, '바로 앞 판 정원: 이미 핀 꽃은 굴리지 않음 · 안 핀 꽃은 처음 필 때');
+  const has = copy(st); has.mig = MN; has.jar = 4; has.dex.mutant = { rose: 2 }; has.dex.mutjar = { rose: true }; has.mutBoost = { week: 9, n: 1 };
+  const hm = E.migrateSave(has);
+  check(hm.jar === 4 && hm.dex.mutant.rose === 2 && hm.dex.mutjar.rose && hm.mutBoost.n === 1, '이미 있는 값은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

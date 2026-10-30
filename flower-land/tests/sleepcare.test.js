@@ -2,6 +2,7 @@
 // 여정: 일요일 꽃잠에 들어온 정원사가 장미를 옆 칸으로 옮겨심고, 라벤더를 꺾꽂이하고, 목마른 꽃에 물을 준다
 //       → 월요일 3월이 되면 시간이 다시 흐르고, 꺾꽂이 묘목은 1달(흐르는 시간) 뒤 창고로 온다
 const E = require(require('path').resolve((process.argv[2] || require('path').join(__dirname, '..', 'engine.js'))));
+{ const c0 = E.create; E.create = (...a) => Object.assign(c0(...a), { gardenId: 'test-garden' }); }   // P36 돌연변이는 정원 이름표 시드라 — 테스트 정원은 같은 이름표로 (무작위 이름표면 1%로 꽃이 변이해 거두기가 흔들림)
 let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails++; };
 const H = E.HOUR, MON = new Date(2026, 9, 5, 6, 0, 0).getTime();
 let seed = 7; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;

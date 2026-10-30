@@ -1,6 +1,7 @@
 // 엔진 검증: 화면 없이 규칙을 시뮬레이션
 const path = require('path');
 const E = require(path.resolve((process.argv[2] || require('path').join(__dirname, '..', 'engine.js'))));
+{ const c0 = E.create; E.create = (...a) => Object.assign(c0(...a), { gardenId: 'test-garden' }); }   // P36 돌연변이는 정원 이름표 시드라 — 테스트 정원은 같은 이름표로 (무작위 이름표면 1%로 꽃이 변이해 거두기가 흔들림)
 const HOUR = E.HOUR;
 let fails = 0;
 const check = (cond, label) => { if (!cond) { fails++; console.log('  ✗ ' + label); } else console.log('  ✓ ' + label); };

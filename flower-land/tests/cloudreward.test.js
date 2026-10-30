@@ -34,7 +34,7 @@ E.applyAccount(nw, T - 2 * H, ctx);
 check(nw.account.reward === T - H && nw.account.firstVisit === T - 2 * H, '첫 방문 이어 붙이기(P20-08)가 받은 때를 지우지 않음');
 
 console.log('[총수: 덤 칭호 · 덤 장식은 따로 셈]');
-check(E.TITLE_KEYS.length === 19 && !E.TITLE_KEYS.includes('t_cloud') && E.EXTRA_TITLE_KEYS[0] === 't_cloud' && E.EXTRA_TITLE_KEYS.slice(1).every(k => E.TITLES[k].season || E.TITLES[k].path), '칭호 19개는 그대로 · 구름 정원사 · 철 칭호(P28-08-04) · 길 칭호(P30-04-01)는 덤');
+check(E.TITLE_KEYS.length === 19 && !E.TITLE_KEYS.includes('t_cloud') && E.EXTRA_TITLE_KEYS[0] === 't_cloud' && E.EXTRA_TITLE_KEYS.slice(1).every(k => E.TITLES[k].season || E.TITLES[k].path || E.TITLES[k].mut), '칭호 19개는 그대로 · 구름 정원사 · 철 칭호(P28-08-04) · 길 칭호(P30-04-01) · 🧬 돌연변이 칭호(P36)는 덤');
 check(!E.DECO_KEYS.includes('cloudstone') && E.EXTRA_DECO_KEYS.join() === 'cloudstone', '구름 돌은 덤 장식');
 const before = fresh(), after = fresh(); E.giveCloudReward(after, null, T, ctx);
 check(E.decoTotal() === E.DECO_KEYS.length + E.GRADE_DECO_KEYS.length + E.TITLE_KEYS.length && E.decoCount(after) === E.decoCount(before), '꾸밈 도감 칸 · 모은 수에 넣지 않음');

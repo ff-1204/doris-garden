@@ -92,7 +92,7 @@ function renderShop(force) {
   const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">달마다 바뀌어요 · 정원에 놓아 꾸며요</span></div>
     <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func || E.DECO_BUFF[k] ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small>${decoBuffHTML(k, 'dk-grade')}</span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
@@ -240,7 +240,7 @@ function renderStore(force) {
     <div class="suptiles">${Object.entries(E.SUPPLIES).map(([k, S]) => {
       const n = st[k] || 0, low = n <= (S.per > 1 ? S.per / 2 : 3);   // 얼마 안 남으면 주황
       return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
-    }).join('')}</div>
+    }).join('')}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
     ${decoStoreHTML()}
     ${pend || resv ? `<div class="cab-head"><span class="sb-title">🚚 도착할 것</span><span class="muted">때가 되면 창고로 들어와요</span></div><div class="argrid">${pend}${resv}</div>` : ''}
     ${rows ? `
@@ -255,6 +255,7 @@ $('#p-store').addEventListener('change', e => { if (e.target.id === 'storeSort')
 $('#p-store').addEventListener('click', e => {
   if (e.target.closest('[data-inbox]')) return openInbox();   // ✉️ 편지함 (10-30)
   const s = e.target.closest('[data-sup]'); if (s) return openSupply(s.dataset.sup);
+  if (e.target.closest('[data-jarinfo]')) return feedback('🫙 정원의 🧬 변이 꽃을 눌러 「유리 관에 담기」로 써요');   // P36-04
   const c = e.target.closest('[data-compost]'); if (c) return openCompost(c.dataset.compost.split(',').map(Number));
   const dp = e.target.closest('[data-decoplace]'); if (dp) { ui.tool = 'deco'; ui.decoId = +dp.dataset.decoplace; return setTab('garden', true); }
   const b = e.target.closest('[data-plant]'); if (!b) return;
@@ -263,9 +264,9 @@ $('#p-store').addEventListener('click', e => {
 // P17-16 창고의 🪴 장식: 종류마다 한 칸 · 창고에 있는 것 / 정원에 놓은 것
 function decoStoreHTML() {
   const ds = st.decos || []; if (!ds.length) return '';
-  const keys = [...new Set(ds.map(d => d.key))];
-  const tiles = keys.map(k => { const all = ds.filter(d => d.key === k), inStore = all.filter(d => d.x == null), out = all.length - inStore.length;
-    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : '', all.some(d => (d.honey || []).length) ? '🍯 꿀이 있어요' : ''].filter(Boolean).join(' · ')}</small>
+  const keys = [...new Set(ds.map(E.decoKey))];   // P36-04 🫙 유리 관은 종 · 단계마다 한 칸
+  const tiles = keys.map(k => { const all = ds.filter(d => E.decoKey(d) === k), inStore = all.filter(d => d.x == null), out = all.length - inStore.length;
+    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : '', all.some(d => (d.honey || []).length) ? '🍯 꿀이 있어요' : ''].filter(Boolean).join(' · ')}</small>${decoBuffHTML(k)}
       ${inStore.length ? `<button type="button" class="btn small primary" data-decoplace="${inStore[0].id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}</div>`; }).join('');
   return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div><div class="decotiles">${tiles}</div>`;
 }
