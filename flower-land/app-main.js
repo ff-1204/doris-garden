@@ -94,7 +94,8 @@ function renderAll(force) {
   const cal = E.calendar(st.virtual);
   $('#restBanner').hidden = !cal.frozen || st.restClosed === cal.week ||   // 닫으면 그 꽃잠 동안은 새로고침해도 안 뜸 (QA 19회차)
     !$('#emptyMap').hidden || !!ui.selected || !!ui.selTile || ui.tool !== 'look';   // 꽃을 고르거나 옮기는 동안엔 가리지 않게 (P04-01-09)
-  if (ui.tab === 'garden') { renderToday(force); renderToolbar(force); renderStatus(force); renderLegend(); renderYear(force); renderGardenLog(force); renderEmpty(force); }
+  if (ui.tab === 'garden') { renderToday(force); renderToolbar(force); renderStatus(force); renderLegend(); renderYear(force); renderEmpty(force); }
+  if (ui.tab === 'settings') renderGardenLog(force);   // 10-30: 📜 정원 일지는 ⚙️ 설정 안 (사용자 요청)
   if (ui.tab === 'shop') renderShop(force);
   if (ui.tab === 'store') renderStore(force);
   if (ui.tab === 'cab' || ui.tab === 'tearoom') renderCab(force);

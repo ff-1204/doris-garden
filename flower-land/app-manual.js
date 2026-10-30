@@ -159,7 +159,7 @@ function renderSettings() {
     const c = s.sleep.on ? '#8e7cc3' : 'var(--line)', stops = hours.map(h => `${on(h) ? c : 'transparent'} ${(h / 24 * 100).toFixed(3)}% ${((h + 1) / 24 * 100).toFixed(3)}%`).join(', ');
     return `<div class="sleepbar" id="sleepBar" data-hours="${hours.filter(on).length}" style="background-image:linear-gradient(90deg, ${stops})"></div><div class="sleepticks"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>`; };
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
-  $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
+  $('#settingsBody').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
     ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
       row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 층 조건 숫자 · 달력 숫자 · 숲 숫자 · 곤충농장 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요. ✉️ 편지함 소식은 숫자 없는 문장만', tog('id="slowOn"', s.slow))
       + row('🔠', '큰 글씨', '글자를 1.25배로 키우고 단추 · 탭을 넓혀요. 그림 크기는 그대로예요', tog('id="bigOn"', s.big))   // P28-01

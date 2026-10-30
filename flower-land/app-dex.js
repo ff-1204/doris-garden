@@ -329,7 +329,7 @@ function logHTML(log, kind) {
   }
   return out;
 }
-// 정원 일지: 정원 상태창 아래, 새 일이 생기면 맨 아래(최근)가 보이게. 접혀 있어도 가장 최근 일 한 줄은 보임
+// 정원 일지: ⚙️ 설정 맨 위(10-30 — 전엔 정원 상태창 아래), 새 일이 생기면 맨 아래(최근)가 보이게. 접혀 있어도 가장 최근 일 한 줄은 보임
 function renderGardenLog(force) {
   const kind = ui.logKind || 'all', sig = st.log.length + '|' + (st.log.length && st.log[st.log.length - 1].text) + '|' + kind;
   if (!force && ui.sigs.glog === sig) return;
@@ -343,7 +343,7 @@ function renderGardenLog(force) {
 }
 $('#logFilter').addEventListener('click', e => { const b = e.target.closest('[data-logk]'); if (!b) return; ui.logKind = b.dataset.logk; renderGardenLog(true); });
 function openLog() {                                  // 알림을 누르면 정원의 일지를 펼쳐서 보여 줌
-  if (ui.tab !== 'garden') setTab('garden');
+  if (ui.tab !== 'settings') setTab('settings');   // 10-30: 일지는 ⚙️ 설정 안
   const d = $('#gardenLog'); d.open = true; renderGardenLog(true);
   d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
