@@ -79,18 +79,17 @@ function cloudSet(state, pending) {
   if (pending) cloud.pending = pending;
   cloudTop(); cloudPaint();
 }
-// 위 막대의 작은 ☁️ (P20-04-02): 로그인했을 때만
+// ⚙️ 설정 탭 아이콘의 점 (10-30 사용자 — 전엔 위 막대 ☁️ 저장됨 칩): 로그인했을 때만 · 초록 = 저장됨 · 저장 중, 빨강 = 못 했어요 · 연결 · 다시 로그인 · 어느 정원
 function cloudTop() {
-  const b = $('#topCloud'); if (!b) return;
+  const b = $('#saveDot'); if (!b) return;
   const on = cloudIn(), s = cloud.state, label = CLOUD_LABEL[s] || '';
   const key = on ? `${s}|${cloud.meta.lastAt || ''}` : '';
   if (b.dataset.k === key) return;
   b.dataset.k = key; b.hidden = !on;
   if (!on) return;
-  b.classList.toggle('warn', ['offline', 'error', 'relogin', 'ask'].includes(s));
-  b.innerHTML = `<span aria-hidden="true">☁️</span>${label ? `<small>${label}</small>` : ''}`;
+  const bad = ['offline', 'error', 'relogin', 'ask'].includes(s);
+  b.classList.toggle('bad', bad); b.classList.toggle('ok', !bad);
   b.title = `구글 드라이브 · ${s === 'saved' && cloud.meta.lastAt ? `${whenText(cloud.meta.lastAt)} 저장` : label || '로그인됨'}`;
-  b.setAttribute('aria-label', b.title);
 }
 // ⚙️ 설정 › 💾 저장 맨 위 ☁️ 줄 (renderSettings가 row 도우미를 넘겨 줌)
 let cloudRowFn = null;
@@ -372,8 +371,4 @@ $('#p-settings').addEventListener('click', e => {
   if (k === 'guide') return cloudInAppGuide();
   if (k === 'now') return cloudTokenOk() ? cloudSync('now') : cloudReconnect('now');
 });
-$('#topCloud').addEventListener('click', () => {
-  if (cloud.state === 'relogin') return cloudReconnect();
-  if (cloud.state === 'ask') return cloudAskOpen();
-  setTab('settings');
-});
+// (10-30) 위 막대 ☁️ 단추는 뺌 — 저장 상태는 ⚙️ 탭 점과 설정 › 💾 저장 줄

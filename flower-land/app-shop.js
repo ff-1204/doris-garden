@@ -172,7 +172,7 @@ function renderStore(force) {
   const cal = E.calendar(st.virtual), yr0 = E.yearOf(st, cal);
   const relYear = y => y <= yr0 ? '올해' : y === yr0 + 1 ? '내년' : `${y - yr0}년 뒤`;   // 10-06: ○년차 대신
   const groups = groupItems();
-  const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx, (st.decos || []).map(d => [d.id, d.x])]);
+  const sig = JSON.stringify([E.inboxUnread(st), groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx, (st.decos || []).map(d => [d.id, d.x])]);
   if (!force && ui.sigs.store === sig) return;
   ui.sigs.store = sig;
   const nextSow = F => { const n = E.untilMonth(st.virtual, c => !c.frozen && F.sow.includes(c.month)); return n ? n.hours : 999; };
@@ -211,7 +211,9 @@ function renderStore(force) {
       <span class="ar-when"><b>${when}</b><small>${sub}</small></span></div>`; };
   const pend = st.pending.map(p => arrive(p.type, p.qs.length, `🌱 ${p.method}`, 'grow', `${cal.frozen ? '정원이 깨어나고 ' : ''}${flowH(Math.max(0, p.dueH))} 뒤`, '뿌리 내리는 중')).join('');
   const resv = st.reservations.filter(r => !r.done).map(r => arrive(r.type, r.qty, '🗓️ 예약', 'resv', `${monthName(MONTHS[r.deliverIdx])} 1일`, `${relYear(r.year)} · 특수 포장`)).join('');
+  const ibOn = E.inboxUnread(st);   // ✉️ 편지함 (P31, 10-30 창고로)
   $('#p-store').innerHTML = `<div class="stack">
+    <div class="card ib-row"><button type="button" class="btn topinbox-btn ${ibOn ? 'on' : ''}" id="storeInbox" data-inbox="1">✉️ 편지함</button><span class="muted">편지와 소식을 한곳에${ibOn ? ' · 새로 온 것이 있어요' : ''}</span></div>
     <div class="shop-news">
       <span><b>🌰 ${total}개</b> ${groups.length ? `${new Set(groups.map(g0 => g0.type)).size}가지 꽃` : '비어 있어요'}</span>
       <span>${cal.frozen ? '🌙 꽃잠에는 품질이 그대로예요' : '한 달에 품질 5%씩 줄어요'}</span>
@@ -233,6 +235,7 @@ function renderStore(force) {
 }
 $('#p-store').addEventListener('change', e => { if (e.target.id === 'storeSort') { ui.storeSort = e.target.value; renderStore(true); } });
 $('#p-store').addEventListener('click', e => {
+  if (e.target.closest('[data-inbox]')) return openInbox();   // ✉️ 편지함 (10-30)
   const s = e.target.closest('[data-sup]'); if (s) return openSupply(s.dataset.sup);
   const c = e.target.closest('[data-compost]'); if (c) return openCompost(c.dataset.compost.split(',').map(Number));
   const dp = e.target.closest('[data-decoplace]'); if (dp) { ui.tool = 'deco'; ui.decoId = +dp.dataset.decoplace; return setTab('garden', true); }

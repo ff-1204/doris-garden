@@ -1,13 +1,13 @@
 // 도리의 정원 — 화면: ✉️ 편지함 (P31-02, 10-30 · app-dex 다음, app-manual 앞에 불림)
-// 위 막대 ✉️ 단추(안 읽은 것이 있으면 점 하나 — 수 배지 없음) → 창 두 칸 ✉️ 편지 · 🔔 소식. 고르는 일은 엔진 inboxOf · inboxUnread · inboxOpen만
+// 📦 창고 탭 ✉️ 편지함 단추 · 창고 탭 아이콘 점(안 읽은 것이 있으면 — 수 배지 없음, 10-30 전엔 위 막대) → 창 두 칸 ✉️ 편지 · 🔔 소식. 고르는 일은 엔진 inboxOf · inboxUnread · inboxOpen만
 'use strict';
 // 위 막대 점 — renderTop이 부름. 엔진 판단은 일지 · 편지함이 바뀔 때만 다시 (그리기마다 일지를 훑지 않게)
 let inboxSig = null, inboxDot = false;
 function inboxTop() {
-  const b = $('#topInbox'); if (!b) return;
+  const b = $('#inboxDot'); if (!b) return;   // 📦 창고 탭 아이콘의 점 (10-30 — 전엔 위 막대 ✉️ 단추)
   const last = st.log[st.log.length - 1], sig = [st.log.length, last && last.at, (st.records || []).length, (st.letterBox || []).length, st.mailSeenAt, E.slowView(st)].join('|');
   if (sig !== inboxSig) { inboxSig = sig; inboxDot = E.inboxUnread(st); }
-  if (b.classList.contains('on') !== inboxDot) { b.classList.toggle('on', inboxDot); b.title = inboxDot ? '편지함 · 새로 온 것이 있어요' : '편지함'; b.setAttribute('aria-label', b.title); }
+  if (b.hidden === inboxDot) { b.hidden = !inboxDot; b.title = inboxDot ? '편지함 · 새로 온 것이 있어요' : ''; const sb = $('#storeInbox'); if (sb) sb.classList.toggle('on', inboxDot); }
 }
 // 언제: 게임 날짜 (느긋하게 보기면 숫자 없이 계절 이름만 — P30-08)
 function inboxWhen(y, m, d) {
@@ -52,4 +52,4 @@ function openInbox() {
   };
   show();
 }
-$('#topInbox').addEventListener('click', openInbox);
+// (10-30) 위 막대 ✉️ 단추는 뺌 — 📦 창고 탭 맨 위 '✉️ 편지함' 단추(app-shop renderStore · data-inbox)가 openInbox를 부름
