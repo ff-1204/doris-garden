@@ -22,6 +22,8 @@ console.log('[한 해 4개 · 결정적]');
   check(keysOf(E.yearlyOf(a)) === keysOf(E.yearlyOf(copy(a))) && JSON.stringify(E.yearlyOf(a, 5)) === JSON.stringify(E.yearlyOf(copy(a), 5)), '같은 정원 같은 해는 같은 결과');
   const yrs = id => [1, 2, 3, 4].map(y => JSON.stringify(E.yearlyOf(fresh(id), y).map(x => [x.key, x.flower]))).join('|');
   check(yrs('yearly-1') !== yrs('yearly-2') && yrs('yearly-2') !== yrs('yearly-3'), '정원 이름표가 다르면 다름');
+  const combos = new Set(Array.from({ length: 400 }, (_, i) => keysOf(E.yearlyOf(fresh('g-' + i), 1))));
+  check(combos.size >= 70, `계절끼리 차례가 따로 섞임 (정원 400곳 첫해 조합 ${combos.size} / 81가지)`);
   const seq = [1, 2, 3].map(y => E.yearlyOf(a, y)[1].key);
   check(new Set(seq).size === 3, `놓친 것이 없으면 해마다 차례로 돌아 3해에 그 계절 3가지를 다 봄 (여름: ${seq.join(' → ')})`);
   const bl = E.YEARLY_KEYS.filter(k => E.YEARLY[k].kind === 'bloom');

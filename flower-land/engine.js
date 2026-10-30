@@ -2441,12 +2441,14 @@ const yearlyNo = st => ((st && st.yearLog) || []).length + 1;    // 올해 번�
 const yearlyOrd = (st, cal) => (yearlyNo(st) - 1) * 4 + (cal.season === 4 ? -0.5 : cal.season);
 const yearlyAt = p => ({ y: Math.floor(p / 4) + 1, s: p % 4 });
 const yearlyWord = (k, f) => YEARLY[k].kind === 'bloom' && f ? `${FLOWERS[f].name} 꽃빛` : YEARLY[k].word;
+// 이름표 해시를 한 번 더 섞음 — FNV만으로는 끝 글자(계절 번호)만 다른 해시끼리 나머지가 닮아 계절끼리 차례가 같이 움직임
+const yearlyHash = str => { let h = hashStr(str); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d) >>> 0; h ^= h >>> 15; h = Math.imul(h, 0x846ca68b) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
 function yearlyPick(st, y, s) {   // 그해 그 계절 것: 놓친 것이 먼저, 없으면 정원 이름표로 정한 차례를 해마다 한 칸씩
   const Y = st.yearly || newYearly(), m = Y.missed.find(x => YEARLY[x.k] && YEARLY[x.k].season === s);
   if (m) return { k: m.k, f: m.f || null, r: 1 };
   const gid = st.gardenId || 'g', ks = YEARLY_KEYS.filter(k => YEARLY[k].season === s);
-  const k = ks[(hashStr(`${gid}|yearly|${s}`) + y - 1) % ks.length], fl = YEARLY[k].flowers;
-  return { k, f: fl ? fl[hashStr(`${gid}|bloom|${y}|${s}`) % fl.length] : null, r: 0 };
+  const k = ks[(yearlyHash(`${gid}|yearly|${s}`) + y - 1) % ks.length], fl = YEARLY[k].flowers;
+  return { k, f: fl ? fl[yearlyHash(`${gid}|bloom|${y}|${s}`) % fl.length] : null, r: 0 };
 }
 function yearlyRow(st, y, keep) {   // 그해 줄 — keep이면 저장 (처음 닿을 때 정해 두어 뒤에 놓친 것이 늘어도 바뀌지 않음), 아니면 미리 보기만
   const Y = st.yearly || newYearly();
@@ -2510,7 +2512,11 @@ function yearlyNow(st, cal) {   // 지금 계절의 올해만 것 | null (꽃잠
 const yearlyMissedAll = st => ((st.yearly && st.yearly.missed) || []).filter(m => YEARLY[m.k]).map(m => ({ key: m.k, season: YEARLY[m.k].season, seasonName: SEASONS[YEARLY[m.k].season], name: yearlyWord(m.k, m.f), icon: YEARLY[m.k].icon, year: m.y, flower: m.f || null }));
 const yearlySeen = (st, key) => !!(st.yearly && st.yearly.got && st.yearly.got[key] != null);
 const yearlyCount = st => YEARLY_KEYS.filter(k => yearlySeen(st, k)).length;
-const yearlyDex = st => YEARLY_KEYS.map(k => ({ key: k, name: YEARLY[k].name, icon: YEARLY[k].icon, season: YEARLY[k].season, seasonName: SEASONS[YEARLY[k].season], desc: YEARLY[k].desc, got: yearlySeen(st, k), hint: `${SEASONS[YEARLY[k].season]}에 와요` }));
+function yearlyDex(st) {   // 📖 도감 🗓️ 올해만 칩 12칸 — flower: 꽃빛이면 가장 최근에 본 꽃 (그 꽃의 다른 빛 그림)
+  const rows = ((st.yearly && st.yearly.years) || []).slice().reverse();
+  return YEARLY_KEYS.map(k => { const T = YEARLY[k], r = T.kind === 'bloom' && rows.find(x => x.s[T.season] && x.k[T.season] === k);
+    return { key: k, name: T.name, icon: T.icon, kind: T.kind, season: T.season, seasonName: SEASONS[T.season], desc: T.desc, got: yearlySeen(st, k), flower: r ? r.f[T.season] : null, hint: `${SEASONS[T.season]}에 와요` }; });
+}
 function yearlyPast(st, n) {   // 달력 "지난 해들": 올해 전 최근 n해 (본 것 · 놓친 것)
   const Y = st.yearly || newYearly(), now = yearlyNo(st);
   return Y.years.filter(r => r.y < now).slice(-(n || 3)).map(r => ({ year: r.y, items: r.k.map((_, s) => yearlyItem(r, s, Y.at)) }));
