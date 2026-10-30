@@ -1,6 +1,7 @@
 // P28-01 🔠 큰 글씨 · P28-03 🧩 땅 무늬 보기 (M4 10-30): 판단 함수 · 기본 꺼짐 · 저장 · 예전 정원 보정 · 새 철 뒤 유지 · 켜도 규칙 그대로 · 무늬 10가지가 모두 다름
 const path = require('path');
 const E = require(path.resolve((process.argv[2] || path.join(__dirname, '..', 'engine.js'))));
+{ const c0 = E.create; E.create = (...a) => Object.assign(c0(...a), { gardenId: 'test-garden' }); }   // P36 돌연변이는 정원 이름표 시드라 — 테스트 정원은 같은 이름표로 (무작위 이름표면 1%로 꽃이 변이해 거두기가 흔들림)
 let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails++; };
 const H = E.HOUR, WEEK = 7 * 24 * H, ctx = { live: false, rng: () => 0.5 };
 const copy = o => JSON.parse(JSON.stringify(o));
