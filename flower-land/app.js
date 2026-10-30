@@ -306,7 +306,7 @@ const ctx = {
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
 const AWAY_H = 3;
-const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0, grade: E.gradeOf(st).grade, weekly: E.weeklySnap(st), auto: E.autoStats(st) });
+const awaySnap = () => ({ real: st.lastReal, money: st.money, log: st.log.length, last: st.log[st.log.length - 1] || null, recTop: st.records[0] || null, energy: st.mine ? st.mine.energy : 0, grade: E.gradeOf(st).grade, weekly: E.weeklySnap(st), auto: E.autoStats(st), long: E.awayLongSnap(st) });   // long: P30-07 그동안 (해마다 기록 줄 수 · 달력 차례)
 function awayDiff(b) {
   const h = (Date.now() - b.real) / HOUR;
   if (h < AWAY_H || !st.onboarded) return null;
@@ -321,7 +321,8 @@ function awayDiff(b) {
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
-  return { h, lines, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
+  const long = E.awayLinesText(E.awayLines(st, b.real, b.long, Date.now()));   // P30-07 🍃 그동안 세 줄 — 1해(1주) 미만이면 null
+  return { h, lines, long, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
 }
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)
 function catchUp() {

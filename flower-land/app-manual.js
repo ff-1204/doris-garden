@@ -113,11 +113,14 @@ function renderManual(force) {
         + fig(`<div class="mn-icons">${item(ico('🗓️'), '주간 목표', '그 길 쪽이 자주')}${item(ico('🐾'), '길 손님', '그 길에만 와요')}${item(titleImg('t_path_tea', 40, st.titles.t_path_tea == null), '길 칭호', '한 철을 마치면')}${item(ico('📖'), '기록 카드', '길 색 한 줄')}</div>`,
           '길이 바꾸는 건 이 넷뿐이에요 · 돈 · 수확 · 꽃 값 · 경험치는 어느 길이든 같아요 · 📖 도감 › 📈 해마다 아래 "철마다" 표에서 지난 철과 견줘요')); })(),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
-      cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
+      (cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
         ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
           `구글로 로그인해 두어 정원이 내 드라이브에도 저장돼요 · 다른 기기에서 같은 계정으로 로그인하면 이어 해요 · 오래 비워도 다시 열면 최대 ${E.bonusVal(st, 'catchup')}주를 따라잡아요`)
         : fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${item(ico('💾'), '저장하기', '.json 파일로')}${arrow('›')}${item(ico('📂'), '불러오기', '다른 기기에서')}${item(ico('↩️'), '되돌리기', '불러오기 직전으로')}${cloud.on ? item(ico('☁️'), '구글 드라이브', '로그인하면 내 드라이브에') : ''}</div>`,
-          `브라우저 데이터를 지우면 정원이 사라질 수 있어요 · ⚙️ 설정 › 💾 저장에서 가끔 파일로 받아 두세요 · 오래 비워도 다시 열면 최대 ${E.bonusVal(st, 'catchup')}주를 따라잡아요`)),
+          `브라우저 데이터를 지우면 정원이 사라질 수 있어요 · ⚙️ 설정 › 💾 저장에서 가끔 파일로 받아 두세요 · 오래 비워도 다시 열면 최대 ${E.bonusVal(st, 'catchup')}주를 따라잡아요`))
+      // P30-07 오래 쉬었다 와도: 🌙 자리를 비운 동안 창 아래 🍃 그동안 세 줄
+      + fig(`<div class="mn-flow">${item(ico('🌙'), '자리를 비운 동안', '3시간 넘게 비우면')}${arrow()}${item(ico('🍃'), '그동안', '1주(1해) 넘게 비우면')}</div>`,
+        '오래 쉬었다 와도 꽃은 그대로 기다려요 · 지나간 해 · 못 본 올해만 것(다음 해 그 계절에 다시 와요) · 다음 층까지 남은 것을 세 줄로 알려 줘요')),
   ].join('');
   $('#p-manual').innerHTML = `<div class="stack"><div class="sectionhead"><span class="sb-title" style="font-family:var(--font-display);font-weight:700;font-size:16px">📘 매뉴얼</span><span class="muted">그림으로 보는 정원 규칙</span></div>
     <nav class="mn-chips" aria-label="매뉴얼 차례">${MN_SECS.map(([k, l]) => `<a href="#mn-${k}" data-mn="${k}">${l}</a>`).join('')}</nav>${body}</div>`;
@@ -154,6 +157,7 @@ function renderSettings() {
       + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
       + row('🌳', '해 8개 쌓기', '정원의 층 확인용 (P30-01) · 3층까지 열고 해마다 기록 8줄 · 꽃 13종 도감', '<button type="button" class="btn small" id="devLayer">쌓기</button>')
       + row('🗓️', '올해만 것', '올해만 확인용 (P30-05) · 다음 계절 첫 달로 · 열지 않은 채 한 해(그동안 계절은 놓침)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devYSeason">다음 계절</button><button type="button" class="btn small" id="devYAway">비운 채 한 해</button></span>')
+      + row('⏪', '비운 채 열기', '그동안 확인용 (P30-07) · 마지막으로 연 때를 13주(13해) 또는 3시간 전으로 돌리고 새로고침 (따라잡기는 상한까지만)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devAway13">13해</button><button type="button" class="btn small" id="devAway3h">3시간</button></span>')
       + row('🛤️', '철의 길', '철의 길 확인용 (P30-04) · 새 철 조건을 채우고 길 카드 확인 창을 엶 · 지금 길의 손님을 다음 흐르는 달에 부름', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devPath">새 철 창</button><button type="button" class="btn small" id="devPathVisitor">길 손님</button></span>')
       + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
@@ -199,6 +203,8 @@ function renderSettings() {
   if (DEV) $('#devLayer').addEventListener('click', devLayerFill);   // 개발용 (P30-01-02)
   if (DEV) $('#devYSeason').addEventListener('click', () => devYearly(false));   // 개발용 (P30-05)
   if (DEV) $('#devYAway').addEventListener('click', () => devYearly(true));
+  if (DEV) $('#devAway13').addEventListener('click', () => devAwayOpen(13 * 7 * 24 * HOUR));   // 개발용 (P30-07)
+  if (DEV) $('#devAway3h').addEventListener('click', () => devAwayOpen(3 * HOUR + 60e3));
   if (DEV) $('#devVisitor').addEventListener('click', devVisitor);   // 개발용 (P30-06)
   if (DEV) $('#devPath').addEventListener('click', () => { devSeasonFill(); if (E.seasonCanStart(st, E.calendar(st.virtual))) openSeasonStart(); });   // 개발용 (P30-04-02)
   if (DEV) $('#devPathVisitor').addEventListener('click', devPathVisitor);
@@ -235,6 +241,13 @@ function devYearly(away) {
   if (away) { ctx.live = false; E.advance(st, st.virtual + 7 * 24 * HOUR, ctx); ctx.live = true; E.yearlyMark(st, E.calendar(st.virtual), ctx); }
   else { const s0 = E.calendar(st.virtual).season; let t = E.calendar(st.virtual).slotEnd; while (E.calendar(t).season === s0) t = E.calendar(t).slotEnd; E.advance(st, t + 1000, ctx); }
   const it = E.yearlyNow(st); save(); renderAll(true); feedback(it ? `${E.SEASONS[it.season]} · ${it.icon} ${it.name}` : '꽃잠이에요');
+}
+// 개발용 (P30-07): 마지막으로 연 때를 ms만큼 앞으로 돌려 저장하고 새로고침 → 열 때 따라잡기 · 🌙 자리를 비운 동안 창 (save()는 lastReal을 지금으로 쓰니 직접 씀)
+function devAwayOpen(ms) {
+  st.lastReal = Date.now() - ms;
+  try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { return feedback('저장을 못 했어요', true); }
+  saveOff = true;                                 // 새로고침 직전 pagehide 저장이 lastReal을 되돌리지 않게
+  location.reload();
 }
 // 개발용 (P30-06): 🦔 고슴도치 할머니 부르기 — 나무 그네가 정원에 없으면 둘레가 빈 칸에 놓고(창고 것 · 없으면 새로), 앉아 있으면 떠난 것으로 치고, 부른 뒤 다음 흐르는 달로
 function devVisitor() {
