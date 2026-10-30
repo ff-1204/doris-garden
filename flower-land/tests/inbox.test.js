@@ -54,7 +54,7 @@ add(9, '🌳 정원 뒤에 작은 숲이 생겼어요');
 add(9, '🍵 정원의 2층 찻집이 열렸어요');
 add(7, '🌸 2철을 시작했어요 · 🍵 찻길로 걸어요 · 다음 월요일 3월이 새 철 1년차예요');
 add(15, '캐모마일 차 2잔 주문을 받은 손님이 작은 조개를 두고 갔어요');
-add(19, '숲 바람이 잡초 3포기를 걷어 갔어요');
+add(19, '무당벌레가 잡초 3포기를 치웠어요');
 add(9, '🏅 새 칭호: 꽃잎 수집가');
 add(9, '도감에 등록: 장미');                      // 소식 아님
 add(17, '📮 새 편지가 왔어요 · 도리「안녕」');       // 편지 칸 (소식 아님)
@@ -91,9 +91,9 @@ N.settings.slow = true;
 ib = E.inboxOf(N);
 check(ib.news.every(n => !/\d/.test(n.text)), '소식 줄에 숫자 0개');
 { const S = copy(N); S.log = S.log.filter(l => !l.text.includes('시험')); const s = E.inboxOf(S).news;
-  check(s.some(n => n.text === '숲 바람이 잡초를 걷어 갔어요') && s.some(n => n.text === '새 철을 시작했어요 · 🍵 찻길로 걸어요') && s.some(n => n.text === '🍵 찻집이 열렸어요'), '숫자가 든 줄은 숫자 없는 문장으로 (숲 바람 · 새 철 · 층)');
+  check(s.some(n => n.text === '무당벌레가 잡초를 치웠어요') && s.some(n => n.text === '새 철을 시작했어요 · 🍵 찻길로 걸어요') && s.some(n => n.text === '🍵 찻집이 열렸어요'), '숫자가 든 줄은 숫자 없는 문장으로 (숲 바람 · 새 철 · 층)');
   check(!s.some(n => n.kind === 'memento') && s.length === 9, '그래도 숫자가 남는 줄(주문 기념품 "2잔")은 뺌');
-  check(!E.inboxUnread(S) && (E.inboxOpen(S), S.log.push({ y: 1, m: 3, d: 1, type: 19, text: '숲 바람이 잡초 2포기를 걷어 갔어요', at: S.virtual + 1 }), E.inboxUnread(S)), '숫자 줄이 고쳐져 보이면 점도 생김'); }
+  check(!E.inboxUnread(S) && (E.inboxOpen(S), S.log.push({ y: 1, m: 3, d: 1, type: 19, text: '무당벌레가 잡초 2포기를 치웠어요', at: S.virtual + 1 }), E.inboxUnread(S)), '숫자 줄이 고쳐져 보이면 점도 생김'); }
 N.settings.slow = false;
 
 console.log('[쉼달 기록으로 옮겨진 일지 · 저장 · 새 철]');

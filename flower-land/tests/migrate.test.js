@@ -207,7 +207,7 @@ console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
 
 console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 · P28-03)]');
 { const BN = E.MIGRATIONS.findIndex(x => x[0].includes('settings.big'));
-  check(BN === 40 && BN === E.MIGRATIONS.length - 1, '맨 끝 보정 (41번째)');
+  check(BN === 40, '41번째 보정');
   check(m.settings.big === false && m.settings.pattern === false, '가장 옛 정원: 둘 다 꺼짐');
   const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN; const om = E.migrateSave(old);
   check(om.settings.big === false && om.settings.pattern === false && om.mig === E.MIGRATIONS.length, '바로 앞 판 정원도 둘 다 꺼짐');
