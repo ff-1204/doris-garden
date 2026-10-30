@@ -201,7 +201,7 @@ function spriteURL(key, kind, locked) {
   if (spriteCache[id]) return spriteCache[id];
   const isPetal = kind === 'petal' || kind === 'dried';
   const grid = kind === 'tea' ? SPR.cup : isPetal ? PETAL_GRID : kind === 'form' ? FORM_GRID[FLOWERS[key].life === 'tree' ? 'tree' : FLOWERS[key].form] : kind === 'teabag' ? TEABAG_GRID : SPR.flowers[key];
-  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, E.CUP_SETS[cupSet].pal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : SPR.pal[key];
+  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, E.CUP_SETS[cupSet].pal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : kind === 'alt' ? Object.assign({}, SPR.pal[key], window.YEARLY_ART.bloom[key].pal) : SPR.pal[key];   // alt: P30-05-02 올해의 꽃빛 (같은 도트 그림에 대체 팔레트)
   const c = document.createElement('canvas'); c.width = c.height = 16;
   const x = c.getContext('2d');
   grid.forEach((row, j) => [...row].forEach((ch, i) => {
@@ -285,6 +285,7 @@ const ctx = {
   toast: (text) => queueToast(text),
   onRecord: rec => { try { draw(); rec.snapshot = snapshot(); } catch (e) { /* 그림 없이 기록 */ } },
   onGrade: e => { if (ctx.live) gradeToasts(e); },   // 🌱 등급이 오르면 알림 한 줄 (P28-05-01, M1-4) · 따라잡는 동안 오른 것은 '자리를 비운 동안' 한 줄로
+  onYearly: e => { if (ctx.live) setTimeout(() => queueToast(e.text), 600); },   // 🗓️ 올해만 오는 것을 이 계절 처음 본 때 알림 한 줄 (P30-05-02) — 숫자가 아니라 느긋하게 보기여도 · 열 때 부르니 알림 칸이 준비된 뒤로
 };
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
@@ -314,6 +315,7 @@ function catchUp() {
   else E.advance(st, st.virtual + gap, ctx);
   st.lastReal = now;
   ctx.live = true;
+  E.yearlyMark(st, E.calendar(st.virtual), ctx);  // P30-05-01 열었음(다시 볼 때도) = 이 계절 올해만 것을 봄 — 켜 둘 필요 없음
 }
 const awayBefore = awaySnap();
 catchUp();

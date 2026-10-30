@@ -129,8 +129,34 @@ function tileColor(i) {
   return `rgb(${[0, 1, 2].map(j => Math.round((bare[j] + (target[j] - bare[j]) * a) * sh)).join(',')})`;
 }
 function ell(x, y, rx, ry, rot, fill) { g.fillStyle = fill; g.beginPath(); g.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot, 0, 7); g.fill(); }
+// 🗓️ 올해만 오는 것 (P30-05-02, L1-4 10-30): 지금 계절 것이 날씨면 지도 위에 반투명 도트 한 겹(decos.js YEARLY_ART — 16px 정수배, CSS로 아주 느리게 · 움직임 줄이기면 멈춤),
+// 꽃빛이면 그 꽃의 지도 꽃잎 색만 바꿈. 그림뿐이라 꽃 값 · 자람 · 수확은 그대로. 판단은 E.yearlyNow 하나
+const yartCache = {};
+function yartURL(k) {
+  if (yartCache[k]) return yartCache[k];
+  const A = window.YEARLY_ART[k], sp = A.sparse || 1, c = document.createElement('canvas'); c.width = c.height = 16 * sp; const x = c.getContext('2d');
+  for (const [ox, oy] of A.spots || [[0, 0]]) A.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && A.pal[ch]) { x.fillStyle = A.pal[ch]; x.fillRect((ox + i) % c.width, (oy + j) % c.height, 1, 1); } }));   // 성긴 타일: 한 칸 안 여러 자리에 (넘치면 맞은편으로 — 이음매 없음)
+  return (yartCache[k] = c.toDataURL());
+}
+let yearSkyMemo = null;
+function yearSkyNow(cal) {   // { key: 날씨 키 | null, bloom: 꽃빛 꽃 | null } — draw는 프레임마다라 같은 달 · 같은 달력이면 다시 셈하지 않음
+  const Y = st.yearly || {}, id = [cal.abs, st.gardenId, (st.yearLog || []).length, Y.at, (Y.missed || []).length, (Y.years || []).length].join('|');
+  if (!yearSkyMemo || yearSkyMemo.id !== id) { const it = E.yearlyNow(st, cal); yearSkyMemo = { id, key: it && it.kind === 'weather' ? it.key : null, bloom: it && it.kind === 'bloom' ? it.flower : null }; }
+  return yearSkyMemo;
+}
+function renderYearSky(cal) {
+  const el = $('#yearSky'); if (!el) return;
+  const k = yearSkyNow(cal).key, A = k && window.YEARLY_ART[k], big = Math.max(3, Math.floor(canvas.clientWidth * 0.24 / 16));
+  const sig = [k, big, canvas.offsetTop, canvas.offsetHeight].join('|');
+  if (el.dataset.sig === sig) return;
+  el.dataset.sig = sig; el.hidden = !A;
+  if (!A) { el.innerHTML = ''; return; }
+  el.style.top = canvas.offsetTop + 'px'; el.style.height = canvas.offsetHeight + 'px'; el.style.background = A.tint || '';
+  el.innerHTML = A.tile ? `<i class="ys-tile ys-${A.tile}" style="background-image:url(${yartURL(k)});background-size:${48 * (A.sparse || 1)}px;--p:${48 * (A.sparse || 1)}px"></i>` : `<img class="px ys-big ys-${A.big}" src="${yartURL(k)}" width="${16 * big}" height="${16 * big}" alt="">`;
+}
 function drawFlower(f, cal) {
-  const F = FLOWERS[f.type], cx = (f.x + 0.5) * cell, cy = (f.y + 0.5) * cell, R = cell * 0.46;
+  const F0 = FLOWERS[f.type], alt = yearSkyMemo && yearSkyMemo.bloom === f.type && window.YEARLY_ART.bloom[f.type];   // P30-05-02 올해의 꽃빛: 그 꽃의 꽃잎 색만 바꿈
+  const F = alt ? Object.assign({}, F0, { petal: alt.petal, center: alt.center }) : F0, cx = (f.x + 0.5) * cell, cy = (f.y + 0.5) * cell, R = cell * 0.46;
   g.save(); g.translate(cx, cy);
   // 심은 칸 받침: 옅은 흙빛 동그라미 — 땅 색 위에서도 꽃이 잘 보이게 (10-06)
   g.fillStyle = 'rgba(255,248,236,.42)'; g.strokeStyle = 'rgba(90,70,50,.22)'; g.lineWidth = Math.max(1, cell * 0.04);
@@ -207,6 +233,7 @@ function draw() {
   if (!canvas.width) return;
   updateRing();
   const cal = E.calendar(st.virtual);
+  renderYearSky(cal);                              // P30-05-02 올해만 오는 날씨 (꽃빛은 아래 drawFlower가 읽음)
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, tl = st.tiles[i];

@@ -217,6 +217,20 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .snack[hidden] { display: none; }
 .snack.warn { background: rgba(122,64,24,.95); }
 .snack button { background: rgba(255,255,255,.18); color: inherit; }
+/* P30-05-02 🗓️ 올해만 오는 날씨: 지도 위 반투명 도트 한 겹 — 타일은 16×3배(성긴 타일은 칸이 2 · 3배 — 흐르는 거리가 칸의 배수라 이음매 없음) · 큰 그림은 16의 정수배, 아주 느리게 흐르고 움직임 줄이기면 멈춤 (깜빡임 없음) */
+.ysky { position: absolute; left: 0; right: 0; pointer-events: none; overflow: hidden; }
+.ysky[hidden] { display: none; }
+.ys-tile { position: absolute; inset: 0; background-repeat: repeat; background-size: 48px 48px; image-rendering: pixelated; opacity: .6; animation: ys-fall 240s linear infinite; }
+.ys-tile.ys-side { animation-name: ys-side; opacity: .55; background-position: 0 30%; }
+.ys-tile.ys-float { animation-name: ys-float; animation-duration: 300s; opacity: .8; }
+@keyframes ys-fall { from { background-position: 0 0; } to { background-position: var(--p) calc(var(--p) * 4); } }
+@keyframes ys-side { from { background-position: 0 30%; } to { background-position: calc(var(--p) * 4) 30%; } }
+@keyframes ys-float { from { background-position: 0 0; } to { background-position: calc(var(--p) * 2) calc(var(--p) * -1); } }
+.ys-big { position: absolute; image-rendering: pixelated; opacity: .55; }
+.ys-big.ys-top { left: 50%; top: 0; transform: translateX(-50%); }
+.ys-big.ys-right { right: 6%; top: 4%; opacity: .7; }
+.ys-big.ys-left { left: 4%; top: 4%; opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .ys-tile { animation: none; } }
 .emptyhint { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding: 16px; }
 .emptyhint[hidden] { display: none; }
 .emptyhint .box { pointer-events: auto; background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; text-align: center; display: grid; gap: 8px; max-width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
@@ -1328,6 +1342,7 @@ body { margin: 0; }
               <div class="mapframe">
                 <div class="yearstrip" id="yearBox" role="img" aria-label="올해의 흐름"></div>
                 <canvas id="map" aria-label="정원 지도"></canvas>
+                <div class="ysky" id="yearSky" aria-hidden="true" hidden></div>
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
