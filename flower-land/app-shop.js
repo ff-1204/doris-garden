@@ -99,7 +99,7 @@ function renderShop(force) {
   // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 정원 저장고 +3칸 (장식이 아니라 정원 등급이 주는 것 · 손길 점은 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
   const gSlow = E.slowView(st);
   const gradeGift = g => { const cap = E.PANTRY_CAPS.find(c => c[0] === g); if (!cap) return '';
-    return `<small class="dk-grade">🌱 ${gSlow ? '이 등급이 되면 · 🧺 정원 저장고 칸이 늘어요' : `${g}등급이 되면 · 🧺 정원 저장고 +${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`}</small>`; };
+    return `<small class="dk-grade">🧺 정원 저장고 ${gSlow ? '칸이 늘어요' : `+${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`}</small>`; };   // 10-30 "🌱 n등급이 되면" 머리말은 뺌 (사용자 요청)
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 한 번 들어온 장식은 계속 팔아요</span></div>
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
