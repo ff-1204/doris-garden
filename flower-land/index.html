@@ -857,30 +857,48 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .away-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: calc(13 * var(--u)); }
 .away-log li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; }
 .away-long { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }   /* P30-07 🍃 그동안 */
-/* P24 광산 (10-24) */
-.mine-pop { display: grid; gap: 10px; }
-#p-mine .mine-pop { max-width: 560px; }   /* 탭이 넓어도 판 칸이 커지지 않게 (예전 창 폭) */
-.mine-head { display: flex; justify-content: space-between; align-items: baseline; }
-.mine-energy { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: calc(13 * var(--u)); }
+/* P24 광산 (10-24) · P24 UI (10-30): 화면 폭에 맞는 판 · PC 두 칸(왼쪽 판 · 오른쪽 가방 · 만들기) */
+.mine-pop { display: grid; gap: 14px; min-width: 0; }
+#p-mine .mine-pop { max-width: 560px; }   /* 좁은 화면 · 보통 폭: 한 칸 (예전 창 폭) */
+.mine-main, .mine-side { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.mine-side { gap: 14px; }
+.mine-pop > .note { margin: 0; }
+@media (min-width: 1100px) {
+  #p-mine .mine-pop { max-width: 1040px; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); align-items: start; }
+  .mine-pop > .note { grid-column: 1 / -1; }
+}
+.mine-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; }
+.mine-energy { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; font-size: calc(13 * var(--u)); }
+.mine-energy > span:first-child { white-space: nowrap; }
 .me-bar { display: inline-flex; gap: 2px; }
 .me-bar i { width: 12px; height: 12px; background: var(--line); }
 .me-bar i.on { background: #c8963e; }
-.mine-grid { display: grid; grid-template-columns: repeat(var(--mw), 1fr); gap: 2px; padding: 6px; background: #3b3128; }
-.mc { aspect-ratio: 1; display: grid; place-items: center; border: 0; padding: 0; background: #7a6a58; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); cursor: pointer; }
-.mc:hover:not(:disabled) { background: #8a7a66; }
+.mine-wait, .mine-done { margin: 0; padding: 6px 10px; text-align: center; font-size: calc(13 * var(--u)); background: var(--sunk); border: 1px dashed var(--line); }
+.mine-done { font-weight: 600; }
+.mine-grid { container-type: inline-size; display: grid; grid-template-columns: repeat(var(--mw), minmax(0, 1fr)); gap: 2px; padding: 6px; background: #3b3128; }
+.mc { aspect-ratio: 1; min-width: 0; display: grid; place-items: center; border: 0; padding: 0; background: #7a6a58; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); cursor: pointer; position: relative; overflow: hidden; }
+.mc:not(:disabled):not(.dug):hover, .mc:not(:disabled):not(.dug):focus-visible { background: #93826d; outline: 2px solid #f0d58a; outline-offset: -2px; }
 .mc:disabled { cursor: default; opacity: .8; }
 .mc.dug { background: #4e4238; box-shadow: inset 0 2px 0 rgba(0,0,0,.35); cursor: default; }
-.mc img.px { width: 32px; height: 32px; }   /* 16px의 2배 (P16-14) */
-.mc.dug { position: relative; }
-.mc-st { position: absolute; right: 1px; bottom: 1px; line-height: 0; }
+.mc.dug.st { background: #5a4a3a; box-shadow: inset 0 0 0 2px #e0b84a; }   /* 계단 칸: 금빛 테두리 */
+.mc img.px { width: 16px; height: 16px; }   /* 칸이 작으면 16px ×1 */
+@container (min-width: 290px) { .mc img.px { width: 32px; height: 32px; } }   /* 칸이 34px쯤 넘으면 ×2 (P16-14 정수배) */
+.mc .mc-st { position: absolute; right: 1px; bottom: 1px; line-height: 0; }
 .mc .mc-st img.px { width: 16px; height: 16px; }
 .mine-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .mine-acts:empty { display: none; }
-.mine-bag { display: flex; flex-wrap: wrap; gap: 10px; }
+.mine-sec { display: grid; gap: 8px; min-width: 0; }
+.mine-sub { margin: 0; font-size: calc(14 * var(--u)); font-weight: 700; }
+.mine-bag { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px 8px; }
+.mine-it { display: grid; justify-items: center; align-content: start; gap: 2px; text-align: center; font-size: calc(12 * var(--u)); min-width: 0; }
+.mine-use { font-size: calc(10.5 * var(--u)); color: var(--muted); line-height: 1.3; word-break: keep-all; }
 .mine-crafts { display: grid; gap: 6px; }
-.mcraft { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; }
-.mcraft.can { border-color: var(--accent); }
-.mcr-main { display: grid; } .mcr-main small { font-size: calc(11.5 * var(--u)); color: var(--muted); }
+.mcraft { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; }
+.mcraft.can { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.mcr-main { display: grid; gap: 3px; min-width: 0; } .mcr-main small { font-size: calc(11.5 * var(--u)); color: var(--muted); }
+.mcr-bar { display: block; height: 6px; background: var(--line); }
+.mcr-bar i { display: block; height: 100%; background: #c8963e; }
+.mcraft.can .mcr-bar i { background: var(--accent); }
 /* P18 꿀 (10-24) */
 .honeyshelf, .hive-jars, .honeypick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .honeyshelf { justify-content: flex-start; padding: 8px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }
