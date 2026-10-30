@@ -92,14 +92,14 @@ function renderShop(force) {
   const decoSection = decoNow.length ? `<div class="cab-head"><span class="sb-title">🪴 이달의 장식</span><span class="muted">달마다 바뀌어요 · 정원에 놓아 꾸며요</span></div>
     <div class="decoshop">${decoNow.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small>${decoBuffHTML(k)}<small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func || E.DECO_BUFF[k] ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 땅 · 꽃에는 영향이 없어요</span></div>
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small>${decoBuffHTML(k)}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${open ? `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>` : `<span class="muted">🔒 ${D.grade}등급에 열려요</span>`}</span></div>`; }).join('')}</div>`;
   // P30-03 🌳 숲: 4층이 열린 뒤에만 · 묘목 6가지를 돈으로 (나무는 팔지 않고 열매 · 수입 없음) — 사면 바로 숲의 첫 빈 자리에 심음 (꽃잠에도)
   const fo = E.forestOpen(st) ? E.forestOf(st) : null;
@@ -247,7 +247,7 @@ function decoStoreHTML() {
   const ds = st.decos || []; if (!ds.length) return '';
   const keys = [...new Set(ds.map(d => d.key))];
   const tiles = keys.map(k => { const all = ds.filter(d => d.key === k), inStore = all.filter(d => d.x == null), out = all.length - inStore.length;
-    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b>${decoBuffHTML(k)}<small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : '', all.some(d => (d.honey || []).length) ? '🍯 꿀이 있어요' : ''].filter(Boolean).join(' · ')}</small>
+    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : '', all.some(d => (d.honey || []).length) ? '🍯 꿀이 있어요' : ''].filter(Boolean).join(' · ')}</small>
       ${inStore.length ? `<button type="button" class="btn small primary" data-decoplace="${inStore[0].id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}</div>`; }).join('');
   return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div><div class="decotiles">${tiles}</div>`;
 }
