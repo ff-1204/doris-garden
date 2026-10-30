@@ -285,7 +285,7 @@ const ctx = {
   toast: (text) => queueToast(text),
   onRecord: rec => { try { draw(); rec.snapshot = snapshot(); } catch (e) { /* 그림 없이 기록 */ } },
   onGrade: e => { if (ctx.live) gradeToasts(e); },   // 🌱 등급이 오르면 알림 한 줄 (P28-05-01, M1-4) · 따라잡는 동안 오른 것은 '자리를 비운 동안' 한 줄로
-  onYearly: e => { if (ctx.live) setTimeout(() => queueToast(e.text), 600); },   // 🗓️ 올해만 오는 것을 이 계절 처음 본 때 알림 한 줄 (P30-05-02) — 숫자가 아니라 느긋하게 보기여도 · 열 때 부르니 알림 칸이 준비된 뒤로
+  onYearly: e => { if (ctx.live && st.settings.toast[9]) setTimeout(() => queueToast(e.text), 600); },   // 🗓️ 올해만 오는 것을 이 계절 처음 본 때 알림 한 줄 (P30-05-02) — 알림 설정 「📖 도감 등록」(9번)을 따름(수면 시간은 다른 알림처럼 웹에선 저장만) · 숫자가 아니라 느긋하게 보기여도 · 열 때 부르니 알림 칸이 준비된 뒤로
 };
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌
