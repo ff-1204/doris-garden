@@ -101,11 +101,11 @@ function cloudRows(row) {
     return row('☁️', '구글 드라이브에 저장', '앱 안의 브라우저에서는 구글 로그인이 안 돼요. Chrome이나 Safari로 열어 주세요 · 여기 정원은 💾 저장하기로 옮길 수 있어요',
       `<span class="row cloud-btns" style="gap:6px"><button type="button" class="btn small" data-cloud="copy">주소 복사</button><button type="button" class="btn small" data-cloud="${url ? 'outside' : 'guide'}">${url ? (cloud.inApp.app === 'kakao' ? '바깥 브라우저로' : 'Chrome으로 열기') : '여는 법'}</button></span>`);
   }
-  if (!cloudIn()) return row('☁️', '구글 드라이브에 저장', `정원을 내 구글 드라이브에도 저장해요${st.titles && st.titles.t_cloud != null ? '' : ' · 로그인하면 🏅 구름 정원사'}`,   // P20-16 설명 · 보상 안내
+  if (!cloudIn()) return row('☁️', '구글 드라이브에 저장', `정원을 내 구글 드라이브에도 저장해요${st.titles && st.titles.t_cloud != null ? '' : ' · 로그인하면 🏅 구름 정원사'} · 로그인을 이어 가려고 구글 창(팝업)이 가끔 뜰 수 있어요`,   // P20-16 설명 · 보상 안내
     '<span class="row cloud-btns" style="gap:6px"><button type="button" class="btn small" data-cloud="info">자세히</button><button type="button" class="btn small" data-cloud="login">구글로 로그인</button></span>');
   const m = cloud.meta, s = cloud.state, warn = ['offline', 'error', 'relogin', 'ask'].includes(s);
   const prev = cloud.remote && cloud.remote.garden && cloud.remote.prev;
-  return row('☁️', '구글 드라이브', `<span class="cloud-mail">${esc(m.email)}</span> · ${m.lastAt ? `마지막 저장 ${whenText(m.lastAt)}` : '아직 드라이브에 저장하지 않았어요'}${s === 'saving' ? ' · 저장 중' : ''}${warn ? ` · <b class="val-down">${CLOUD_LABEL[s]}</b>` : ''}`,
+  return row('☁️', '구글 드라이브', `<span class="cloud-mail">${esc(m.email)}</span> · ${m.lastAt ? `마지막 저장 ${whenText(m.lastAt)}` : '아직 드라이브에 저장하지 않았어요'}${s === 'saving' ? ' · 저장 중' : ''}${warn ? ` · <b class="val-down">${CLOUD_LABEL[s]}</b>` : ''} · 자동 로그인 때 구글 창(팝업)이 잠깐 뜰 수 있어요`,
     `<span class="row cloud-btns" style="gap:6px"><button type="button" class="btn small" data-cloud="${s === 'relogin' ? 'relogin' : s === 'ask' ? 'ask' : 'now'}" ${cloud.busy ? 'disabled' : ''}>${s === 'relogin' ? '다시 로그인' : s === 'ask' ? '고르기' : '지금 저장'}</button><button type="button" class="btn small" data-cloud="logout">로그아웃</button></span>`)
     + (prev ? row('↩︎', '드라이브 직전 저장본', `${whenText(prev.savedAt)}에 저장한 정원 · 한 번 되돌릴 수 있어요`, '<button type="button" class="btn small" data-cloud="prev">보기</button>') : '');
 }
@@ -119,7 +119,7 @@ function cloudInfo() {
   const got = st.titles && st.titles.t_cloud != null;
   openModal('☁️ 구글 드라이브 저장', `<div class="stack cloud-info">
     <p style="margin:0">구글로 로그인하면 정원을 <b>내 구글 드라이브</b>에도 저장해요.</p>
-    <div><b>하는 일</b><ul><li>드라이브의 <b>앱 전용 숨김 폴더</b>에 정원 파일 하나(+ 직전 저장본)를 저장해요</li><li>브라우저 데이터를 지워도, 휴대폰과 PC를 오가도 이어서 할 수 있어요</li></ul></div>
+    <div><b>하는 일</b><ul><li>드라이브의 <b>앱 전용 숨김 폴더</b>에 정원 파일 하나(+ 직전 저장본)를 저장해요</li><li>브라우저 데이터를 지워도, 휴대폰과 PC를 오가도 이어서 할 수 있어요</li><li>로그인을 이어 가려고 <b>구글 로그인 창(팝업)</b>이 가끔 뜰 수 있어요 — 닫아도 정원은 그대로, 다음에 "다시 로그인"을 누르면 돼요</li></ul></div>
     <div><b>안 하는 일</b><ul><li>드라이브의 다른 파일은 보지도 만지지도 않아요</li><li>운영자에게는 아무것도 보내지 않아요 (서버가 없어요)</li></ul></div>
     <div><b>꼭 해야 하나요?</b><ul><li>아니요. 로그인하지 않아도 이 브라우저에 저장하며 끝까지 할 수 있어요</li></ul></div>
     <div><b>그만두거나 지우려면</b><ul><li>⚙️ 설정 › ☁️ <b>로그아웃</b> — 이 브라우저의 정원은 그대로예요</li><li>드라이브 설정 › <b>앱 관리</b> › 도리의 정원 › 숨겨진 앱 데이터 삭제</li></ul></div>
