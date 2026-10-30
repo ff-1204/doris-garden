@@ -74,7 +74,7 @@ function renderToolbar(force) {
     const d = decoById(ui.decoId);
     if (!d) { ui.tool = 'look'; ui.decoId = null; tray.hidden = true; tray.innerHTML = ''; return renderHint(); }
     tray.hidden = false;
-    tray.innerHTML = `<span class="muted deco-tray">${decoImg(d.key, 1)} 🪴 ${d.x == null ? '놓는' : '옮기는'} 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>`;
+    tray.innerHTML = `<span class="muted deco-tray">${decoImg(E.decoKey(d), 1)} 🪴 ${d.x == null ? '놓는' : '옮기는'} 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>`;
   } else if (ui.tool === 'move') {
     tray.hidden = false;
     tray.innerHTML = '<span class="muted" style="font-size:calc(13 * var(--u))">↔ 옮겨 심는 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>';
@@ -94,7 +94,7 @@ function renderHint() {
   let msg = '';
   if (E.calendar(st.virtual).frozen && ui.tool !== 'move') msg = '';      // 꽃잠은 지도 가운데 팝업이 알려 줌 (옮겨심기는 꽃잠에도)
   else if (ui.tool === 'plant') msg = ui.plantType ? `${josa(FLOWERS[ui.plantType].name, '을/를')} 심을 빈 칸을 누르세요` : HINT.plant;
-  else if (ui.tool === 'deco') { const d = decoById(ui.decoId); msg = d ? `${josa(E.decoInfo(d.key).name, '을/를')} 놓을 빈 칸을 누르세요` : ''; }
+  else if (ui.tool === 'deco') { const d = decoById(ui.decoId); msg = d ? `${josa(E.decoInfo(E.decoKey(d)).name, '을/를')} 놓을 빈 칸을 누르세요` : ''; }
   else if (ui.tool === 'move') { const f = ui.moveFrom && st.flowers.find(x => x.id === ui.moveFrom); msg = f ? `${josa(FLOWERS[f.type].name, '을/를')} 옮길 빈 칸을 누르세요` : HINT.move; }
   $('#hint').textContent = msg;
   $('#hint').hidden = !msg;
@@ -164,7 +164,8 @@ function renderYearSky(cal) {
   el.innerHTML = A.tile ? `<i class="ys-tile ys-${A.tile}" style="background-image:url(${yartURL(k)});background-size:${48 * (A.sparse || 1)}px;--p:${48 * (A.sparse || 1)}px"></i>` : `<img class="px ys-big ys-${A.big}" src="${yartURL(k)}" width="${16 * big}" height="${16 * big}" alt="">`;
 }
 function drawFlower(f, cal) {
-  const F0 = FLOWERS[f.type], alt = yearSkyMemo && yearSkyMemo.bloom === f.type && window.YEARLY_ART.bloom[f.type];   // P30-05-02 올해의 꽃빛: 그 꽃의 꽃잎 색만 바꿈
+  const F0 = FLOWERS[f.type], mut = E.mutShown(f) ? E.mutStage(f) : 0;   // P36-03 🧬 변이 꽃빛 · 단계 (올해의 꽃빛보다 먼저)
+  const alt = mut ? mutPetal(f.type, mut) : yearSkyMemo && yearSkyMemo.bloom === f.type && window.YEARLY_ART.bloom[f.type];   // P30-05-02 올해의 꽃빛: 그 꽃의 꽃잎 색만 바꿈
   const F = alt ? Object.assign({}, F0, { petal: alt.petal, center: alt.center }) : F0, cx = (f.x + 0.5) * cell, cy = (f.y + 0.5) * cell, R = cell * 0.46;
   g.save(); g.translate(cx, cy);
   // 심은 칸 받침: 옅은 흙빛 동그라미 — 땅 색 위에서도 꽃이 잘 보이게 (10-06)
@@ -189,6 +190,10 @@ function drawFlower(f, cal) {
     case 'bloom': {
       const picked = f.harvestKey === E.harvestSlot(cal), open = picked ? 0.6 : 1;
       ell(R * 0.08, R * 0.12, R * 0.95, R * 0.85, 0, 'rgba(0,0,0,.16)');
+      if (mut >= 3) {                                // P36-03 3단계: 짙은 그림자 + 테두리 1px (흔들림은 없음 — 움직임 줄이기와 상관없이 가만히)
+        ell(R * 0.16, R * 0.22, R * 1.02, R * 0.92, 0, 'rgba(30,8,36,.32)');
+        g.strokeStyle = window.MUT_RIM; g.lineWidth = Math.max(1, cell * 0.05); g.beginPath(); g.arc(0, 0, R * 0.98, 0, 7); g.stroke();
+      }
       if (F.look === 'lotus') { g.fillStyle = '#3c7d4a'; g.beginPath(); g.arc(0, 0, R * 0.95, 0.5, Math.PI * 2 - 0.1); g.lineTo(0, 0); g.fill(); }
       else for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3; ell(Math.cos(a) * R * 0.45, Math.sin(a) * R * 0.45, R * 0.38, R * 0.22, a, '#467f3d'); }
       if (F.look === 'spike') {
@@ -209,7 +214,7 @@ function drawFlower(f, cal) {
         }
         g.fillStyle = F.center; g.beginPath(); g.arc(0, 0, R * (F.look === 'daisy' ? 0.26 : 0.14), 0, 7); g.fill();
       }
-      if (!picked) { g.fillStyle = '#ffd84a'; g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1; g.beginPath(); g.arc(0, -R * 0.95, Math.max(2, R * 0.14), 0, 7); g.fill(); g.stroke(); }
+      if (!picked && !mut) { g.fillStyle = '#ffd84a'; g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1; g.beginPath(); g.arc(0, -R * 0.95, Math.max(2, R * 0.14), 0, 7); g.fill(); g.stroke(); }
       break;
     }
   }
@@ -266,7 +271,7 @@ function draw() {
   for (const f of st.flowers) drawFlower(f, cal);
   // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만, imageSmoothingEnabled는 위 땅 그리기에서 껐음)
   for (const d of st.decos || []) if (d.x != null) {
-    const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92);
+    const im = decoBitmap(E.decoKey(d)); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92);
     if (d.honey && d.honey.length) { g.fillStyle = '#f2b632'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(d.x * cell + cell * 0.82, d.y * cell + cell * 0.2, Math.max(2.5, cell * 0.14), 0, 7); g.fill(); g.stroke(); }   // 🍯 거둘 꿀이 있음
   }
   for (const v of E.visitorsOf(st, cal)) { const im = visitorBitmap(v.key); if (im) g.drawImage(im, v.x * cell + cell * 0.04, v.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); }   // P30-06-02 🐾 특별 손님 (장식과 같은 길 · 빈 칸에만 앉음)
@@ -334,7 +339,7 @@ for (const id of ['#tray', '#hint']) new MutationObserver(ms => { if (ms.some(m 
 function tipHTML([x, y]) {
   const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y), vs = !f && !dc && E.visitorAt(st, x, y);
   if (vs) return `<b>${vs.icon} ${esc(vs.name)}</b><br><span class="muted">${land} · 눌러서 말 걸기</span>`;   // P30-06-02
-  if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(dc.key).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
+  if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(E.decoKey(dc)).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
   if (!f) return `<b>${land}</b><br><span class="muted">${tl.t.toFixed(1)}°C · 습도 ${Math.round(tl.m)}%</span>`;
   const F = FLOWERS[f.type], cal = E.calendar(st.virtual), v = Math.round(E.vigorOf(st, f));
   const needs = [];
@@ -343,6 +348,7 @@ function tipHTML([x, y]) {
     if (E.canCare(st, f, 'weed', cal)) needs.push('🌿 잡초가 났어요');
     if (E.canCare(st, f, 'harvest', cal)) needs.push('🧺 수확할 수 있어요');
   }
+  if (E.mutShown(f)) return `<b>🧬 ${esc(E.MUTANTS[f.type].name)}</b> · ${E.mutStage(f)}단계<br><span class="stars">${starStr(f.q)}</span> ${E.pct(f.q)}%${needs.length ? '<br>' + needs.join('<br>') : ''}<br><span class="muted">${land}</span>`;   // P36 변이 꽃
   return `<b>${F.name}</b> · ${E.STAGE[f.stage]}<br><span class="stars">${starStr(f.q)}</span> ${E.pct(f.q)}% · 기운 ${v}%${needs.length ? '<br>' + needs.join('<br>') : ''}<br><span class="muted">${land}</span>`;
 }
 canvas.addEventListener('pointerdown', e => {
@@ -441,9 +447,9 @@ function renderMine(force) {
   const bagKeys = ['dirt', 'stone', ...E.ORE_KEYS, ...E.FOSSIL_KEYS, 'oldseed'].filter(k => m.bag[k] > 0);
   const bag = bagKeys.length ? `<div class="mine-bag">${bagKeys.map(k => `<span class="hj">${mineImg(k, 2)}<small>${E.mineName(k)} <b class="data">×${m.bag[k]}</b></small></span>`).join('')}</div>` : '<p class="muted">아직 판 게 없어요 · 칸을 눌러 파 보세요</p>';
   const crafts = `<div class="mine-crafts">${E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], can = E.canCraft(st, k), have = C.cup && E.shopOf(st).cups.includes(C.cup);
-    const art = C.deco ? decoImg(C.deco, 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
+    const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
     return `<div class="mcraft ${can && !have ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>`; }).join('')}</div>`;
-  const sig = JSON.stringify([m, nextE, ui.mineTab, st.money, E.shopOf(st).cups]);
+  const sig = JSON.stringify([m, nextE, ui.mineTab, st.money, E.shopOf(st).cups, st.jar]);
   if (!force && ui.sigs.mine === sig) return;
   ui.sigs.mine = sig;
   $('#p-mine').innerHTML = `<div class="cab-head"><span class="sb-title">⛏️ 정원 뒤 광산</span><span class="muted">기다리는 동안 조금씩 파요</span></div>
@@ -471,7 +477,7 @@ $('#p-mine').addEventListener('click', e => {
 // 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
 const ageText = h => { const m = Math.floor(h / E.MONTH_H); return m >= 14 ? `${Math.floor(m / 14)}년 ${m % 14 ? `${m % 14}달` : ''}`.trim() : flowH(h); };
 function openDecoTile(d) {
-  const info = E.decoInfo(d.key);
+  const info = E.decoInfo(E.decoKey(d));
   let extra = '';
   if (d.key === 'hive') {                          // P18 벌통: 모인 꿀 · 둘레의 핀 꽃 · 다음에 모일 꿀
     const hn = d.honey || [], by = {}; for (const k of hn) by[k] = (by[k] || 0) + 1;
@@ -500,7 +506,7 @@ function openDecoTile(d) {
     extra = `<p class="muted">${frozen ? '🌙 꽃잠엔 장치도 쉬어요' : n ? `지금 ${n}포기가 빨리 자라는 중이에요` : '지금 둘레에 빨리 자랄 꽃이 없어요'} · 둘레 ${E.GEAR[d.key].r}칸 (창을 닫으면 지도에 잠깐 보여요)</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
-  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${decoBuffHTML(d.key)}${extra}</div>`, [
+  openModal(`${info.jar ? '🫙' : '🪴'} ${esc(info.name)}`, `<div class="deco-pop">${decoImg(E.decoKey(d), 4)}<p class="muted">${esc(info.desc || '')}</p>${decoBuffHTML(E.decoKey(d))}${extra}</div>`, [
     { label: '📦 창고에', act: () => { closeModal(); after(E.storeDeco(st, d.id)); } },
     { label: '↔ 옮기기', primary: true, act: () => { closeModal(); ui.tool = 'deco'; ui.decoId = d.id; renderToolbar(true); } },
   ]);
@@ -600,8 +606,9 @@ function renderStatus(force) {
   })();
   const moveReason = canMove ? '' : f.withered ? '시든 꽃이에요' : '심는 달 · 휴면기 · 꽃잠에 할 수 있어요';
   const actBtn = (act, label, reason) => `<div class="sx-act"><button type="button" class="btn ${reason ? '' : 'primary'}" data-act="${act}" ${reason ? 'disabled' : ''}>${label}</button>${reason ? `<span class="muted">${reason}</span>` : ''}</div>`;
-  const actions = `<div class="sx-acts">${actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : '↔ 옮겨심기', moveReason)}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}</div>`;
-  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), f.harvestKey === E.harvestSlot(cal), f.propYear, cal.idx, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
+  const mut = E.mutShown(f) ? E.mutStage(f) : 0, M = mut && E.MUTANTS[f.type];   // P36-02 🧬 변이 꽃: 꽃잎은 못 따고 유리 관에 담아 장식으로 (호미 · 뽑기 없음)
+  const actions = `<div class="sx-acts">${actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : '↔ 옮겨심기', moveReason)}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}${mut ? actBtn('jar', '🫙 유리 관에 담기', st.jar > 0 ? '' : '유리 관이 필요해요 · ⛏️ 광산 만들기') : ''}</div>`;
+  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), f.harvestKey === E.harvestSlot(cal), f.propYear, cal.idx, mut, st.jar, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
   if (!force && ui.sigs.status === sig) return;
   ui.sigs.status = sig;
   el.className = 'status' + (ui.sheetOpen ? ' sheet' : ' idle-mobile');
@@ -613,8 +620,8 @@ function renderStatus(force) {
   const nextArrow = next > f.q + 0.004 ? '↑' : next < f.q - 0.004 ? '↓' : '→';
   el.innerHTML = `
     <div class="sx-head">
-      <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
-      <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:calc(12 * var(--u))">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
+      <div class="sx-art" style="background:color-mix(in srgb, ${mut ? mutPetal(f.type, mut).petal : F.petal} 16%, var(--sunk))">${spriteImg(f.type, mut ? 'mut' + mut : 'flower', 56, false, M ? M.name : F.name)}</div>
+      <div class="sx-title"><h3>${M ? `🧬 ${esc(M.name)}` : F.name}</h3>${M ? `<div class="sx-mut"><b>변이 · ${mut}단계</b> · ${F.name}<br><i>${esc(M.lore)}</i></div>` : ''}<div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:calc(12 * var(--u))">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
         <div class="muted" style="font-size:calc(12 * var(--u))">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${basketNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
@@ -641,7 +648,7 @@ function renderStatus(force) {
       <h3 style="margin:10px 0 4px;font-size:calc(14 * var(--u))">일정</h3>
       ${flowerStrip(F, cal.idx)}
       <dl class="kv">
-        ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === E.harvestSlot(cal) ? (cal.frozen ? '이번 꽃잠엔 수확했어요' : '이번 달은 수확했어요') : '지금 수확할 수 있어요'}</dd>` : ''}
+        ${mut ? '<dt>수확</dt><dd>🧬 변이 꽃은 꽃잎을 딸 수 없어요 · 품질이 낮을수록 낯설어져요</dd>' : f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === E.harvestSlot(cal) ? (cal.frozen ? '이번 꽃잠엔 수확했어요' : '이번 달은 수확했어요') : '지금 수확할 수 있어요'}</dd>` : ''}
         <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
         <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 달 · 휴면기 · 꽃잠에'}</dd>
       </dl>
@@ -753,5 +760,6 @@ $('#status').addEventListener('click', e => {
     renderToolbar(true); renderStatus(true);
   }
   if (b.dataset.act === 'prop' && f) after(E.propagate(st, f.id, ctx.rng, ctx));
+  if (b.dataset.act === 'jar' && f) { const r = E.jarCapture(st, f.id, ctx); if (r.ok) { ui.selected = null; ui.sheetOpen = false; } after(r, null, r.ok ? { label: '📦 창고', fn: () => setTab('store') } : null); }   // P36-04 🫙
 });
 $('#status').addEventListener('toggle', e => { if (e.target.matches('details')) ui.detailsOpen = e.target.open; }, true);

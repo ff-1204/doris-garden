@@ -201,7 +201,7 @@ function spriteURL(key, kind, locked) {
   if (spriteCache[id]) return spriteCache[id];
   const isPetal = kind === 'petal' || kind === 'dried';
   const grid = kind === 'tea' ? SPR.cup : isPetal ? PETAL_GRID : kind === 'form' ? FORM_GRID[FLOWERS[key].life === 'tree' ? 'tree' : FLOWERS[key].form] : kind === 'teabag' ? TEABAG_GRID : SPR.flowers[key];
-  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, E.CUP_SETS[cupSet].pal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : kind === 'alt' ? Object.assign({}, SPR.pal[key], window.YEARLY_ART.bloom[key].pal) : SPR.pal[key];   // alt: P30-05-02 올해의 꽃빛 (같은 도트 그림에 대체 팔레트)
+  const pal = kind === 'tea' ? Object.assign({}, SPR.cupPal, E.CUP_SETS[cupSet].pal, { T: SPR.tea[key], f: FLOWERS[key].petal }) : isPetal ? petalPal(key, kind === 'dried') : kind === 'form' ? formPal(key) : kind === 'teabag' ? teabagPal(key) : kind === 'alt' ? Object.assign({}, SPR.pal[key], window.YEARLY_ART.bloom[key].pal) : /^mut[123]$/.test(kind) ? mutPal(key, +kind[3]) : SPR.pal[key];   // alt: P30-05-02 올해의 꽃빛 (같은 도트 그림에 대체 팔레트)
   const c = document.createElement('canvas'); c.width = c.height = 16;
   const x = c.getContext('2d');
   grid.forEach((row, j) => [...row].forEach((ch, i) => {
@@ -209,7 +209,16 @@ function spriteURL(key, kind, locked) {
     x.fillStyle = locked ? (kind === 'tea' && 'sDd'.includes(ch) ? 'rgba(130,136,128,.35)' : '#8a8f86') : pal[ch];
     x.fillRect(i, j, 1, 1);
   }));
+  if (kind === 'mut3' && !locked) mutRim(x, grid);   // P36-03 3단계: 테두리 1px
   return (spriteCache[id] = c.toDataURL());
+}
+// P36-03 🧬 돌연변이 꽃빛: 꽃 팔레트 위에 변이 팔레트(decos.js MUTANT_ART) → 단계 효과(MUT_SHADE — 2 · 3단계 어둡게 · 채도 ↓)
+const mutPal = (key, stage) => { const p = Object.assign({}, SPR.pal[key], window.MUTANT_ART[key].pal); for (const k in p) p[k] = window.MUT_SHADE(p[k], stage); return p; };
+const mutPetal = (key, stage) => { const A = window.MUTANT_ART[key]; return { petal: window.MUT_SHADE(A.petal, stage), center: window.MUT_SHADE(A.center, stage) }; };
+function mutRim(x, grid) {                          // 그림 둘레 빈 도트에 1px 테두리 (16px 안에서)
+  const on = (i, j) => j >= 0 && j < 16 && i >= 0 && i < 16 && grid[j][i] !== '.';
+  x.fillStyle = window.MUT_RIM;
+  for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) if (!on(i, j) && (on(i - 1, j) || on(i + 1, j) || on(i, j - 1) || on(i, j + 1))) x.fillRect(i, j, 1, 1);
 }
 // 화원·창고 카드 그림: 파는 모양(씨앗 봉투·묘목…) → 피면 이런 꽃 (작게)
 const formArt = (key, size) => { const F = FLOWERS[key]; return `<span class="sc-pair">${spriteImg(key, 'form', size, false, `${F.name} ${FORM[F.form].name}`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom" title="피면 ${F.name}">${spriteImg(key, 'flower', Math.round(size * 0.5), false, F.name)}</span></span>`; };
@@ -223,9 +232,9 @@ function decoURL(key) {
   if (decoCache[art]) return decoCache[art];
   const info = E.decoInfo(key); if (!info) return '';
   if (info.title) return (decoCache[art] = titleURL(info.title, false, 0));
-  const S = window.DECO_SPRITES[art], c = document.createElement('canvas'); c.width = c.height = 16;
-  const x = c.getContext('2d');
-  S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && S.pal[ch]) { x.fillStyle = S.pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  const S = window.DECO_SPRITES[info.jar ? 'mutjar' : art], c = document.createElement('canvas'); c.width = c.height = 16;
+  const x = c.getContext('2d'), mp = info.mut && mutPetal(info.mut.k, info.mut.stage), pal = mp ? Object.assign({}, S.pal, { f: mp.petal, F: mp.center }) : S.pal;   // P36-04 🫙 속 꽃은 그 변이 꽃빛 · 단계
+  S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
   return (decoCache[art] = c.toDataURL());
 }
 // 화면에 띄우는 크기는 원본의 정수배로 (장식 16 · 칭호 문장 22, P16-14)

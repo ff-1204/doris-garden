@@ -1233,6 +1233,13 @@ img.px { image-rendering: pixelated; image-rendering: crisp-edges; flex: none; d
 .dex-head .muted { font-size: calc(12 * var(--u)); }
 .dex-total { display: inline-flex; align-items: center; gap: 8px; font-size: calc(13 * var(--u)); font-weight: 600; }
 .dexcard .dc-sub:empty { display: none; }
+/* P36 🧬 돌연변이: 도감 칸 단계 점 3개 · 괴담 한 줄 · 꽃 창 변이 줄 */
+.mut-dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.mut-dots i { width: 6px; height: 6px; background: color-mix(in srgb, var(--muted) 35%, transparent); }
+.mut-dots i.on { background: #7a4a8a; }
+.dexcard .dc-lore { font-size: calc(10.5 * var(--u)); color: var(--muted); line-height: 1.35; font-style: italic; }
+.sx-mut { font-size: calc(12 * var(--u)); color: color-mix(in srgb, #7a4a8a 70%, var(--ink)); line-height: 1.4; margin: 2px 0; }
+.sx-mut i { color: var(--muted); }
 .rec-line { font-size: calc(13 * var(--u)); }
 .rec-line .stars { font-size: calc(12 * var(--u)); }
 .dexcard.locked { cursor: default; }
