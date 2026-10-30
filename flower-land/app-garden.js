@@ -487,8 +487,8 @@ function renderMine(force) {
     <div class="mine-acts">${downBtn ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${m.depth < m.deepest ? `<button type="button" class="btn small" data-mact="deep" ${m.energy < 3 ? 'disabled' : ''}>🪜 지하 ${m.deepest}층으로 · 기력 3</button>` : ''}${allDug ? `<button type="button" class="btn small ${downBtn ? '' : 'primary'}" data-mact="fresh">🔄 새 굴</button>` : ''}</div>
     </div>
     <div class="mine-side">
-    <section class="mine-sec"><h3 class="mine-sub">🎒 가방</h3>${bag}</section>
     <section class="mine-sec"><h3 class="mine-sub">🔨 만들기</h3>${crafts}</section>
+    <section class="mine-sec"><h3 class="mine-sub">🎒 가방</h3>${bag}</section>
     </div>
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>
     <div class="mine-extra"><div class="stack">${minePantryHTML(E.pantryView(st), E.slowView(st))}</div><div class="stack">${mineGearHTML()}</div></div>`;   // 10-31 🧺 선반 · 🔆 공방
