@@ -328,7 +328,9 @@ function openShopUp() {
   $('#modalRoot').querySelectorAll('[data-up]').forEach(b => b.onclick = () => {
     const v = b.dataset.up;
     const go = () => { const r = v === 'seat' ? E.addSeat(st) : E.buyDecor(st, ...v.split(':')); feedback(r.msg, !r.ok); if (r.ok) { save(); renderAll(true); } openShopUp(); };
-    if (v !== 'seat') return go();
+    if (v !== 'seat') { const [kind, key] = v.split(':'), sh = E.shopOf(st), it = (kind === 'cup' ? E.CUP_SETS : E.SIGNS)[key];
+      if ((kind === 'cup' ? sh.cups : sh.signs).includes(key)) return go();   // 가진 것은 고르기만 (돈 안 듦)
+      return askBuy({ name: `${kind === 'cup' ? '☕' : '🪧'} ${it.name}`, note: it.desc, price: it.price }, go, () => openShopUp()); }   // 사기 전 확인
     const nx = E.SEATS[E.shopOf(st).seats + 1];
     openModal('🪑 손님 자리 늘리기', `<p>손님 자리를 ${E.shopOf(st).seats + 1}자리로 늘려요 · <b class="data">${won(nx.price)}</b></p><p class="muted">한 시간에 ${E.shopOf(st).seats + 1}잔씩 팔려요 · 되돌릴 수 없어요</p>`, [{ label: '취소', act: () => openShopUp() }, { label: `늘리기 · ${won(nx.price)}`, primary: true, act: go }]);
   });

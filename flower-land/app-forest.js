@@ -50,7 +50,7 @@ function openPlantPicker(slot) {
       <span class="dk-buy"><span class="sc-price">${won(T.price)}</span><button type="button" class="btn primary" data-fplant="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '심기'}</button></span></div>`; }).join('');
   openModal('🌳 묘목 심기', `<div class="fo-pick">${rows}</div><p class="note muted">한 번 심은 나무는 옮기거나 베지 않아요 · 열매 · 돈은 나오지 않아요${E.calendar(st.virtual).frozen ? ' · 꽃잠에 심으면 다음 해 아침부터 자라요' : ''} · ${wallet()}</p>`, [{ label: '닫기', act: () => closeModal() }]);
   const root = $('#modalRoot'), base = root.onclick;
-  root.onclick = e => { const b = e.target.closest('[data-fplant]'); if (b && !b.disabled) { closeModal(); return after(E.plantTree(st, b.dataset.fplant, slot, ctx), null); } base(e); };
+  root.onclick = e => { const b = e.target.closest('[data-fplant]'); if (b && !b.disabled) { const k = b.dataset.fplant, T = E.TREES[k]; return askBuy({ name: `${T.icon} ${T.name} 묘목`, note: T.desc, price: T.price, art: treeImg(k, 0, 3, 1), verb: '심기' }, () => after(E.plantTree(st, k, slot, ctx), null), () => openPlantPicker(slot)); } base(e); };   // 사기 전 확인
 }
 // 나무 → 자라는 차례 (4단계 그림, 아직 안 온 단계는 흐리게) · 앉은 손님 말 한 줄
 function openTreeInfo(slot) {

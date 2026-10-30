@@ -70,8 +70,8 @@ function renderFarm(force) {
     <p class="note muted fm-foot">일꾼은 사람이 하던 손을 덜 뿐, 더 벌지는 않아요 · 켜 두지 않아도 일해요</p></div>`;
 }
 $('#p-farm').addEventListener('click', e => {
-  const b = e.target.closest('[data-fbuy]'); if (b && !b.disabled) return after(E.buyDeco(st, b.dataset.fbuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
-  const db = e.target.closest('[data-decobuy]'); if (db && !db.disabled) return after(E.buyDeco(st, db.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });   // 🔆 정원 장치 (화원과 같은 흐름)
+  const b = e.target.closest('[data-fbuy]'); if (b && !b.disabled) return askDeco(b.dataset.fbuy);   // 사기 전 확인 (askBuy, app-shop)
+  const db = e.target.closest('[data-decobuy]'); if (db && !db.disabled) return askDeco(db.dataset.decobuy);   // 🔆 정원 장치 (화원과 같은 흐름)
   const p = e.target.closest('[data-fplace]'); if (p) { ui.tool = 'deco'; ui.decoId = +p.dataset.fplace; return setTab('garden', true); }   // 창고 🪴 놓기와 같은 흐름
   if (e.target.closest('[data-pantry]')) return takePantryOn();
   const bn = e.target.closest('[data-bonus]'); if (bn) return after(E.bonusSet(st, bn.dataset.bonus, +bn.dataset.lv));   // 🌟 손길 점 — 도감일지와 같은 엔진 함수
