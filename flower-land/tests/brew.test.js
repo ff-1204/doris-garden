@@ -6,7 +6,7 @@ const st = E.create(MON);
 st.teas.push({ id: 800, type: 'lotus', q: 0.9, seasonKey: -1, hat: true });
 st.blends.push({ id: 801, parts: ['chamomile', 'rose'], q: 0.8, recipe: 'springfield', name: '봄 들판' });
 check(E.bagBlends(st, [801], ctx).ok && st.blends[0].bagged && st.dex.bagBlend.springfield, '블렌드를 티백으로 (블렌드 티백 도감)');
-check(!E.brew(st, [800], [801]).ok, '평일엔 우릴 수 없음');
+check(E.teaShopOpen(E.calendar(st.virtual)), 'P34 평일(3월)에도 찻집이 열려 있음');
 E.advance(st, MON + 5 * 24 * E.HOUR + 60e3, ctx);                     // 토요일 1월
 const r = E.brew(st, [800], [801]);
 check(r.ok && st.cups.length === 2 && !st.teas.length && !st.blends.length, '토요일에 우려서 찻잔 2잔');

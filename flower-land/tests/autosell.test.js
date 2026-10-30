@@ -13,8 +13,8 @@ check(st.log.some(l => l.type === 13 && l.text.includes('2잔')), '정원 일지
 check(st.dex.tea.lotus != null, '자동 판매도 차 도감 등록');
 E.advance(st, st.virtual + 1 * E.HOUR, ctx);
 check(st.cups.length === 0 && st.cupTimerH === 0, '마지막 잔도 팔리고 타이머 초기화');
-// 닫혔을 땐 팔리지 않음
+// P34 평일(3월)에도 찻집이 열려 저절로 팔림 (예전엔 닫혀 안 팔렸음)
 const st2 = E.create(MON); st2.cups = [{ id: 1, kind: 'tea', type: 'rose', q: 0.5, seasonKey: -1, brewAbs: 0 }];
 E.advance(st2, MON + 3 * E.HOUR, ctx);
-check(st2.cups.length === 1, '찻집이 닫힌 평일엔 팔리지 않음');
+check(st2.cups.length === 0, 'P34 평일(3월)에도 저절로 팔림');
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

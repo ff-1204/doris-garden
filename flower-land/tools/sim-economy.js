@@ -9,7 +9,7 @@
 // --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도, 달 끝마다 숲 바람이 잡초를 걷어 감. 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
-process.env.TZ = 'Asia/Seoul';   // 달력이 현지 시각을 따라 결과가 시간대에 흔들림 — CI(UTC)에서 22,250원이 나와 기준값(KST 22,310원)에 고정 (10-30)
+process.env.TZ = 'Asia/Seoul';   // 달력이 현지 시각을 따라 결과가 시간대에 흔들림 — CI(UTC)에서 22,250원이 나와 기준값(KST 22,310원 · P34 뒤 62,870원)에 고정 (10-30)
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
 const PATH_I = process.argv.indexOf('--path'), PATH_ARG = PATH_I > 0 ? process.argv[PATH_I + 1] : null;

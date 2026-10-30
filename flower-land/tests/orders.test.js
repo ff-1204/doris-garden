@@ -7,10 +7,10 @@ const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 600
 console.log('[주문 쪽지]');
 const st = E.create(at(c => c.month === 11 && !c.frozen), () => 0.5); st.gardenId = 'test-garden';
 st.dex.teabag = { lavender: true };
-check(!st.orders, '찻집이 닫힌 달엔 쪽지 없음');
+check(!st.orders, '만든 그 자리(시간이 흐르기 전)엔 쪽지 없음');
 E.advance(st, E.calendar(st.virtual).slotEnd + 0.1 * H, { live: false });
 const os = st.orders && st.orders.list;
-check(E.calendar(st.virtual).month === 12 && os && os.length === 2 && os[0].kind === 'tea' && os[0].type === 'lavender' && os[1].kind === 'any', '12월(찻집 열림)이 되면 쪽지 · 처음엔 들어줄 수 있는 것만 (만든 적 있는 꽃의 차 · 차 아무거나)');
+check(E.calendar(st.virtual).month === 12 && os && os.length === 2 && os[0].kind === 'tea' && os[0].type === 'lavender' && os[1].kind === 'any', '다음 달(12월)이 되면 쪽지 · 처음엔 들어줄 수 있는 것만 (만든 적 있는 꽃의 차 · 차 아무거나)');
 const abs0 = st.orders.abs, again = JSON.stringify(os);
 const st2 = E.create(at(c => c.month === 11 && !c.frozen), () => 0.5); st2.gardenId = 'test-garden'; st2.dex.teabag = { lavender: true };
 E.advance(st2, E.calendar(st2.virtual).slotEnd + 0.1 * H, { live: false });
@@ -44,11 +44,12 @@ st.cups = [{ id: 503, kind: 'blend', parts: ['chamomile', 'rose'], recipe: 'spri
 const before = os.filter(x => x.done).length; st.cupTimerH = 0; E.advance(st, st.virtual + 1.05 * H, { live: false });
 check(!os.some(x => x.kind === 'recipe' && !x.done) || os.filter(x => x.done).length === before + 1, '저절로 팔린 찻잔도 주문을 채움');
 
-console.log('[찻집이 닫히면 쪽지 치움]');
+console.log('[P34 찻집은 매달 열림: 3월에도 그 달 쪽지]');
 const st3 = E.create(at(c => c.month === 14), () => 0.5);
 st3.orders = { abs: 0, list: [{ kind: 'hat', done: false }] };
 E.advance(st3, E.calendar(st3.virtual).slotEnd + 0.1 * H);
-check(E.calendar(st3.virtual).month === 3 && st3.orders === null, '꽃샘달 → 3월이 되면 쪽지 없음');
+check(E.calendar(st3.virtual).month === 3 && st3.orders && st3.orders.abs === E.calendar(st3.virtual).abs && st3.orders.list.length >= 1 && !st3.orders.list.some(x => x.kind === 'hat' && x.done === false && st3.orders.list.length === 1), 'P34 꽃샘달 → 3월: 지난 쪽지는 치우고 3월 쪽지가 옴');
+{ const s = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); E.advance(s, s.virtual + 0.1 * H); check(s.orders && s.orders.list.length >= 1, 'P34 6월(예전엔 닫힌 달)에 시작해도 바로 쪽지'); }
 
 console.log('[한 해 정원 평가]');
 const sc = E.yearScore(st);
