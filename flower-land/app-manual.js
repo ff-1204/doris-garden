@@ -66,6 +66,8 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(decoImg('dryrack', 2), '자동 건조대', '정원 등급 9 · 50,000원')}${arrow()}${item(ico('🌾'), '생화 8장', '달이 끝날 때 꽃방에')}${arrow()}${item(ico('🏷️'), '티백', '다 마르면 저절로')}</div>`, '오래된 꽃잎부터 하나에 한 달 8장 · 블렌드는 하지 않아요 — 섞고 싶은 꽃잎은 달이 끝나기 전에 직접 널어요')
       + fig(`<div class="mn-flow">${item(decoImg('teahelper', 2), '찻집 일손', '정원 등급 12 · 80,000원 · 하나만')}${arrow()}${item(ico('🏷️'), '오래된 티백', '찻집이 열리면')}${arrow()}${item(ico('☕'), '카운터', '손님 자리 + 1잔')}</div>`, '카운터가 손님에게 팔아요 · 블렌드 티백 · 🍯 꿀 · 주문은 직접 · 자리를 비운 동안 창에 한 일이 한 줄로 나와요')
       + fig(`<div class="mn-flow">${item(decoImg('heatmat', 2), '온상 매트', '씨앗 · 새싹 2배')}${item(decoImg('growlight', 2), '생장등', '옆 8칸 1.5배')}${item(decoImg('greenhouse', 2), '유리 온실', '둘레 2칸 2배')}</div>`, '💐 화원 🔆 정원 장치 · 다 자라기까지만 빨라지고, 피는 달 · 품질 · 땅 · 꽃잠은 그대로예요 · 겹치면 가장 빠른 것 하나만')
+      + fig(`<div class="mn-flow">${item(decoImg('swing', 2), '놓은 것 · 핀 꽃', '올해만 것도')}${arrow()}${item(visitorImg('hedgehog', 2), '🐾 특별 손님', '옆 빈 칸에 앉아요')}${arrow()}${item(ico('💌'), '기념품', '세 번째로 온 날')}</div><div class="mn-icons">${E.VISITOR_KEYS.map(k => item(visitorImg(k, 2), E.VISITORS[k].name, E.VISITORS[k].need)).join('')}</div>`,   // P30-06-02 🐾 특별 손님
+        '🐾 특별 손님 — 놓은 장식 · 핀 꽃 · 올해만 것에 따라 가끔 와서 2~3달 앉아 있다 가요 · 누르면 말 한 줄 · 세 번째로 온 날 기념품을 남겨요(📖 도감 💌 기념품) · 돈은 주지 않아요 · 꽃잠엔 새로 안 와요')
       + `<div class="mn-icons">${item(ico('🪑'), '손님 자리', '1시간에 더 많이')}${item(ico('☕'), '찻잔 세트', '보기만')}${item(ico('🪧'), '간판', '보기만')}</div><p class="note" style="text-align:center">🍵 찻집 › 🪑 찻집 가꾸기에서 바꿔요</p>`),
     sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',
       fig(`<div class="mn-flow">${item(ico('⛏️'), '기력 12', '30분마다 1칸')}${arrow()}${item(mineImg('stone', 2), '파기', '한 칸에 1')}${arrow()}${item(mineImg('stairs', 2), '계단', '아래층으로')}${arrow()}${item(mineImg('amber', 2), '깊을수록', '드문 광물')}</div>`,
@@ -145,6 +147,7 @@ function renderSettings() {
       + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
       + row('🌳', '해 8개 쌓기', '정원의 층 확인용 (P30-01) · 3층까지 열고 해마다 기록 8줄 · 꽃 13종 도감', '<button type="button" class="btn small" id="devLayer">쌓기</button>')
       + row('🗓️', '올해만 것', '올해만 확인용 (P30-05) · 다음 계절 첫 달로 · 열지 않은 채 한 해(그동안 계절은 놓침)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devYSeason">다음 계절</button><button type="button" class="btn small" id="devYAway">비운 채 한 해</button></span>')
+      + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
       return group('💾', '저장', files ? '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요' : '진행은 이 브라우저와 내 구글 드라이브에 저장돼요',
@@ -188,6 +191,7 @@ function renderSettings() {
   if (DEV) $('#devLayer').addEventListener('click', devLayerFill);   // 개발용 (P30-01-02)
   if (DEV) $('#devYSeason').addEventListener('click', () => devYearly(false));   // 개발용 (P30-05)
   if (DEV) $('#devYAway').addEventListener('click', () => devYearly(true));
+  if (DEV) $('#devVisitor').addEventListener('click', devVisitor);   // 개발용 (P30-06)
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)
   if (DEV) $('#devMail').addEventListener('click', async () => { const n = await mailFetch(); renderSettings(); feedback(n < 0 ? '📮 편지 파일을 못 읽었어요' : n ? `📮 새 편지 ${n}통` : '📮 새로 받을 편지가 없어요', n < 0); });   // 개발용 (P29-08)
   if (DEV) $('#devMailForget').addEventListener('click', () => { st.mailGot = {}; st.letterBox = (st.letterBox || []).filter(b => !b.mail); save(); renderSettings(); feedback('📮 받은 기록을 지웠어요'); });
@@ -221,6 +225,23 @@ function devYearly(away) {
   if (away) { ctx.live = false; E.advance(st, st.virtual + 7 * 24 * HOUR, ctx); ctx.live = true; E.yearlyMark(st, E.calendar(st.virtual), ctx); }
   else { const s0 = E.calendar(st.virtual).season; let t = E.calendar(st.virtual).slotEnd; while (E.calendar(t).season === s0) t = E.calendar(t).slotEnd; E.advance(st, t + 1000, ctx); }
   const it = E.yearlyNow(st); save(); renderAll(true); feedback(it ? `${E.SEASONS[it.season]} · ${it.icon} ${it.name}` : '꽃잠이에요');
+}
+// 개발용 (P30-06): 🦔 고슴도치 할머니 부르기 — 나무 그네가 정원에 없으면 둘레가 빈 칸에 놓고(창고 것 · 없으면 새로), 앉아 있으면 떠난 것으로 치고, 부른 뒤 다음 흐르는 달로
+function devVisitor() {
+  let d = (st.decos || []).find(z => z.key === 'swing' && z.x != null);
+  if (!d) {
+    const free = (x, y) => x >= 0 && x < W && y >= 0 && y < H && !E.flowerAt(st, x, y) && !E.decoAt(st, x, y);
+    let at = null;
+    for (let r = 0; r < Math.max(W, H) && !at; r++) for (let y = 10 - r; y <= 10 + r && !at; y++) for (let x = 15 - r; x <= 15 + r && !at; x++) if (free(x, y) && free(x + 1, y) && free(x - 1, y)) at = [x, y];
+    if (!at) return feedback('그네를 놓을 빈 칸이 없어요', true);
+    d = (st.decos || []).find(z => z.key === 'swing') || (st.decos.push({ id: st.nextId++, key: 'swing', x: null, y: null }), st.decos[st.decos.length - 1]);
+    d.x = at[0]; d.y = at[1]; st.dex.deco.swing = true;
+  }
+  const V = st.visitors; V.now = V.now.filter(v => v.k !== 'hedgehog');
+  E.visitorCall(st, 'hedgehog');
+  let t = E.calendar(st.virtual).slotEnd; while (E.calendar(t).frozen) t = E.calendar(t).slotEnd;   // 꽃잠엔 손님이 안 와서 다음 흐르는 달까지
+  E.advance(st, t + 1000, ctx); save(); renderAll(true);
+  const n = E.visitorTimes(st, 'hedgehog'); feedback(st.visitors.now.some(v => v.k === 'hedgehog') ? `🦔 ${n}번째로 왔어요 · 그네 옆을 눌러 보세요` : '🦔 이번엔 못 왔어요 (그네 둘레에 빈 칸이 없어요)');
 }
 // P16-12-03 처음부터 다시 시작 = 완전 초기화 (변경 10-27, 사용자 요청): 이 게임의 저장 키 전부(정원 · 설정 · 되돌리기 칸 · 보관본 · 안내 표시)를 지우고
 // 구글 로그인도 끊은 뒤(권한도 돌려줌, 드라이브 파일은 남김) 새로고침 → 처음 온 사람처럼 첫 안내 · 이웃의 화분부터. 계정 칭호는 이어 붙이지 않음 (st.resetAt)

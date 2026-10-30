@@ -665,3 +665,46 @@ window.YEARLY_ART = {
     napmae: { name: '연한 빛', petal: '#f6edc4', center: '#c9a040', pal: { a: '#f6edc4', A: '#fbf6e0', C: '#c9a040' } },
   },
 };
+// P30-06-02 🐾 특별 손님 8명 — 16×16 도트(채도 낮게, 손님마다 모티프 · 팔레트가 겹치지 않게). 이름 · 조건 · 말은 engine.js VISITORS
+window.VISITOR_ART = {
+  hedgehog: { pal: { k: '#4a3a30', s: '#7d6a58', S: '#a08a72', f: '#e3cfb2', r: '#b07a8a', e: '#2a2220' }, grid: [
+    '................', '................', '................', '.....kkkkk......',
+    '...kkSsSsSk.....', '..kSsSsSsSsk....', '.kSsSsSsSrrrk...', '.kSsSsSsrrffk...',
+    'kSsSsSsSrfffek..', 'kSsSsSsSsfffffk.', '.kSsSsSsSffffkk.', '.kkkkkkkkkkkk...',
+    '..kf..kf..kf....', '................', '................', '................'] },
+  tit: { pal: { k: '#2e2c2a', w: '#eeeae0', g: '#7f8f74', y: '#d6c27a', b: '#6a7480', o: '#5a5048' }, grid: [
+    '................', '................', '.....kkkk.......', '....kkkkkk......',
+    '...kkwwwkkk.....', '...kwwwwkkk.....', '..okwwwwkggg....', '...kkkwkggggg...',
+    '....ykkygbbbgg..', '....yykyybbbbgg.', '....yykyyybbb.gg', '.....ykyyybb....',
+    '......yyyy......', '.......o.o......', '......oo.oo.....', '................'] },
+  beekid: { pal: { y: '#d9bf6a', k: '#3e3630', w: '#dfe8ec', W: '#b8c8d0', f: '#e8d6b8', e: '#2a2220' }, grid: [
+    '................', '.....k....k.....', '......k..k......', '.....ffffff.....',
+    '....ffeffeff....', '....ffffffff....', '.WW..ffffff..WW.', 'WwwW.yyyyyy.WwwW',
+    'WwwWyyyyyyyyWwwW', '.WWkkkkkkkkkkWW.', '...yyyyyyyyyy...', '...kkkkkkkkkk...',
+    '....yyyyyyyy....', '.....kkkkkk.....', '......k..k......', '................'] },
+  cat: { pal: { k: '#3c3836', g: '#8e8a84', G: '#b4afa6', w: '#e8e2d6', e: '#b8a24a', p: '#c89a9a' }, grid: [
+    '................', '..k...k.........', '..kg.kgk........', '..kGgGgk........',
+    '.kgegGegk.......', '.kgGpGGgk.......', '..kgwwgk........', '..kgGGGgk.......',
+    '.kgGgGgGgk......', '.kgGGgGGgk....k.', '.kgwGgGwgk...kg.', '.kgwwGwwgk..kg..',
+    '.kgwwgwwgkkkgk..', '..kkkkkkkkkkk...', '................', '................'] },
+  butterfly: { pal: { k: '#4a3e4a', l: '#b9a6cc', L: '#d8cce4', d: '#8a7aa0', p: '#e0b8a8', P: '#ecd2c6' }, grid: [
+    '................', '................', '...k......k.....', '....k....k......',
+    '.lll.k..k.lll...', 'lLLLl.kk.lLLLl..', 'lLdLLlkklLLdLl..', 'lLLLLlkklLLLLl..',
+    '.lLLLlkklLLLl...', '..lllpkkplll....', '..ppPpkkpPpp....', '.pPPPpkkpPPPp...',
+    '.pPdPp.kpPdPp...', '..ppp..k.ppp....', '................', '................'] },
+  frog: { pal: { k: '#2e3a2a', g: '#7fa06a', G: '#a6c08e', w: '#eef0e4', e: '#2a2a22', b: '#d8e0b8' }, grid: [
+    '................', '................', '...kkk....kkk...', '..kwwek..kewwk..',
+    '..kwwwkkkkwwwk..', '..kgGGGGGGGGgk..', '.kgGGGGGGGGGGgk.', '.kgGkkkkkkkkGgk.',
+    '.kgGGGGGGGGGGgk.', '..kgGbbbbbbGgk..', '.kggkbbbbbbkggk.', 'kgGgkkbbbbkkgGgk',
+    'kggk..kkkk..kggk', '.kk..........kk.', '................', '................'] },
+  snowkid: { pal: { w: '#f2f3f4', s: '#c8d0d8', h: '#9a6a6a', H: '#b88888', r: '#7a9ab0', o: '#d89a6a', e: '#4a4a52', k: '#4a4a52' }, grid: [
+    '......hh........', '.....hHHh.......', '....hHHHHh......', '....hhhhhh......',
+    '....wwwwww......', '...wweswesw.....', '...wwwwowww.....', '...swwwwwws.....',
+    '....rrrrrrr.....', '...wwwwwrrw.....', '..wwwwwwwrws....', '..wwkwwwwwws....',
+    '..wwwwwwwwws....', '..swwkwwwwss....', '...ssswwsss.....', '................'] },
+  owl: { pal: { k: '#3a2e26', b: '#8a6e52', B: '#ad9070', f: '#d8c4a4', y: '#d8b85a', e: '#2a2220', o: '#a87a4a' }, grid: [
+    '................', '...k........k...', '...kb......bk...', '...kbbbbbbbbk...',
+    '..kbffffffffbk..', '..kfyyfbbfyyfk..', '..kfyefoofeyfk..', '..kbfffoofffbk..',
+    '..kbBbBbbBbBbk..', '..kbbBBBBBBbbk..', '..kbBbBbbBbBbk..', '..kbbBBBBBBbbk..',
+    '...kbbbbbbbbk...', '....kokkkokk....', '................', '................'] },
+};
