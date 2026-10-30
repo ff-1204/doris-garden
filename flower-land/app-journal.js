@@ -192,7 +192,7 @@ function bonusHTML(hid) {                          // hid: 🐝 곤충농장(P32
   }).join('');
   return `<div class="cab-head dex-head j-head" id="${hid || 'jBonus'}"><span class="sb-title">🌟 손길 점</span>${slow ? '' : `<span class="dh-count data">${v.left} / ${v.points}점</span>`}</div>
     <div class="card bn-card">${slow ? '' : `<p class="bn-sum"><b>남은 점 ${v.left}점</b><small class="data">모은 점 ${v.points}점 · ${v.nextAt}등급에 1점 더</small></p>`}${rows}
-      <p class="note muted">${slow ? '정원이 자라면 손을 덜어 주는 보너스를 골라요' : `정원 등급 ${v.per}마다 1점 · 돈으로는 못 얻어요`} · 언제든 내리면 점이 돌아와요</p></div>`;
+      <p class="note muted">${slow ? '정원이 자라면 손을 덜어 주는 보너스를 골라요' : '정원 등급이 오를 때마다 1점 · 돈으로는 못 얻어요'} · 언제든 내리면 점이 돌아와요</p></div>`;
 }
 // 🗓️ 이번 주 목표 (P28-09, 10-28): 등급 쪽 바로 아래 — 끝내면 등급 경험치라 같은 자리에. 🐢 느긋하게 보기면 통째로 숨김 (E.weeklyView가 null)
 const weekLeft = h => h >= 24 ? `${Math.floor(h / 24)}일` : h >= 1 ? `${Math.floor(h)}시간` : '곧';

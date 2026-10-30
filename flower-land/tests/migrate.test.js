@@ -115,7 +115,7 @@ console.log('[🌟 등급 보너스 bonus (P28-05-02)]');
   const zero = b => b && E.BONUS_KEYS.every(k => b[k] === 0) && Object.keys(b).length === E.BONUS_KEYS.length;
   check(BN >= 0 && zero(E.create(MON, () => 0.5).bonus) && zero(m.bonus), '새 정원 · 예전 정원 모두 모든 칸 0단계');
   const old = copy(st); delete old.bonus; old.mig = BN; old.grade.xp = 5000; const om = E.migrateSave(old);
-  check(zero(om.bonus) && om.mig === E.MIGRATIONS.length && E.bonusPoints(om) === Math.floor(E.gradeOf(om).grade / 5) && E.bonusLeft(om) === E.bonusPoints(om), 'bonus가 없는 정원은 0단계로 · 손길 점은 지금 등급으로 바로 셈');
+  check(zero(om.bonus) && om.mig === E.MIGRATIONS.length && E.bonusPoints(om) === E.gradeOf(om).grade - 1 && E.bonusLeft(om) === E.bonusPoints(om), 'bonus가 없는 정원은 0단계로 · 손길 점은 지금 등급으로 바로 셈');
   const got = copy(st); got.bonus = { rack: 2 }; got.mig = BN; const gm = E.migrateSave(got);
   check(gm.bonus.rack === 2 && gm.bonus.basket === 0 && Object.keys(gm.bonus).length === E.BONUS_KEYS.length, '이미 고른 칸은 그대로, 빠진 칸만 0'); }
 
