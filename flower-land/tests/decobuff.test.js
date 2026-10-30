@@ -51,7 +51,11 @@ console.log('[🪨 돌 물확]');
   check(two.flowers.filter(x => x.waterH > 0).length === 1 && two.stats.basinWater === 1, '물확 둘이어도 한 달에 한 포기 (겹치지 않음)');
   const wet = copy(s); put(wet, 'basin', 5, 5); wet.flowers.forEach(x => { x.waterH = MH; });
   check(E.basinTick(wet, quiet) === null, '둘레 꽃이 다 물이 넉넉하면 안 줌 (빗물 통과 같은 기준)');
-  check(!E.AUTO_STATS || !E.FARM_STATS || !JSON.stringify(E.FARM_STATS).includes('basin'), '곤충농장 · 자리를 비운 동안 일꾼 줄엔 안 넣음 (장식이지 일꾼이 아님)'); }
+  check(!E.FARM_STATS.includes('basinWater') && !E.FARM_KEYS.includes('basin'), '곤충농장 일꾼 카드엔 안 넣음 (장식이지 일꾼이 아님)');
+  check(E.isAutoLine('🪨 돌 물확의 빗물이 장미에 닿았어요') && E.autoLineType('🪨 돌 물확의 빗물이 장미에 닿았어요') === 16, '자리를 비운 동안: 달마다 남긴 물확 줄은 빼고');
+  const snap = E.autoStats(s); snap.basinWater = 3; const later = copy(s); later.stats.basinWater = 7;
+  check(E.autoAwayLines(later, snap).join() === '🪨 돌 물확이 꽃 4포기에 물을 줬어요', '"🪨 돌 물확이 꽃 n포기에 물을 줬어요" 한 줄로');
+  later.settings.slow = true; check(E.autoAwayLines(later, snap).join() === '🪨 돌 물확이 목마른 꽃에 물을 줬어요', '느긋하게 보기면 숫자 없이'); }
 { const s = fresh('b-basin-slot'); const f = flower(s, 'rose', 4, 4, { waterH: 0, thirstH: 10 }); put(s, 'basin', 5, 5);
   const w0 = s.water;
   E.advance(s, s.virtual + 2 * MH * H, quiet);
@@ -102,7 +106,11 @@ console.log('[🕰️ 해시계]');
   s.bonus.catchup = 2;
   check(E.catchUpWeeks(s) === 6 && E.catchUpH(s) === 6 * 7 * 24 && E.CATCHUP_MAX_W === 6, '🌟 따라잡기 길게 끝(5주) + 해시계 = 6주 (최대)');
   check(E.farmOf(s).catchup.weeks === 6, '곤충농장 🌙 칸 "n주까지 따라잡아요"가 이 값을 읽음');
-  check(E.bonusView(s).rows.find(r => r.key === 'catchup').desc === '오래 비워도 5주까지 따라잡아요', '손길 점 설명 문구는 그대로'); }
+  const row = E.bonusView(s).rows.find(r => r.key === 'catchup');
+  check(row.desc === '오래 비워도 6주까지 따라잡아요 · 🕰️ 해시계 +1주' && row.nextDesc === null, `손길 점 칸 설명도 해시계를 더한 값 (${row.desc})`);
+  s.bonus.catchup = 0; const r0 = E.bonusView(s).rows.find(r => r.key === 'catchup');
+  check(r0.desc === '오래 비워도 4주까지 따라잡아요 · 🕰️ 해시계 +1주' && r0.nextDesc === '오래 비워도 5주까지 따라잡아요 · 🕰️ 해시계 +1주' && E.farmOf(s).catchup.weeks === 4, '0단계 + 해시계: 지금 4주 · 다음 5주 — 곤충농장 🌙 칸 4주와 같음');
+  const bare = fresh('b-sun-bare'); check(E.bonusView(bare).rows.find(r => r.key === 'catchup').desc === '오래 비워도 3주까지 따라잡아요', '해시계가 없으면 설명 그대로'); }
 
 console.log('[🌳 나무 그네 · 🪑 나무 벤치]');
 { const sw = new Set(), arch = new Set();
@@ -118,7 +126,7 @@ console.log('[🌳 나무 그네 · 🪑 나무 벤치]');
   const v = s.visitors.now[0];
   check(v && Math.max(Math.abs(v.x - 15), Math.abs(v.y - 15)) === 1, '🐈 길고양이(조건 장식 없음)는 벤치 옆을 먼저');
   check(v && (v.left === 2 || v.left === 3), '그네 옆이 아닌 자리엔 그대로 2 ~ 3달');
-  check(E.visitorsOf(s)[0].where === '볕 드는 자리', '길고양이는 장식 · 꽃 옆 어디든이라 "볕 드는 자리" 그대로'); }
+  check(E.visitorsOf(s)[0].where === '나무 벤치 옆' && s.log.some(l => l.text === '🐈 길고양이가 나무 벤치 옆에 앉았어요'), '벤치 옆에 앉으면 어떤 손님이든 "나무 벤치 옆"'); }
 { const s = fresh('b-bench-fly'); put(s, 'bench', 15, 15); for (let i = 0; i < 10; i++) flower(s, 'chamomile', 1 + i * 2, 2, { waterH: 99 });
   s.visitors.call = 'butterfly'; E.visitorTick(s, calAt(s, 70), quiet);
   const v = s.visitors.now[0];

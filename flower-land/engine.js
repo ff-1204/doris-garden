@@ -2279,10 +2279,11 @@ function forestWeedOf(st) {
 // "자리를 비운 동안"(P25-01): 장치마다 한 줄로 합침 — 달마다 남긴 일지 줄은 빼고(isAutoLine) 이 줄만. 느긋하게 보기면 숫자 없이 (P28-02)
 // P32-01 곤충 일꾼 이름 (10-30): 머리말이 바뀜 — 예전 저장의 일지 줄("자동 수확 바구니가 …")도 알아보게 [5] 옛 머리말
 const AUTO_STATS = [['autoHarvest', '개미 일꾼', n => `이 꽃잎 ${n}장을 물어 왔어요`, '이 꽃잎을 물어 왔어요', 18, ['자동 수확 바구니']], ['autoBags', '누에 일꾼', n => `이 꽃잎을 말려 티백 ${n}개를 만들었어요`, '이 꽃잎을 말려 티백을 만들었어요', 12, ['자동 건조대']],
-  ['autoBrew', '나비 일꾼', n => `이 찻잔 ${n}잔을 우렸어요`, '이 차를 우렸어요', 13, ['찻집 일손']], ['autoWeed', '무당벌레', n => `가 잡초 ${n}포기를 치웠어요`, '가 잡초를 치웠어요', 19, ['숲 바람']]];   // P30-02
+  ['autoBrew', '나비 일꾼', n => `이 찻잔 ${n}잔을 우렸어요`, '이 차를 우렸어요', 13, ['찻집 일손']], ['autoWeed', '무당벌레', n => `가 잡초 ${n}포기를 치웠어요`, '가 잡초를 치웠어요', 19, ['숲 바람']],   // P30-02
+  ['basinWater', '🪨 돌 물확', n => `이 꽃 ${n}포기에 물을 줬어요`, '이 목마른 꽃에 물을 줬어요', 16, []]];   // P33-01 물확 (장식이라 곤충농장 FARM엔 없음 — 자리를 비운 동안 한 줄로만 합침)
 const autoStats = st => Object.fromEntries(AUTO_STATS.map(([k]) => [k, ((st.stats || {})[k]) || 0]));
 const autoWho = text => AUTO_STATS.find(([, who, , , , old]) => text.startsWith(who) || old.some(o => text.startsWith(o)));
-const isAutoLine = text => !!autoWho(text);
+const isAutoLine = text => !!autoWho(text);   // 🪨 물확 일지 줄("🪨 돌 물확의 빗물이 …")도 머리말로 알아봄 (P33-01)
 const autoLineType = text => (autoWho(text) || [])[4] || 18;   // 일지 아이콘: 🧺 · 🍂 · ☕ · 🌿
 function autoAwayLines(st, before) {
   const now = autoStats(st), b = before || {};
@@ -2439,11 +2440,13 @@ function bonusSet(st, key, level) {
   st.bonus[key] = level;                          // 내리기는 늘 됨 — 점이 그대로 돌아옴
   return ok(`${B.icon} ${josa(B.name, '을/를')} ${level}단계로 내렸어요 · 🌟 ${bonusCostTo(from) - bonusCostTo(level)}점이 돌아왔어요`, { level });
 }
+// P33-02 🕰️ 해시계가 놓여 있으면 따라잡기 칸 설명도 실제 합산값으로 (곤충농장 🌙 칸 "n주까지"와 맞춤)
+const bonusDesc = (st, key, v) => key === 'catchup' && decoBuff(st).sundial ? `${BONUS[key].desc(Math.min(CATCHUP_MAX_W, v + 1))} · 🕰️ 해시계 +1주` : BONUS[key].desc(v);
 function bonusView(st) {                          // 고르기 화면(M3-2)이 읽음 — 느긋하게 보기 판단은 넣지 않음
   const points = bonusPoints(st), used = bonusUsed(st);
   const rows = BONUS_KEYS.map(key => {
     const B = BONUS[key], level = bonusLevel(st, key), max = bonusMax(key);
-    return { key, name: B.name, icon: B.icon, level, max, maxed: level === max, costNext: level < max ? BONUS_COST[level] : null, desc: B.desc(B.vals[level]), nextDesc: level < max ? B.desc(B.vals[level + 1]) : null };
+    return { key, name: B.name, icon: B.icon, level, max, maxed: level === max, costNext: level < max ? BONUS_COST[level] : null, desc: bonusDesc(st, key, B.vals[level]), nextDesc: level < max ? bonusDesc(st, key, B.vals[level + 1]) : null };
   });
   return { points, used, left: Math.max(0, points - used), per: BONUS_PER, nextAt: (points + 1) * BONUS_PER, rows };
 }
@@ -2876,7 +2879,7 @@ function visitorCells(st, k) {   // 조건 장식 · 꽃 바로 옆 빈 칸 (같
   return out;
 }
 const visitorWho = k => `${VISITORS[k].icon} ${josa(VISITORS[k].name, '이/가')}`;
-const visitorWhere = (st, k, x, y) => decoBuff(st).bench.some(d => nextTo(d, x, y)) && !VISITORS[k].spots(st).some(a => nextTo(a, x, y)) ? '나무 벤치 옆' : VISITORS[k].where;   // P33-01 벤치 옆에만 닿은 자리
+const visitorWhere = (st, k, x, y) => decoBuff(st).bench.some(d => nextTo(d, x, y)) ? '나무 벤치 옆' : VISITORS[k].where;   // P33-01 벤치 옆에 앉으면 어떤 손님이든 "나무 벤치 옆"
 function visitorArrive(st, k, cell, cal, rnd, ctx) {
   const V = visitorsSt(st), T = VISITORS[k];
   const fo = cell[2] === 'forest';
