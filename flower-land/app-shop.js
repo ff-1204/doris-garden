@@ -94,20 +94,6 @@ function renderShop(force) {
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
-  // P28-10 🧺 자동 장치 (10-28) → P32-01 🐝 곤충 일꾼 (10-30): 늘 팖 · 정원 등급이 닿으면 열림 · 손을 덜어 줄 뿐 더 벌게 하지 않음 (느긋하게 보기여도 그대로) · 🐝 곤충농장 탭에서도 데려옴
-  const gAuto = E.gradeOf(st).grade;
-  const autoSection = `<div class="cab-head"><span class="sb-title">🐝 곤충 일꾼</span><span class="muted">놓아 두면 저절로 일해요 · 손으로 할 때보다 더 벌지는 않아요</span><button type="button" class="btn small right" data-gofarm="1">🐝 곤충농장</button></div>
-    <div class="decoshop">${E.AUTO_KEYS.map(k => { const D = E.DECOS[k], open = D.need <= gAuto, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
-      return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${!open ? `<span class="muted">🔒 ${D.need}등급에 열려요</span>` : D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
-  // P27 🔆 정원 장치: 늘 팖 · 다 자라기까지 걸리는 시간만 줄임
-  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear);
-  const gearSection = `<div class="cab-head"><span class="sb-title">🔆 정원 장치</span><span class="muted">다 자라기까지만 빨라져요 · 피는 달 · 품질 · 땅 · 꽃잠은 그대로</span></div>
-    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
-      return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 땅 · 꽃에는 영향이 없어요</span></div>
@@ -115,14 +101,6 @@ function renderShop(force) {
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${open ? `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>` : `<span class="muted">🔒 ${D.grade}등급에 열려요</span>`}</span></div>`; }).join('')}</div>`;
-  // P26 💐 이웃에게 선물: 종류마다 한 해에 한 번, 다음 달 답장 편지
-  const gs = E.giftsOf(st);
-  const lc = E.letterCount(st), allL = lc >= E.LETTER_KEYS.length;
-  const giftSection = `<div class="cab-head"><span class="sb-title">💐 이웃에게 선물</span><span class="muted">종류마다 한 해에 한 번 · 다음 달 답장과 함께 답례품이 와요(무엇이 올지는 몰라요) · ✉️ ${lc} / ${E.LETTER_KEYS.length}${allL ? ' · 편지를 다 모았어요, 이제는 고맙다는 답장이 와요' : ''}</span></div>
-    <div class="decoshop">${E.GIFT_KEYS.map(k => { const G = E.GIFTS[k], sent = gs.sent[k], short = st.money < G.price;
-      return `<div class="decocard"><span class="dk-art"><span class="gift-ic">${G.ic}</span></span>
-        <span class="dk-main"><b>${G.name}</b><small>${G.desc}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(G.price)}</span>${sent ? '<span class="muted">✓ 올해 보냈어요 · 3월에 다시</span>' : `<button type="button" class="btn primary" data-gift="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '보내기'}</button>`}</span></div>`; }).join('')}</div>`;
   // P30-03 🌳 숲: 4층이 열린 뒤에만 · 묘목 6가지를 돈으로 (나무는 팔지 않고 열매 · 수입 없음) — 사면 바로 숲의 첫 빈 자리에 심음 (꽃잠에도)
   const fo = E.forestOpen(st) ? E.forestOf(st) : null;
   const forestSection = !fo ? '' : `<div class="cab-head"><span class="sb-title">🌳 숲</span><span class="muted">묘목을 사면 숲 빈 자리에 심어요 · 해가 바뀔 때마다 자라요 · 열매 · 돈은 나오지 않아요${fo.slow ? '' : ` · 빈 자리 ${fo.empty} / ${E.FOREST_N}`}</span></div>
@@ -131,7 +109,7 @@ function renderShop(force) {
         <span class="dk-main"><b>${T.icon} ${T.name} 묘목</b><small>${T.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(T.price)}</span>${!fo.empty ? '<span class="muted">자리가 다 찼어요</span>' : `<button type="button" class="btn primary" data-treebuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '심기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${forestSection}${decoSection}${gradeSection}${autoSection}${gearSection}${giftSection}</div>`;
+    ${cal.frozen ? rvView : saleView}${forestSection}${decoSection}${gradeSection}</div>`;   // 10-30: 🐝 곤충 일꾼 · 🔆 정원 장치 줄은 🐝 곤충농장 탭으로, 💐 이웃에게 선물 줄은 뺌 (사용자 요청 — 엔진 · 받은 편지는 그대로)
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
@@ -142,7 +120,6 @@ $('#p-shop').addEventListener('click', e => {
   const k = b.dataset.key;
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
-  if (b.dataset.gift) { const G = E.GIFTS[b.dataset.gift]; return openModal(`${G.ic} ${G.name} 보내기`, `<p>이웃에게 ${josa(G.name, '을/를')} 보내요 · <b class="data">${won(G.price)}</b></p><p class="muted">종류마다 한 해에 한 번 · 다음 달(오전 · 오후 6시)에 ${E.letterLeftFor(st, b.dataset.gift) ? '답장 편지와' : '고맙다는 답장과'} 함께 🎁 답례품이 와요 · 무엇이 올지는 몰라요</p><p class="muted">💰 가진 돈 ${won(st.money)} → ${won(st.money - G.price)}</p>`, [{ label: '취소', act: () => closeModal() }, { label: `보내기 · ${won(G.price)}`, primary: true, act: () => { closeModal(); after(E.sendGift(st, b.dataset.gift, ctx)); } }]); }
   if (b.dataset.treebuy) return after(E.plantTree(st, b.dataset.treebuy, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') });   // P30-03
   if (b.dataset.gofarm) return setTab('farm');   // P32-03
   if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
