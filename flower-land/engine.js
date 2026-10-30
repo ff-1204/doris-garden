@@ -320,7 +320,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {}, bonus: newBonus(), season: Object.assign(newSeason(), { startedAt: now }),   // P28-08-03 🌸 새 철 · P28-05-02 🌟 고른 등급 보너스 · P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {}, layers: newLayers(), bonus: newBonus(), season: Object.assign(newSeason(), { startedAt: now }),   // P28-08-03 🌸 새 철 · P28-05-02 🌟 고른 등급 보너스 · P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -531,6 +531,7 @@ function onSlot(st, cal, ctx) {
   }
   flushPending(st, ctx);
   checkLands(st, ctx);
+  if (cal.idx === 0) layerCheck(st, ctx); else layerSync(st);                 // P30-01-01 새 층은 새해 3월 아침에만 · 1~3층 연 해는 달마다 적음
 }
 
 function recordYear(st, cal, ctx) {
@@ -2322,7 +2323,7 @@ const seasonBreaks = rows => (rows || []).reduce((out, r, i) => (i > 0 && rowSea
 //   · 🪑 찻집 가꾸기 · 장식 보유(🧺 자동 장치는 놓인 자리 그대로 — 열린 질문 ①, 나머지는 창고 🪴로) · 첫 안내 · 이웃의 화분 · 첫 꽃 · 첫 손님 표시 · 꽃잠 시작 표시(「꽃잠에 온 손님」을 새로 주지 않게)
 //   · 이번 주 목표(같은 주에 다시 뽑으면 경험치를 두 번 받아서 — 월요일에 저절로 바뀜) · 마지막 파일 저장 · 마지막으로 손댄 때 · 이름표 번호(nextId)
 const SEASON_KEEP = ['grade', 'bonus', 'titles', 'titleOn', 'dex', 'journal', 'stats', 'yearLog', 'records', 'bestScore', 'letterBox', 'letterPending', 'mailGot', 'settings', 'account', 'resetAt', 'gardenId',
-  'shop', 'decos', 'onboarded', 'guide', 'gift', 'firstFlower', 'ownBloom', 'firstGuest', 'starterGift', 'startedInSleep', 'weekly', 'restClosed', 'lastExport', 'lastReal', 'actAt', 'speed', 'nextId', '_newTitles'];
+  'shop', 'decos', 'onboarded', 'guide', 'gift', 'firstFlower', 'ownBloom', 'firstGuest', 'starterGift', 'startedInSleep', 'weekly', 'restClosed', 'lastExport', 'lastReal', 'actAt', 'speed', 'nextId', '_newTitles', 'layers'];   // layers: P30-01-01 정원의 층 (연 해는 누적 해 수라 철을 넘겨도 그대로)
 function seasonStart(st, ctx) {
   ctx = ctx || {};
   const cal = calendar(st.virtual);
@@ -2347,6 +2348,67 @@ function seasonStart(st, ctx) {
   const title = SEASON_TITLES.find(k => TITLES[k].season === n + 1) || null;   // 새 철 보상은 이 칭호뿐 — 🌟 손길 점은 더 주지 않음 (열린 질문 ②)
   if (title) giveTitle(st, title, cal, ctx);
   return ok(`🌸 ${n + 1}철을 시작했어요`, { season: n + 1, title, ended });
+}
+
+// ---------------------------------------------------------------- 🌳 정원의 층 (P30-01-01, L1-1 10-30)
+// P30-01-01 해 단위로 천천히 열리는 층. 1~3층은 이미 있는 것(찻집 · 광산)을 층으로 부를 뿐이라 정원은 바뀌지 않음 — 찻집은 첫 찻잔을 팔면, 광산은 처음 파면(주간 목표 open과 같은 기준)
+//   4층부터는 앞 층을 연 뒤 흐른 해 + 모은 것. 흐른 해 = 해마다 기록(yearLog) 줄 수 — 철을 넘겨 센 누적(seasonRows가 아님), 비운 동안 따라잡기로 쌓인 줄도 셈(켜 두어야만 얻는 것 없음)
+//   새 층(4층~)은 새해 3월 아침(월요일 6시, onSlot idx 0)에만 열림 — 꽃잠 가운데 · 흐르는 달 중간엔 안 열림. 수입 배율 없음 (P17-14)
+// 저장 st.layers = { at: { 2: 연 때의 누적 해 수, 3: …, 4: … } } (없으면 null) — 새 철에도 이어짐 (SEASON_KEEP)
+// LAYER_MAX_OPEN: 실제로 열 수 있는 가장 높은 층. 🌳 숲 탭 · 열림 알림은 L3(P30-01-03 · P30-03) 몫이라 그때까지 3 — 4층 조건 · 남은 것은 보이되 열리지는 않음
+const LAYER_MAX_OPEN = 3;
+const LAYERS = [
+  null,
+  { layer: 1, name: '꽃밭', icon: '🌱' },
+  { layer: 2, name: '찻집', icon: '🍵', test: st => n0(st.dex && st.dex.tea) > 0, how: '찻집에서 첫 찻잔을 팔면' },
+  { layer: 3, name: '광산과 벌통', icon: '⛏️', test: st => S(st, 'dug') > 0, how: '광산에서 처음 파면' },
+  { layer: 4, name: '작은 숲', icon: '🌳', years: 8, dex: true, newYear: true, openText: '🌳 정원 뒤에 작은 숲이 생겼어요' },
+  { layer: 5, name: null, icon: null },   // 5층부터는 자리만 (지금 범위 밖 — 연못 · 온실 후보)
+];
+const newLayers = () => ({ at: {} });
+const layerYears = st => ((st && st.yearLog) || []).length;   // 흐른 해 (누적)
+const layerDexOk = st => FLOWER_KEYS.every(k => st.dex && st.dex.flower && st.dex.flower[k]);
+const layerDexN = st => FLOWER_KEYS.filter(k => st.dex && st.dex.flower && st.dex.flower[k]).length;
+const layerAt = (st, n) => { const a = st.layers && st.layers.at; return a && a[n] != null ? a[n] : null; };
+function layerNow(st) {   // 지금 층: 1층부터 차례로 — 1~3층은 조건이 차면 바로, 4층부터는 연 해가 저장돼 있어야
+  let n = 1;
+  for (let i = 2; i < LAYERS.length && LAYERS[i].name; i++) {
+    const L = LAYERS[i];
+    if (L.test ? L.test(st) : layerAt(st, i) != null) n = i; else break;
+  }
+  return n;
+}
+function layerNeed(st, i, max) {   // i층 조건 (4층부터): 앞 층 연 해에서 몇 해 더 · 꽃 도감
+  const L = LAYERS[i], prevAt = layerAt(st, i - 1), years = layerYears(st);
+  const from = prevAt == null ? years : prevAt;                     // 앞 층을 막 열었으면(아직 저장 전) 지금 해부터
+  const yearsLeft = Math.max(0, from + (L.years || 0) - years);
+  const dexOk = !L.dex || layerDexOk(st);
+  return { needYears: L.years || 0, yearsLeft, needDex: L.dex ? FLOWER_KEYS.length : 0, dex: layerDexN(st), dexOk, ready: yearsLeft === 0 && dexOk, held: i > (max || LAYER_MAX_OPEN) };
+}
+function layerOf(st, max) {   // max: 열 수 있는 가장 높은 층 (기본 LAYER_MAX_OPEN — 테스트 · L3가 ctx.layerMax로 넘김)
+  const n = layerNow(st), L = LAYERS[n], N = LAYERS[n + 1];
+  let next = null;
+  if (N && N.name) {
+    next = { layer: N.layer, name: N.name, icon: N.icon };
+    if (N.test) Object.assign(next, { how: N.how, needYears: 0, yearsLeft: 0, needDex: 0, dex: layerDexN(st), dexOk: true, ready: false, held: false });
+    else Object.assign(next, layerNeed(st, N.layer, max));
+  }
+  return { layer: n, name: L.name, icon: L.icon, layers: LAYERS.filter(x => x && x.name).map(x => ({ layer: x.layer, name: x.name, icon: x.icon, open: x.layer <= n })), next };
+}
+function layerSync(st) {   // 1~3층: 조건이 찬 층의 연 해를 적어 둠 (onSlot 달마다) — 다음 층 남은 해가 여기서부터
+  st.layers = st.layers || newLayers();
+  const n = layerNow(st), y = layerYears(st);
+  for (let i = 2; i <= n; i++) if (LAYERS[i].test && st.layers.at[i] == null) st.layers.at[i] = y;
+}
+function layerCheck(st, ctx) {   // 새해 3월 아침에만 (onSlot idx 0): 다음 층 조건이 차면 한 층만 엶
+  layerSync(st);
+  const o = layerOf(st, ctx && ctx.layerMax), N = o.next;
+  if (!N || !LAYERS[N.layer].newYear || !N.ready || N.held) return null;
+  st.layers.at[N.layer] = layerYears(st);
+  addLog(st, 9, LAYERS[N.layer].openText || `${N.icon} 정원의 ${N.layer}층 ${N.name}이 열렸어요`);   // 알림은 화면이 onLayer로 (L3) — 등급 줄처럼 ctx 없이
+  const e = { layer: N.layer, name: N.name };
+  if (ctx && ctx.onLayer) ctx.onLayer(e);
+  return e;
 }
 
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
@@ -2492,6 +2554,9 @@ const MIGRATIONS = [
     if (!s.season) s.season = newSeason();
     for (const r of [...(s.yearLog || []), ...(s.records || [])]) if (r.season == null) r.season = 1;
   }],
+  ['🌳 정원의 층 layers (P30-01-01, L1-1 10-30): 이미 찻집 · 광산을 연 정원은 2 · 3층 연 해 = 업데이트한 해(지금 해마다 기록 줄 수) — 4층이 한꺼번에 열리지 않게', s => {
+    if (!s.layers) { s.layers = newLayers(); layerSync(s); }
+  }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2610,7 +2675,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, layerYears, layerNow, layerOf, layerSync, layerCheck, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

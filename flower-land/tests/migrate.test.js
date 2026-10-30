@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -122,7 +122,7 @@ console.log('[🌟 등급 보너스 bonus (P28-05-02)]');
 console.log('[🌸 새 철 season (P28-08-03)]');
 { const SN = E.MIGRATIONS.findIndex(x => x[0].includes('새 철 season'));
   const nw = E.create(MON, () => 0.5);
-  check(SN === E.MIGRATIONS.length - 1 && nw.season.n === 1 && nw.season.startedAt === MON && nw.season.path === null && nw.season.log.length === 0, '새 정원은 1철 · 시작한 때를 앎 (맨 끝 보정)');
+  check(SN >= 0 && nw.season.n === 1 && nw.season.startedAt === MON && nw.season.path === null && nw.season.log.length === 0, '새 정원은 1철 · 시작한 때를 앎');
   check(m.season && m.season.n === 1 && m.season.startedAt === null && m.season.path === null && JSON.stringify(m.season.log) === '[]', '가장 옛 정원도 1철 · 시작한 때는 모름(null)');
   const old = copy(st); delete old.season; old.mig = SN;
   old.yearLog = [{ year: 1, income: 5, sold: 1, harvest: 1, orders: 0, score: 9, grade: 2, dex: 1, dexTotal: 93 }, { year: 2, income: 6, sold: 2, harvest: 1, orders: 0, score: 10, grade: 3, dex: 2, dexTotal: 93 }];
@@ -133,6 +133,22 @@ console.log('[🌸 새 철 season (P28-08-03)]');
   const s2 = copy(st); s2.season = { n: 3, startedAt: 7, path: null, log: [{ n: 1 }, { n: 2 }] }; s2.yearLog = [{ year: 1, season: 3, score: 1 }]; s2.mig = SN;
   const sm = E.migrateSave(s2);
   check(sm.season.n === 3 && sm.season.log.length === 2 && sm.yearLog[0].season === 3, '이미 있는 철 · 줄의 철 번호는 그대로'); }
+
+console.log('[🌳 정원의 층 layers (P30-01-01)]');
+{ const LN = E.MIGRATIONS.findIndex(x => x[0].includes('정원의 층 layers'));
+  const nw = E.create(MON, () => 0.5);
+  check(LN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.layers) === '{"at":{}}', '새 정원은 연 층 기록이 비어 있음 (맨 끝 보정)');
+  check(m.layers && m.layers.at[2] === m.yearLog.length && m.layers.at[3] == null, '가장 옛 정원: 차를 판 적이 있으면 2층 연 해 = 업데이트한 해 · 광산을 판 적 없으면 3층은 아직');
+  const old = copy(st); delete old.layers; old.mig = LN; old.dex.tea = { rose: 1 }; old.stats = { dug: 5 };
+  old.yearLog = Array.from({ length: 20 }, (_, i) => ({ year: i + 1, season: 1, score: 1 }));
+  for (const k of E.FLOWER_KEYS) old.dex.flower[k] = true;
+  const om = E.migrateSave(old), o = E.layerOf(om);
+  check(om.layers.at[2] === 20 && om.layers.at[3] === 20 && o.layer === 3 && o.next.yearsLeft === 8 && !o.next.ready, '찻집 · 광산을 연 정원(20해): 2 · 3층 연 해 = 20 → 4층까지 8해 더 (한꺼번에 안 열림)');
+  const none = copy(st); delete none.layers; none.mig = LN; none.dex.tea = {}; none.stats = {};
+  const nm = E.migrateSave(none);
+  check(JSON.stringify(nm.layers) === '{"at":{}}' && E.layerOf(nm).layer === 1, '아무것도 연 적 없는 정원은 1층 · 기록 없음');
+  const has = copy(st); has.layers = { at: { 2: 3 } }; has.mig = LN; has.dex.tea = { rose: 1 };
+  check(E.migrateSave(has).layers.at[2] === 3, '이미 있는 층 기록은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
