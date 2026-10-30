@@ -29,7 +29,7 @@ function renderInbox(ib) {
       + (ib.more ? '<p class="note ib-more">그 밖은 📜 정원 일지 · 📖 기록에 있어요</p>' : '');   // 열린 질문 ①: 최근 30줄 · 넘치면 한 줄
   return `<div class="stack ib-wrap"><span class="seg ib-tabs">${tb('letters', '✉️ 편지')}${tb('news', '🔔 소식')}</span>
     <div class="ib-list">${tab === 'news' ? news : letters}</div>
-    <button type="button" class="btn small ib-dex" data-ibdex="1">📖 도감에서 모두 보기</button></div>`;
+    ${tab === 'news' ? '' : '<button type="button" class="btn small ib-dex" data-ibdex="1">📖 도감에서 모두 보기</button>'}</div>`;
 }
 // 열면 점이 사라짐 (st.mailSeenAt = 지금) — 줄마다의 "새로 옴"은 이번에 연 창에서만 보임
 function openInbox() {
@@ -47,7 +47,8 @@ function openInbox() {
       if (l.kind === 'mail') { const m = E.mailOf(st, l.id); return m ? openMail(m) : feedback('편지함에 없는 편지예요', true); }
       openLetter(item || E.letterOf(st, l.key) || { k: l.key }, false);   // 도감 편지 칩과 같은 창
     });
-    root.querySelector('[data-ibdex]').onclick = () => { closeModal(); ui.dexTab = 'dex'; ui.dexCat = 'letter'; setTab('dex'); window.scrollTo({ top: 0 }); };
+    const dex = root.querySelector('[data-ibdex]');   // ✉️ 편지 칸에만
+    if (dex) dex.onclick = () => { closeModal(); ui.dexTab = 'dex'; ui.dexCat = 'letter'; setTab('dex'); window.scrollTo({ top: 0 }); };
   };
   show();
 }

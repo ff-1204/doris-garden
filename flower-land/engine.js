@@ -1962,7 +1962,9 @@ function inboxNews(st) {
   for (const l of [...(st.records || []).slice().reverse().flatMap(r => r.log || []), ...(st.log || [])]) {   // 오래된 해부터
     const K = newsKind(l); if (!K) continue;
     const text = newsText(st, l, K); if (text == null) continue;
-    all.push({ type: l.type, kind: K[0], icon: K[1], text, y: l.y, m: l.m, d: l.d, at: l.at == null ? null : l.at, unread: inboxNew(st, l.at) });
+    const vk = K[0] === 'visitor' ? VISITOR_KEYS.find(k => text.startsWith(VISITORS[k].icon + ' ')) : null;   // 🐾 줄은 손님 아이콘을 줄 아이콘으로 (🐾 🦔 겹침 없이)
+    const icon = vk ? VISITORS[vk].icon : K[1], body = vk ? text.slice(VISITORS[vk].icon.length + 1) : text;
+    all.push({ type: l.type, kind: K[0], icon, text: body, y: l.y, m: l.m, d: l.d, at: l.at == null ? null : l.at, unread: inboxNew(st, l.at) });
   }
   return { list: all.slice(-INBOX_NEWS_MAX).reverse(), more: all.length > INBOX_NEWS_MAX };   // 최근 30줄 · 넘으면 more ("그 밖은 📜 정원 일지에" — 열린 질문 ①)
 }

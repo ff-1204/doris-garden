@@ -66,6 +66,8 @@ check(ib.news.length === 9, `소식 9줄 · 도감 등록 · 편지 · 쪽지 ·
 check(ib.news[0].kind === 'title' && ib.news[ib.news.length - 1].text.startsWith('올해 봄엔'), '최근 것부터');
 check(ib.news.every(n => n.icon && n.text && n.d && n.unread), '줄마다 아이콘 · 문장 · 날짜 · 안 읽음');
 check(ib.news[0].text === '새 칭호: 꽃잎 수집가' && ib.news.find(n => n.kind === 'layer' && n.text === '정원 뒤에 작은 숲이 생겼어요'), '줄 아이콘과 같은 문장 머리 아이콘은 한 번만');
+{ const V = E.VISITORS[E.VISITOR_KEYS[0]], v = ib.news.find(n => n.kind === 'visitor');
+  check(v.icon === V.icon && !v.text.startsWith(V.icon), '🐾 손님 줄은 손님 아이콘이 줄 아이콘 (🐾 🦔 겹침 없음)'); }
 check(N.log.filter(l => l.at != null).length === 9, '시각은 소식 줄에만 적음 (다른 일지 줄은 그대로)');
 
 console.log('[연 뒤 → 새 소식]');
