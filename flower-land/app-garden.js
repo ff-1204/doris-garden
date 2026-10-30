@@ -438,6 +438,7 @@ function showVisitorBubble(v) {
   clearTimeout(visitorBubbleT); visitorBubbleT = setTimeout(hideVisitorBubble, 8000);
 }
 // ---------------------------------------------------------------- ⛏️ 광산 탭 (P24, 10-24 · 10-30 창 → 탭, 사용자 요청 "창고 밑에 광산 메뉴 따로"): 층 · 기력 · 8×6 판 · 가방 · 만들기
+const mineFrom = n => E.ORES[n] ? E.ORES[n].from : E.FOSSILS[n] ? E.FOSSILS[n].from : n === 'oldseed' ? 8 : 1;   // 10-31 QA: 광석 · 화석 · 옛 씨앗(8층부터) 모두 "n층부터"
 function renderMine(force) {
   const m = E.mineOf(st), b = m.board;
   const wait = realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1));
@@ -454,7 +455,7 @@ function renderMine(force) {
   const craftRows = E.CRAFT_KEYS.filter(k => !E.CRAFTS[k].cup).map(k => { const C = E.CRAFTS[k], have = C.cup && E.shopOf(st).cups.includes(C.cup), can = E.canCraft(st, k) && !have;
     const pct = Math.floor(100 * Math.min(...Object.entries(C.need).map(([n, q]) => Math.min(1, (m.bag[n] || 0) / q))));
     const art = C.deco ? decoImg(C.deco, 2) : C.item === 'jar' ? decoImg('mutjar', 2) : C.supply ? `<span class="mn-ico">${E.SUPPLIES[C.supply].icon}</span>` : C.cup ? `<img class="px" src="${cupPreview(C.cup)}" width="32" height="32" alt="">` : '<span class="mn-ico">🌱</span>';
-    return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && E.ORES[n] && E.ORES[n].from > 1 ? ` (${E.ORES[n].from}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
+    return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && mineFrom(n) > 1 ? ` (${mineFrom(n)}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
   const crafts = `<div class="mine-crafts">${[...craftRows.filter(r => r.can), ...craftRows.filter(r => !r.can)].map(r => r.html).join('')}</div>`;
   const sig = JSON.stringify([m, nextE, st.money, E.shopOf(st).cups, st.jar]);
   if (!force && ui.sigs.mine === sig) return;
@@ -476,11 +477,18 @@ function renderMine(force) {
     </div>
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
 }
+// 10-31 QA: 광산은 눌릴 때마다 통째로 다시 그려 키보드 포커스가 BODY로 떨어짐 → 같은 자리(판 칸은 그 칸부터 다음 안 판 칸)로 되돌림
+function mineRefocus(sel, kind) {
+  const root = $('#p-mine'); let el = root.querySelector(sel);
+  if (!el && kind === 'dig') { const i = +sel.replace(/D/g, ''), cells = [...root.querySelectorAll('[data-dig]')]; el = cells.find(b => +b.dataset.dig >= i) || cells[0] || root.querySelector('[data-mact]'); }
+  if (el && !el.disabled) el.focus({ preventScroll: true });
+}
 $('#p-mine').addEventListener('click', e => {
   const d = e.target.closest('[data-dig]'); if (d && !d.disabled) {   // 10-31 QA: 연속 클릭 — 판 전체를 다시 그리지 않고 광산 탭만 바로 다시 그림(renderAll은 다음 프레임에), 같은 칸 두 번은 조용히
     const r = E.dig(st, +d.dataset.dig, ctx); if (!r.ok) return r.msg.startsWith('이미') ? undefined : feedback(r.msg, true);
     save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg);
-    renderMine(true); return requestAnimationFrame(() => renderAll(true));
+    const sel = `[data-dig="${d.dataset.dig}"]`; renderMine(true); mineRefocus(sel, 'dig');
+    return requestAnimationFrame(() => { renderAll(true); mineRefocus(sel, 'dig'); });   // 전체 다시 그리기 뒤에도 포커스 한 번 더
   }
   const x = e.target.closest('[data-mact]');
   if (x && !x.disabled) {
@@ -488,7 +496,7 @@ $('#p-mine').addEventListener('click', e => {
     if (a !== 'up') return go();
     return openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => closeModal() }, { label: '올라가기', primary: true, act: go }]);
   }
-  const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const r = E.craft(st, c.dataset.craft, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); return renderAll(true); }
+  const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const k = c.dataset.craft, r = E.craft(st, k, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); return mineRefocus(`[data-craft="${k}"]`); }
 });
 // 놓인 장식을 누르면: 그림 · 이름 · 옮기기 · 창고에 넣기 (P17-16-03)
 // 심은 지: 한 해(14달)가 넘으면 해 단위로 (QA 13회차)
