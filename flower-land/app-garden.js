@@ -477,7 +477,11 @@ function renderMine(force) {
     <p class="note">기력은 30분마다 한 칸씩, 꺼 둔 동안에도 차요 · 나온 것은 팔지 않고 만들기 · 도감에 써요</p></div>`;
 }
 $('#p-mine').addEventListener('click', e => {
-  const d = e.target.closest('[data-dig]'); if (d && !d.disabled) { const r = E.dig(st, +d.dataset.dig, ctx); if (!r.ok) return feedback(r.msg, true); save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg); return renderAll(true); }
+  const d = e.target.closest('[data-dig]'); if (d && !d.disabled) {   // 10-31 QA: 연속 클릭 — 판 전체를 다시 그리지 않고 광산 탭만 바로 다시 그림(renderAll은 다음 프레임에), 같은 칸 두 번은 조용히
+    const r = E.dig(st, +d.dataset.dig, ctx); if (!r.ok) return r.msg.startsWith('이미') ? undefined : feedback(r.msg, true);
+    save(); if (r.first || r.stairs || r.cell.k === 'oldseed') feedback(r.msg);
+    renderMine(true); return requestAnimationFrame(() => renderAll(true));
+  }
   const x = e.target.closest('[data-mact]');
   if (x && !x.disabled) {
     const a = x.dataset.mact, m = E.mineOf(st), go = () => { closeModal(); const r = a === 'down' ? E.descend(st) : a === 'up' ? E.mineUp(st) : a === 'deep' ? E.toDeepest(st) : E.freshBoard(st); feedback(r.msg, !r.ok); save(); renderAll(true); };

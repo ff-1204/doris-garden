@@ -876,7 +876,7 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .mine-wait, .mine-done { margin: 0; padding: 6px 10px; text-align: center; font-size: calc(13 * var(--u)); background: var(--sunk); border: 1px dashed var(--line); }
 .mine-done { font-weight: 600; }
 .mine-grid { container-type: inline-size; display: grid; grid-template-columns: repeat(var(--mw), minmax(0, 1fr)); gap: 2px; padding: 6px; background: #3b3128; }
-.mc { aspect-ratio: 1; min-width: 0; display: grid; place-items: center; border: 0; padding: 0; background: #7a6a58; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); cursor: pointer; position: relative; overflow: hidden; }
+.mc { aspect-ratio: 1; min-width: 0; display: grid; place-items: center; border: 0; padding: 0; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; background: #7a6a58; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); cursor: pointer; position: relative; overflow: hidden; }
 .mc:not(:disabled):not(.dug):hover, .mc:not(:disabled):not(.dug):focus-visible { background: #93826d; outline: 2px solid #f0d58a; outline-offset: -2px; }
 .mc:disabled { cursor: default; opacity: .8; }
 .mc.dug { background: #4e4238; box-shadow: inset 0 2px 0 rgba(0,0,0,.35); cursor: default; }
