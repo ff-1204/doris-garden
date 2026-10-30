@@ -1,6 +1,12 @@
 // 정원 장식 16×16 도트 그림 (P17-16, 10-24). 문자 하나가 도트 하나, '.'은 빈칸, 색은 장식마다 pal에서 찾음
 // 이름 · 값 · 파는 달은 engine.js DECOS에 있고, 여기는 그림만
 window.DECO_SPRITES = {
+  // P36-04 🫙 유리 관 (10-30): 안의 꽃 색 f · F는 그리는 쪽이 그 변이 꽃빛(단계 효과까지)으로 바꿈
+  mutjar: { pal: { k: '#7a5a3c', K: '#b08a60', g: '#7f9fa4', a: 'rgba(206,230,232,.55)', w: '#f2fbfb', f: '#c9a0c0', F: '#7a4a6a', s: '#5c7a4a', l: '#7f9f5a', d: '#6a5040' }, grid: [
+    '................', '.....kkkkkk.....', '.....kKKKKk.....', '....gggggggg....',
+    '....gaaaaaag....', '...gwaaaaaaag...', '..gawaaffaaaag..', '..gawafFFfaaag..',
+    '..gawaaffaaaag..', '..gawaasaaaaag..', '..gawaasalaaag..', '..gaaaslaaaaag..',
+    '..gaaasaaaaaag..', '..gaaddddddaag..', '...gggggggggg...', '................'] },
   stepstone: { pal: { g: '#8d8a80', G: '#bdb8ab' }, grid: [
     '................',
     '................',
@@ -665,6 +671,34 @@ window.YEARLY_ART = {
     napmae: { name: '연한 빛', petal: '#f6edc4', center: '#c9a040', pal: { a: '#f6edc4', A: '#fbf6e0', C: '#c9a040' } },
   },
 };
+// P36-03 🧬 돌연변이 꽃빛 (10-30) — 꽃 도트 그림의 대체 팔레트 하나(올해의 꽃빛 bloom 꼴, 같은 도트) · 지도 꽃잎 색(petal · center). 13종 × 3단계 = 39장을 따로 그리지 않고
+// 단계 효과는 공통: 2단계 어둡게 · 채도 ↓ / 3단계 더 어둡고 채도 ↓ + 테두리 1px · 그림자(그리는 쪽 — 지도 drawFlower · 도트 spriteURL 'mut3')
+window.MUTANT_ART = {
+  chamomile: { name: '납작한 흙빛', petal: '#b9a888', center: '#7f6838', pal: { w: '#c4b494', W: '#8a7656', y: '#9a8040', Y: '#6a5222', g: '#6a7044', G: '#4a4e2e', l: '#8a8a5a' } },
+  rose: { name: '흰 꽃잎 끝 핏빛', petal: '#f2ece6', center: '#b0202c', pal: { r: '#f2ece6', R: '#b0202c', s: '#faf6f2' } },
+  lavender: { name: '검보라 · 그늘 줄기', petal: '#3e2e52', center: '#22182e', pal: { p: '#3e2e52', P: '#22182e', q: '#5c4a74', g: '#2e3a2a', G: '#1a2418', l: '#3e4a34' } },
+  jasmine: { name: '달빛 은백', petal: '#e2e8f2', center: '#9fa9c2', pal: { w: '#e2e8f2', W: '#9fa9c2', y: '#c6d0e4' } },
+  lotus: { name: '꽃 속 빛 한 점', petal: '#efe0ea', center: '#fff7c0', pal: { k: '#efe0ea', K: '#c9a8c0', Y: '#fffbe0' } },
+  bpea: { name: '보라 ↔ 분홍', petal: '#b85aa8', center: '#f2d24a', pal: { b: '#b85aa8', B: '#7a3486', w: '#f6d8ee' } },
+  hibiscus: { name: '재 묻은 검붉은 테', petal: '#6a1a20', center: '#2a1e1e', pal: { r: '#6a1a20', R: '#4a4446', d: '#1e1414', y: '#8a8282' } },
+  marigold: { name: '짙은 주황 · 꽃가루', petal: '#d4500c', center: '#f4c858', pal: { o: '#d4500c', O: '#8e3006', y: '#f4c858', Y: '#f8e09a' } },
+  celosia: { name: '검붉은 볏 · 금테', petal: '#5a0e1c', center: '#caa040', pal: { c: '#5a0e1c', C: '#caa040' } },
+  gamguk: { name: '이슬 방울', petal: '#e6de6e', center: '#bfe2ec', pal: { y: '#e6de6e', o: '#bfe2ec', O: '#7fb2c4' } },
+  dongbaek: { name: '밤빛', petal: '#2c2148', center: '#c9b862', pal: { r: '#2c2148', R: '#140e28', y: '#c9b862', Y: '#8e8040' } },
+  maehwa: { name: '비스듬한 흰빛', petal: '#f4f6f8', center: '#d6c070', pal: { m: '#f4f6f8', M: '#c2ccd6', y: '#d6c070' } },
+  napmae: { name: '녹아내리는 노랑', petal: '#e8c23e', center: '#a0781e', pal: { a: '#e8c23e', A: '#f6e8a6', C: '#a0781e' } },
+};
+// 단계 효과: 색 하나를 1 · 2 · 3단계 빛으로 (HSL — 2단계 채도 ×0.65 · 밝기 ×0.78, 3단계 채도 ×0.45 · 밝기 ×0.58). 1단계는 그대로
+window.MUT_SHADE = (hex, stage) => {
+  if (!stage || stage < 2 || typeof hex !== 'string' || hex[0] !== '#') return hex;
+  const n = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255), mx = Math.max(...n), mn = Math.min(...n), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0, s = 0;
+  if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === n[0] ? ((n[1] - n[2]) / d) % 6 : mx === n[1] ? (n[2] - n[0]) / d + 2 : (n[0] - n[1]) / d + 4; h *= 60; if (h < 0) h += 360; }
+  const s2 = s * (stage >= 3 ? 0.45 : 0.65), l2 = l * (stage >= 3 ? 0.58 : 0.78), c = (1 - Math.abs(2 * l2 - 1)) * s2, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l2 - c / 2;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return '#' + [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+};
+window.MUT_RIM = '#2a1630';   // 3단계 테두리 1px (지도 · 도트 같은 색)
 // P30-06-02 🐾 특별 손님 8명 — 16×16 도트(채도 낮게, 손님마다 모티프 · 팔레트가 겹치지 않게). 이름 · 조건 · 말은 engine.js VISITORS
 window.VISITOR_ART = {
   hedgehog: { pal: { k: '#4a3a30', s: '#7d6a58', S: '#a08a72', f: '#e3cfb2', r: '#b07a8a', e: '#2a2220' }, grid: [
