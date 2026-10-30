@@ -67,9 +67,9 @@ function renderToolbar(force) {
     tray.hidden = false;
     tray.innerHTML = keys.length ? `<button type="button" class="seedchip none" data-seed="" aria-pressed="${!ui.plantType}">선택 안 함</button>` + keys.map(k => {
       const F = FLOWERS[k], best = Math.max(...st.items.filter(i => i.type === k && E.germOf(i) > 0).map(i => i.q));
-      return `<button type="button" class="seedchip" data-seed="${k}" aria-pressed="${ui.plantType === k}"><span class="dot" style="background:${F.petal}"></span>${F.name} ${FORM[F.form].name} <span class="data">×${pl[k]}</span> <span class="stars" style="font-size:11px">★${E.stars(best)}</span></button>`;
+      return `<button type="button" class="seedchip" data-seed="${k}" aria-pressed="${ui.plantType === k}"><span class="dot" style="background:${F.petal}"></span>${F.name} ${FORM[F.form].name} <span class="data">×${pl[k]}</span> <span class="stars" style="font-size:calc(11 * var(--u))">★${E.stars(best)}</span></button>`;
     }).join('') + '<button type="button" class="btn small" data-act="endMode">✓ 심기 끝</button>'
-      : `<span class="muted" style="font-size:13px">${cal.frozen ? '꽃잠에는 심을 수 없어요.' : '지금 심을 수 있는 게 창고에 없어요.'}</span> <button type="button" class="btn small primary" data-go="shop">💐 화원</button> <button type="button" class="btn small" data-act="endMode">닫기</button>`;
+      : `<span class="muted" style="font-size:calc(13 * var(--u))">${cal.frozen ? '꽃잠에는 심을 수 없어요.' : '지금 심을 수 있는 게 창고에 없어요.'}</span> <button type="button" class="btn small primary" data-go="shop">💐 화원</button> <button type="button" class="btn small" data-act="endMode">닫기</button>`;
   } else if (ui.tool === 'deco') {                // P17-16 장식 놓기 · 옮기기
     const d = decoById(ui.decoId);
     if (!d) { ui.tool = 'look'; ui.decoId = null; tray.hidden = true; tray.innerHTML = ''; return renderHint(); }
@@ -77,7 +77,7 @@ function renderToolbar(force) {
     tray.innerHTML = `<span class="muted deco-tray">${decoImg(d.key, 1)} 🪴 ${d.x == null ? '놓는' : '옮기는'} 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>`;
   } else if (ui.tool === 'move') {
     tray.hidden = false;
-    tray.innerHTML = '<span class="muted" style="font-size:13px">↔ 옮겨 심는 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>';
+    tray.innerHTML = '<span class="muted" style="font-size:calc(13 * var(--u))">↔ 옮겨 심는 중이에요</span><button type="button" class="btn small" data-act="endMode">취소</button>';
   } else { tray.hidden = true; tray.innerHTML = ''; }
   renderHint();
 }
@@ -122,6 +122,20 @@ function resize() {
 new ResizeObserver(resize).observe(canvas.parentElement);
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const LCOL = Object.fromEntries(LAND_KEYS.map(k => [k, hex(LANDS[k].color)]));
+// P28-03 🧩 땅 무늬 보기 (M4-2 10-30): decos.js LAND_PATTERNS를 땅마다 16×16 한 장으로 — 지도엔 무늬만 겹치고, 범례 · 창의 땅 네모는 땅색 + 무늬.
+// 무늬 색은 땅 밝기로만 고름(밝은 땅은 어둡게 · 어두운 땅은 밝게) — 색상이 아니라 모양으로 구분. 보기뿐이라 규칙은 그대로
+const patInk = k => { const [r, gr, b] = LCOL[k]; return 0.299 * r + 0.587 * gr + 0.114 * b > 140 ? 'rgba(20,26,18,.34)' : 'rgba(255,255,255,.4)'; };
+const patCache = {};
+function landPat(k, bg) {
+  const id = k + (bg ? ':bg' : ''); if (patCache[id]) return patCache[id];
+  const P = (window.LAND_PATTERNS || {})[k], c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+  if (bg) { x.fillStyle = LANDS[k].color; x.fillRect(0, 0, 16, 16); }
+  if (P) { x.fillStyle = patInk(k); P.grid.forEach((row, y) => { for (let i = 0; i < 16; i++) if (row[i] === '#') x.fillRect(i, y, 1, 1); }); }
+  return (patCache[id] = c);
+}
+const patURL = k => patCache[k + ':url'] || (patCache[k + ':url'] = landPat(k, true).toDataURL());
+// 땅 네모 하나 (범례 · 빈 칸 · 꽃 창 · 매뉴얼): 땅 무늬 보기면 16px 무늬 그림(정수배), 아니면 색만 — style은 색 네모일 때만
+const landSw = (k, style) => E.patternView(st) ? `<span class="sw pat" style="background-image:url(${patURL(k)})"></span>` : `<span class="sw" style="background:${LANDS[k].color};${style || ''}"></span>`;
 function tileColor(i) {
   const tl = st.tiles[i], bare = LCOL.barren, target = LCOL[E.classify(tl.t, tl.m)];
   const a = Math.min(1, Math.max(0, (tl.life - 0.1) / (E.LIFE_MIN + 0.15 - 0.1)));
@@ -235,6 +249,7 @@ function draw() {
   const cal = E.calendar(st.virtual);
   renderYearSky(cal);                              // P30-05-02 올해만 오는 날씨 (꽃빛은 아래 drawFlower가 읽음)
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pat = E.patternView(st); g.imageSmoothingEnabled = false;   // P28-03 땅 무늬
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, tl = st.tiles[i];
     g.fillStyle = tileColor(i);
@@ -243,6 +258,7 @@ function draw() {
       g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1;
       g.beginPath(); g.arc((x + 0.5) * cell, (y + 0.55) * cell, cell * 0.22, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
     }
+    if (pat) { const k = E.landOf(tl); if (k !== 'barren') g.drawImage(landPat(k), x * cell, y * cell, cell, cell); }   // 땅이 덜 바뀐 칸(황무지)은 민무늬
   }
   g.fillStyle = ['rgba(255,190,210,.06)', 'rgba(255,220,120,.05)', 'rgba(220,140,60,.07)', 'rgba(215,232,255,.16)', 'rgba(0,0,0,0)'][cal.season];
   g.fillRect(0, 0, W * cell, H * cell);
@@ -541,7 +557,7 @@ function renderStatus(force) {
     el.innerHTML = `
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${FLOWERS[qf].petal} 16%, var(--sunk))">${spriteImg(qf, 'flower', 56, false, '')}</div>
-      <div class="sx-title"><p class="sx-quote">${mw ? mw.w : GARDEN_WORDS[qi]}</p>${mw ? `<div class="sx-lang">${monthName(cal0.month)}의 꽃 · <b>${FLOWERS[mw.k].name}</b> · ${FLOWER_WORDS[mw.k].own ? '정원의 꽃말' : '꽃말'} 「${FLOWER_WORDS[mw.k].lang}」</div>` : ''}<div class="muted" style="font-size:11.5px">꽃이나 빈 칸을 누르면 여기에 자세히 나와요</div></div>
+      <div class="sx-title"><p class="sx-quote">${mw ? mw.w : GARDEN_WORDS[qi]}</p>${mw ? `<div class="sx-lang">${monthName(cal0.month)}의 꽃 · <b>${FLOWERS[mw.k].name}</b> · ${FLOWER_WORDS[mw.k].own ? '정원의 꽃말' : '꽃말'} 「${FLOWER_WORDS[mw.k].lang}」</div>` : ''}<div class="muted" style="font-size:calc(11.5 * var(--u))">꽃이나 빈 칸을 누르면 여기에 자세히 나와요</div></div>
     </div>`;
     return;
   }
@@ -597,8 +613,8 @@ function renderStatus(force) {
   el.innerHTML = `
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${F.petal} 16%, var(--sunk))">${spriteImg(f.type, 'flower', 56, false, F.name)}</div>
-      <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:12px">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:12px">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${basketNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
+      <div class="sx-title"><h3>${F.name}</h3><div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:calc(12 * var(--u))">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
+        <div class="muted" style="font-size:calc(12 * var(--u))">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${basketNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
@@ -611,9 +627,9 @@ function renderStatus(force) {
     <!-- 돌보기 다섯 칸은 꽃 둘레 단추로 옮김 (10-06) -->
     ${actions}
     <details ${ui.detailsOpen ? 'open' : ''} data-act="details"><summary>자세히 보기 · 땅 · 일정 · 출신</summary>
-      <h3 style="margin:10px 0 4px;font-size:14px">땅</h3>
+      <h3 style="margin:10px 0 4px;font-size:calc(14 * var(--u))">땅</h3>
       <dl class="kv">
-        <dt>지금 땅</dt><dd><span class="sw" style="background:${LANDS[land].color}"></span> ${LANDS[land].name}</dd>
+        <dt>지금 땅</dt><dd>${landSw(land)} ${LANDS[land].name}</dd>
         <dt>원하는 땅</dt><dd>${LANDS[home].name} · ${rel}</dd>
       </dl>
       <div class="gauges" title="색칸이 이 꽃이 원하는 범위(±3), ▲가 지금 이 칸">${envGauges(F, tl)}</div>
@@ -621,14 +637,14 @@ function renderStatus(force) {
         <dt>바꾸는 범위</dt><dd>${Math.max(0, E.stageRadius(f))}칸 (다 자라면 ${E.qualityRadius(f)}칸)</dd>
         ${blk.length ? `<dt>밀리는 중</dt><dd>옆의 ${josa(FLOWERS[blk[0].type].name, '이/가')} 만든 땅에 밀리고 있어요</dd>` : ''}
       </dl>
-      <h3 style="margin:10px 0 4px;font-size:14px">일정</h3>
+      <h3 style="margin:10px 0 4px;font-size:calc(14 * var(--u))">일정</h3>
       ${flowerStrip(F, cal.idx)}
       <dl class="kv">
         ${f.stage === 'bloom' ? `<dt>수확</dt><dd>${f.harvestKey === E.harvestSlot(cal) ? (cal.frozen ? '이번 꽃잠엔 수확했어요' : '이번 달은 수확했어요') : '지금 수확할 수 있어요'}</dd>` : ''}
         <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
         <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 달 · 휴면기 · 꽃잠에'}</dd>
       </dl>
-      <h3 style="margin:10px 0 4px;font-size:14px">출신</h3>
+      <h3 style="margin:10px 0 4px;font-size:calc(14 * var(--u))">출신</h3>
       <dl class="kv">
         <dt>어디서</dt><dd>${f.origin}${f.parent ? ` (${f.parent}에서)` : ''}</dd>
         <dt>심을 때 품질</dt><dd>${qLabel(f.startQ)}</dd>
@@ -664,8 +680,8 @@ function renderTileStatus(force) {
   el.innerHTML = `
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${LANDS[land].color} 22%, var(--sunk))"><span class="sx-land" style="background-color:${LANDS[land].color}"></span></div>
-      <div class="sx-title"><h3>빈 칸</h3><div><span class="chip" style="font-size:11.5px"><span class="sw" style="background:${LANDS[land].color};width:9px;height:9px;margin-right:4px"></span>${LANDS[land].name}</span></div>
-        <div class="muted" style="font-size:12px">가로 ${x + 1} · 세로 ${y + 1}</div></div>
+      <div class="sx-title"><h3>빈 칸</h3><div><span class="chip" style="font-size:calc(11.5 * var(--u))">${landSw(land, 'width:9px;height:9px;margin-right:4px')}${LANDS[land].name}</span></div>
+        <div class="muted" style="font-size:calc(12 * var(--u))">가로 ${x + 1} · 세로 ${y + 1}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     <div class="sx-stats">
@@ -674,7 +690,7 @@ function renderTileStatus(force) {
       <div><span class="lbl">이 땅</span><b>${cnt}<small> 칸</small></b><span class="mini land"><i style="background:${LANDS[land].color}"></i></span><span class="sub">정원 전체에서</span></div>
     </div>
     <div class="sx-note">💬 ${say}</div>
-    <div class="sx-sec">🌰 이 칸에 심기${keys.length && !cal.frozen ? ` <span class="muted" style="font-family:var(--font-body);font-weight:400;font-size:12px">${keys.length}가지 · 누르면 바로 심어요</span>` : ''}</div>
+    <div class="sx-sec">🌰 이 칸에 심기${keys.length && !cal.frozen ? ` <span class="muted" style="font-family:var(--font-body);font-weight:400;font-size:calc(12 * var(--u))">${keys.length}가지 · 누르면 바로 심어요</span>` : ''}</div>
     ${cal.frozen ? '<p class="note">꽃잠에는 심을 수 없어요. 화원에서 다음 해 꽃을 예약할 수 있어요.</p><div><button type="button" class="btn small" data-go="shop">💐 예약</button></div>'
       : keys.length ? `<div class="pgrid">${list}</div>`
       : '<p class="note">지금 심을 수 있는 게 창고에 없어요. 화원에서 제철 꽃을 사 보세요.</p><div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}`;
@@ -691,9 +707,9 @@ function updateRing() {
   const cares = ['water', 'weed', 'prune', 'fert', 'harvest'].filter(t => need.includes(t) || lack.includes(t));
   if (!cares.length) { if (!ringEl.hidden) { ringEl.hidden = true; ringEl.innerHTML = ''; ui.ringSig = ''; } return; }
   const cx = canvas.offsetLeft + (f.x + 0.5) * cell, cy = canvas.offsetTop + (f.y + 0.5) * cell;
-  const R = Math.max(46, cell * 1.6), step = 52, n = cares.length;   // 단추끼리 겹치지 않게 (활꼴 간격 ≥ 40px)
+  const big = E.bigView(st), R = big ? Math.max(58, cell * 1.8) : Math.max(46, cell * 1.6), step = big ? 60 : 52, n = cares.length;   // 단추끼리 겹치지 않게 (활꼴 간격 ≥ 40px) · P28-01 큰 글씨면 48px 단추라 더 넓게
   // 꽃 자리에 따라 (10-06): 지도 가운데 쪽으로 펼침 (오른쪽 끝 꽃 → 왼쪽, 위쪽 꽃 → 아래). 가운데 가까운 꽃은 위로. 안 들어가면 옆 방향을 차례로
-  const fw = ringEl.clientWidth, fh = ringEl.clientHeight, M = 20;
+  const fw = ringEl.clientWidth, fh = ringEl.clientHeight, M = big ? 26 : 20;
   const pos = base => cares.map((t, i) => { const ang = (base + (i - (n - 1) / 2) * step) * Math.PI / 180; return [cx + Math.cos(ang) * R, cy + Math.sin(ang) * R]; });
   const fits = ps => ps.every(([x, y]) => x >= M && x <= fw - M && y >= M && y <= fh - M);
   const dx = fw / 2 - cx, dy = fh / 2 - cy, toC = Math.round(Math.atan2(dy, dx) * 180 / Math.PI / 45) * 45;   // 가운데 쪽 (45° 단위)
@@ -703,7 +719,7 @@ function updateRing() {
   let pts;
   if (base != null) pts = pos(base);
   else {   // 지도 모서리 · 가장자리라 부채꼴이 안 들어가면: 지도 안쪽으로 한 줄 (좌우 끝이면 세로 줄, 위아래 끝이면 가로 줄)
-    const gap = 42, nearSide = Math.min(cx, fw - cx) < Math.min(cy, fh - cy);
+    const gap = big ? 54 : 42, nearSide = Math.min(cx, fw - cx) < Math.min(cy, fh - cy);
     base = nearSide ? 'col' : 'row';
     const clampLine = (c0, lim) => Math.min(lim - M - (n - 1) * gap / 2, Math.max(M + (n - 1) * gap / 2, c0));
     if (nearSide) { const x = cx < fw / 2 ? cx + R : cx - R, y0 = clampLine(cy, fh); pts = cares.map((t, i) => [x, y0 + (i - (n - 1) / 2) * gap]); }
