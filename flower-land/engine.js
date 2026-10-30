@@ -2151,7 +2151,7 @@ function forestWeedTick(st, ended, ctx) {
   if (!forestOpen(st)) return 0;
   const fs = st.flowers.filter(f => canCare(st, f, 'weed', ended)).filter((f, i) => i % 2 === 0);   // 반만 — 잡초 난 꽃 둘 중 하나 (다 걷으면 시뮬 4년째 찻집 수입 +50% · 연말 돈 22,310 → 55,740원, P17-14 ±5%를 넘어서)
   for (const f of fs) f.weedH = 24;
-  if (fs.length) { bump(st, 'autoWeed', fs.length); st.stats.autoWeedLast = fs.length; st.stats.autoWeedAbs = ended.abs; addLog(st, 19, `숲 바람이 잡초 ${fs.length}포기를 걷어 갔어요`, ctx); }
+  if (fs.length) { bump(st, 'autoWeed', fs.length); st.stats.autoWeedLast = fs.length; st.stats.autoWeedAbs = ended.abs; addLog(st, 19, slowView(st) ? '숲 바람이 잡초를 걷어 갔어요' : `숲 바람이 잡초 ${fs.length}포기를 걷어 갔어요`, ctx); }   // 느긋하게 보기면 일지에도 숫자 없이 (P30-08)
   return fs.length;
 }
 // 🌳 숲 탭 머리 한 줄: 바로 앞 달 끝에 걷어 간 수 (그 뒤 달이 또 바뀌면 0) · 느긋하게 보기면 숫자 없이 (P30-08)
