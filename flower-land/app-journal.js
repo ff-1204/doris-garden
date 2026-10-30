@@ -112,7 +112,8 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return gradeHTML() + layerHTML() + yearlyCalHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()   // 10-30 사용자 요청: 칭호를 도감일지 맨 위로
+    + gradeHTML() + layerHTML() + yearlyCalHTML() + bonusHTML() + weeklyHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
