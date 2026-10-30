@@ -5,19 +5,24 @@
 // --bonus: 🌟 등급 보너스(P28-05-02) 4칸을 처음부터 모두 끝까지 켠 정원사 (손길 점과 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry와 함께 써야 바구니 · 건조대 · 저장고 칸이 일함. --bonus=rack,basket처럼 몇 칸만 켤 수도 있음
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
+// --path 꽃길|찻길|흙길 (또는 flower|tea|earth): 🛤️ 철의 길(P30-04-01) — 1철부터 그 길을 걷는 정원으로 봄(실제로는 2철부터 고름) · --season이면 2철도 그 길. 돈 · 수확은 길 없이와 같아야 함 (P17-14)
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
+const PATH_I = process.argv.indexOf('--path'), PATH_ARG = PATH_I > 0 ? process.argv[PATH_I + 1] : null;
+const PATH = PATH_ARG == null ? null : (E.PATHS[PATH_ARG] ? PATH_ARG : E.PATH_KEYS.find(k => E.PATHS[k].name === PATH_ARG) || null);
+if (PATH_ARG != null && !PATH) { console.error(`모르는 길: ${PATH_ARG} (꽃길 · 찻길 · 흙길)`); process.exit(1); }
+const args = process.argv.slice(2).filter((a, i) => !a.startsWith('--') && !(PATH_I > 0 && i + 2 === PATH_I + 1)), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
 const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 1000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
 const st = E.create(mon + 0.1 * H, rng); st.gardenId = `sim-${SEED}`;   // 광산 판 · 주문 쪽지 · 기념품이 이름표로 정해져서 고정 (QA 7회차: 매번 같은 값)
 if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, BONUS === 'all' || BONUS.split(',').includes(k) ? E.bonusMax(k) : 0]));   // P28-05-02 --bonus
+if (PATH) st.season.path = PATH;   // P30-04-01 --path
 st.onboarded = true;   // 첫 안내를 마친 정원사 — 🗓️ 주간 목표(P28-09)는 첫 안내 뒤부터 뽑혀서 (0장 첫 방문 퀘스트 10점도 이때)
-const ctx = { live: false, rng };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
+const ctx = { live: false, rng, path: PATH };   // rng가 없으면 번식이 Math.random을 써서 같은 씨앗이어도 결과가 달라짐
 const ledger = {}; const add = (yr, k, v) => { (ledger[yr] = ledger[yr] || {})[k] = (ledger[yr][k] || 0) + v; };
 const spots = []; for (let y = 2; y < E.H - 1; y += 3) for (let x = 2; x < E.W - 1; x += 3) spots.push([x, y]);
 const ykey = (n, y) => n > 1 ? n * 100 + y : y, ylabel = k => k >= 100 ? `${Math.floor(k / 100)}철 ${k % 100}` : k;   // P28-08 --season: 2철부터 해 칸을 나눔
@@ -152,6 +157,7 @@ if (AUTO) console.log(`자동 장치: ${st.decos.filter(d => E.DECOS[d.key] && E
 // 🗓️ 주간 목표 (P28-09): 주마다 뽑힌 3개 · 진행 · 끝냈는지 (정원사는 목표를 따로 쫓지 않고 늘 하던 대로)
 console.log('\n주마다 목표 (✓ 끝냄)');
 Object.keys(weeks).sort((a, b) => a - b).forEach((k, i) => console.log([i + 1, ...weeks[k].goals.map(g => `${g.done ? '✓' : '·'} ${E.weeklyText(g)} ${g.got}/${g.n}`), weeks[k].bonus ? '덤' : ''].join('\t')));
+if (PATH) console.log(`길: ${E.PATHS[PATH].icon} ${E.PATHS[PATH].name} · 손님 ${E.VISITOR_KEYS.filter(k => E.VISITORS[k].path === PATH).map(k => `${E.VISITORS[k].name} ${E.visitorTimes(st, k)}번`).join('')} · 등급 ${E.gradeOf(st).grade}`);
 console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL}`);
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');

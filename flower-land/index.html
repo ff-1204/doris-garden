@@ -532,6 +532,29 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 @media (max-width: 420px) { .season-pop .sp-row { grid-template-columns: 1fr; gap: 2px; } }
 .modal:has(.season-pop) header h2 { color: var(--bloom); }
 .modal:has(.season-pop) footer .btn.primary { background: var(--bloom); border-color: var(--bloom); color: var(--bloom-ink); }
+/* 🛤️ 철의 길 (P30-04-02 · 03): 확인 창 길 카드(라디오처럼 하나) · 철마다 표 · 한 해 기록 카드 길 색 한 줄. --pc = 길 색 (엔진 PATHS.color) */
+.sp-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.sp-paths .spp-head, .sp-paths .spp-note { grid-column: 1 / -1; margin: 0; font-size: 13.5px; }
+.sp-paths .spp-note { font-size: 12.5px; }
+.sp-path { display: flex; align-items: flex-start; gap: 8px; text-align: left; padding: 8px 10px; background: var(--sunk); border: 2px solid var(--line); border-left: 4px solid var(--pc); color: inherit; font: inherit; cursor: pointer; }
+.sp-path[aria-checked="true"] { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, var(--panel)); }
+.sp-path[data-spath=""][aria-checked="true"] { border-color: var(--ink, currentColor); }
+.sp-path:focus-visible { outline: 2px solid var(--pc); outline-offset: 2px; }
+.sp-path .spp-ic { font-size: 20px; line-height: 1.2; }
+.sp-path .spp-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sp-path .spp-t small { font-size: 12px; color: var(--muted); line-height: 1.35; }
+@media (max-width: 420px) { .sp-paths { grid-template-columns: 1fr; } }
+.card.stable { min-width: 0; max-width: 100%; }
+.stable .st-wrap { overflow-x: auto; max-width: 100%; }
+.stable table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.stable th, .stable td { padding: 6px 7px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.stable thead th { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.stable tr.now { background: color-mix(in srgb, var(--spring) 10%, var(--panel)); }
+.st-path { border-left: 3px solid var(--pc); padding-left: 6px; white-space: nowrap; display: inline-block; }
+.stable .st-now { white-space: nowrap; display: inline-block; font-family: inherit; }
+@media (max-width: 420px) { .stable table { font-size: 12.5px; } .stable th, .stable td { padding: 5px 4px; } .stable td { white-space: normal; } }
+.card.record.rec-path { box-shadow: inset 0 4px 0 var(--pc); }
+.rec-pathname { font-size: 12px; border: 1px solid var(--pc); padding: 0 6px; }
 .topseason { display: inline-flex; align-items: center; gap: 3px; border: 1px solid color-mix(in srgb, var(--spring) 55%, var(--line)); background: color-mix(in srgb, var(--spring) 14%, var(--sunk)); padding: 1px 7px; font-size: 12px; color: var(--ink); white-space: nowrap; }
 .topseason[hidden] { display: none; }
 .topseason .ts-s { display: none; }
