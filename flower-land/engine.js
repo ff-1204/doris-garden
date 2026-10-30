@@ -2764,7 +2764,8 @@ function plantTree(st, key, slot, ctx) {
   const first = F.dex[key] == null;
   if (first) F.dex[key] = 0;
   addLog(st, 10, `🌳 숲에 ${T.name} 묘목을 심었어요`, ctx);
-  return ok(`${T.icon} ${josa(T.name, '을/를')} 심었어요 · 해가 바뀔 때마다 자라요`, { slot, first });
+  const sleep = calendar(st.virtual).frozen;                                   // 꽃잠엔 그해 기록이 이미 끝나 다음 해 아침부터 셈 (검토 10-30 — 셈은 그대로, 한 줄로 알려 줌)
+  return ok(`${T.icon} ${josa(T.name, '을/를')} 심었어요 · ${sleep ? '꽃잠에 심어 다음 해 아침부터 자라요' : '해가 바뀔 때마다 자라요'}`, { slot, first, sleep });
 }
 function forestOf(st) {   // 화면이 읽는 것: 자리 6칸 · 도감 칸 수 (🐢 느긋하게 보기면 화면이 숫자를 뺌 — slow)
   const F = forestSt(st);

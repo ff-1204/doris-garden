@@ -50,7 +50,8 @@ console.log('[흐르는 달 중간엔 그대로]');
   check(stageOf(s, 2) === 0, '같은 해 목요일: 묘목 그대로');
   E.advance(s, mon + WEEK + 0.5 * H, ctx);
   check(stageOf(s, 2) === 1, '다음 월요일 3월 아침: 어린나무');
-  const late = forestGarden('forest-3'); E.advance(late, mon + REST + H, ctx); E.plantTree(late, 'birch', 0);   // 꽃잠에 심음 (그해는 이미 기록됨)
+  const late = forestGarden('forest-3'); E.advance(late, mon + REST + H, ctx); const lr = E.plantTree(late, 'birch', 0);   // 꽃잠에 심음 (그해는 이미 기록됨)
+  check(lr.ok && lr.sleep && lr.msg.includes('꽃잠에 심어 다음 해 아침부터 자라요'), '꽃잠에 심으면 알림에 "다음 해 아침부터" 한 줄 (검토 10-30)');
   E.advance(late, mon + WEEK + 0.5 * H, ctx);
   check(stageOf(late, 0) === 0, '꽃잠에 심으면 바로 다음 아침엔 그대로 (해가 바뀐 뒤 심어서)');
   E.advance(late, mon + 2 * WEEK + 0.5 * H, ctx);

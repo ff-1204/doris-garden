@@ -755,13 +755,13 @@ window.TREE_ART = (() => {
       ground(g, 7.5, 14, 4);
       if (pine) { tri(g, 7.5, 1, 5, 3, seed); tri(g, 7.5, 4, 6, 5, seed); }
       else if (birch) disc(g, 7.5, 5.5, 3.2, seed, 4.6);
-      else { disc(g, 7.5, 5.5, 4.6, seed, 4.2); line(g, 7, 9, 5, 6, 'b'); line(g, 8, 9, 10, 5, 'b'); }
+      else { disc(g, 7.5, 5.5, 4.6, seed, 4.2); line(g, 7, 9, 5, 5, 'b'); line(g, 8, 9, 10, 4, 'b'); line(g, 7, 9, 7, 2, 'b'); line(g, 5, 5, 4, 3, 'b'); }
       trunk(g, 7, 2, 9, 13, birch);
     } else if (stage === 2) {   // 나무
       ground(g, 15.5, 29, 7);
       if (pine) { tri(g, 15.5, 2, 7, 4, seed); tri(g, 15.5, 6, 8, 7, seed); tri(g, 15.5, 11, 8, 9, seed); }
       else if (birch) { disc(g, 15.5, 10.5, 5.6, seed, 8.4); line(g, 15, 18, 13, 9, 'b'); line(g, 16, 18, 18, 8, 'b'); }
-      else { disc(g, 15.5, 11.5, 8.2, seed, 7.4); disc(g, 10, 15, 4, seed); disc(g, 21, 15, 4, seed); line(g, 15, 18, 10, 12, 'b'); line(g, 16, 18, 21, 11, 'b'); line(g, 16, 17, 16, 6, 'b'); }
+      else { disc(g, 15.5, 11.5, 8.2, seed, 7.4); disc(g, 10, 15, 4, seed); disc(g, 21, 15, 4, seed); line(g, 15, 18, 10, 12, 'b'); line(g, 16, 18, 21, 11, 'b'); line(g, 16, 17, 16, 6, 'b'); line(g, 10, 12, 8, 8, 'b'); line(g, 21, 11, 23, 7, 'b'); line(g, 16, 10, 12, 6, 'b'); line(g, 16, 9, 20, 5, 'b'); }
       trunk(g, 15, 2, 17, 28, birch);
     } else {   // 큰 나무: 줄기 넷 · 뿌리 · 넓은 잎
       ground(g, 15.5, 29, 11);

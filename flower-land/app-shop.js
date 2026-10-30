@@ -127,7 +127,7 @@ function renderShop(force) {
   const fo = E.forestOpen(st) ? E.forestOf(st) : null;
   const forestSection = !fo ? '' : `<div class="cab-head"><span class="sb-title">🌳 숲</span><span class="muted">묘목을 사면 숲 빈 자리에 심어요 · 해가 바뀔 때마다 자라요 · 열매 · 돈은 나오지 않아요${fo.slow ? '' : ` · 빈 자리 ${fo.empty} / ${E.FOREST_N}`}</span></div>
     <div class="decoshop">${E.TREE_KEYS.map(k => { const T = E.TREES[k], short = st.money < T.price, own = fo.slots.filter(t => t && t.key === k).length;
-      return `<div class="decocard"><span class="dk-art">${treeImg(k, 0, 4, 1)}${own ? `<span class="sc-own" title="숲에 ${own}그루">🌳 ${own}</span>` : ''}</span>
+      return `<div class="decocard"><span class="dk-art">${treeImg(k, 0, 4, 1)}${own && !fo.slow ? `<span class="sc-own" title="숲에 ${own}그루">🌳 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${T.icon} ${T.name} 묘목</b><small>${T.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(T.price)}</span>${!fo.empty ? '<span class="muted">자리가 다 찼어요</span>' : `<button type="button" class="btn primary" data-treebuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '심기'}</button>`}</span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">

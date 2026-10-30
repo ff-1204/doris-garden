@@ -48,7 +48,7 @@ function openPlantPicker(slot) {
   const rows = E.TREE_KEYS.map(k => { const T = E.TREES[k], short = st.money < T.price;
     return `<div class="decocard"><span class="dk-art">${treeImg(k, 0, 3, 1)}</span><span class="dk-main"><b>${T.icon} ${esc(T.name)}</b><small>${esc(T.desc)}</small></span>
       <span class="dk-buy"><span class="sc-price">${won(T.price)}</span><button type="button" class="btn primary" data-fplant="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '심기'}</button></span></div>`; }).join('');
-  openModal('🌳 묘목 심기', `<div class="fo-pick">${rows}</div><p class="note muted">한 번 심은 나무는 옮기거나 베지 않아요 · 열매 · 돈은 나오지 않아요 · ${wallet()}</p>`, [{ label: '닫기', act: () => closeModal() }]);
+  openModal('🌳 묘목 심기', `<div class="fo-pick">${rows}</div><p class="note muted">한 번 심은 나무는 옮기거나 베지 않아요 · 열매 · 돈은 나오지 않아요${E.calendar(st.virtual).frozen ? ' · 꽃잠에 심으면 다음 해 아침부터 자라요' : ''} · ${wallet()}</p>`, [{ label: '닫기', act: () => closeModal() }]);
   const root = $('#modalRoot'), base = root.onclick;
   root.onclick = e => { const b = e.target.closest('[data-fplant]'); if (b && !b.disabled) { closeModal(); return after(E.plantTree(st, b.dataset.fplant, slot, ctx), null); } base(e); };
 }
@@ -58,8 +58,8 @@ function openTreeInfo(slot) {
   const slow = E.slowView(st), v = E.forestVisitors(st).find(x => x.slot === slot);
   const strip = E.TREE_STAGES.map((name, s) => `<span class="mn-item" style="${s > t.stage ? 'opacity:.35' : ''}">${treeImg(t.key, s, TREE_SMALL[s])}<small><b>${name}</b></small></span>`).join('');
   openModal(`${t.icon} ${t.name}`, `<div class="mn-flow" style="align-items:flex-end;justify-content:center">${strip}</div>
-    <p class="note" style="text-align:center">${slow ? (t.big ? '다 자랐어요' : '자라는 중이에요') : t.big ? '큰 나무로 다 자랐어요' : `지금 ${t.stageName} · ${t.yearsLeft}해 더 자라면 큰 나무예요`}</p>
-    ${v ? `<p class="note" style="text-align:center">${visitorImg(v.key, 2)}<br>${v.icon} ${esc(v.name)} · “${esc(v.line)}”</p>` : t.big ? '<p class="note muted" style="text-align:center">큰 나무엔 가끔 손님이 와 앉아요</p>' : ''}
+    <p class="note" style="text-align:center;margin-top:8px">${slow ? (t.big ? '다 자랐어요' : '자라는 중이에요') : t.big ? '큰 나무로 다 자랐어요' : `지금 ${t.stageName} · ${t.yearsLeft}해 더 자라면 큰 나무예요`}</p>
+    ${v ? `<div class="note" style="display:grid;justify-items:center;gap:4px;text-align:center">${visitorImg(v.key, 2)}<span>${v.icon} ${esc(v.name)} · “${esc(v.line)}”</span></div>` : t.big ? '<p class="note muted" style="text-align:center">큰 나무엔 가끔 손님이 와 앉아요</p>' : ''}
     <p class="note muted" style="text-align:center">${esc(E.TREES[t.key].desc)}</p>`, [{ label: '닫기', act: () => closeModal() }]);
 }
 $('#p-forest').addEventListener('click', e => {
