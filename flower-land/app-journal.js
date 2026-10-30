@@ -175,7 +175,7 @@ function yearlyCalHTML() {
 }
 // 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
 // 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)
-function bonusHTML() {
+function bonusHTML(hid) {                          // hid: 🐝 곤충농장(P32-03)에도 같은 칸 — 칸 id가 겹치지 않게
   const v = E.bonusView(st), slow = E.slowView(st);
   const rows = v.rows.map(r => {
     const can = !r.maxed && r.costNext <= v.left;
@@ -184,7 +184,7 @@ function bonusHTML() {
       <span class="bn-txt"><b>${esc(r.name)}${slow ? '' : ` <span class="bn-lv data">${r.level} / ${r.max}단계</span>`}${r.maxed ? ' <span class="bn-max">✨ 끝까지</span>' : ''}</b><small>${esc(r.desc)}</small>${!slow && r.nextDesc ? `<small class="bn-next">다음 단계: ${esc(r.nextDesc)}</small>` : ''}${why}</span>
       <span class="bn-btns">${r.maxed ? '' : `<button type="button" class="btn small primary" data-bonus="${r.key}" data-lv="${r.level + 1}"${can ? '' : ' disabled'}>올리기${slow ? '' : ` (🌟 ${r.costNext}점)`}</button>`}${r.level ? `<button type="button" class="btn small" data-bonus="${r.key}" data-lv="${r.level - 1}">내리기</button>` : ''}</span></div>`;
   }).join('');
-  return `<div class="cab-head dex-head j-head" id="jBonus"><span class="sb-title">🌟 손길 점</span>${slow ? '' : `<span class="dh-count data">${v.left} / ${v.points}점</span>`}</div>
+  return `<div class="cab-head dex-head j-head" id="${hid || 'jBonus'}"><span class="sb-title">🌟 손길 점</span>${slow ? '' : `<span class="dh-count data">${v.left} / ${v.points}점</span>`}</div>
     <div class="card bn-card">${slow ? '' : `<p class="bn-sum"><b>남은 점 ${v.left}점</b><small class="data">모은 점 ${v.points}점 · ${v.nextAt}등급에 1점 더</small></p>`}${rows}
       <p class="note muted">${slow ? '정원이 자라면 손을 덜어 주는 보너스를 골라요' : `정원 등급 ${v.per}마다 1점 · 돈으로는 못 얻어요`} · 언제든 내리면 점이 돌아와요</p></div>`;
 }

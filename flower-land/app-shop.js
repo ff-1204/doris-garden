@@ -94,9 +94,9 @@ function renderShop(force) {
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small><small class="muted">${E.decoMonths(k).map(monthName).join('·')}에만 들어와요${D.func ? '' : ' · 땅 · 꽃에는 영향이 없어요'}${decoNext && !D.months && decoNext !== k ? ` · 다음 달엔 ${E.DECOS[decoNext].name}` : ''}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
-  // P28-10 🧺 자동 장치 (10-28): 늘 팖 · 정원 등급이 닿으면 열림 · 손을 덜어 줄 뿐 더 벌게 하지 않음 (느긋하게 보기여도 그대로)
+  // P28-10 🧺 자동 장치 (10-28) → P32-01 🐝 곤충 일꾼 (10-30): 늘 팖 · 정원 등급이 닿으면 열림 · 손을 덜어 줄 뿐 더 벌게 하지 않음 (느긋하게 보기여도 그대로) · 🐝 곤충농장 탭에서도 데려옴
   const gAuto = E.gradeOf(st).grade;
-  const autoSection = `<div class="cab-head"><span class="sb-title">🧺 자동 장치</span><span class="muted">놓아 두면 저절로 일해요 · 손으로 할 때보다 더 벌지는 않아요</span></div>
+  const autoSection = `<div class="cab-head"><span class="sb-title">🐝 곤충 일꾼</span><span class="muted">놓아 두면 저절로 일해요 · 손으로 할 때보다 더 벌지는 않아요</span><button type="button" class="btn small right" data-gofarm="1">🐝 곤충농장</button></div>
     <div class="decoshop">${E.AUTO_KEYS.map(k => { const D = E.DECOS[k], open = D.need <= gAuto, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
@@ -144,6 +144,7 @@ $('#p-shop').addEventListener('click', e => {
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
   if (b.dataset.gift) { const G = E.GIFTS[b.dataset.gift]; return openModal(`${G.ic} ${G.name} 보내기`, `<p>이웃에게 ${josa(G.name, '을/를')} 보내요 · <b class="data">${won(G.price)}</b></p><p class="muted">종류마다 한 해에 한 번 · 다음 달(오전 · 오후 6시)에 ${E.letterLeftFor(st, b.dataset.gift) ? '답장 편지와' : '고맙다는 답장과'} 함께 🎁 답례품이 와요 · 무엇이 올지는 몰라요</p><p class="muted">💰 가진 돈 ${won(st.money)} → ${won(st.money - G.price)}</p>`, [{ label: '취소', act: () => closeModal() }, { label: `보내기 · ${won(G.price)}`, primary: true, act: () => { closeModal(); after(E.sendGift(st, b.dataset.gift, ctx)); } }]); }
   if (b.dataset.treebuy) return after(E.plantTree(st, b.dataset.treebuy, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') });   // P30-03
+  if (b.dataset.gofarm) return setTab('farm');   // P32-03
   if (b.dataset.decobuy) return after(E.buyDeco(st, b.dataset.decobuy, ctx), null, { label: '🪴 놓기', fn: () => { const d = st.decos[st.decos.length - 1]; ui.tool = 'deco'; ui.decoId = d.id; setTab('garden', true); } });
   if (b.dataset.buy) { const key = b.dataset.buy, n = ui.shopQty[key] || 1; ui.shopQty[key] = 1; return after(E.buy(st, key, n), 'bought', { label: '🌰 심기', fn: () => { ui.tool = 'plant'; ui.plantType = key; setTab('garden', true); } }); }
   if (b.dataset.cart) {

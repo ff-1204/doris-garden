@@ -100,6 +100,7 @@ function renderAll(force) {
   if (ui.tab === 'cab' || ui.tab === 'tearoom') renderCab(force);
   forestTabSync();                                // P30-01-03 🌳 숲 탭은 4층이 열린 정원에만
   if (ui.tab === 'forest') renderForest(force);
+  if (ui.tab === 'farm') renderFarm(force);        // P32-03 🐝 곤충농장
   if (ui.tab === 'dex') renderDex(force);
   if (ui.tab === 'manual') renderManual(force);
   if (ui.tab === 'settings' && force) renderSettings();   // 입력 중에 다시 그려지지 않게, 들어올 때만
@@ -114,10 +115,11 @@ function showAway() {
   if (!a || $('#modalRoot').innerHTML) return;   // 다른 창(새 칭호 등)이 닫히면 그다음에 보여 줌 (frame에서 다시 부름)
   awayInfo = null;
   const hh = a.h >= 48 ? `${Math.round(a.h / 24)}일` : `${Math.round(a.h)}시간`;
+  if (a.again) { a.thirsty = E.careAllTargets(st, 'water', E.calendar(st.virtual)).length; a.energy = E.mineOf(st).energy; a.gained = 0; }   // P32-03 🐝 곤충농장 다시 보기: 저장한 줄 · 돈 · 시간 + 지금 목마른 꽃 · 기력
   const pick = a.lines.slice(-8).map(l => `<li><span>${LOG_IC[l.type] || '·'}</span>${esc(l.text)}</li>`).join('');
   const chips = [a.money ? `💰 ${a.money > 0 ? '+' : ''}${won(a.money)}` : '', a.thirsty ? `💧 목마른 꽃 ${a.thirsty}포기` : '🌿 목마른 꽃 없어요', `⛏️ 기력 ${a.gained > 0 ? `+${a.gained} · ` : ''}${a.energy >= E.MINE_MAX_E ? '가득' : `${a.energy} / ${E.MINE_MAX_E}`}`].filter(Boolean);
   const acts = careAllBtns(careNeed(E.calendar(st.virtual)), 'btn small care') + pantryAllBtn('btn small care');   // P28-11 모두 물 주기 · 모두 거두기 · P28-04 🧺 저장고 모두 거두기
-  openModal(`🌙 자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+  openModal(`🌙 ${a.again ? '지난번 ' : ''}자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
     ${acts ? `<div class="away-acts">${acts}</div>` : ''}
     ${pick ? `<ul class="away-log">${pick}</ul>${a.lines.length > 8 ? `<p class="muted">그 밖에 ${a.lines.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : '<p class="muted">조용히 시간이 흘렀어요</p>'}${awayLongHTML(a.long)}</div>`,
     [{ label: '닫기', act: () => closeModal() }, ...(a.thirsty ? [{ label: '💧 정원으로', primary: true, act: () => { closeModal(); setTab('garden'); ui.flash = { t: 'water', until: performance.now() + 2400 }; } }] : [])]);

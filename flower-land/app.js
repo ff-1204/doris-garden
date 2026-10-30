@@ -323,7 +323,9 @@ function awayDiff(b) {
   const gl = E.gradeAwayLine(st, b.grade); if (gl) lines.push({ type: 9, text: gl });   // 🌱 그동안 오른 등급 (P28-05-01, M1-4 · 느긋하게 보기면 없음)
   const cal = E.calendar(st.virtual);
   const thirsty = E.careAllTargets(st, 'water', cal).length;   // 꽃잠에도 물을 줄 수 있어서 (P04-01-09) 꽃잠이어도 셈 — 모두 물 주기 단추와 같은 수 (P28-11)
-  return { h, lines, long, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
+  const a = { h, lines, long, money: st.money - b.money, thirsty, energy: E.mineOf(st).energy, gained: E.mineOf(st).energy - (b.energy || 0) };
+  E.awayKeep(st, a, Date.now());                  // P32-02 🐝 곤충농장에서 지난번 것을 다시 보게 (줄 · 돈 · 시간만 저장)
+  return a;
 }
 // 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 따라잡기 길게면 4 · 5주 P28-05-02, 그 이상은 건너뜀)
 function catchUp() {
