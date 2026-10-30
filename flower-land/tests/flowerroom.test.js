@@ -28,9 +28,9 @@ check(st.dried[0].q === dq, '말린 꽃잎은 품질이 더 떨어지지 않음'
 
 // 블렌딩은 꽃잠에만
 const dIds = st.dried.map(p => p.id);
-// 블렌딩은 언제든 (10-06). 찻집은 토·일요일에만
+// 블렌딩은 언제든 (10-06). 찻집은 매달 (P34)
 st.teas.push({ id: id++, type: 'rose', q: 0.5, seasonKey: 0 });
-check(!E.sellTea(st, [st.teas[st.teas.length - 1].id]).ok, '평일(월)에는 찻집에서 못 팜');
+check(E.sellTea(st, [st.teas[st.teas.length - 1].id]).ok, 'P34 평일(월)에도 찻집에서 팖');
 // 일요일 06:00(쉼달)로 이동
 const SUN = MON + 6 * 24 * E.HOUR;
 E.advance(st, SUN + 60 * 1000, ctx);

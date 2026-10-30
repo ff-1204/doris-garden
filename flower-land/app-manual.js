@@ -46,8 +46,8 @@ function renderManual(force) {
       + fig(`<div class="mn-flow"><span class="mn-item"><span class="mn-stars">★★★★☆</span><small><b>72%</b>★ 하나 = 20%</small></span>${bar(12, 'var(--good)', '유효기간 12달')}${bar(8, 'var(--good)', '발아율 ↓', 0)}${arrow('›')}${item(ico('🌱'), '비료 1개', '0%가 되면')}</div>`,
         '품질 0%여도 발아율이 남으면 심을 수 있어요 · 싹이 안 튼 씨앗도 🌱 비료가 돼요')
       + `<div class="mn-icons">${item(ico('🗓️'), '예약', '꽃잠에 · 10% 할인')}${item(ico('📦'), '배송', '심는 날 아침 6시')}${item(ico('3'), '한 종류 3개', '예약 한도')}${item(ico('↔️'), '옮겨심기', '심는 달 · 휴면기 · 꽃잠')}${E.slowView(st) ? '' : item(ico('📊'), '꽃별 셈', '📖 도감 · 한 해 수입')}</div>`),
-    sec('tea', '찻집', '겨울부터 꽃잠까지 열어요',
-      fig(monthStrip([['🍵', '찻집', [12, 1, 2, 13, 14], 'var(--accent)'], ['🗓️', '예약', [13, 14], 'var(--rest)']], cal.idx), '금요일 저녁 6시(12월)에 문을 열고 일요일 꽃잠까지 · 그 전엔 🌿 제다실에서 티백을 만들어 두세요 · 처음 온 정원은 닫혀 있어도 🍵 <b>첫 손님</b>을 한 번 맞아요')
+    sec('tea', '찻집', '매달 열어요',   // P34 (10-30) 매달 열림
+      fig(monthStrip([['🍵', '찻집', [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 14], 'var(--accent)'], ['🗓️', '예약', [13, 14], 'var(--rest)']], cal.idx), '3월부터 꽃잠까지 매달 열어요 · 🌿 제다실에서 티백을 만들면 언제든 🫖 우려 팔 수 있어요 · 💌 주문 쪽지도 달마다 와요 · ❄️ 겨울(12 · 1 · 2월)엔 찻값 ' + (E.slowView(st) ? '조금 비싸요, 🌙 꽃잠엔 더' : `×${E.TEA_PRICE_MUL.winter} · 🌙 꽃잠엔 ×${E.TEA_PRICE_MUL.sleep}`))
       + fig(`<div class="mn-flow">${item(spriteImg(mf, 'teabag', 44, false, ''), '티백', '품질 그대로')}${arrow()}${item(ico('🫖'), '우림', '찻집에서')}${arrow()}${item(spriteImg(mf, 'tea', 52, false, ''), '☕ 갓 우림', '100%')}${arrow()}${item(ico('🧊'), '식은 차', '다음 달 −50%')}${arrow()}${item(ico('💰'), '판매', '1시간마다 손님')}</div>`,
         '🍃 <b>햇차</b>(★5) +10% · 🌸 생화로 바로 만든 티백 −10% · 찻잔은 꽃잠에도 팔려요 · 손님은 먼저 우린 잔부터 사 가요(식은 잔도) — 팔 만큼만 우려요')),
     sec('blend', '블렌드', '말린 꽃잎 2~3장을 섞어요',
@@ -70,8 +70,8 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(mineImg('dirt', 2), '흙 5', '🌱 비료')}${item(mineImg('stone', 2), '돌', '징검돌 · 물확 · 석등')}${item(mineImg('jade', 2), '비취 2', '청자 찻잔')}${item(mineImg('fossil', 2), '화석', '광산 도감')}</div>`,
         '광산에서 나온 것은 팔지 않아요 · 🔨 만들기로 장식과 찻잔을 돈 없이 만들어요')),
     sec('guest', '손님 주문과 한 해 평가', '오래 하는 정원사에게',
-      fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '달마다 · 등급 장식마다 +1')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '12가지 · 도감')}</div>`,
-        '손으로 팔든 손님이 사 가든 맞으면 돼요 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
+      fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '달마다 · 등급 장식마다 +1')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '🌙 꽃잠 주문만')}</div>`,
+        '손으로 팔든 손님이 사 가든 맞으면 ✓ · 기념품(12가지 · 도감)은 🌙 꽃잠에 들어준 주문에만 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
       + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 가짓수', '×10')}${item(ico('🌸'), '정원의 꽃', '80포기까지')}${item(ico('🌼'), '올해 핀 꽃', '가짓수 ×4')}${item(ico('🫖'), '올해 블렌드', '가짓수 ×3')}${item(ico('🍯'), '올해 꿀', '가짓수 ×2')}${item(ico('🪴'), '놓은 장식', '×3')}${item(ico('💌'), '들어준 주문', '×5')}${item(ico('💐'), '보낸 선물', '×10')}</div>`,
         '쉼달 기록 때 🏅 정원 점수 · 남과 겨루지 않고 내 최고 기록과만 · 250점이 되면 숨은 칭호')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
@@ -368,7 +368,7 @@ function onboarding() {
     </div>
     <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
     ${st.gift == null ? `<p class="ob-care">${spriteImg((ui.giftWant = E.GIFT_BY_MONTH[cal.month]), 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요 · 정원 가운데에서 먼저 눌러 보세요</p>
-    <p class="ob-care"><span>✉️</span> 꽃집 할머니도 <b>편지와 꾸러미</b>를 보내요 · 말린 꽃잎 두 가지로 블렌딩하고, 찻집이 닫혀 있어도 🍵 <b>첫 손님</b>을 한 번 맞을 수 있어요</p>` : ''}
+    <p class="ob-care"><span>✉️</span> 꽃집 할머니도 <b>편지와 꾸러미</b>를 보내요 · 말린 꽃잎 두 가지로 블렌딩하고, 🍵 찻집에서 <b>첫 손님</b>을 맞아 보세요</p>` : ''}
     <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
     <p class="note">돌보지 않아도 꽃은 죽지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
     [{ label: '시작', primary: true, act: startGarden }]);

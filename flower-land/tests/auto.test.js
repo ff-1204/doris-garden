@@ -152,11 +152,11 @@ console.log('[🫖 열려 있으면 오래된 티백부터 카운터를 (손님 
   check(st.stats.autoCups === 4 && st.teas.length === 0 && st.money > m0, '카운터가 한 잔씩 팖 (기존 자동 판매)');
 }
 
-console.log('[🫖 닫혀 있으면 쉼 · 꽃잠엔 열려 있어 일함 · 자리를 비운 동안 한 줄]');
+console.log('[🫖 P34 매달 일함 (6월 · 꽃잠) · 자리를 비운 동안 한 줄]');
 {
   const cl = garden(c => c.month === 6 && !c.frozen); put(cl, 'teahelper', 0, 0); bag(cl, 'rose');
   E.advance(cl, cl.virtual + 3 * H, ctx);
-  check(cl.cups.length === 0 && cl.teas.length === 1, '6월(찻집 닫힘)엔 안 우림');
+  check(cl.teas.length === 0 && cl.stats.autoBrew === 1, 'P34 6월(예전엔 닫힘)에도 우림');
   const st = garden(c => c.month === 13); put(st, 'teahelper', 0, 0);
   for (let i = 0; i < 6; i++) bag(st, 'rose');
   const b0 = E.autoStats(st);
@@ -207,7 +207,7 @@ console.log('[저장 · 불러오기]');
   check(['autobasket', 'dryrack', 'teahelper'].every(k => g.decos.some(d => d.key === k && d.x != null)) && g.decos.find(d => d.key === 'autobasket').n === 1, '놓인 자리 · 장치가 센 수 그대로');
   check(g.drying.length === 1 && g.drying[0].auto && g.stats.autoHarvest === 1, '건조대가 넌 꽃잎(말리는 중)도 그대로');
   monthEnd(g);
-  check(g.teas.some(t => t.auto), '불러온 뒤에도 다 마르면 티백');
+  check(g.teas.some(t => t.auto) || (g.cups || []).some(c => c.auto) || (g.stats.autoCups || 0) > 0, '불러온 뒤에도 다 마르면 티백 (P34 찻집이 열려 있어 나비 일꾼이 바로 우리기도 함)');
 }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

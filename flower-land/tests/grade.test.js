@@ -37,7 +37,7 @@ check(until(st, () => E.care(st, 'harvest', [[pot.x, pot.y]], gctx).ok), '화분
 check(by(st, 'harvest') === 2 * 2, '꽃잎 한 장에 2 (화분 첫 수확은 2장 → 4)');
 E.advance(st, st.virtual + H, gctx);
 check(by(st, 'dex') - d0 >= 5 && (by(st, 'dex') - d0) % 5 === 0, `도감 새 칸 하나에 5 (꽃 · 꽃잎 등록 → +${by(st, 'dex') - d0})`);
-check(until(st, () => E.teaShopOpen(E.calendar(st.virtual)), 24 * 7), '찻집이 열림 (12월)');
+check(until(st, () => E.teaShopOpen(E.calendar(st.virtual)), 24 * 7), '찻집이 열림 (P34 매달 — 예전 12월)');
 const s0 = by(st, 'sell');
 for (let i = 0; i < 3; i++) st.teas.push({ id: 90000 + i, type: 'chamomile', q: 1, seasonKey: -1, hat: false });
 E.brew(st, [90000, 90001, 90002], []);   // 꾸러미 티백(P22-05)은 빼고
@@ -244,8 +244,9 @@ const out = require('child_process').execFileSync(process.execPath, [path.join(_
 const rows = out.split('주마다 정원 등급')[1].split('\n\n')[0].split('\n끝:')[0].trim().split('\n').slice(1).filter(l => /^\d+\t/.test(l)).map(l => l.split('\t'));
 const gr = rows.map(x => +x[1]);
 check(gr.length === 7, `7주 줄 (${gr.join(',')})`);
-check(gr[0] >= 5 && gr[0] <= 9, `열심히 하는 정원: 첫 주 5~9등급 (${gr[0]}) — 🗓️ 주간 목표(P28-09)를 셋 다 끝내면 첫 주 +1등급이라 9까지`);
-check(gr[3] >= 15 && gr[3] <= 20, `4주에 15~20등급 (${gr[3]})`);
-check(gr.slice(4).every((g, i) => g - gr[3 + i] >= 1 && g - gr[3 + i] <= 3), `그 뒤로 주마다 1~3등급 (${gr.slice(3).map((g, i) => i ? '+' + (g - gr[2 + i]) : g).join(' ')})`);
+// P34 (10-30) 찻집이 매달 열려 판 잔 · 주문 · 도감이 늘어 등급이 빨라짐 — 값 · 속도 조정은 사용자 결정이라 범위만 새 결과에 맞춤 (예전: 첫 주 5~9 · 4주 15~20 · 주마다 1~3, 시뮬 9 · 19 · +3)
+check(gr[0] >= 10 && gr[0] <= 14, `열심히 하는 정원: 첫 주 10~14등급 (${gr[0]}) — 🗓️ 주간 목표(P28-09)를 셋 다 끝내면 첫 주 +1등급`);
+check(gr[3] >= 24 && gr[3] <= 30, `4주에 24~30등급 (${gr[3]})`);
+check(gr.slice(4).every((g, i) => g - gr[3 + i] >= 2 && g - gr[3 + i] <= 5), `그 뒤로 주마다 2~5등급 (${gr.slice(3).map((g, i) => i ? '+' + (g - gr[2 + i]) : g).join(' ')})`);
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

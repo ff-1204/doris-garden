@@ -31,7 +31,7 @@ for (const [day, pred] of [['월요일 아침 (3월)', c => c.idx === 0], ['금�
   check(r.ok && r.blend.recipe && !E.BLENDS[r.blend.recipe].hidden && st.dex.blend[r.blend.recipe] != null, `꾸러미만으로 「${r.blend && r.blend.name}」`);
   // 첫 손님
   const open = E.teaShopOpen(cal), m0 = st.money;
-  if (!open) {
+  if (!open) {                                     // P34부터 찻집이 매달 열려 이쪽은 돌지 않음 (다시 닫는 달이 생기면 쓰임)
     check(!E.brew(st, st.teas.map(t => t.id), []).ok, '닫힌 찻집: 그냥 우리기는 막힘');
     check(E.firstGuestReady(st), '닫힌 찻집: 첫 손님이 기다림');
     const f = E.firstGuest(st, st.teas[0].id, ctx);
@@ -42,10 +42,10 @@ for (const [day, pred] of [['월요일 아침 (3월)', c => c.idx === 0], ['금�
     E.bagBlends(st, st.blends.map(b => b.id), ctx);
     check(!E.firstGuest(st, st.blends[0].id, ctx).ok && !E.brew(st, [], st.blends.map(b => b.id)).ok && st.blends.length === 1, '두 번째는 막힘 (블렌드 티백도)');
   } else {
-    check(!E.firstGuestReady(st) && !E.firstGuest(st, st.teas[0].id, ctx).ok, '열린 찻집(꽃잠): 첫 손님 단추 없이 그냥 우려 팖');
+    check(!E.firstGuestReady(st) && !E.firstGuest(st, st.teas[0].id, ctx).ok, `열린 찻집(${cal.frozen ? '꽃잠' : cal.month + '월'}): 첫 손님 단추 없이 그냥 우려 팖`);
     const later = copy(st);
     E.advance(later, E.untilMonth(later.virtual, c => !c.frozen).cal.slotStart + H, ctx);
-    check(E.firstGuestReady(later), '꽃잠에 팔지 않으면 월요일에 첫 손님이 기다림');
+    check(!E.firstGuestReady(later), 'P34 팔지 않고 다음 날이 돼도 찻집이 열려 있어 첫 손님 줄은 없음');
     E.brew(st, [st.teas[0].id], []); const s = E.sellCups(st, st.cups.map(c => c.id), ctx);
     check(s.ok && st.firstGuest === false, '열린 찻집에서 한 잔 팔면 첫 손님 표도 끝');
     E.advance(st, E.untilMonth(st.virtual, c => !c.frozen).cal.slotStart + H, ctx);
@@ -53,10 +53,11 @@ for (const [day, pred] of [['월요일 아침 (3월)', c => c.idx === 0], ['금�
   }
 }
 
-console.log('[블렌드 티백으로 첫 손님]');
+console.log('[블렌드 티백 첫 잔 (P34: 월요일 3월에도 찻집이 열려 그냥 우려 팖)]');
 { const st = start(c => c.idx === 0); const r = E.blend(st, st.dried.map(p => p.id), ctx); E.bagBlends(st, [r.blend.id], ctx);
-  const m0 = st.money, f = E.firstGuest(st, r.blend.id, ctx);
-  check(f.ok && st.money - m0 === E.blendValue(r.blend) && st.teas.length === 1 && st.firstGuest === false, `「${r.blend.name}」 블렌드 티백을 팖 · 꽃 티백은 남음`); }
+  check(!E.firstGuestReady(st) && !E.firstGuest(st, r.blend.id, ctx).ok, '열린 찻집이라 첫 손님 단추는 없음');
+  const m0 = st.money; E.brew(st, [], [r.blend.id]); const s = E.sellCups(st, st.cups.map(c => c.id), ctx);
+  check(s.ok && st.money - m0 === E.blendValue(r.blend) && st.teas.length === 1 && st.firstGuest === false, `「${r.blend.name}」 블렌드 티백을 팖 · 꽃 티백은 남음 · 첫 손님 표도 끝`); }
 
 console.log('[금요일 저녁 (12월, 찻집이 열림)]');
 { const st = start(c => c.idx === 9);

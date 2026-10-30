@@ -505,8 +505,8 @@ function guideSub(k, need) {
   if (k === 'pot') { const f = E.potFlower(st); return sub(`이웃에게 선물 받은 ${f ? josa(FLOWERS[f.type].name, '이에요/예요') : '꽃이에요'} · 반짝이는 꽃을 눌러 언제 피는지, 무엇이 필요한지 봐요`); }
   if (k === 'blended') return sub('🎁 시작 선물의 말린 꽃잎 두 가지를 골라 섞어요 · 캐모마일 + 장미 = 봄 들판');
   if (k === 'sold' && E.firstGuestReady(st)) return sub(st.teas.length || st.blends.some(b => b.bagged) ? '🍵 찻집에서 "첫 손님 맞기"를 눌러요 · 문이 닫혀 있어도 한 번은 티백 하나를 우려 팔아요' : '🌿 제다실에서 티백을 만들고 🍵 찻집에서 "첫 손님 맞기" · 닫혀 있어도 한 번은 팔아요');   // P22-05 첫 손님 (P22-04 문구보다 먼저)
-  if (k === 'sold' && st.gift != null && st.gift >= 0 && st.petals.length >= 2) return sub(`꽃잎 하나는 🌾 꽃방에 널고, 하나는 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)부터 꽃잠까지${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);
-  if (k === 'sold') return sub(st.starterGift ? '블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요' : `꽃잎을 말려 🏷️ 티백으로 · 찻집은 금요일 저녁 6시(12월)에 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);   // P22-04
+  if (k === 'sold' && st.gift != null && st.gift >= 0 && st.petals.length >= 2) return sub(`꽃잎 하나는 🌾 꽃방에 널고, 하나는 🏷️ 티백으로 · 찻집은 매달 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);
+  if (k === 'sold') return sub(st.starterGift ? '블렌드를 🏷️ 티백으로 만들고, 찻집에서 🫖 우려 ☕ 찻잔을 💰 판매해요' : `꽃잎을 말려 🏷️ 티백으로 · 찻집은 매달 열어요${E.teaShopOpen(E.calendar(st.virtual)) ? ' · 지금 열려 있어요' : ` · ${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤`}`);   // P22-04
   if (k === 'bought' && E.calendar(st.virtual).frozen) return sub('월요일 아침 6시에 정원이 깨어나면 화원에서 살 수 있어요');
   if (k === 'planted' && E.calendar(st.virtual).frozen) return sub(st.reservations.some(r => !r.done) ? '월요일 아침 6시부터 예약한 꽃이 심을 때에 맞춰 창고로 와요' : '월요일 아침 6시에 정원이 깨어나면 심을 수 있어요 · 꽃잠에도 물 주기 · 옮겨심기는 돼요');
   if (k === 'reserved') return sub(E.calendar(st.virtual).frozen ? '꽃잠엔 새해 꽃을 10% 싸게 미리 사 둬요 · 심을 때가 되면 창고로 와요' : '화원에서 제철 꽃을 사도 돼요');

@@ -66,6 +66,6 @@ check(minD >= 24, `가장 비슷한 두 무늬도 도트 ${minD}칸 이상 다�
 console.log('[시뮬 기본은 그대로]');
 { const out = require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7'], { encoding: 'utf8' });
   const y4 = out.split('\n')[4].split('\t');
-  check(y4[0] === '4' && y4[15] === '22310', `sim-economy 4 7 연말 22,310원 그대로 (${y4[15]})`); }
+  check(y4[0] === '4' && y4[15] === '80720', `sim-economy 4 7 연말 80,720원 그대로 (${y4[15]}) — P34 찻집 매달 · 겨울 · 꽃잠 값 (예전 22,310원)`); }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

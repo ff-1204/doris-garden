@@ -69,13 +69,13 @@ const QART = {
 };
 const questArt = q => { const ff = E.firstFlower(st), c1 = { c1_bloom: ['flower', ff], c1_petal: ['petal', ff], c1_dry: ['dried', ff], c1_bag: ['teabag', ff], c1_land: ['land', homeLand(FLOWERS[ff])], c1_sell: ['tea', ff] };   // P22-01 1장은 첫 꽃
   const [k, v] = c1[q.key] || QART[q.key]; return k === 'land' ? `<span class="q-land" style="background:${LANDS[v].color}"></span>` : spriteImg(v, k, 32, false, ''); };
-// 언제 할 수 있는지 (P19-04-03): 화원에 들어오는 달 · 심어 둔 꽃이 피는 달 · 찻집 여는 달
+// 언제 할 수 있는지 (P19-04-03): 화원에 들어오는 달 · 심어 둔 꽃이 피는 달 · 찻집 여는 달 (P34부터 매달)
 function questWhen(q, cal) {
   const w = E.questWhenOf(q, st);
   if (!w) return { now: true };
-  if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: `${SEASON_IC[3]} 12월부터` };
+  if (w === 'cafe') return E.teaShopOpen(cal) ? { now: true } : { now: false, label: '찻집이 열리면' };   // P34 매달 열려 늘 지금
   if (w.need === 'dry') return st.petals.length || st.drying.length ? { now: true } : { now: false, label: '꽃잎을 거두면' };   // 널 꽃잎 (QA 16회차)
-  if (w.need === 'sell') return !E.teaShopOpen(cal) ? { now: false, label: `${SEASON_IC[3]} 12월부터` } : st.teas.some(t => t.type === w.flower) || (st.cups || []).some(c => c.kind === 'tea' && c.type === w.flower) ? { now: true } : { now: false, label: '티백을 만들면' };   // 그 꽃 차만 (QA 19회차)
+  if (w.need === 'sell') return !E.teaShopOpen(cal) ? { now: false, label: '찻집이 열리면' } : st.teas.some(t => t.type === w.flower) || (st.cups || []).some(c => c.kind === 'tea' && c.type === w.flower) ? { now: true } : { now: false, label: '티백을 만들면' };   // 그 꽃 차만 (QA 19회차)
   if (w.need === 'petal') return [st.petals, st.drying, st.dried].some(l => l.some(p => p.type === w.flower)) ? { now: true } : { now: false, label: '꽃잎을 거두면' };   // QA 6회차: 정확한 "지금" · 그 꽃 꽃잎만 (QA 19회차)
   if (w.need === 'land') return { now: false, label: '꽃 둘레 땅이 바뀌면 (2달쯤)' };
   const F = FLOWERS[w.sow || w.bloom];
