@@ -272,7 +272,7 @@ function visitorBitmap(k) {
   return im.complete && im.naturalWidth ? im : null;
 }
 const visitorImg = (k, scale) => `<img class="px" src="${visitorURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.VISITORS[k] ? E.VISITORS[k].name : '')}">`;
-const px16 =size => 16 * Math.max(1, size >= 48 ? Math.floor(size / 16 + 0.49) : Math.round(size / 16));   // 도트 그림은 16px의 정수배로만 (P16-14, 10-24)
+const px16 = size => 16 * Math.max(1, size >= 48 ? Math.floor(size / 16 + 0.49) : Math.round(size / 16));   // 도트 그림은 16px의 정수배로만 (P16-14, 10-24)
 const spriteImg = (key, kind, size, locked, alt) => { const s = px16(size); return `<img class="px" src="${spriteURL(key, kind, locked)}" width="${s}" height="${s}" alt="${esc(alt || '')}">`; };
 
 // ---------------------------------------------------------------- 저장

@@ -407,13 +407,13 @@ function onTiles(tiles) {
     return after(r);
   }
 }
-// 🐾 특별 손님 말풍선 (P30-06-02, L1-7 10-30): 그 칸 위에 말 한 줄 + "🧺 n번째 방문" (느긋하게 보기면 말만). 지도를 다시 누르거나 8초 뒤 닫힘
+// 🐾 특별 손님 말풍선 (P30-06-02, L1-7 10-30): 그 칸 위에 말 한 줄 + "🧺 n번째 방문" (느긋하게 보기면 말만) + "심으면 손님이 비켜요" (검토 10-30). 지도를 다시 누르거나 8초 뒤 닫힘
 var visitorBubbleEl = document.getElementById('visitorBubble'), visitorBubbleT = 0;
 function hideVisitorBubble() { if (visitorBubbleEl && !visitorBubbleEl.hidden) { visitorBubbleEl.hidden = true; clearTimeout(visitorBubbleT); } }
 function showVisitorBubble(v) {
   if (!visitorBubbleEl) return;
   const el = visitorBubbleEl, fw = el.parentElement.clientWidth;
-  el.innerHTML = `<span class="vb-art">${visitorImg(v.key, 2)}</span><span class="vb-main"><b>${v.icon} ${esc(v.name)}</b><span class="vb-line">“${esc(v.line)}”</span>${E.slowView(st) ? '' : `<small class="muted">🧺 ${v.times}번째 방문</small>`}</span>`;
+  el.innerHTML = `<span class="vb-art">${visitorImg(v.key, 2)}</span><span class="vb-main"><b>${v.icon} ${esc(v.name)}</b><span class="vb-line">“${esc(v.line)}”</span>${E.slowView(st) ? '' : `<small class="muted">🧺 ${v.times}번째 방문</small>`}<small class="muted">심으면 손님이 비켜요</small></span>`;
   el.hidden = false;
   const cx = canvas.offsetLeft + (v.x + 0.5) * cell, top = canvas.offsetTop + v.y * cell, w = el.offsetWidth, h = el.offsetHeight;
   const left = Math.max(6, Math.min(fw - w - 6, cx - w / 2)), below = top - h - 6 < 4;   // 지도 위쪽 끝이면 칸 아래로
