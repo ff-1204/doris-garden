@@ -259,6 +259,7 @@ function draw() {
     const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92);
     if (d.honey && d.honey.length) { g.fillStyle = '#f2b632'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(d.x * cell + cell * 0.82, d.y * cell + cell * 0.2, Math.max(2.5, cell * 0.14), 0, 7); g.fill(); g.stroke(); }   // 🍯 거둘 꿀이 있음
   }
+  for (const v of E.visitorsOf(st, cal)) { const im = visitorBitmap(v.key); if (im) g.drawImage(im, v.x * cell + cell * 0.04, v.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); }   // P30-06-02 🐾 특별 손님 (장식과 같은 길 · 빈 칸에만 앉음)
   // P27 장치 효과 범위: 놓거나 옮기는 중엔 가리킨 칸 둘레, 놓인 장치를 누르면 잠깐 그 둘레 (QA 12회차 제안)
   const gearAt = (key, x, y) => { const G = { r: decoReach(key) }; if (G.r == null) return; g.save(); g.fillStyle = 'rgba(255, 216, 74, .18)'; g.strokeStyle = 'rgba(255, 216, 74, .9)'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
     const x0 = Math.max(0, x - G.r), y0 = Math.max(0, y - G.r), x1 = Math.min(W - 1, x + G.r), y1 = Math.min(H - 1, y + G.r);
@@ -321,7 +322,8 @@ const tipEl = $('#tip');
 // 위 막대 · 안내 줄이 실제로 나타나거나 사라질 때만 (같은 값으로 다시 넣는 것은 빼고 — QA 17회차)
 for (const id of ['#tray', '#hint']) new MutationObserver(ms => { if (ms.some(m => (m.oldValue !== null) !== m.target.hidden) && performance.now() > (ui.noShiftUntil || 0)) ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
 function tipHTML([x, y]) {
-  const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y);
+  const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y), vs = !f && !dc && E.visitorAt(st, x, y);
+  if (vs) return `<b>${vs.icon} ${esc(vs.name)}</b><br><span class="muted">${land} · 눌러서 말 걸기</span>`;   // P30-06-02
   if (!f && dc) return `<b>🪴 ${esc(E.decoInfo(dc.key).name)}</b><br><span class="muted">${land} · 눌러서 옮기기</span>`;
   if (!f) return `<b>${land}</b><br><span class="muted">${tl.t.toFixed(1)}°C · 습도 ${Math.round(tl.m)}%</span>`;
   const F = FLOWERS[f.type], cal = E.calendar(st.virtual), v = Math.round(E.vigorOf(st, f));
@@ -334,7 +336,7 @@ function tipHTML([x, y]) {
   return `<b>${F.name}</b> · ${E.STAGE[f.stage]}<br><span class="stars">${starStr(f.q)}</span> ${E.pct(f.q)}% · 기운 ${v}%${needs.length ? '<br>' + needs.join('<br>') : ''}<br><span class="muted">${land}</span>`;
 }
 canvas.addEventListener('pointerdown', e => {
-  tipEl.hidden = true;
+  tipEl.hidden = true; hideVisitorBubble();
   const t = tileAt(e); if (!t) return;
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 일부 환경에서는 지원하지 않음 */ }
   drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY, top: canvas.getBoundingClientRect().top, early: performance.now() - (ui.mapShiftAt || 0) < 600 };   // 지도가 막 움직였으면 (QA 16회차 메모)
@@ -385,6 +387,8 @@ function onTiles(tiles) {
   }
   const dc = !f && E.decoAt(st, x, y);
   if (dc && ui.tool === 'look') return openDecoTile(dc);
+  const vs = !f && !dc && ui.tool === 'look' && E.visitorAt(st, x, y);
+  if (vs) { ui.selected = null; ui.selTile = null; renderStatus(true); return showVisitorBubble(vs); }   // P30-06-02 손님 칸: 둘레 단추 · 심기 대신 말풍선 (손님은 빈 칸에만 앉아 꽃 · 장식 누르기를 막지 않음)
   if (ui.tool === 'look') {
     if (f) select(f.id);
     else { ui.selected = null; ui.selTile = [x, y]; ui.sheetOpen = true; }   // 빈 칸: 상태창에서 심기
@@ -402,6 +406,20 @@ function onTiles(tiles) {
     if (r.ok) { ui.moveFrom = null; ui.tool = 'look'; }                     // 옮긴 뒤에는 관찰로 돌아감
     return after(r);
   }
+}
+// 🐾 특별 손님 말풍선 (P30-06-02, L1-7 10-30): 그 칸 위에 말 한 줄 + "🧺 n번째 방문" (느긋하게 보기면 말만) + "심으면 손님이 비켜요" (검토 10-30). 지도를 다시 누르거나 8초 뒤 닫힘
+var visitorBubbleEl = document.getElementById('visitorBubble'), visitorBubbleT = 0;
+function hideVisitorBubble() { if (visitorBubbleEl && !visitorBubbleEl.hidden) { visitorBubbleEl.hidden = true; clearTimeout(visitorBubbleT); } }
+function showVisitorBubble(v) {
+  if (!visitorBubbleEl) return;
+  const el = visitorBubbleEl, fw = el.parentElement.clientWidth;
+  el.innerHTML = `<span class="vb-art">${visitorImg(v.key, 2)}</span><span class="vb-main"><b>${v.icon} ${esc(v.name)}</b><span class="vb-line">“${esc(v.line)}”</span>${E.slowView(st) ? '' : `<small class="muted">🧺 ${v.times}번째 방문</small>`}<small class="muted">심으면 손님이 비켜요</small></span>`;
+  el.hidden = false;
+  const cx = canvas.offsetLeft + (v.x + 0.5) * cell, top = canvas.offsetTop + v.y * cell, w = el.offsetWidth, h = el.offsetHeight;
+  const left = Math.max(6, Math.min(fw - w - 6, cx - w / 2)), below = top - h - 6 < 4;   // 지도 위쪽 끝이면 칸 아래로
+  el.style.left = left + 'px'; el.style.top = (below ? top + cell + 6 : top - h - 6) + 'px';
+  el.style.setProperty('--tail', Math.max(12, Math.min(w - 12, cx - left)) + 'px'); el.classList.toggle('below', below);
+  clearTimeout(visitorBubbleT); visitorBubbleT = setTimeout(hideVisitorBubble, 8000);
 }
 // ---------------------------------------------------------------- ⛏️ 광산 창 (P24, 10-24): 층 · 기력 · 8×6 판 · 가방 · 만들기
 function openMine(tab) {

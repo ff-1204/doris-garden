@@ -149,6 +149,15 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 .ring-btn:hover { background: color-mix(in srgb, var(--k) 14%, var(--panel)); transform: scale(1.08); }
 @keyframes ringPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ring-btn { animation: none; } }
+/* P30-06-02 🐾 특별 손님 말풍선 — 네모 칸 (P16-14) */
+.v-bubble { position: absolute; z-index: 5; display: flex; gap: 8px; align-items: center; max-width: min(280px, calc(100% - 12px)); padding: 7px 10px; background: var(--panel); border: 2px solid #8a7f72; box-shadow: 0 3px 10px rgba(40,30,20,.22); font-size: 13px; line-height: 1.35; animation: ringPop .2s ease both; }
+.v-bubble::after { content: ''; position: absolute; left: var(--tail, 50%); bottom: -8px; width: 10px; height: 10px; margin-left: -5px; background: var(--panel); border: 2px solid #8a7f72; border-top: 0; border-left: 0; transform: rotate(45deg); }
+.v-bubble.below::after { bottom: auto; top: -8px; transform: rotate(-135deg); }
+.v-bubble .vb-main { display: flex; flex-direction: column; min-width: 0; }
+.v-bubble .vb-line { color: var(--ink); }
+.v-bubble small { font-size: 11px; }
+.v-bubble[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .v-bubble { animation: none; } }
 .mapframe { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #a39b8e; box-shadow: 0 6px 18px rgba(40, 30, 20, .10); }
 canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair; }
 .mapwrap.zoom canvas#map { touch-action: pan-x pan-y; }   /* 확대했을 땐 손가락으로 밀어 봄 (QA 7회차) */
@@ -1367,6 +1376,7 @@ body { margin: 0; }
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
                 <div class="care-ring" id="careRing" hidden></div>
+                <div class="v-bubble" id="visitorBubble" role="status" hidden></div>
               </div>
               <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size:13px">꽃들이 자고 있어요. 옮겨심기 · 번식 · 돌보기, 핀 채로 잠든 꽃 수확은 할 수 있어요. 블렌딩이나 새해 꽃 예약도 해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기 · 수확은 돼요</span></div></div>
             </div>

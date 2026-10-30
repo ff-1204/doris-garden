@@ -257,6 +257,21 @@ function decoBitmap(key) {                         // 지도에 그릴 그림 (�
   if (!im) { im = new Image(); im.src = decoURL(key); decoBitmaps[art] = im; }
   return im.complete && im.naturalWidth ? im : null;
 }
+// P30-06-02 🐾 특별 손님 그림: decos.js VISITOR_ART 16×16 (지도는 장식과 같은 길로, 말풍선 · 도감은 정수배)
+const visitorCache = {}, visitorBitmaps = {};
+function visitorURL(k) {
+  if (visitorCache[k]) return visitorCache[k];
+  const S = window.VISITOR_ART[k]; if (!S) return '';
+  const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+  S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && S.pal[ch]) { x.fillStyle = S.pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return (visitorCache[k] = c.toDataURL());
+}
+function visitorBitmap(k) {
+  let im = visitorBitmaps[k];
+  if (!im) { im = new Image(); im.src = visitorURL(k); visitorBitmaps[k] = im; }
+  return im.complete && im.naturalWidth ? im : null;
+}
+const visitorImg = (k, scale) => `<img class="px" src="${visitorURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.VISITORS[k] ? E.VISITORS[k].name : '')}">`;
 const px16 = size => 16 * Math.max(1, size >= 48 ? Math.floor(size / 16 + 0.49) : Math.round(size / 16));   // 도트 그림은 16px의 정수배로만 (P16-14, 10-24)
 const spriteImg = (key, kind, size, locked, alt) => { const s = px16(size); return `<img class="px" src="${spriteURL(key, kind, locked)}" width="${s}" height="${s}" alt="${esc(alt || '')}">`; };
 
@@ -286,6 +301,7 @@ const ctx = {
   onRecord: rec => { try { draw(); rec.snapshot = snapshot(); } catch (e) { /* 그림 없이 기록 */ } },
   onGrade: e => { if (ctx.live) gradeToasts(e); },   // 🌱 등급이 오르면 알림 한 줄 (P28-05-01, M1-4) · 따라잡는 동안 오른 것은 '자리를 비운 동안' 한 줄로
   onYearly: e => { if (ctx.live && st.settings.toast[9]) setTimeout(() => queueToast(e.text), 600); },   // 🗓️ 올해만 오는 것을 이 계절 처음 본 때 알림 한 줄 (P30-05-02) — 알림 설정 「📖 도감 등록」(9번)을 따름(수면 시간은 다른 알림처럼 웹에선 저장만) · 숫자가 아니라 느긋하게 보기여도 · 열 때 부르니 알림 칸이 준비된 뒤로
+  onVisitor: e => { if (!ctx.live || !st.settings.toast[9]) return; setTimeout(() => queueToast(e.text), 600); if (e.gift) setTimeout(() => queueToast(`${e.gift.text} ${e.gift.ic}`), 1400); },   // 🐾 특별 손님이 와 앉음 · 세 번째로 온 날 기념품은 따로 한 줄 (한꺼번에 오면 "새 소식 2개"로 묶여서) (P30-06-01 · 03) — 알림 설정 「📖 도감 등록」(9번), 열어 둔 채일 때만 (따라잡기는 일지만)
 };
 
 // P25-01 돌아왔을 때 한 장 요약: 3시간 넘게 비웠으면 그 사이 일지 · 돈 · 목마른 꽃 · 광산 기력을 모아 보여 줌

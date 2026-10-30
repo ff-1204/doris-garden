@@ -320,7 +320,7 @@ function _create(now, rng, cal) {
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false },   // slow: P28-02 느긋하게 보기
     onboarded: false, _fertNew: 0, _bloomNew: {},
     journal: { done: {} }, titles: {}, titleOn: null, stats: {}, grade: newGrade(), gardenId: newGardenId(), lastExport: null, mig: MIGRATIONS.length,   // P19 도감일지 · P20 이름표 · 마지막 파일 저장 · mig: 예전 저장 보정을 어디까지 했는지(새 정원은 다 한 것)
-    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {}, layers: newLayers(), yearly: newYearly(), bonus: newBonus(), season: Object.assign(newSeason(), { startedAt: now }),   // P28-08-03 🌸 새 철 · P28-05-02 🌟 고른 등급 보너스 · P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
+    shop: newShop(), decos: [], honey: {}, gift: null, firstFlower: null, mine: newMine(), orders: null, bestScore: 0, gifts: null, letterPending: [], letterBox: [], pantry: newPantry(), restClosed: null, account: null, actAt: null, resetAt: null, weekly: null, firstGuest: null, mailGot: {}, layers: newLayers(), yearly: newYearly(), visitors: newVisitors(), bonus: newBonus(), season: Object.assign(newSeason(), { startedAt: now }),   // P28-08-03 🌸 새 철 · P28-05-02 🌟 고른 등급 보너스 · P29 📮 운영자 편지 받은 기록 · P22-05 🍵 첫 손님 한 번 (꾸러미를 받으면 true) · P28-09 이번 주 목표 · P16-12-03 처음부터 다시 시작한 때 · P20-08 계정 기록 · P20-06 마지막으로 손댄 때 · P24 광산 · P17-15 찻집 가꾸기 · P17-16 장식 · P18 꿀 · P22 이웃의 화분 · 1장 첫 꽃
   };
 }
 const nid = st => st.nextId++;
@@ -533,6 +533,7 @@ function onSlot(st, cal, ctx) {
   checkLands(st, ctx);
   if (cal.idx === 0) layerCheck(st, ctx); else layerSync(st);                 // P30-01-01 새 층은 새해 3월 아침에만 · 1~3층 연 해는 달마다 적음
   yearlyTick(st, cal, ctx, !!(ctx && ctx.live));                              // P30-05-01 올해만 오는 것: 새 계절 일지 한 줄 · 끝난 계절 놓침 · 열어 둔 채면 봤음 (쉼달 기록 뒤 — 꽃잠은 다음 해 번호)
+  visitorTick(st, cal, ctx);                                                   // P30-06-01 특별 손님: 떠남 · 새로 옴 (올해만 것 본 뒤라 그 조건을 바로 읽음)
 }
 
 function recordYear(st, cal, ctx) {
@@ -1410,8 +1411,12 @@ const MEMENTOS = {
   hanky: { name: '꽃수 손수건', ic: '🧣' }, button: { name: '나무 단추', ic: '🔘' }, postcard: { name: '바다 엽서', ic: '🖼️' }, shell: { name: '분홍 조개껍데기', ic: '🐚' },
   feather: { name: '파랑새 깃털', ic: '🪶' }, acorn: { name: '반들 도토리', ic: '🌰' }, ribbon: { name: '노란 리본', ic: '🎀' }, stamp: { name: '옛 우표', ic: '📮' },
   bookmark: { name: '꽃잎 책갈피', ic: '🔖' }, marble: { name: '유리구슬', ic: '🔮' }, bell: { name: '작은 종', ic: '🔔' }, candy: { name: '별사탕', ic: '⭐' },
+  // P30-06-03 🐾 특별 손님이 세 번째로 온 날 남기는 기념품 (L1-8 10-30) — visitor: 그 손님 키. 주문 기념품 뽑기에는 넣지 않음
+  coaster: { name: '도토리 찻잔 받침', ic: '🪵', visitor: 'hedgehog' }, titstring: { name: '박새 깃털 끈', ic: '🪢', visitor: 'tit' }, honeycomb: { name: '벌집 조각', ic: '🍯', visitor: 'beekid' }, yarn: { name: '털실 방울', ic: '🧶', visitor: 'cat' },
+  wingmark: { name: '나비 날개 책갈피', ic: '📑', visitor: 'butterfly' }, lotusbrella: { name: '연잎 우산', ic: '☂️', visitor: 'frog' }, snowbutton: { name: '눈 결정 단추', ic: '❄️', visitor: 'snowkid' }, quill: { name: '부엉이 깃털 펜', ic: '🖋️', visitor: 'owl' },
 };
 const MEMENTO_KEYS = Object.keys(MEMENTOS);
+const ORDER_MEMENTO_KEYS = MEMENTO_KEYS.filter(k => !MEMENTOS[k].visitor);   // 손님 주문이 두고 가는 12가지 (특별 손님 것은 빼고 — 주문 뽑기 차례 그대로)
 const mementoCount = st => Object.keys((st.dex && st.dex.memento) || {}).filter(k => MEMENTOS[k]).length;
 const orderText = o => o.kind === 'tea' ? `★${o.stars} 이상 ${FLOWERS[o.type].tea}` : o.kind === 'recipe' ? '레시피 블렌드 아무거나' : o.kind === 'honey' ? '꿀 넣은 차 아무거나' : o.kind === 'any' ? '차 아무거나 한 잔' : '🍃 햇차 아무거나';
 function orderMatch(o, c) {
@@ -1447,7 +1452,7 @@ function fillOrder(st, c) {
   const o = os.filter(x => orderMatch(x, c)).sort((a, b) => hard(b) - hard(a))[0]; if (!o) return null;
   o.done = true; bump(st, 'orders');
   st.dex.memento = st.dex.memento || {};
-  const left = MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
+  const left = ORDER_MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
   let gift = null;
   if (left.length) { const rnd = mineRng(hashStr(`${st.gardenId || 'g'}|memento|${S(st, 'orders')}`)); gift = left[Math.floor(rnd() * left.length)]; st.dex.memento[gift] = true; }
   else addFert(st, 1);                            // 기념품을 다 모은 뒤엔 손님이 비료 한 줌 (QA 6회차)
@@ -2324,7 +2329,7 @@ const seasonBreaks = rows => (rows || []).reduce((out, r, i) => (i > 0 && rowSea
 //   · 🪑 찻집 가꾸기 · 장식 보유(🧺 자동 장치는 놓인 자리 그대로 — 열린 질문 ①, 나머지는 창고 🪴로) · 첫 안내 · 이웃의 화분 · 첫 꽃 · 첫 손님 표시 · 꽃잠 시작 표시(「꽃잠에 온 손님」을 새로 주지 않게)
 //   · 이번 주 목표(같은 주에 다시 뽑으면 경험치를 두 번 받아서 — 월요일에 저절로 바뀜) · 마지막 파일 저장 · 마지막으로 손댄 때 · 이름표 번호(nextId)
 const SEASON_KEEP = ['grade', 'bonus', 'titles', 'titleOn', 'dex', 'journal', 'stats', 'yearLog', 'records', 'bestScore', 'letterBox', 'letterPending', 'mailGot', 'settings', 'account', 'resetAt', 'gardenId',
-  'shop', 'decos', 'onboarded', 'guide', 'gift', 'firstFlower', 'ownBloom', 'firstGuest', 'starterGift', 'startedInSleep', 'weekly', 'restClosed', 'lastExport', 'lastReal', 'actAt', 'speed', 'nextId', '_newTitles', 'layers', 'yearly'];   // layers: P30-01-01 정원의 층 (연 해는 누적 해 수라 철을 넘겨도 그대로) · yearly: P30-05-01 올해만 오는 것 (해 번호가 누적이라 달력 · 본 것 · 놓친 것 그대로)
+  'shop', 'decos', 'onboarded', 'guide', 'gift', 'firstFlower', 'ownBloom', 'firstGuest', 'starterGift', 'startedInSleep', 'weekly', 'restClosed', 'lastExport', 'lastReal', 'actAt', 'speed', 'nextId', '_newTitles', 'layers', 'yearly', 'visitors'];   // layers: P30-01-01 정원의 층 (연 해는 누적 해 수라 철을 넘겨도 그대로) · yearly: P30-05-01 올해만 오는 것 (해 번호가 누적이라 달력 · 본 것 · 놓친 것 그대로) · visitors: P30-06 특별 손님 (온 횟수 · 기념품은 이어지고 앉은 손님은 seasonStart가 비움)
 function seasonStart(st, ctx) {
   ctx = ctx || {};
   const cal = calendar(st.virtual);
@@ -2344,6 +2349,7 @@ function seasonStart(st, ctx) {
     if (d.honey) d.honey = [];                                                // 벌통에 모인 꿀도 비움
     if (!(DECOS[d.key] && DECOS[d.key].auto)) { d.x = null; d.y = null; }     // 🧺 자동 장치만 제자리, 나머지 장식은 창고 🪴로
   }
+  if (st.visitors) { st.visitors.now = []; st.visitors.call = null; }        // P30-06-01 앉아 있던 손님은 떠남 (장식이 창고로 감) — 온 횟수 · 기념품은 이어짐
   st.yearPace.xp0 = (st.grade && st.grade.xp) || 0;                         // P28-07-02 새 철 0년차부터 견줌 (경험치는 이어짐)
   addLog(st, 7, `🌸 ${n + 1}철을 시작했어요 · 다음 월요일 3월이 새 철 1년차예요`, ctx);
   const title = SEASON_TITLES.find(k => TITLES[k].season === n + 1) || null;   // 새 철 보상은 이 칭호뿐 — 🌟 손길 점은 더 주지 않음 (열린 질문 ②)
@@ -2525,6 +2531,103 @@ function yearlyBloom(st, cal) {   // 지금 다른 빛으로 피는 꽃 (지도 
   const it = yearlyNow(st, cal); return it && it.kind === 'bloom' ? it.flower : null;
 }
 
+// ---------------------------------------------------------------- 🐾 특별 손님 (P30-06-01, L1-6 10-30)
+// 놓은 장식 · 핀 꽃 · 올해만 것에 따라 특별 손님이 정원 빈 칸에 와 앉음 — 보는 즐거움 · 수집만, 돈 · 주문 · 경험치 보상 없음 (P17-14)
+// 오기: 달이 바뀔 때(onSlot 끝 visitorTick) 조건이 맞는 손님마다 정원 이름표 · 달(cal.abs = 해 · 달)로 정해지는 난수 ~1/3 (Math.random 아님), 한 달에 한 명 · 한꺼번에 둘까지
+//   자리 = 조건 장식 · 꽃 바로 옆 빈 칸(꽃 · 장식 · 다른 손님 없는 칸, 없으면 안 옴). 2~3달 앉았다 떠남. 꽃잠엔 새로 안 오고 앉은 손님도 그대로(떠나는 달을 세지 않음)
+//   켜 두어야만 얻는 것 없음 — 비운 동안 따라잡기에도 돌고 알림은 일지만 (열어 둔 채일 때만 ctx.onVisitor)
+// 세 번째로 와 앉은 날 기념품 하나(P30-06-03) — 💌 기념품 도감(P23-01 dex.memento)에 새 칸, 손님마다 한 번
+// 저장 st.visitors = { now: [{ k, x, y, at: 온 달 abs, left: 남은 달 }], times: { 키: 온 횟수(앉은 때 셈) }, gift: { 키: true }, call: DEV 부른 손님 | null }
+//   새 철: times · gift는 이어지고(SEASON_KEEP) now는 비움(장식이 창고로 가서 앉을 자리가 없음)
+// 큰 나무(P30-03 작은 숲, L3)가 생기면 🐦 박새 자리 · 조건에 더함 — 지금은 꽃 아치
+const blooming = (st, type) => (st.flowers || []).filter(f => !f.withered && f.stage === 'bloom' && (!type || f.type === type));
+const VISITORS = {
+  hedgehog: { name: '고슴도치 할머니', icon: '🦔', memento: 'coaster', where: '나무 그네 옆', need: '🪴 나무 그네를 놓으면',
+    lines: ['그네가 살랑살랑, 졸음이 와요', '이 정원 꽃은 향이 순해요', '천천히 가꾸는 게 제일이에요'], spots: st => placedOf(st, 'swing') },
+  tit: { name: '박새', icon: '🐦', memento: 'titstring', where: '꽃 아치 옆', need: '🪴 꽃 아치를 놓으면',
+    lines: ['아치 위에서 노래 연습 중이에요', '찌르르, 꽃 냄새가 좋아요', '오늘은 바람이 착해요'], spots: st => placedOf(st, 'arch') },
+  beekid: { name: '꿀벌 아이', icon: '🐝', memento: 'honeycomb', where: '벌통 옆', need: '🐝 벌통을 놓으면',
+    lines: ['벌통 언니들 일하는 거 보러 왔어요', '이 꽃 꿀은 무슨 맛일까요', '붕붕, 잠깐만 쉬어 갈게요'], spots: st => placedOf(st, 'hive') },
+  cat: { name: '길고양이', icon: '🐈', memento: 'yarn', where: '볕 드는 자리', need: '🍵 찻집 손님 자리가 둘이 되면',
+    lines: ['찻집 손님이 많아서 구경 왔어요', '여기 볕이 제일 따뜻해요', '야옹, 조금만 누웠다 갈게요'], cond: st => shopOf(st).seats >= 2, spots: st => [...(st.decos || []).filter(d => d.x != null), ...(st.flowers || []).filter(f => !f.withered)] },
+  butterfly: { name: '나비 언니', icon: '🦋', memento: 'wingmark', where: '꽃 옆', need: '🌸 꽃이 열 포기 넘게 피면',
+    lines: ['꽃이 이렇게 많다니, 신나요', '날개 좀 말리고 갈게요', '이 꽃 색이 제일 예뻐요'], cond: st => blooming(st).length >= 10, spots: st => blooming(st) },
+  frog: { name: '청개구리', icon: '🐸', memento: 'lotusbrella', where: '연꽃 옆', need: '🌦️ 소나기를 본 정원에 연꽃이 피면',
+    lines: ['소나기 덕에 연못이 좋아요', '연꽃 아래가 시원해요', '개굴, 비 오면 또 올게요'], cond: st => yearlySeen(st, 'shower'), spots: st => blooming(st, 'lotus') },
+  snowkid: { name: '눈사람 아이', icon: '⛄', memento: 'snowbutton', where: '동백 옆', need: '❄️ 첫눈을 본 정원에 동백이 피면',
+    lines: ['첫눈 오던 날 생각나요', '동백이 빨개서 따뜻해 보여요', '녹기 전에 놀다 갈게요'], cond: st => yearlySeen(st, 'firstsnow'), spots: st => blooming(st, 'dongbaek') },
+  owl: { name: '부엉이', icon: '🦉', memento: 'quill', where: '해시계 옆', need: '🌕 큰 달을 본 정원에 해시계를 놓으면',
+    lines: ['큰 달 뜨던 밤이 그리워요', '해시계는 밤엔 쉬어요', '부엉, 조용한 정원이 좋아요'], cond: st => yearlySeen(st, 'bigmoon'), spots: st => placedOf(st, 'sundial') },
+};
+const VISITOR_KEYS = Object.keys(VISITORS);
+const VISITOR_MAX = 2, VISITOR_P = 1 / 3, VISITOR_GIFT_AT = 3;   // 한꺼번에 앉는 손님 · 달마다 올 확률 · 몇 번째 온 날 기념품
+const newVisitors = () => ({ now: [], times: {}, gift: {}, call: null });
+const visitorsSt = st => (st.visitors = st.visitors || newVisitors());
+const visitorOk = (st, k) => { const T = VISITORS[k]; return (!T.cond || T.cond(st)) && T.spots(st).length > 0; };   // 조건은 놓은 장식 · 핀 꽃 · 올해만 것으로만 (돈 · 등급 숫자 없음)
+const cellTaken = (st, x, y) => !!flowerAt(st, x, y) || !!decoAt(st, x, y) || visitorsSt(st).now.some(v => v.x === x && v.y === y);
+function visitorCells(st, k) {   // 조건 장식 · 꽃 바로 옆 빈 칸 (같은 칸은 한 번)
+  const out = [], seen = {};
+  for (const a of VISITORS[k].spots(st)) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const x = a.x + dx, y = a.y + dy, id = y * W + x;
+    if ((dx || dy) && x >= 0 && x < W && y >= 0 && y < H && !seen[id] && !cellTaken(st, x, y)) { seen[id] = 1; out.push([x, y]); }
+  }
+  return out;
+}
+const visitorWho = k => `${VISITORS[k].icon} ${josa(VISITORS[k].name, '이/가')}`;
+function visitorArrive(st, k, cell, cal, rnd, ctx) {
+  const V = visitorsSt(st), T = VISITORS[k];
+  V.now.push({ k, x: cell[0], y: cell[1], at: cal.abs, left: 2 + (rnd() < 0.5 ? 1 : 0) });   // 2~3달
+  const times = V.times[k] = (V.times[k] || 0) + 1;
+  const text = `${visitorWho(k)} ${T.where}에 앉았어요`;
+  addLog(st, 9, text);                                                         // 토스트는 화면이 onVisitor로 (따라잡는 동안엔 일지만)
+  let gift = null;
+  if (times >= VISITOR_GIFT_AT && !V.gift[k] && MEMENTOS[T.memento]) {         // P30-06-03 세 번째로 온 날 기념품 (한 번만)
+    V.gift[k] = true; st.dex.memento = st.dex.memento || {}; st.dex.memento[T.memento] = true;
+    const M = MEMENTOS[T.memento];
+    gift = { key: T.memento, name: M.name, ic: M.ic, text: `${visitorWho(k)} ${josa(M.name, '을/를')} 남겼어요` };
+    addLog(st, 9, `${gift.text} ${M.ic}`);
+  }
+  const e = { key: k, name: T.name, icon: T.icon, times, text, gift };
+  if (ctx && ctx.live && ctx.onVisitor && st.onboarded) ctx.onVisitor(e);
+  return e;
+}
+// 달이 바뀔 때 (onSlot 끝). 돌려줌: 이 달에 온 손님 이벤트 | null
+function visitorTick(st, cal, ctx) {
+  const V = visitorsSt(st), gid = st.gardenId || 'g';
+  if (cal.frozen) return null;                                                 // 꽃잠: 새로 안 오고 앉은 손님은 그대로
+  const left = [];
+  V.now = V.now.filter(v => {                                                  // 떠남: 자리에 꽃 · 장식이 들어섰거나 머문 달이 다 됨
+    const gone = !VISITORS[v.k] || !!flowerAt(st, v.x, v.y) || !!decoAt(st, v.x, v.y) || --v.left <= 0;
+    if (gone) left.push(v.k);
+    if (gone && VISITORS[v.k]) addLog(st, 9, `${visitorWho(v.k)} 다녀갔어요`);
+    return !gone;
+  });
+  const call = V.call; V.call = null;
+  if (V.now.length >= VISITOR_MAX) return null;
+  const order = VISITOR_KEYS.filter(k => !V.now.some(v => v.k === k) && !left.includes(k) && visitorOk(st, k))   // 떠난 달엔 다시 안 옴
+    .sort((a, b) => (b === call) - (a === call) || yearlyHash(`${gid}|vorder|${a}|${cal.abs}`) - yearlyHash(`${gid}|vorder|${b}|${cal.abs}`));
+  for (const k of order) {
+    const rnd = mineRng(yearlyHash(`${gid}|visitor|${k}|${cal.abs}`));
+    if (!(rnd() < VISITOR_P) && k !== call) continue;
+    const cells = visitorCells(st, k); if (!cells.length) continue;
+    return visitorArrive(st, k, cells[Math.floor(rnd() * cells.length)], cal, rnd, ctx);   // 한 달에 한 명
+  }
+  return null;
+}
+// 화면이 읽는 것: 지금 앉아 있는 손님 (자리에 꽃 · 장식이 들어선 손님은 다음 달에 떠나므로 빼고 보여 줌)
+function visitorsOf(st, cal) {
+  cal = cal || calendar(st.virtual);
+  const V = visitorsSt(st), gid = st.gardenId || 'g';
+  return V.now.filter(v => VISITORS[v.k] && !flowerAt(st, v.x, v.y) && !decoAt(st, v.x, v.y)).map(v => {
+    const T = VISITORS[v.k], L = T.lines;
+    return { key: v.k, name: T.name, icon: T.icon, x: v.x, y: v.y, since: v.at, times: V.times[v.k] || 1, where: T.where,
+      line: L[yearlyHash(`${gid}|vline|${v.k}|${cal.abs}`) % L.length] };   // 같은 손님 같은 달이면 같은 말
+  });
+}
+const visitorAt = (st, x, y, cal) => visitorsOf(st, cal).find(v => v.x === x && v.y === y) || null;
+const visitorTimes = (st, k) => (st.visitors && st.visitors.times && st.visitors.times[k]) || 0;
+const visitorCall = (st, k) => { if (!VISITORS[k]) return false; visitorsSt(st).call = k; return true; };   // DEV 🐾 손님 부르기: 조건이 맞으면 다음 달에 꼭 옴
+
 // ---------------------------------------------------------------- 저장 파일 (P20-02 · 03, 10-17)
 // 파일과 (나중의) 구글 드라이브가 같은 형식을 씀. check는 깨짐 확인용 해시일 뿐 치트 방지가 아님
 const SAVE_APP = 'doris-garden', SAVE_FORMAT = 1;
@@ -2672,6 +2775,7 @@ const MIGRATIONS = [
     if (!s.layers) { s.layers = newLayers(); layerSync(s); }
   }],
   ['🗓️ 올해만 오는 것 yearly (P30-05-01, L1-3 10-30): 예전 정원은 빈 달력 — 다음에 열 때부터 셈 (지난 계절을 놓친 것으로 치지 않음)', s => { if (!s.yearly) s.yearly = newYearly(); }],
+  ['🐾 특별 손님 visitors (P30-06-01, L1-6 10-30): 예전 정원은 아무도 안 온 정원 — 다음 달부터 조건이 맞으면 옴', s => { if (!s.visitors) s.visitors = newVisitors(); }],
 ];
 // 열 때마다 하는 일 (한 번으로 끝나지 않는 것)
 function onOpen(s) {
@@ -2790,7 +2894,7 @@ const api = {
   teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
-  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, layerYears, layerNow, layerOf, layerSync, layerCheck, YEARLY, YEARLY_KEYS, YEARLY_ROWS, newYearly, yearlyNo, yearlyOf, yearlyTick, yearlyMark, yearlyNow, yearlyMissedAll, yearlySeen, yearlyCount, yearlyDex, yearlyPast, yearlyBloom, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
+  flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, autoStats, isAutoLine, autoAwayLines, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, layerYears, layerNow, layerOf, layerSync, layerCheck, YEARLY, YEARLY_KEYS, YEARLY_ROWS, newYearly, yearlyNo, yearlyOf, yearlyTick, yearlyMark, yearlyNow, yearlyMissedAll, yearlySeen, yearlyCount, yearlyDex, yearlyPast, yearlyBloom, VISITORS, VISITOR_KEYS, VISITOR_MAX, VISITOR_P, VISITOR_GIFT_AT, newVisitors, visitorOk, visitorCells, visitorTick, visitorsOf, visitorAt, visitorTimes, visitorCall, ORDER_MEMENTO_KEYS, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
