@@ -96,7 +96,14 @@ function renderShop(force) {
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>` : '';
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
+  // 10-30 사용자 요청 "등급에 따라 추가되는 걸 설명글로": 몇 등급에 무엇이 들어오는지 · 지금 등급 · 다음 것 · 등급이 오르는 일 (느긋하게 보기면 숫자 없이)
+  const gNext = E.GRADE_DECO_KEYS.find(k => E.DECOS[k].grade > gNow), gSlow = E.slowView(st);
+  const gradeNote = gSlow ? '<p class="note muted grade-deco-note">🌱 꽃을 거두고 · 차를 팔고 · 주문 · 도감을 채우며 정원을 가꿀수록 등급 장식이 하나씩 더 들어와요 · 한 번 들어온 장식은 계속 팔아요</p>'
+    : `<div class="grade-deco-note"><p class="note muted">🌱 지금 정원 등급 <b>${gNow}</b>${gNext ? ` · 다음은 <b>${E.DECOS[gNext].grade}등급</b>에 ${josa(E.DECOS[gNext].name, '이/가')} 들어와요` : ' · 등급 장식이 모두 들어왔어요'}</p>
+      <div class="gd-steps">${E.GRADE_DECO_KEYS.map(k => `<span class="gd-step ${E.DECOS[k].grade <= gNow ? 'on' : ''}">${E.DECOS[k].grade <= gNow ? '✓' : '🔒'} <b>${E.DECOS[k].grade}</b> ${E.DECOS[k].name}</span>`).join('')}</div>
+      <p class="note muted">등급은 꽃 거두기 · 차 팔기 · 손님 주문 · 퀘스트 · 도감 · 한 해 평가 · 주간 목표로 올라요 · 한 번 들어온 장식은 계속 팔아요</p></div>`;
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 땅 · 꽃에는 영향이 없어요</span></div>
+    ${gradeNote}
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small></span>
