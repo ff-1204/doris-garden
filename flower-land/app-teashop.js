@@ -261,7 +261,7 @@ function renderCab(force) {
   $('#p-cab').innerHTML = `<div class="stack">
     <div class="news-row"><div class="shop-sign ${shopOpen ? 'open' : 'closed'} sign-${E.shopOf(st).sign}">
       <span class="ss-board"><b>${shopOpen ? 'OPEN' : 'CLOSED'}</b><small>${shopOpen ? '영업 중' : '준비 중'}</small></span>
-      <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`} · 🏷️ 티백은 품질이 그대로예요</small></span>
+      <span class="ss-txt"><b>${shopOpen ? '☕ 오늘은 찻집이 열려요' : '🔒 겨울(12월)이 되면 열어요'}</b><small>${shopOpen ? '겨울 · 꽃잠 동안 · 티백을 우려 팔 수 있어요' : `${realH(E.hoursToShopOpen(st.virtual) / (st.speed || 1))} 뒤 · 평일엔 티백을 모아 두세요`}</small></span>
 </div><span class="news-side">${wallet()}<button type="button" class="btn small" data-act="shopUp">🪑 찻집 가꾸기</button></span></div>
     ${firstGuestHTML(bagged)}
     ${ordersHTML()}
