@@ -291,7 +291,7 @@ function openMail(b, done) {
 }
 function showLetters() {                           // 받은 편지함에서 아직 안 띄운 편지를 하나씩 (다른 창이 닫히면 그다음에)
   if ($('#modalRoot').innerHTML || !st.onboarded) return;
-  const b = (st.letterBox || []).find(x => !x.read); if (!b) return;
+  const b = (st.letterBox || []).find(x => !x.read && x.k !== 'welcome'); if (!b) return;   // 10-31 사용자: 첫 방문 「꽃집 할머니의 편지」는 창으로 띄우지 않음 — 📦 창고 ✉️ 편지함에 안 읽은 채로 남아 점만 뜸(꾸러미는 이미 받음)
   b.read = true; if (b.mail) openMail(b); else openLetter(b, true); save();
 }
 function openModal(title, html, buttons) {
