@@ -2,12 +2,14 @@
 // --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
 // --no-grade-deco: 🌱 등급 장식(P28-05-01)만 사지 않음 (등급 장식 전과 비교할 때)
 // --auto: 🧺 자동 장치(P28-10)를 사서 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 장치가 더 벌어 주지 않아서). 바구니 3 · 건조대 2 · 일손 1까지, 맡긴 일은 손으로 안 함
-// --bonus: 🌟 등급 보너스(P28-05-02) 4칸을 처음부터 모두 끝까지 켠 정원사 (손길 점과 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry와 함께 써야 바구니 · 건조대 · 저장고 칸이 일함. --bonus=rack,basket처럼 몇 칸만 켤 수도 있음
+// --bonus: 🌼 일꾼 기르기(P28-05-02 · P37) 7칸을 처음부터 모두 끝단계로 기른 정원사 (꽃가루와 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry · --layer4와 함께 써야 개미 · 누에 · 나비 · 선반 · 무당벌레가 일함
+//   --bonus=rack,basket처럼 몇 칸만 끝단계로 · --bonus brew=2(또는 --bonus=brew=2,hive=1)처럼 단계를 정할 수도 · --bonus all = 모두 끝단계 (P37)
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
 // --path 꽃길|찻길|흙길 (또는 flower|tea|earth): 🛤️ 철의 길(P30-04-01) — 1철부터 그 길을 걷는 정원으로 봄(실제로는 2철부터 고름) · --season이면 2철도 그 길. 돈 · 수확은 길 없이와 같아야 함 (P17-14)
 // --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도, 달 끝마다 숲 바람이 잡초를 걷어 감. 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
 // --decos: P35 · P36 이달의 장식 14가지(3월 ~ 꽃샘달)를 처음부터 맨 위 줄에 놓은 정원 — 사는 돈은 같게(정원사는 기본처럼 그 달에 또 사서 창고에 둠). 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
+// --workers (P37): --auto에 더해 🐛 누에 · 🦋 나비 · 🐝 꿀벌을 처음부터 놓은 정원 — 기르기(rack · brew · hive) 가중치를 잴 때. 공짜로 놓으니 연말 돈은 기본과 견주지 않고 --workers끼리만
 // --hold: P34 겨울(12 · 1 · 2월) · 꽃잠에만 모아 파는 정원사 (철 값 TEA_PRICE_MUL) · --hold=sleep: 꽃잠에만 파는 정원사 (꽃잠 값 · 꽃잠 기념품) — 기본 정원사는 찻집이 열린 달마다 팖
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
@@ -15,16 +17,20 @@ process.env.TZ = 'Asia/Seoul';   // 달력이 현지 시각을 따라 결과가 
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js'));
 const PATH_I = process.argv.indexOf('--path'), PATH_ARG = PATH_I > 0 ? process.argv[PATH_I + 1] : null;
+const BONUS_I = process.argv.indexOf('--bonus'), BONUS_NEXT = BONUS_I > 0 && process.argv[BONUS_I + 1] && !process.argv[BONUS_I + 1].startsWith('--') && !/^\d+$/.test(process.argv[BONUS_I + 1]) ? BONUS_I + 1 : -1;   // P37 --bonus brew=2 (뒤 값은 해 수 · 씨앗이 아님)
 const PATH = PATH_ARG == null ? null : (E.PATHS[PATH_ARG] ? PATH_ARG : E.PATH_KEYS.find(k => E.PATHS[k].name === PATH_ARG) || null);
 if (PATH_ARG != null && !PATH) { console.error(`모르는 길: ${PATH_ARG} (꽃길 · 찻길 · 흙길)`); process.exit(1); }
-const args = process.argv.slice(2).filter((a, i) => !a.startsWith('--') && !(PATH_I > 0 && i + 2 === PATH_I + 1)), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), AUTO = process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a === '--bonus' || a.startsWith('--bonus=')) || '').replace(/^--bonus=?/, '') || (process.argv.includes('--bonus') ? 'all' : '');
+const args = process.argv.slice(2).filter((a, i) => !a.startsWith('--') && !(PATH_I > 0 && i + 2 === PATH_I + 1) && i + 2 !== BONUS_NEXT), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), WORKERS = process.argv.includes('--workers'), AUTO = WORKERS || process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a.startsWith('--bonus=')) || '').replace(/^--bonus=/, '') || (BONUS_NEXT > 0 ? process.argv[BONUS_NEXT] : BONUS_I > 0 ? 'all' : '');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
 const mon = (() => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 1000; i++) { const c = E.calendar(t); if (c.idx === 0 && c.yh < 0.5) return t; t += H / 4; } })();
 const st = E.create(mon + 0.1 * H, rng); st.gardenId = `sim-${SEED}`;   // 광산 판 · 주문 쪽지 · 기념품이 이름표로 정해져서 고정 (QA 7회차: 매번 같은 값)
-if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, BONUS === 'all' || BONUS.split(',').includes(k) ? E.bonusMax(k) : 0]));   // P28-05-02 --bonus
+const BONUS_LV = Object.fromEntries(BONUS.split(',').filter(Boolean).map(p => p.split('=')).map(([k, n]) => [k, n == null ? null : +n]));
+for (const k of Object.keys(BONUS_LV)) if (k !== 'all' && !E.BONUS[k]) { console.error(`모르는 일꾼 칸: ${k} (${E.BONUS_KEYS.join(' · ')})`); process.exit(1); }
+if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, 'all' in BONUS_LV ? E.bonusMax(k) : k in BONUS_LV ? Math.min(E.bonusMax(k), BONUS_LV[k] == null ? E.bonusMax(k) : BONUS_LV[k]) : 0]));   // P28-05-02 · P37 --bonus
 if (PATH) st.season.path = PATH;   // P30-04-01 --path
+if (WORKERS) ['dryrack', 'teahelper', 'hive'].forEach((k, i) => st.decos.push({ id: st.nextId++, key: k, x: i, y: 0 }));   // P37 --workers: 🐛 누에 · 🦋 나비 · 🐝 꿀벌을 처음부터 맨 위 줄에 (값 · 등급 없이 — 시뮬 정원사는 9 · 12등급에 닿지 못해 기르기를 잴 수 없어서)
 const LAYER4 = process.argv.includes('--layer4') || process.argv.includes('--forest');
 const HOLD = process.argv.includes('--hold=sleep') ? 'sleep' : process.argv.includes('--hold') ? 'season' : null;   // P34
 if (process.argv.includes('--decos')) E.MONTH_DECO_KEYS.concat(['moonlamp', 'pavilion']).forEach((k, i) => st.decos.push({ id: st.nextId++, key: k, x: E.W - 1 - i, y: 0 }));   // P35 --decos (dex.deco는 안 적어 사는 것은 기본과 같음 · 자동 장치는 맨 위 줄 왼쪽부터라 오른쪽 끝부터)
