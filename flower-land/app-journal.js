@@ -112,7 +112,7 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return gradeHTML() + layerHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return gradeHTML() + layerHTML() + yearlyCalHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -158,6 +158,20 @@ function layerHTML() {
   }
   return `<div class="cab-head dex-head j-head" id="jLayer"><span class="sb-title">🌳 정원의 층</span>${slow ? '' : `<span class="dh-count data">${o.layer}층</span>`}</div>
     <div class="card ly-card"><div class="ly-head"><span class="ly-ic" aria-hidden="true">${o.icon}</span><b>${slow ? '' : `${o.layer}층 `}${esc(o.name)}</b></div>${chips}${next}</div>`;
+}
+// 🗓️ 올해 달력 (P30-05-03, L1-5 10-30): 층 쪽 아래 · 손길 점 위 — 계절 4칸(온 것 또렷 "왔어요" · 아직 흐림 "아직" · 놓친 것 "🔁 다음 해에 다시" · 놓쳤다 다시 온 것 "🔁 다시 와요") · 지난 해들(최근 3해 작은 그림)
+// 값은 E.yearlyOf · E.yearlyPast 그대로. 🐢 느긋하게 보기면 해 번호 · n / 12 · 이름 · 꼬리표 없이 또렷 · 흐림 그림 칸만 (P30-08, 판단은 E.slowView 하나)
+const YC_TAG = { seen: '왔어요', missed: '🔁 다음 해에 다시', gone: '지났어요', now: '지금 와 있어요', soon: '아직' };
+const ycArt = (it, scale) => it.kind === 'bloom' && it.flower ? spriteImg(it.flower, 'alt', 16 * scale, false, '') : `<span class="yc-ic" aria-hidden="true">${it.icon}</span>`;
+function yearlyCalHTML() {
+  const slow = E.slowView(st), list = E.yearlyOf(st), past = E.yearlyPast(st, 3), sleep = E.calendar(st.virtual).frozen;
+  if (!list) return '';
+  const tag = it => it.seen && it.retry ? '🔁 다시 왔어요' : !it.seen && it.state === 'soon' && it.retry ? '🔁 다시 와요' : YC_TAG[it.state];
+  const cells = list.map(it => `<div class="yc-cell ${it.state}"${slow ? ` role="img" aria-label="${it.seasonName} ${esc(it.name)} · ${it.seen ? '왔어요' : '아직'}"` : ` title="${esc(it.desc)}"`}><small>${it.seasonName}</small><span class="yc-art">${ycArt(it, 2)}</span>${slow ? '' : `<b>${esc(it.name)}</b><span class="yc-tag ${it.retry || it.state === 'missed' ? 'again' : ''}">${tag(it)}</span>`}</div>`).join('');
+  const rows = past.length ? `<div class="yc-past-box"><small class="muted">지난 해들</small>${past.slice().reverse().map(p => `<div class="yc-past">${slow ? '' : `<small class="data">${p.year}해</small>`}${p.items.map(it => `<span class="yc-mini ${it.seen ? 'on' : ''}" title="${it.seasonName} ${esc(it.name)} · ${it.seen ? '봤어요' : it.missed ? '놓쳤어요' : '세기 전'}">${ycArt(it, 1)}</span>`).join('')}</div>`).join('')}</div>` : '';
+  const note = sleep ? '꽃잠이에요 · 새해에 올 것들이에요' : '그 계절에 한 번 열면 봐요 · 놓친 것은 다음 해 같은 계절에 먼저 다시 와요';
+  return `<div class="cab-head dex-head j-head" id="jYearly"><span class="sb-title">🗓️ 올해 달력</span>${slow ? '' : `<span class="dh-count data">${E.yearlyNo(st)}해째 · 본 것 ${E.yearlyCount(st)} / ${E.YEARLY_KEYS.length}</span>`}</div>
+    <div class="card yc-card"><div class="yc-grid">${cells}</div>${rows}<p class="note muted">${note}</p></div>`;
 }
 // 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
 // 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)

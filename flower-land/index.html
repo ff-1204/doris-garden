@@ -217,6 +217,20 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .snack[hidden] { display: none; }
 .snack.warn { background: rgba(122,64,24,.95); }
 .snack button { background: rgba(255,255,255,.18); color: inherit; }
+/* P30-05-02 🗓️ 올해만 오는 날씨: 지도 위 반투명 도트 한 겹 — 타일은 16×3배(성긴 타일은 칸이 2 · 3배 — 흐르는 거리가 칸의 배수라 이음매 없음) · 큰 그림은 16의 정수배, 아주 느리게 흐르고 움직임 줄이기면 멈춤 (깜빡임 없음) */
+.ysky { position: absolute; left: 0; right: 0; pointer-events: none; overflow: hidden; }
+.ysky[hidden] { display: none; }
+.ys-tile { position: absolute; inset: 0; background-repeat: repeat; background-size: 48px 48px; image-rendering: pixelated; opacity: .6; animation: ys-fall 240s linear infinite; }
+.ys-tile.ys-side { animation-name: ys-side; opacity: .55; background-position: 0 30%; }
+.ys-tile.ys-float { animation-name: ys-float; animation-duration: 300s; opacity: .8; }
+@keyframes ys-fall { from { background-position: 0 0; } to { background-position: var(--p) calc(var(--p) * 4); } }
+@keyframes ys-side { from { background-position: 0 30%; } to { background-position: calc(var(--p) * 4) 30%; } }
+@keyframes ys-float { from { background-position: 0 0; } to { background-position: calc(var(--p) * 2) calc(var(--p) * -1); } }
+.ys-big { position: absolute; image-rendering: pixelated; opacity: .55; }
+.ys-big.ys-top { left: 50%; top: 0; transform: translateX(-50%); }
+.ys-big.ys-right { right: 6%; top: 4%; opacity: .7; }
+.ys-big.ys-left { left: 4%; top: 4%; opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .ys-tile { animation: none; } }
 .emptyhint { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding: 16px; }
 .emptyhint[hidden] { display: none; }
 .emptyhint .box { pointer-events: auto; background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; text-align: center; display: grid; gap: 8px; max-width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
@@ -474,6 +488,26 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .bn-max { font-size: 12px; font-weight: 600; }
 .bn-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 #jBonus { scroll-margin-top: 84px; }
+/* P30-05-03 🗓️ 올해 달력: 계절 4칸 (375px에서도 한 줄) · 지난 해들 작은 그림 줄. 안 온 것은 흐리게 */
+#jYearly { scroll-margin-top: 84px; }
+.yc-card { display: grid; gap: 8px; }
+.yc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.yc-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 1px solid var(--line); text-align: center; min-width: 0; }
+.yc-cell small { color: var(--muted); font-size: 12px; }
+.yc-cell b { font-size: 12.5px; font-weight: 600; word-break: keep-all; line-height: 1.25; }
+.yc-cell.seen { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: color-mix(in srgb, var(--good) 10%, var(--panel)); }
+.yc-cell:not(.seen) .yc-art, .yc-cell:not(.seen) b { opacity: .38; filter: grayscale(.7); }
+.yc-art { display: grid; place-items: center; height: 32px; }
+.yc-ic { font-size: 24px; line-height: 32px; }
+.yc-tag { font-size: 11.5px; color: var(--muted); }
+.yc-cell.seen .yc-tag { color: var(--good); }
+.yc-tag.again { color: var(--accent); font-weight: 600; }
+.yc-past-box { display: grid; gap: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.yc-past { display: flex; align-items: center; gap: 8px; }
+.yc-past small { min-width: 2.6em; color: var(--muted); font-size: 12px; }
+.yc-mini { display: grid; place-items: center; width: 22px; height: 22px; opacity: .3; filter: grayscale(.8); }
+.yc-mini.on { opacity: 1; filter: none; }
+.yc-mini .yc-ic { font-size: 15px; line-height: 22px; }
 @media (max-width: 480px) { .bn-btns { grid-column: 2 / -1; justify-content: flex-start; } }
 .rec-bonus { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
 /* P28-08-05 🌸 새 철: 따뜻한 꽃 색 (완전 초기화의 --warn 빨강과 다르게) — 꽃잠 기록 끝 한 줄 · 확인 창 · 위 막대 · 그래프 경계선 */
@@ -1328,6 +1362,7 @@ body { margin: 0; }
               <div class="mapframe">
                 <div class="yearstrip" id="yearBox" role="img" aria-label="올해의 흐름"></div>
                 <canvas id="map" aria-label="정원 지도"></canvas>
+                <div class="ysky" id="yearSky" aria-hidden="true" hidden></div>
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
