@@ -269,8 +269,7 @@ function draw() {
     if (night > 0) { g.fillStyle = `rgba(14,22,52,${0.18 * night})`; g.fillRect(0, 0, W * cell, H * cell); }
   }
   for (const f of st.flowers) drawFlower(f, cal);
-  // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만)
-  g.imageSmoothingEnabled = false;
+  // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만, imageSmoothingEnabled는 위 땅 그리기에서 껐음)
   for (const d of st.decos || []) if (d.x != null) {
     const im = decoBitmap(d.key); if (im) g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92);
     if (d.honey && d.honey.length) { g.fillStyle = '#f2b632'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(d.x * cell + cell * 0.82, d.y * cell + cell * 0.2, Math.max(2.5, cell * 0.14), 0, 7); g.fill(); g.stroke(); }   // 🍯 거둘 꿀이 있음

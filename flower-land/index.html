@@ -1414,6 +1414,11 @@ body { margin: 0; }
 :root[data-big] input.tog::before { width: 24px; height: 24px; }
 :root[data-big] input.tog:checked::before { transform: translateX(22px); }
 :root[data-big] .x { min-width: 40px; min-height: 40px; }
+:root[data-big] .needs .nd, :root[data-big] .dexchip, :root[data-big] .topgrade, :root[data-big] .toptitle, :root[data-big] .topcloud, :root[data-big] .topinbox, :root[data-big] .topseason { min-height: 44px; }   /* 위 막대 · 돌볼 꽃 칩 · 도감 칩도 손가락 폭 (검토 10-30) */
+:root[data-big] .topinbox { min-width: 44px; justify-content: center; }
+:root[data-big] .iconbtn { width: 44px; height: 44px; }
+:root[data-big] .ob-care { display: block; }   /* 첫 안내 창: flex면 글 토막이 칸마다 갈라져 — 큰 글씨면 한 문단으로 흐르게 */
+:root[data-big] .ob-care span { vertical-align: middle; margin-right: 4px; }
 @media (min-width: 900px) { :root[data-big] .body { grid-template-columns: 108px minmax(0, 1fr); } :root[data-big] nav.tabs { top: 72px; } }
 /* 휴대폰은 탭 줄이 두 줄 (5칸씩) — 이름은 지우지 않음 */
 @media (max-width: 640px) {
