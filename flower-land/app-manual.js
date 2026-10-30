@@ -1,7 +1,7 @@
 // 도리의 정원 — 화면: 📘 매뉴얼 (app.js 다음에 순서대로 불림, 이름은 app.js 첫머리 참고)
 'use strict';
 // ---------------------------------------------------------------- 📘 매뉴얼 (P21, 10-17): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄
-const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['farm', '🐝 곤충농장'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['inbox', '✉️ 편지함'], ['save', '💾 저장']];
+const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['farm', '🐝 곤충농장'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['inbox', '✉️ 편지함'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
   const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st), E.seasonPath(st), E.patternView(st)]);   // 🌸 새 철 카드 (P28-08-05)
@@ -56,15 +56,7 @@ function renderManual(force) {
     sec('sleep', '꽃잠', '일요일, 정원이 쉬어요',
       fig(`<div class="mn-icons">${item(ico('🌱'), '자람', '멈춤', 'off')}${item(ico('🌿'), '잡초 · 목마름', '멈춤', 'off')}${item(ico('📉'), '품질 하락', '멈춤', 'off')}${item(ico('↔️'), '옮겨심기 · 번식', '할 수 있어요')}${item(ico('💧'), '돌보기', '할 수 있어요')}${item(ico('🧺'), '수확', '핀 꽃만 · 한 번')}${item(ico('🗓️'), '예약', '할 수 있어요')}${item(ico('🫖'), '블렌딩', '할 수 있어요')}${item(ico('🍵'), '찻집', '열려 있어요')}${item(ico('📖'), '기록', '한 해를 돌아봐요')}</div>`,
         '심기는 쉬어요 · 꽃잠엔 새로 피지 않고, 2월에 핀 채로 잠든 꽃은 꽃잠에 한 번 거둬요 · 달 상관없이 옮기고 번식해요(새해 몫 한 번) · 꽃방에 넌 꽃잎은 꽃잠 동안 마르지 않아요 · 일요일에 처음 왔다면 그 꽃잠은 <b>0년차</b>, 1년차는 월요일 아침 6시부터')),
-    sec('deco', '꾸미기와 꿀', '돈은 보는 즐거움으로',
-      fig(`<div class="mn-flow">${item(decoImg('bench', 2), '이달의 장식', '화원 · 달마다 하나')}${arrow()}${item(ico('📦'), '창고', '🪴 놓기')}${arrow()}${item(decoImg('stonelamp', 2), '정원에', '꽃 없는 칸')}</div>`,
-        '화원 장식은 그 달에만 들어오고 내년에 다시 와요 · 돌 장식은 ⛏️ 광산에서 언제든 만들어요 · 보통 장식은 땅 · 꽃 · 값에 영향이 없어요 · 칭호를 얻으면 그 <b>문장 장식</b>을 받아요')
-      + fig(`<div class="mn-flow">${item(decoImg('hive', 2), '벌통', '6–8월 · 하나만')}${arrow()}${item(spriteImg('lavender', 'flower', 32, false, ''), '둘레 2칸', '핀 꽃')}${arrow()}${item(honeyImg('lavender', 2), '라벤더꿀', '달이 끝날 때')}${arrow()}${item(spriteImg('chamomile', 'tea', 32, false, ''), '🍯 꿀차', '찻잔에 한 숟갈')}</div>`,
-        '꽃이 피는 달마다 모여요 · 가장 많이 핀 꽃을 따라 꿀 종류가 정해지고, 여러 꽃이 섞여 절반을 넘는 꽃이 없으면 <b>들꽃꿀</b> · 꽃잠엔 벌도 쉬어요 · 꿀은 팔지 않아요')
-      + fig(`<div class="mn-flow">${item(decoImg('heatmat', 2), '온상 매트', '씨앗 · 새싹 2배')}${item(decoImg('growlight', 2), '생장등', '옆 8칸 1.5배')}${item(decoImg('greenhouse', 2), '유리 온실', '둘레 2칸 2배')}</div>`, '💐 화원 🔆 정원 장치 · 다 자라기까지만 빨라지고, 피는 달 · 품질 · 땅 · 꽃잠은 그대로예요 · 겹치면 가장 빠른 것 하나만')
-      + fig(`<div class="mn-flow">${item(decoImg('swing', 2), '놓은 것 · 핀 꽃', '올해만 것도')}${arrow()}${item(visitorImg('hedgehog', 2), '🐾 특별 손님', '옆 빈 칸에 앉아요')}${arrow()}${item(ico('💌'), '기념품', '세 번째로 온 날')}</div><div class="mn-icons">${E.VISITOR_KEYS.map(k => item(visitorImg(k, 2), E.VISITORS[k].name, E.VISITORS[k].need)).join('')}</div>`,   // P30-06-02 🐾 특별 손님
-        '🐾 특별 손님 — 놓은 장식 · 핀 꽃 · 올해만 것에 따라 가끔 와서 2~3달 앉아 있다 가요 · 누르면 말 한 줄 · 세 번째로 온 날 기념품을 남겨요(📖 도감 💌 기념품) · 돈은 주지 않아요 · 꽃잠엔 새로 안 와요')
-      + `<div class="mn-icons">${item(ico('🪑'), '손님 자리', '1시간에 더 많이')}${item(ico('☕'), '찻잔 세트', '보기만')}${item(ico('🪧'), '간판', '보기만')}</div><p class="note" style="text-align:center">🍵 찻집 › 🪑 찻집 가꾸기에서 바꿔요</p>`),
+    // 🪴 꾸미기와 꿀 절은 뺌 (P32, 10-30 사용자 요청 — 장식 · 장치 · 🐾 손님은 도감 · 말풍선에서 스스로 찾는 재미, 일꾼은 아래 🐝 곤충농장 칸)
     // 🐝 곤충농장 (P32-04): 자동 장치 카드들을 하나로 — 일꾼 6줄(이름 · 하는 일 · 값 · 조건) + 저장고 · 손길 점 · 따라잡기 한 줄씩
     sec('farm', '🐝 곤충농장', '정원 일을 도와주는 작은 일꾼들',
       `<div class="mn-farm">${E.FARM.map(w => { const D = w.wild ? null : E.DECOS[w.key];
