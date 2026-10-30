@@ -189,8 +189,6 @@ main { min-width: 0; padding-block: 14px calc(var(--nav-h) + 24px + env(safe-are
 @media (prefers-reduced-motion: reduce) { .v-bubble { animation: none; } }
 .mapframe { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #a39b8e; box-shadow: 0 6px 18px rgba(40, 30, 20, .10); }
 canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair; }
-.mapwrap.zoom canvas#map { touch-action: pan-x pan-y; }   /* 확대했을 땐 손가락으로 밀어 봄 (QA 7회차) */
-.zoom-hint { position: sticky; left: 8px; top: 8px; z-index: 3; display: inline-block; margin: 6px 0 -28px 8px; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; font-size: calc(12 * var(--u)); pointer-events: none; }
 .feedback { min-height: 22px; font-size: calc(13 * var(--u)); color: var(--muted); }
 .feedback.warn { color: var(--warn); }
 .topfb { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px 7px 14px; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -765,10 +763,6 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .rv-badge { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: calc(12.5 * var(--u)); margin-right: 4px; }
 .shop-news > .rv-badge + *::before { content: none; }
 /* QA 6회차: 모바일 정원 확대 — 두 배로 넓혀 옆으로 밀어 봄 */
-.zoom-chip { --k: #6a7f8f; display: none; }
-@media (max-width: 640px) { .zoom-chip { display: inline-flex; } }
-.mapwrap.zoom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.mapwrap.zoom .mapframe { width: 200%; }
 /* P26 이웃에게 선물 · 편지 (10-24) */
 .dexcard .dc-name { word-break: keep-all; }
 .gift-ic { display: grid; place-items: center; width: 64px; height: 64px; font-size: calc(36 * var(--u)); }

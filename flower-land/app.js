@@ -483,7 +483,7 @@ function feedback(msg, warn, action) {
   clearTimeout(feedbackTimer);
   for (const el of [snack, top]) { el.hidden = true; el.innerHTML = ''; }
   if (!msg) return;
-  const el = ui.tab === 'garden' && !ui.zoom ? snack : top;               // 정원은 지도 위 풍선, 다른 탭은 위쪽 줄
+  const el = ui.tab === 'garden' ? snack : top;               // 정원은 지도 위 풍선, 다른 탭은 위쪽 줄
   el.innerHTML = `<span>${warn ? '⚠️' : '✓'} ${esc(msg)}</span>${action ? `<button type="button">${esc(action.label)}</button>` : ''}`;
   el.classList.toggle('warn', !!warn); el.hidden = false;
   const b = el.querySelector('button'); if (b) b.onclick = () => { el.hidden = true; action.fn(); };
