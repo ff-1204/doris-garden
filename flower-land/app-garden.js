@@ -491,7 +491,7 @@ function openDecoTile(d) {
   }
   if (d.key === 'teahelper') {                    // P28-10-03 찻집 일손: 열려 있으면 카운터를 채움 · 남은 티백
     const cal = E.calendar(st.virtual), open = E.teaShopOpen(cal), bags = st.teas.length;
-    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : open ? (bags ? `카운터에 갓 우린 잔이 ${E.helperKeep(st)}잔이 되게 채워요 · 남은 티백 ${bags}개` : '우릴 티백이 없어요 · 제다실에서 티백을 만들어요') : '🔒 찻집이 열리는 겨울(12월)부터 일해요'} · 가장 오래된 티백부터 · 블렌드 티백 · 🍯 꿀은 직접 해요${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}잔`}</p>`;
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : open ? (bags ? `카운터에 갓 우린 잔이 ${E.helperKeep(st)}잔이 되게 채워요 · 남은 티백 ${bags}개` : '우릴 티백이 없어요 · 제다실에서 티백을 만들어요') : '🔒 찻집이 열리면 일해요'} · 가장 오래된 티백부터 · 블렌드 티백 · 🍯 꿀은 직접 해요${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}잔`}</p>`;
   }
   if (E.GEAR[d.key]) {                           // P27 장치: 지금 몇 포기가 빨리 자라는지 · 지도에 범위
     const G = E.GEAR[d.key], frozen = E.calendar(st.virtual).frozen;
