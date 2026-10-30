@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers', 'yearly', 'visitors']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers', 'yearly', 'visitors', 'mailSeenAt']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -187,13 +187,23 @@ console.log('[🛤️ 철의 길 season.path (P30-04-01)]');
 
 console.log('[🌳 작은 숲 forest (P30-03)]');
 { const FN = E.MIGRATIONS.findIndex(x => x[0].includes('작은 숲 forest'));
-  check(FN === 38 && FN === E.MIGRATIONS.length - 1, '맨 끝 보정 (39번째)');
+  check(FN === 38, '39번째 보정');
   check(m.forest && m.forest.trees.length === 6 && m.forest.trees.every(t => t === null) && JSON.stringify(m.forest.dex) === '{}', '가장 옛 정원: 빈 숲 6칸 · 도감 없음');
   const old = copy(st); delete old.forest; old.mig = FN; const om = E.migrateSave(old);
   check(om.forest && om.mig === E.MIGRATIONS.length && om.forest.trees.length === 6, '바로 앞 판 정원도 숲 칸이 생김');
   const has = copy(st); has.forest = { trees: [{ k: 'pine', at: 3, stage: 2 }, null, null, null, null, null], dex: { pine: 2 } }; has.mig = FN;
   const hm = E.migrateSave(has);
   check(hm.forest.trees[0].k === 'pine' && hm.forest.trees[0].stage === 2 && hm.forest.dex.pine === 2, '이미 있는 숲은 그대로'); }
+
+console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
+{ const MN = E.MIGRATIONS.findIndex(x => x[0].includes('편지함 mailSeenAt'));
+  check(MN === 39 && MN === E.MIGRATIONS.length - 1, '맨 끝 보정 (40번째)');
+  check(m.mailSeenAt === m.virtual && !E.inboxUnread(m), '가장 옛 정원: 지금 연 것으로 — 처음엔 점 없음');
+  const old = copy(st); delete old.mailSeenAt; old.mig = MN; old.letterBox = [{ k: 'teacher', y: 1, m: 3, read: true }]; old.log.push({ y: 1, m: 3, d: 1, type: 9, text: '🏅 새 칭호: 시험' });
+  const om = E.migrateSave(old);
+  check(om.mailSeenAt === om.virtual && om.mig === E.MIGRATIONS.length && !E.inboxUnread(om) && E.inboxOf(om).unread === 0, '바로 앞 판 정원: 시각 없는 편지 · 일지 줄은 읽은 것');
+  const has = copy(st); has.mailSeenAt = 123; has.mig = MN;
+  check(E.migrateSave(has).mailSeenAt === 123, '이미 있는 읽은 때는 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
