@@ -16,9 +16,9 @@ const run = (s, from, n) => { const out = []; for (let a = from; a < from + n; a
 const swingGarden = id => { const s = fresh(id); put(s, 'swing', 10, 10); return s; };
 
 console.log('[표 8명 · 기념품 8가지]');
-check(E.VISITOR_KEYS.length === 11 && E.VISITOR_KEYS.every(k => { const V = E.VISITORS[k]; return V.name && V.icon && V.where && V.lines.length >= 2 && V.lines.length <= 3 && E.MEMENTOS[V.memento] && E.MEMENTOS[V.memento].visitor === k; }), '11명(길 손님 3 · P30-04-01) · 이름 · 아이콘 · 말 둘셋 · 기념품이 서로 짝');
-check(E.MEMENTO_KEYS.length === 23 && E.ORDER_MEMENTO_KEYS.length === 12 && E.ORDER_MEMENTO_KEYS.every(k => !E.MEMENTOS[k].visitor), '기념품 12 → 23 (길 손님 3) · 주문 기념품 뽑기는 12가지 그대로');
-check(new Set(E.VISITOR_KEYS.map(k => E.VISITORS[k].memento)).size === 11, '손님마다 기념품이 다름');
+check(E.VISITOR_KEYS.length === 12 && E.VISITOR_KEYS.every(k => { const V = E.VISITORS[k]; return V.name && V.icon && V.where && V.lines.length >= 2 && V.lines.length <= 3 && E.MEMENTOS[V.memento] && E.MEMENTOS[V.memento].visitor === k; }), '12명(길 손님 3 · P30-04-01 · 숲 손님 1 · P30-03) · 이름 · 아이콘 · 말 둘셋 · 기념품이 서로 짝');
+check(E.MEMENTO_KEYS.length === 24 && E.ORDER_MEMENTO_KEYS.length === 12 && E.ORDER_MEMENTO_KEYS.every(k => !E.MEMENTOS[k].visitor), '기념품 12 → 24 (길 손님 3 · 숲 손님 1) · 주문 기념품 뽑기는 12가지 그대로');
+check(new Set(E.VISITOR_KEYS.map(k => E.VISITORS[k].memento)).size === 12, '손님마다 기념품이 다름');
 check(E.VISITORS.hedgehog.name === '고슴도치 할머니' && E.MEMENTOS[E.VISITORS.hedgehog.memento].name === '도토리 찻잔 받침', '🦔 고슴도치 할머니 → 도토리 찻잔 받침');
 
 console.log('[조건 — 놓은 장식 · 핀 꽃 · 올해만 것]');

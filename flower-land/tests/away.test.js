@@ -39,9 +39,9 @@ let t = E.awayLinesText(a);
 check(t.title === '🍃 그동안' && t.years === '정원에 13해가 지났어요', `첫 줄 "${t.years}"`);
 check(t.skipped === '그 사이 정원은 조용히 쉬었어요 · 해 번호는 따라잡은 3해만큼만 가요', `건너뜀 한 줄 "${t.skipped}"`);
 check(t.missed.endsWith('못 봤어요 · 다음 해 그 계절에 다시 와요') && t.missed.includes(a.missed[0].name), `놓친 줄 "${t.missed}"`);
-check(t.layer === '다음 층 🌳 4층 작은 숲은 다음 업데이트에 열려요 · 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `층 줄 — 못 여는 층은 업데이트 한마디 · 정원 해로 "${t.layer}"`);
-{ const r = E.awayLines(st, mon - WEEK, { yl: 3, at: null }, mon); r.layer.next = { ...r.layer.next, held: false };
-  check(E.awayLinesText(r).layer === '다음 층 🌳 4층 작은 숲까지 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `열 수 있는 층이면 "…까지 정원 해로" "${E.awayLinesText(r).layer}"`); }
+check(t.layer === '다음 층 🌳 4층 작은 숲까지 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `층 줄 — L3부터 4층은 열 수 있는 층 · "업데이트" 한마디 없음 "${t.layer}"`);
+{ const r = E.awayLines(st, mon - WEEK, { yl: 3, at: null }, mon); r.layer.next = { ...r.layer.next, held: true };
+  check(E.awayLinesText(r).layer === '다음 층 🌳 4층 작은 숲은 다음 업데이트에 열려요 · 정원 해로 🗓️ 5해 더 · 📖 꽃 도감 0 / 13', `못 여는 층(held)이면 업데이트 한마디 "${E.awayLinesText(r).layer}"`); }
 check(E.isYearlyMissLine('🌈 무지개는 못 봤어요 · 다음 해 봄에 다시 와요') && !E.isYearlyMissLine('올해 봄엔 🌈 무지개가 왔어요'), '일지의 놓침 줄을 알아봄 (그동안이 있으면 창 위 일지에선 뺌)');
 
 console.log('[🐢 느긋하게 보기 — 숫자 없이 (P30-08)]');
@@ -69,7 +69,7 @@ console.log('[다음 층 줄 — 찻집 전 · 조건 다 참 · 꼭대기]');
 { const s2 = copy(st); s2.yearLog = Array.from({ length: 9 }, (_, i) => ({ year: i + 1, season: 1, score: 1 })); s2.layers.at[3] = 0;
   for (const k of E.FLOWER_KEYS) s2.dex.flower[k] = true;
   const r = E.awayLines(s2, mon - WEEK, { yl: 9, at: null }, mon);
-  check(E.awayLinesText(r).layer === '다음 층 🌳 4층 작은 숲 · 조건을 다 채웠어요 · 곧 업데이트로 열려요', `조건 다 참 (LAYER_MAX_OPEN 3) "${E.awayLinesText(r).layer}"`); }
+  check(E.awayLinesText(r).layer === '다음 층 🌳 4층 작은 숲 · 조건을 다 채웠어요 · 새해 3월 아침에 열려요', `조건 다 참 (LAYER_MAX_OPEN 4) "${E.awayLinesText(r).layer}"`); }
 { const top = { ...a, layer: { layer: 4, name: '작은 숲', icon: '🌳', next: null } };
   check(E.awayLinesText(top).layer === '🌳 정원이 다 자랐어요 · 모든 층을 열었어요', '꼭대기 층이면 "정원이 다 자랐어요"'); }
 

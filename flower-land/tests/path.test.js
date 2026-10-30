@@ -85,7 +85,7 @@ console.log('[① 주간 목표 뽑는 쪽]');
 console.log('[② 그 길에만 오는 손님 · 기념품]');
 const PV = { flower: 'snail', tea: 'squirrel', earth: 'badger' };
 check(E.PATH_KEYS.every(k => E.VISITORS[PV[k]].path === k && E.MEMENTOS[E.VISITORS[PV[k]].memento].visitor === PV[k]) && E.VISITOR_KEYS.filter(k => E.VISITORS[k].path).length === 3, '길마다 손님 하나 (🐌 달팽이 할아버지 · 🐿️ 다람쥐 단골 · 🦡 오소리 광부) · 기념품 짝');
-check(E.MEMENTO_KEYS.length === 23 && E.ORDER_MEMENTO_KEYS.length === 12, '기념품 20 → 23 · 주문 기념품 12 그대로');
+check(E.MEMENTO_KEYS.length === 24 && E.ORDER_MEMENTO_KEYS.length === 12, '기념품 20 → 23 → 24(L3 숲 손님) · 주문 기념품 12 그대로');
 { const s = copy(by.none.s); s.flowers.push({ id: 7002, type: 'rose', x: 10, y: 10, stage: 'bloom', q: 1, ageH: 1, lifeH: 999, waterH: 0, thirstH: 0 });
   for (const k of E.PATH_KEYS) { const x = copy(s); x.season.path = k;
     check(E.visitorOk(x, PV[k]) && E.PATH_KEYS.filter(o => o !== k).every(o => !E.visitorOk(x, PV[o])), `${E.PATHS[k].name}: ${E.VISITORS[PV[k]].name}만 조건이 맞음`); }
@@ -113,7 +113,7 @@ check(E.PATH_KEYS.every(k => by[k].r.pathTitle === null && by[k].s.titles[E.path
   const slow = copy(s); slow.settings.slow = true;
   check(E.seasonTable(slow) === null && E.pathBadge(slow) && E.pathBadge(slow).name === '흙길', '🐢 느긋하게 보기면 표는 숨김(null) · 길 이름은 보임 (P30-08)'); }
 check(E.seasonTable(ready) === null, '1철이면 표 없음');
-{ const old = copy(by.tea.s); old.season.log[0].sold = undefined; delete old.season.log[0].path; old.season.path = 'nope'; old.mig = E.MIGRATIONS.length - 1;
+{ const old = copy(by.tea.s); old.season.log[0].sold = undefined; delete old.season.log[0].path; old.season.path = 'nope'; old.mig = E.MIGRATIONS.findIndex(x => x[0].includes('철의 길 season.path'));
   const m = E.migrateSave(old);
   check(m.season.path === null && m.season.log[0].path === null && E.seasonTable(m)[0].sold === null, '맨 끝 보정: 모르는 길 · 빈 길은 길 없이 · 판 잔 모르면 null ("—")'); }
 
