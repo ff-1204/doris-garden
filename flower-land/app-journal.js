@@ -113,7 +113,7 @@ function journalHTML() {
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
   return head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()   // 10-30 사용자 요청: 칭호를 도감일지 맨 위로
-    + gradeHTML() + layerHTML() + yearlyCalHTML() + bonusLinkHTML() + weeklyHTML()   // 🌟 손길 점 칸은 🐝 곤충농장에만 (10-30 사용자: 두 곳에 있어서) — 여기엔 한 줄 안내
+    + gradeHTML() + layerHTML() + yearlyCalHTML() + bonusLinkHTML() + weeklyHTML()   // 🌼 꽃가루 기르기는 🐝 곤충농장 카드에만 (10-30 사용자: 두 곳에 있어서 · P37) — 여기엔 한 줄 안내
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -133,7 +133,7 @@ function gradeHTML() {
       <p class="note">🪴 ${next} · 열린 장식은 💐 화원에서 언제든 사요</p>
       ${slow ? '' : '<p class="note muted">정원에서 한 일만큼 쌓여요 · 돈으로 산 것은 세지 않아요</p>'}</div>`;
 }
-// 🌳 정원의 층 쪽 (P30-01-02, L1-2 10-30): 등급 쪽 바로 아래 · 손길 점 위 — 지금 층 · 1~4층 칩 · 다음 층 조건 두 줄 (값은 E.layerOf 그대로, 위 막대엔 넣지 않음)
+// 🌳 정원의 층 쪽 (P30-01-02, L1-2 10-30): 등급 쪽 바로 아래 · 꽃가루 줄 위 — 지금 층 · 1~4층 칩 · 다음 층 조건 두 줄 (값은 E.layerOf 그대로, 위 막대엔 넣지 않음)
 // 🐢 느긋하게 보기면 남은 해 · 조건 숫자 · "n층" 대신 새싹 그림과 "다음 층은 아직 자라는 중이에요" 한 줄 (P30-08, 판단은 E.slowView 하나)
 let layerArtURL = '';
 function layerSprout(scale) {
@@ -160,7 +160,7 @@ function layerHTML() {
   return `<div class="cab-head dex-head j-head" id="jLayer"><span class="sb-title">🌳 정원의 층</span>${slow ? '' : `<span class="dh-count data">${o.layer}층</span>`}</div>
     <div class="card ly-card"><div class="ly-head"><span class="ly-ic" aria-hidden="true">${o.icon}</span><b>${slow ? '' : `${o.layer}층 `}${esc(o.name)}</b></div>${chips}${next}</div>`;
 }
-// 🗓️ 올해 달력 (P30-05-03, L1-5 10-30): 층 쪽 아래 · 손길 점 위 — 계절 4칸(온 것 또렷 "왔어요" · 아직 흐림 "아직" · 놓친 것 "🔁 다음 해에 다시" · 놓쳤다 다시 온 것 "🔁 다시 와요") · 지난 해들(최근 3해 작은 그림)
+// 🗓️ 올해 달력 (P30-05-03, L1-5 10-30): 층 쪽 아래 · 꽃가루 줄 위 — 계절 4칸(온 것 또렷 "왔어요" · 아직 흐림 "아직" · 놓친 것 "🔁 다음 해에 다시" · 놓쳤다 다시 온 것 "🔁 다시 와요") · 지난 해들(최근 3해 작은 그림)
 // 값은 E.yearlyOf · E.yearlyPast 그대로. 🐢 느긋하게 보기면 해 번호 · n / 12 · 이름 · 꼬리표 없이 또렷 · 흐림 그림 칸만 (P30-08, 판단은 E.slowView 하나)
 const YC_TAG = { seen: '왔어요', missed: '🔁 다음 해에 다시', gone: '지났어요', now: '지금 와 있어요', soon: '아직' };
 const ycArt = (it, scale) => it.kind === 'bloom' && it.flower ? spriteImg(it.flower, 'alt', 16 * scale, false, '') : `<span class="yc-ic" aria-hidden="true">${it.icon}</span>`;
@@ -174,25 +174,11 @@ function yearlyCalHTML() {
   return `<div class="cab-head dex-head j-head" id="jYearly"><span class="sb-title">🗓️ 올해 달력</span>${slow ? '' : `<span class="dh-count data">${E.yearlyNo(st)}해째 · 본 것 ${E.yearlyCount(st)} / ${E.YEARLY_KEYS.length}</span>`}</div>
     <div class="card yc-card"><div class="yc-grid">${cells}</div>${rows}<p class="note muted">${note}</p></div>`;
 }
-// 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
-// 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)
-// 📔 도감일지 쪽 한 줄: 손길 점 칸은 🐝 곤충농장에 있다는 안내 (10-30 — 네 보너스가 모두 일꾼 쪽이라 거기가 본자리)
+// 🌼 꽃가루 (P28-05-02-03 · P37 10-31): 📔 도감일지엔 한 줄만 — 기르기는 🐝 곤충농장 일꾼 카드마다 (app-farm growHTML)
+// 🐢 느긋하게 보기면 남은 알 수를 빼고 이름 · 단추만 (판단은 E.slowView 하나)
 function bonusLinkHTML() {
   const v = E.bonusView(st), slow = E.slowView(st);
-  return `<div class="card bn-link"><span>🌟 손길 점${slow ? '' : ` · 남은 ${v.left}점`}</span><button type="button" class="btn small" data-gofarm="1">🐝 곤충농장에서 고르기</button></div>`;
-}
-function bonusHTML(hid) {                          // hid: 🐝 곤충농장(P32-03)에도 같은 칸 — 칸 id가 겹치지 않게
-  const v = E.bonusView(st), slow = E.slowView(st);
-  const rows = v.rows.map(r => {
-    const can = !r.maxed && r.costNext <= v.left;
-    const why = r.maxed || can || slow ? '' : `<small class="bn-why">🌟 ${r.costNext - v.left}점이 더 있어야 올려요</small>`;
-    return `<div class="bn-row ${r.maxed ? 'maxed' : ''}"><span class="bn-ic" aria-hidden="true">${r.icon}</span>
-      <span class="bn-txt"><b>${esc(r.name)}${slow ? '' : ` <span class="bn-lv data">${r.level} / ${r.max}단계</span>`}${r.maxed ? ' <span class="bn-max">✨ 끝까지</span>' : ''}</b><small>${esc(r.desc)}</small>${!slow && r.nextDesc ? `<small class="bn-next">다음 단계: ${esc(r.nextDesc)}</small>` : ''}${why}</span>
-      <span class="bn-btns">${r.maxed ? '' : `<button type="button" class="btn small primary" data-bonus="${r.key}" data-lv="${r.level + 1}"${can ? '' : ' disabled'}>올리기${slow ? '' : ` (🌟 ${r.costNext}점)`}</button>`}${r.level ? `<button type="button" class="btn small" data-bonus="${r.key}" data-lv="${r.level - 1}">내리기</button>` : ''}</span></div>`;
-  }).join('');
-  return `<div class="cab-head dex-head j-head" id="${hid || 'jBonus'}"><span class="sb-title">🌟 손길 점</span>${slow ? '' : `<span class="dh-count data">${v.left} / ${v.points}점</span>`}</div>
-    <div class="card bn-card">${slow ? '' : `<p class="bn-sum"><b>남은 점 ${v.left}점</b><small class="data">모은 점 ${v.points}점 · ${v.nextAt}등급에 1점 더</small></p>`}${rows}
-      <p class="note muted">${slow ? '정원이 자라면 손을 덜어 주는 보너스를 골라요' : '정원 등급이 오를 때마다 1점 · 돈으로는 못 얻어요'} · 언제든 내리면 점이 돌아와요</p></div>`;
+  return `<div class="card bn-link"><span>🌼 꽃가루${slow ? '' : ` ${v.left}알`} · 🐝 곤충농장에서 먹여요</span><button type="button" class="btn small" data-gofarm="1">🐝 곤충농장</button></div>`;
 }
 // 🗓️ 이번 주 목표 (P28-09, 10-28): 등급 쪽 바로 아래 — 끝내면 등급 경험치라 같은 자리에. 🐢 느긋하게 보기면 통째로 숨김 (E.weeklyView가 null)
 const weekLeft = h => h >= 24 ? `${Math.floor(h / 24)}일` : h >= 1 ? `${Math.floor(h)}시간` : '곧';

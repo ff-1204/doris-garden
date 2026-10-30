@@ -2626,7 +2626,7 @@ function farmWorker(st, w, cal, grade, last) {
     work: placed.length && !slow ? farmWork(st, w, placed) : null,
   });
 }
-// 🐝 곤충농장 한 화면: 일꾼 6 · 🧺 저장고 · 🌟 손길 점 · 🌙 따라잡기 — 저장고 · 손길 점은 원래 것을 그대로 (화원 · 창고 · 도감일지에서도 됨)
+// 🐝 곤충농장 한 화면: 일꾼 6 · 🧺 저장고 · 🌼 꽃가루 기르기(P37 — bonus.rows의 worker로 카드에 붙임) · 🌙 따라잡기 — 저장고 · 손길 점은 원래 것을 그대로 (화원 · 창고 · 도감일지에서도 됨)
 function farmOf(st) {
   const cal = calendar(st.virtual), grade = gradeOf(st).grade, slow = slowView(st), last = farmLastOf(st);
   const workers = FARM.map(w => farmWorker(st, w, cal, grade, last));

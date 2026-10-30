@@ -526,7 +526,7 @@ function openDecoTile(d) {
     const hn = d.honey || [], by = {}; for (const k of hn) by[k] = (by[k] || 0) + 1;
     const bl = E.hiveBlooms(st, d), h = E.honeyOf(bl), frozen = E.calendar(st.virtual).frozen;
     extra = `<div class="hive-info"><div class="hive-jars">${hn.length ? Object.entries(by).map(([k, n]) => `<span class="hj">${honeyImg(k, 2)}<small>${E.honeyName(k)} ×${n}</small></span>`).join('') : '<span class="muted">아직 모인 꿀이 없어요</span>'}</div>
-      <small class="muted">둘레 ${E.HONEY_R}칸에 핀 꽃 ${bl.length}포기 · ${frozen ? '🌙 꽃잠에는 벌도 쉬어요' : h ? `이 달이 끝나면 ${E.honeyName(h.type)} ${h.jars}병` : '꽃이 피면 꿀이 모여요'} · 벌통엔 ${E.HIVE_MAX}병까지</small>
+      <small class="muted">둘레 ${E.hiveR(st)}칸에 핀 꽃 ${bl.length}포기 · ${frozen ? '🌙 꽃잠에는 벌도 쉬어요' : h ? `이 달이 끝나면 ${E.honeyName(h.type)} ${h.jars}병` : '꽃이 피면 꿀이 모여요'} · 벌통엔 ${E.HIVE_MAX}병까지</small>
       ${hn.length ? '<button type="button" class="btn primary" data-takehoney="1">🍯 거두기</button>' : ''}</div>`;
   }
   if (d.key === 'autobasket') {                   // P28-10-01 자동 수확 바구니: 이 달이 끝나면 거둘 꽃 · 지도에 범위

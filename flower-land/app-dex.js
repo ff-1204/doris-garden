@@ -51,10 +51,10 @@ function seasonTableHTML() {
 // 지난해 견줌 한 줄: "수입 +12% · 점수 +8" (없는 칸은 뺌)
 const vsText = d => [d.income != null ? `수입 ${signed(d.income, '%')}` : '', d.score != null ? `점수 ${signed(d.score)}` : ''].filter(Boolean).join(' · ') || '기록이 비슷해요';
 // 한 해 기록 카드 (꽃잠): 지난해보다 얼마나 · 그래프 보기. 느긋하게 보기면 숫자 없이 그래프 링크만
-// 🌙 꽃잠 한 해 평가 뒤 (P23-02 · P28-05-02-03, M3-2): 가장 최근 기록 카드 끝에 쓸 수 있는 손길 점 한 줄 → 도감일지 손길 점 칸 (느긋하게 보기면 없음)
+// 🌙 꽃잠 한 해 평가 뒤 (P23-02 · P28-05-02-03, M3-2): 가장 최근 기록 카드 끝에 남은 🌼 꽃가루 한 줄 → 🐝 곤충농장 (느긋하게 보기면 없음, P37)
 function bonusRecHTML() {
   const left = E.bonusView(st).left;
-  return left >= 1 && !E.slowView(st) ? `<div class="rec-bonus"><span>🌟 손길 점 ${left}점을 쓸 수 있어요</span><button type="button" class="btn small" data-bgo="1">고르러 가기</button></div>` : '';
+  return left >= 1 && !E.slowView(st) ? `<div class="rec-bonus"><span>🌼 꽃가루 ${left}알을 먹일 수 있어요</span><button type="button" class="btn small" data-bgo="1">🐝 곤충농장</button></div>` : '';
 }
 // 🌸 새 철 (P28-08-05, M3-4): 꽃잠 기록 끝 한 줄 + 작은 단추 — 창 · 알림 · 재촉 없음, 안 눌러도 손해 없음
 // 느긋하게 보기여도 보임(숫자가 아니라 고르는 것) · 조건이 안 됐으면 아무것도 없음 (조건 숫자는 📘 매뉴얼에만)
@@ -76,7 +76,7 @@ function openSeasonStart() {
   const n = E.seasonN(st) + 1, files = !cloudIn();
   openModal(`🌸 ${n}철 시작`, `<div class="season-pop stack" style="gap:10px">
     <p class="sp-lead"><b>정원을 비우고 새 철을 시작할까요?</b><br><span class="muted">다음 월요일 3월이 새 철 1년차예요</span></p>
-    <div class="sp-row keep"><b>🌿 이어져요</b><span>정원 등급 · 🌟 손길 점 · 칭호 · 도감 · 🐝 곤충 일꾼 · 🪑 찻집 가꾸기 · 기록</span></div>
+    <div class="sp-row keep"><b>🌿 이어져요</b><span>정원 등급 · 🌼 꽃가루 · 칭호 · 도감 · 🐝 곤충 일꾼 · 🪑 찻집 가꾸기 · 기록</span></div>
     <div class="sp-row clear"><b>🍂 비워져요</b><span>땅 · 꽃 · 돈(15,000원부터) · 씨앗 · 꽃잎 · 티백 · 찻잔 · 용품${st.jar > 0 ? '(🫙 유리 관은 남아요)' : ''}${st.flowers.some(E.mutShown) ? ' · 🧬 변이 꽃(유리 관에 담은 것은 남아요)' : ''} · 놓은 장식은 📦 창고로</span></div>
     ${files ? '<div class="sp-save"><span>시작 전에 💾 저장 파일을 받아 두면 좋아요</span><button type="button" class="btn small" id="seasonSave">저장</button></div>' : '<p class="note">☁️ 구글 드라이브에 저장된 직전 정원은 ⚙️ 설정에서 볼 수 있어요</p>'}
     ${seasonPathPickHTML()}
@@ -220,9 +220,8 @@ $('#p-dex').addEventListener('click', e => {
   const dc = e.target.closest('[data-dc]'); if (dc) { ui.dexCat = dc.dataset.dc; return renderDex(true); }
   const ml = e.target.closest('[data-mail]'); if (ml) { const b = E.mailOf(st, ml.dataset.mail); return b && openMail(b); }
   const lt = e.target.closest('[data-letter]'); if (lt) return openLetter(E.letterOf(st, lt.dataset.letter) || { k: lt.dataset.letter }, false);
-  const gf = e.target.closest('[data-gofarm]'); if (gf) return setTab('farm');   // 🌟 손길 점은 🐝 곤충농장에서 (10-30)
-  const bn = e.target.closest('[data-bonus]'); if (bn) { return after(E.bonusSet(st, bn.dataset.bonus, +bn.dataset.lv)); }   // 🌟 손길 점 고르기 (P28-05-02-03) — 다른 단추와 같은 알림 줄 (모자라면 경고)
-  const bg = e.target.closest('[data-bgo]'); if (bg) { ui.dexTab = 'journal'; renderDex(true); const el = $('#jBonus'); return el && el.scrollIntoView({ block: 'start' }); }   // 기록 카드 → 도감일지 손길 점 칸
+  const gf = e.target.closest('[data-gofarm]'); if (gf) return setTab('farm');   // 🌼 꽃가루는 🐝 곤충농장에서 (10-30 · P37)
+  const bn = e.target.closest('[data-bonus]');   const bg = e.target.closest('[data-bgo]'); if (bg) return setTab('farm');   // 기록 카드 → 🐝 곤충농장 (P37)
   const qg = e.target.closest('[data-qgo]'); if (qg) return setTab(qg.dataset.qgo);
   const to = e.target.closest('[data-ttlon]'); if (to) return after(E.setTitleOn(st, to.dataset.ttlon || null));
   const c = e.target.closest('[data-dex]'); if (c) openDexDetail(c.dataset.dex, c.dataset.key);
