@@ -210,7 +210,7 @@ function titlesHTML() {
 // 접기 상자: 펼친 상태는 다시 그려도 유지 (ui.fold)
 const foldBox = (key, label, inner) => `<details class="fold" data-fold="${key}"${ui.fold[key] ? ' open' : ''}><summary>${label}</summary>${inner}</details>`;
 // 도감 칸 묶음: 모은 칸은 그대로, 못 모은 칸(.locked)은 접기 상자로
-function foldGrid(key, gridHTML) {   // 티백 · 차처럼 그리드가 여럿(꽃 + 블렌드)이어도 그리드마다 나눔
+function foldGrid(key, gridHTML, quiet) {   // 티백 · 차처럼 그리드가 여럿(꽃 + 블렌드)이어도 그리드마다 나눔 · quiet: 칸 수 없이 (P30-08)
   const t = document.createElement('template'); t.innerHTML = gridHTML.trim();
   let shown = '', folded = '', n = 0;
   for (const el of [...t.content.children]) {
@@ -219,7 +219,7 @@ function foldGrid(key, gridHTML) {   // 티백 · 차처럼 그리드가 여럿(
     if (!off.length || el.children.length) shown += el.outerHTML;
     if (off.length) folded += `<div class="${el.className}">${off.map(c => c.outerHTML).join('')}</div>`;
   }
-  return n ? shown + foldBox(key, `아직 못 모은 ${n}칸`, `<div class="stack" style="gap:8px">${folded}</div>`) : gridHTML;
+  return n ? shown + foldBox(key, quiet ? '아직 못 모은 칸' : `아직 못 모은 ${n}칸`, `<div class="stack" style="gap:8px">${folded}</div>`) : gridHTML;
 }
 function titleCard(k) {
   const T = E.TITLES[k], has = st.titles[k] != null, hidden = !T.chapter, ch = T.chapter && E.CHAPTERS.find(c => c.key === T.chapter), on = st.titleOn === k;

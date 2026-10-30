@@ -50,4 +50,42 @@ const yo = year(false), yn = year(true);
 check(yn.records.length === 1 && yn.records[0].score === yo.records[0].score && yn.bestScore === yo.bestScore, '켜도 쉼달 기록 점수 · 최고 기록은 똑같이 남음');
 check(yo.log.some(l => l.type === 7 && l.text.includes('정원 점수')) && yn.log.some(l => l.type === 7 && !l.text.includes('점수')), '켜면 기록 일지 줄에 점수를 쓰지 않음');
 
+console.log('[P30-08 새 화면: 느긋하게 보기면 숫자 없이 · 얻는 규칙은 그대로 (16 연두리)]');
+{
+  const WEEK = 7 * 24 * H, ctx = { live: false, rng: () => 0.5 };
+  const mon = at(c => c.idx === 0);
+  const grow = slow => {   // 3층 · 13종 · 4층까지 9해를 비운 채 따라잡는 정원 — 느긋하게 보기만 다름
+    const g = E.create(mon, () => 0.5); g.gardenId = 'slow-p30'; g.onboarded = true; g.settings.slow = slow;
+    g.dex.tea.chamomile = 1; g.stats.dug = 1; for (const k of E.FLOWER_KEYS) g.dex.flower[k] = true;
+    E.advance(g, mon + 13 * H, ctx);
+    E.advance(g, mon + 9 * WEEK + 2 * H, ctx);
+    if (E.forestOpen(g)) E.plantTree(Object.assign(g, { money: g.money + 1e5 }), E.TREE_KEYS[0], 0, ctx);
+    E.advance(g, mon + 10 * WEEK + 2 * H, ctx);
+    return g;
+  };
+  const off = grow(false), on = grow(true), same = k => JSON.stringify(off[k]) === JSON.stringify(on[k]);
+  check(E.forestOpen(on) && E.layerNow(on) === E.layerNow(off) && same('layers'), '켜도 4층이 똑같이 열림 (층 · 연 해)');
+  check(same('forest') && E.forestCount(on) === E.forestCount(off) && E.forestCount(on) >= 2, '숲 나무 · 숲 도감이 똑같이 자람');
+  check(same('yearly') && E.yearlyCount(on) === E.yearlyCount(off), '올해만 것 · 도감이 똑같음');
+  check(same('visitors') && same('dex'), '특별 손님 · 도감 칸이 똑같음');
+  check((on.stats.autoWeed || 0) === (off.stats.autoWeed || 0), '숲 바람이 걷은 잡초 수가 똑같음');
+  check(off.money === on.money && off.grade.xp === on.grade.xp, '돈 · 등급 경험치가 똑같음');
+  const lo = E.layerOf(on);
+  check(lo.layer === 4 && lo.name === '작은 숲', 'layerOf는 값을 그대로 돌려줌 (숨김은 화면이 E.slowView로)');
+  const fo = E.forestOf(on);
+  check(fo.slow === true && E.forestOf(off).slow === false, 'forestOf(...).slow');
+  const wo = E.forestWeedOf(on);
+  check(wo && wo.slow && wo.n === null && !/\d/.test(wo.text), 'forestWeedOf: 숫자 없음');
+  check(!on.log.some(l => l.text.startsWith('숲 바람') && /\d/.test(l.text)), '일지 숲 바람 줄에 숫자 없음');
+  const two = copy(off); two.season = Object.assign(two.season || {}, { n: 2 });
+  const twoSlow = copy(two); twoSlow.settings.slow = true;
+  check(Array.isArray(E.seasonTable(two)) && E.seasonTable(twoSlow) === null, 'seasonTable: 2철이어도 느긋하게 보기면 null');
+  const snap = E.awayLongSnap(off), back = copy(off);
+  back.yearLog = back.yearLog.concat(Array.from({ length: 3 }, (_, i) => ({ year: 90 + i, season: 1, score: 1 })));
+  const aOff = E.awayLines(back, 0, snap, 3 * WEEK), backSlow = copy(back); backSlow.settings.slow = true;
+  const aOn = E.awayLines(backSlow, 0, snap, 3 * WEEK), tOn = aOn && E.awayLinesText(aOn);
+  check(aOff && aOff.slow === false && aOn && aOn.slow === true, 'awayLines(...).slow');
+  check(tOn && !/\d/.test([tOn.title, tOn.years, tOn.skipped || '', tOn.layer || ''].join(' ')), '🍃 그동안 문구에 숫자 없음');
+}
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
