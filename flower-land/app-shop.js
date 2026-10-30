@@ -98,13 +98,13 @@ function renderShop(force) {
   const gNow = E.gradeOf(st).grade;
   // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 정원 저장고 +3칸 (장식이 아니라 정원 등급이 주는 것 · 손길 점은 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
   const gSlow = E.slowView(st);
-  const gradeGift = g => { const cap = E.PANTRY_CAPS.find(c => c[0] === g);
+  const gradeGift = (g, k) => { const cap = E.PANTRY_CAPS.find(c => c[0] === g), n = E.orderMax(st) + (E.placedOf(st, k).length ? 0 : 1);   // 이 장식을 놓았을 때의 최대 쪽지 수
     const pantry = cap ? `🧺 정원 저장고 ${gSlow ? '칸이 늘어요' : `+${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`} · ` : '';
-    return `<small class="dk-grade">${pantry}💌 ${gSlow ? '놓으면 주문 쪽지가 늘어요' : '놓으면 주문 쪽지 +1장'}</small>`; };   // P33-04 (10-30): 놓은 등급 장식 가짓수만큼 주문 쪽지 +1 — 저장고 줄 뒤에 붙임 (사용자 요청)   // 10-30 "🌱 n등급이 되면" 머리말은 뺌 (사용자 요청)
+    return `<small class="dk-grade">${pantry}💌 ${gSlow ? '최대 주문 쪽지가 늘어요' : `최대 주문 쪽지 +1장 (${n}장)`}</small>`; };   // 10-31 사용자: "최대 주문 쪽지 +1장 (N장)"   // P33-04 (10-30): 놓은 등급 장식 가짓수만큼 주문 쪽지 +1 — 저장고 줄 뒤에 붙임 (사용자 요청)   // 10-30 "🌱 n등급이 되면" 머리말은 뺌 (사용자 요청)
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요</span></div>
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
-        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small>${gradeGift(D.grade)}</span>
+        <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small>${gradeGift(D.grade, k)}</span>
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${open ? `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>` : `<span class="muted">🔒 ${D.grade}등급에 열려요</span>`}</span></div>`; }).join('')}</div>`;
   // P30-03 🌳 숲: 4층이 열린 뒤에만 · 묘목 6가지를 돈으로 (나무는 팔지 않고 열매 · 수입 없음) — 사면 바로 숲의 첫 빈 자리에 심음 (꽃잠에도)
   const fo = E.forestOpen(st) ? E.forestOf(st) : null;
