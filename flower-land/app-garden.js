@@ -55,12 +55,12 @@ function pantryAllBtn(cls) {
 function takePantryOn() { const r = E.takePantry(st, ctx); return after(r, null, r.ok && r.petals ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 function renderToolbar(force) {
   const pl = plantable(), cal = E.calendar(st.virtual), need = careNeed(cal);
-  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy, !!ui.zoom, (v => v && [v.n, v.cap, v.has, v.slow, v.list.length])(E.pantryView(st))]);
+  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy, (v => v && [v.n, v.cap, v.has, v.slow, v.list.length])(E.pantryView(st))]);
   if (!force && ui.sigs.toolbar === sig) return;
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip() + `<button type="button" class="nd zoom-chip" data-zoom="1" aria-pressed="${!!ui.zoom}" title="정원 크게 보기"><span>🔍</span><b>${ui.zoom ? '×2' : '×1'}</b></button>`;   // 모바일 확대 (QA 6회차) · ⛏️ 광산 입구는 10-30 탭으로 옮김
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : '🌿 지금은 돌볼 꽃이 없어요'}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -84,10 +84,6 @@ function renderToolbar(force) {
 $('#needs').addEventListener('click', e => {
   if (e.target.closest('[data-pantry]')) return takePantryOn();
   const all = e.target.closest('[data-all]'); if (all) return careAllOn(all.dataset.all);
-  if (e.target.closest('[data-zoom]')) { ui.zoom = !ui.zoom; $('.mapwrap').classList.toggle('zoom', ui.zoom);
-    const old = $('.zoom-hint'); if (old) old.remove();
-    let hinted = ui.zoomHinted; try { hinted = hinted || localStorage.getItem(KEY + '-zoomhint') === '1'; } catch (e) { /* 무시 */ }
-    if (ui.zoom && !hinted) { ui.zoomHinted = true; try { localStorage.setItem(KEY + '-zoomhint', '1'); } catch (e) { /* 무시 */ } const h = document.createElement('span'); h.className = 'zoom-hint'; h.textContent = '← 밀어서 보기 →'; $('.mapwrap').prepend(h); setTimeout(() => h.remove(), 3500); } renderToolbar(true); requestAnimationFrame(() => { resize(); const f = st.flowers.find(x => x.id === ui.selected) || st.flowers[0]; if (ui.zoom && f) $('.mapwrap').scrollLeft = Math.max(0, (f.x + 0.5) * cell - $('.mapwrap').clientWidth / 2); }); return; }
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];
   if (!careNeed(E.calendar(st.virtual))[t]) return feedback(`지금은 ${nm}이 없어요`);
