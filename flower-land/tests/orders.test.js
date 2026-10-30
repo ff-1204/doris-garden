@@ -16,6 +16,19 @@ const st2 = E.create(at(c => c.month === 11 && !c.frozen), () => 0.5); st2.garde
 E.advance(st2, E.calendar(st2.virtual).slotEnd + 0.1 * H, { live: false });
 check(JSON.stringify(st2.orders.list) === again, '같은 정원 · 같은 달이면 같은 쪽지 (Math.random 안 씀)');
 
+console.log('[등급 장식마다 쪽지 +1 (P33-04)]');
+{
+  const mk = () => { const s = E.create(at(c => c.month === 11 && !c.frozen), () => 0.5); s.gardenId = 'test-garden'; s.dex.teabag = { lavender: true, rose: true, jasmine: true, lotus: true }; s.dex.blend = { a: true }; s.dex.honey = { a: true }; return s; };
+  const go = s => { E.advance(s, E.calendar(s.virtual).slotEnd + 0.1 * H, { live: false }); return s.orders.list.length; };
+  const s0 = mk(); check(E.orderMax(s0) === 3 && go(s0) === 3, '등급 장식이 없으면 3장');
+  const s1 = mk(); s1.decos.push({ id: 1, key: 'sproutsign', x: 1, y: 1 }, { id: 2, key: 'arch', x: 3, y: 3 });
+  check(E.orderMax(s1) === 5 && go(s1) === 5, '등급 장식 2가지를 놓으면 5장');
+  const s2 = mk(); s2.decos.push({ id: 1, key: 'sproutsign', x: 1, y: 1 }, { id: 2, key: 'sproutsign', x: 3, y: 3 }, { id: 3, key: 'arch', x: null, y: null }, { id: 4, key: 'bench', x: 5, y: 5 });
+  check(E.orderMax(s2) === 4 && go(s2) === 4, '같은 장식 둘은 한 번 · 창고 것 · 이달의 장식은 안 셈');
+  const s3 = mk(); for (const [i, k] of E.GRADE_DECO_KEYS.entries()) s3.decos.push({ id: 10 + i, key: k, x: i, y: 0 });
+  check(E.orderMax(s3) === 9, '여섯 가지 다 놓으면 9장');
+}
+
 console.log('[맞는 찻잔을 팔면]');
 const o = os[0], cal = E.calendar(st.virtual);
 st.cups = [{ id: 501, kind: 'tea', type: 'lavender', q: (o.stars - 1) * 0.2 - 0.05, brewAbs: cal.abs }];

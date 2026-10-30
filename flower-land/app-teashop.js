@@ -304,7 +304,7 @@ function openFirstGuest() {                       // 어느 티백을 우릴지 
 function ordersHTML() {
   const os = st.orders && st.orders.list; if (!os || E.slowView(st)) return '';   // 🐢 느긋하게 보기면 쪽지를 숨김 — 맞는 찻잔이 팔리면 기념품은 그대로 (P28-02)
   const done = os.filter(o => o.done).length;
-  return `<div class="cab-head"><span class="sb-title">💌 손님 주문 <span class="sh-n">${done} / ${os.length}</span></span><span class="muted">맞는 찻잔이 팔리면 손님이 기념품을 두고 가요 · 다음 달엔 새 쪽지</span></div>
+  return `<div class="cab-head"><span class="sb-title">💌 손님 주문 <span class="sh-n">${done} / ${os.length}</span></span><span class="muted">맞는 찻잔이 팔리면 손님이 기념품을 두고 가요 · 다음 달엔 새 쪽지${E.orderBonus(st) ? ` · 🌱 등급 장식 ${E.orderBonus(st)}가지로 ${E.orderBonus(st)}장 더` : ' · 등급 장식을 놓으면 쪽지가 한 장씩 늘어요'}</span></div>
     <div class="orders">${os.map(o => `<div class="order ${o.done ? 'done' : ''}"><span class="od-ic">${o.done ? '✓' : '💌'}</span><span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b></span></div>`).join('')}</div>`;
 }
 // P17-15 찻집 가꾸기 창 (10-06 백업 → 10-24): 🪑 손님 자리 · ☕ 찻잔 세트 · 🪧 간판. 값은 여기(사는 곳)에서만
