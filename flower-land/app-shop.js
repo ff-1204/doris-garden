@@ -101,7 +101,7 @@ function renderShop(force) {
   const gradeGift = g => { const cap = E.PANTRY_CAPS.find(c => c[0] === g);
     const pantry = cap ? `🧺 정원 저장고 ${gSlow ? '칸이 늘어요' : `+${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`} · ` : '';
     return `<small class="dk-grade">${pantry}💌 ${gSlow ? '놓으면 주문 쪽지가 늘어요' : '놓으면 주문 쪽지 +1장'}</small>`; };   // P33-04 (10-30): 놓은 등급 장식 가짓수만큼 주문 쪽지 +1 — 저장고 줄 뒤에 붙임 (사용자 요청)   // 10-30 "🌱 n등급이 되면" 머리말은 뺌 (사용자 요청)
-  const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요 · 한 번 들어온 장식은 계속 팔아요</span></div>
+  const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요</span></div>
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
       return `<div class="decocard ${open ? '' : 'locked'}"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}</small>${gradeGift(D.grade)}</span>
