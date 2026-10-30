@@ -52,7 +52,7 @@ function bonusRecHTML() {
 // 느긋하게 보기여도 보임(숫자가 아니라 고르는 것) · 조건이 안 됐으면 아무것도 없음 (조건 숫자는 📘 매뉴얼에만)
 function seasonHintHTML() {
   const t = E.seasonHint(st, E.calendar(st.virtual));
-  return t ? `<div class="rec-season"><span>${t}</span><button type="button" class="btn small" data-season="1">새 철 시작</button></div>` : '';
+  return t ? `<div class="rec-season"><span>${t}</span><button type="button" class="btn small" data-newseason="1">새 철 시작</button></div>` : '';
 }
 // 05 확인 창: 완전 초기화(⚙️ 설정 · 빨간 경고 · 모두 지움)와 다른 색(따뜻한 꽃 색) · 다른 자리(📖 기록 끝)
 function openSeasonStart() {
@@ -169,7 +169,7 @@ function renderDex(force) {
   $('#p-dex').innerHTML = `<div class="stack"><div class="sectionhead">${tabs}</div>${body}</div>`;
 }
 $('#p-dex').addEventListener('click', e => {
-  const sg = e.target.closest('[data-season]'); if (sg) return openSeasonStart();   // 🌸 새 철 (P28-08-05)
+  const sg = e.target.closest('button[data-newseason]'); if (sg) return openSeasonStart();   // 🌸 새 철 (P28-08-05) — data-season은 <html>의 계절 배경색이라 다른 이름
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
   const yb = e.target.closest('[data-yb]'); if (yb) { ui.yearBar = yb.dataset.yb; return renderDex(true); }
   const yn = e.target.closest('[data-ynav]'); if (yn) { ui.yearEnd = +yn.dataset.ynav >= (st.yearLog || []).length - 1 ? null : +yn.dataset.ynav; return renderDex(true); }   // 가장 최근까지 오면 다시 '최근' (새해가 생기면 따라감)
