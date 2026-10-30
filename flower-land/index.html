@@ -1440,8 +1440,8 @@ body { margin: 0; }
 :root[data-big] .ob-care { display: block; }   /* 첫 안내 창: flex면 글 토막이 칸마다 갈라져 — 큰 글씨면 한 문단으로 흐르게 */
 :root[data-big] .ob-care span { vertical-align: middle; margin-right: 4px; }
 @media (min-width: 900px) { :root[data-big] .body { grid-template-columns: 108px minmax(0, 1fr); } :root[data-big] nav.tabs { top: 72px; } }
-/* P32-03 🐝 곤충농장으로 탭이 9 · 10칸 — 휴대폰 폭(480px 이하)은 큰 글씨가 아니어도 두 줄 (5칸씩, 이름은 지우지 않음) */
-@media (max-width: 480px) {
+/* P32-03 🐝 곤충농장으로 탭이 9 · 10칸 — 640px 이하(큰 글씨 두 줄과 같은 폭)는 큰 글씨가 아니어도 두 줄 (5칸씩, 이름은 지우지 않음) */
+@media (max-width: 640px) {
   :root { --nav-h: 112px; }
   nav.tabs { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); }
   nav.tabs button { padding: 6px 2px 7px; }
