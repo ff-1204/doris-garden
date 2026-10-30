@@ -1387,7 +1387,7 @@ body { margin: 0; }
 .mn-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .mn-icons .mn-ico { width: 40px; height: 40px; font-size: calc(22 * var(--u)); }
 .mn-icons .mn-item.off .mn-ico { opacity: .45; filter: grayscale(1); }
-.mn-blends { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; width: 100%; }
+.mn-blends { display: grid; grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));   /* 레시피 줄(말린 잎 24px×2 + 찻잔 28px + 기호)이 136px라 104px면 412px 휴대폰에서 3칸이 되어 겹침 (10-30) */ gap: 6px; width: 100%; }
 .mn-blend { display: grid; justify-items: center; gap: 4px; padding: 7px 4px; background: var(--sunk); font-size: calc(11 * var(--u)); min-width: 0; }
 .mn-blend .eq { display: flex; align-items: center; gap: 3px; }
 .mn-blend .px { background: var(--panel); padding: 2px; box-sizing: content-box; }
