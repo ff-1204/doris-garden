@@ -176,7 +176,7 @@ console.log('[🐾 특별 손님 visitors (P30-06-01)]');
 
 console.log('[🛤️ 철의 길 season.path (P30-04-01)]');
 { const PN = E.MIGRATIONS.findIndex(x => x[0].includes('철의 길 season.path'));
-  check(PN === 37 && PN === E.MIGRATIONS.length - 1, '맨 끝 보정 (38번째)');
+  check(PN === 37, '38번째 보정');
   check(m.season && m.season.path === null && m.season.n === 1, '가장 옛 정원: 1철 · 길 없이');
   const old = copy(st); old.mig = PN; old.season = { n: 3, startedAt: 5, path: 'tea', log: [{ n: 1, years: 3, grade: 9, sold: 10 }, { n: 2, years: 4, grade: 12, sold: null, path: 'flower' }] };
   const om = E.migrateSave(old);
@@ -184,6 +184,16 @@ console.log('[🛤️ 철의 길 season.path (P30-04-01)]');
   const bad = copy(st); bad.mig = PN; bad.season = { n: 2, startedAt: 5, path: 'gold', log: [{ n: 1, years: 3, path: 'x' }] };
   const bm = E.migrateSave(bad);
   check(bm.season.path === null && bm.season.log[0].path === null, '모르는 길 이름은 길 없이'); }
+
+console.log('[🌳 작은 숲 forest (P30-03)]');
+{ const FN = E.MIGRATIONS.findIndex(x => x[0].includes('작은 숲 forest'));
+  check(FN === 38 && FN === E.MIGRATIONS.length - 1, '맨 끝 보정 (39번째)');
+  check(m.forest && m.forest.trees.length === 6 && m.forest.trees.every(t => t === null) && JSON.stringify(m.forest.dex) === '{}', '가장 옛 정원: 빈 숲 6칸 · 도감 없음');
+  const old = copy(st); delete old.forest; old.mig = FN; const om = E.migrateSave(old);
+  check(om.forest && om.mig === E.MIGRATIONS.length && om.forest.trees.length === 6, '바로 앞 판 정원도 숲 칸이 생김');
+  const has = copy(st); has.forest = { trees: [{ k: 'pine', at: 3, stage: 2 }, null, null, null, null, null], dex: { pine: 2 } }; has.mig = FN;
+  const hm = E.migrateSave(has);
+  check(hm.forest.trees[0].k === 'pine' && hm.forest.trees[0].stage === 2 && hm.forest.dex.pine === 2, '이미 있는 숲은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

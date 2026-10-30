@@ -11,7 +11,7 @@ const rows = (st, n) => { st.yearLog = Array.from({ length: n }, (_, i) => ({ ye
 console.log('[층 표]');
 check(E.LAYERS[1].name === '꽃밭' && E.LAYERS[2].name === '찻집' && E.LAYERS[3].name === '광산과 벌통' && E.LAYERS[4].name === '작은 숲', '1 🌱 꽃밭 · 2 🍵 찻집 · 3 ⛏️ 광산과 벌통 · 4 🌳 작은 숲');
 check(E.LAYERS[4].years === 8 && E.LAYERS[4].dex === true && E.LAYERS[5] && E.LAYERS[5].name === null, '4층은 3층 뒤 8해 + 꽃 도감 · 5층은 자리만 (이름 없음)');
-check(E.LAYER_MAX_OPEN === 3, 'LAYER_MAX_OPEN = 3 — 숲 탭(L3) 전까지 4층은 열리지 않음');
+check(E.LAYER_MAX_OPEN === 4, 'LAYER_MAX_OPEN = 4 — L3 🌳 숲 탭과 함께 4층이 열림 (L1 · L2 동안은 3)');
 
 console.log('[1 → 2 → 3층: 이미 있는 찻집 · 광산을 층으로]');
 const st = E.create(mon + 0.1 * H, () => 0.5); st.gardenId = 'layer-1';
@@ -49,12 +49,14 @@ console.log('[비운 동안에도 셈 (17 문태경 17-5)]');
   const v = E.layerOf(away);
   check(before === 8 && v.next.yearsLeft === 1 && E.yearLogOf(away).length === 7, '쉬는 동안 흐른 7해가 쌓여 4층까지 1해만 남음 (켜 둘 필요 없음)'); }
 
-console.log('[LAYER_MAX_OPEN: 조건이 차도 4층은 아직 안 열림]');
+console.log('[P30-01-03 LAYER_MAX_OPEN 4: 기본 ctx로도 새해 3월 아침에 4층 (꽃잠 가운데엔 안 열림)]');
 E.advance(st, mon + 7 * WEEK + REST, ctx);
 o = E.layerOf(st);
-check(o.next.ready && o.next.held && o.next.yearsLeft === 0, '8해 + 13종: 조건은 참 · 열 수 없는 층 (held)');
+check(o.next.ready && !o.next.held && o.next.yearsLeft === 0 && o.layer === 3, '8해 + 13종: 조건이 참 · 열 수 있는 층 (held 아님) · 꽃잠 가운데라 아직 3층');
+check(E.layerOf(st, 3).next.held, 'max 3을 넘기면 예전처럼 held (L1 · L2 화면 문구 길은 남음)');
 E.advance(st, mon + 8 * WEEK + 2 * H, ctx);
-check(E.layerOf(st).layer === 3 && st.layers.at[4] == null && !st.log.some(l => l.text.includes('작은 숲')), '새해 3월 아침이 지나도 3층 그대로 · 일지 줄 없음');
+check(E.layerOf(st).layer === 4 && st.layers.at[4] === 8 && st.log.filter(l => l.text === '🌳 정원 뒤에 작은 숲이 생겼어요').length === 1, '새해 3월 아침에 4층 · 일지 한 줄');
+check(E.forestOpen(st) && st.forest.trees.length === 6 && st.forest.trees.every(t => t === null), '🌳 작은 숲이 열림 · 빈 자리 6칸');
 
 console.log('[새해 3월 아침에만 열림 (ctx.layerMax 4 — L3에서 켤 자리)]');
 { const evs = [], lc = { live: false, rng: () => 0.5, layerMax: 4, onLayer: e => evs.push(e) };
@@ -106,6 +108,6 @@ console.log('[돈 · 수입 없음]');
 
 console.log('[저장 · 다시 열기]');
 { const sv = E.makeSave(st, st.virtual), back = E.parseSave(JSON.stringify(sv)), mg = back.ok && E.migrateSave(back.data.game);
-  check(mg && JSON.stringify(mg.layers) === JSON.stringify(st.layers) && E.layerOf(mg).layer === 3, '저장 파일로 다시 열어도 그대로'); }
+  check(mg && JSON.stringify(mg.layers) === JSON.stringify(st.layers) && E.layerOf(mg).layer === 4, '저장 파일로 다시 열어도 그대로 (4층)'); }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

@@ -99,7 +99,8 @@ h3 { font-family: var(--font-display); font-size: 16px; margin: 0; font-weight: 
 .iconbtn:hover { border-color: var(--muted); }
 
 .body { display: grid; grid-template-columns: 1fr; min-height: 0; }
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--panel); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(8, 1fr); padding-bottom: env(safe-area-inset-bottom, 0px); }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--panel); border-top: 1px solid var(--line); display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding-bottom: env(safe-area-inset-bottom, 0px); }   /* P30-01-03 🌳 숲 탭이 생기면 8 → 9칸 (숨긴 탭은 칸을 차지하지 않음) */
+nav.tabs button[hidden] { display: none; }
 nav.tabs button { border: 0; background: none; padding: 8px 2px 9px; display: grid; justify-items: center; gap: 1px; font-size: 12px; color: var(--muted); }
 nav.tabs button .ic { font-size: 19px; line-height: 1.1; }
 nav.tabs button[aria-selected="true"] { color: var(--ink); font-weight: 600; box-shadow: inset 0 2px 0 var(--accent); }
@@ -107,7 +108,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); font-weight: 600; box
   .app { grid-template-rows: auto 1fr; }
   .body { grid-template-columns: 96px minmax(0, 1fr); }
   main { padding-bottom: 24px; }
-  nav.tabs { position: sticky; top: 61px; bottom: auto; left: auto; right: auto; align-self: start; grid-template-columns: 1fr; border-top: 0; border-right: 1px solid var(--line); background: transparent; padding: 10px 6px; gap: 4px; order: -1; }
+  nav.tabs { position: sticky; top: 61px; bottom: auto; left: auto; right: auto; align-self: start; grid-auto-flow: row; grid-template-columns: 1fr; border-top: 0; border-right: 1px solid var(--line); background: transparent; padding: 10px 6px; gap: 4px; order: -1; }
   nav.tabs button { padding: 10px 4px; border-radius: 10px; }
   nav.tabs button[aria-selected="true"] { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
 }
@@ -469,6 +470,17 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 #jWeekly { scroll-margin-top: 84px; }   /* 정원 띠 "보기"로 올 때 위 막대에 가리지 않게 */
 /* P30-01-02 🌳 정원의 층 (L1-2): 등급 쪽 아래 — 지금 층 · 층 칩 줄 · 다음 층 조건 두 줄 (된 것 ✔, 안 된 것은 흐리게) */
 .ly-card { display: grid; gap: 8px; }
+/* P30-03 🌳 작은 숲: 나무 자리 6칸 (3 × 2) — 그림은 바닥에 맞춰 정수배(묘목 ×2 32px · 어린나무 ×3 48px · 나무 ×2 64px · 큰 나무 ×3 96px) */
+.fo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.fo-slot { position: relative; display: grid; justify-items: center; gap: 4px; padding: 8px 2px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; color: var(--ink); font: inherit; min-width: 0; }
+.fo-slot.empty { border-style: dashed; background: transparent; color: var(--muted); }
+.fo-art { position: relative; height: 96px; width: 96px; max-width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.fo-art .fo-plus { font-size: 22px; align-self: center; }
+.fo-vis { position: absolute; right: -2px; bottom: 0; }
+.fo-vis.up { bottom: auto; top: 8px; }
+.fo-name { font-size: 13px; font-weight: 600; text-align: center; line-height: 1.2; }
+.fo-sub { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.25; }
+.fo-pick { display: grid; gap: 8px; }
 .ly-head { display: flex; align-items: center; gap: 8px; }
 .ly-head b { font-family: var(--font-display); font-size: 17px; }
 .ly-ic { font-size: 22px; }
@@ -1421,6 +1433,7 @@ body { margin: 0; }
       <!-- 🍵 찻집 -->
       <section class="panel" id="p-cab" aria-label="찻집"></section>
       <!-- 📖 도감 (도감일지 · 기록 · 도감) -->
+      <section class="panel" id="p-forest" aria-label="작은 숲"></section>
       <section class="panel" id="p-dex" aria-label="도감과 기록"></section>
       <section class="panel" id="p-manual" aria-label="매뉴얼"></section>
       <section class="panel" id="p-settings" aria-label="설정"></section>
@@ -1432,6 +1445,7 @@ body { margin: 0; }
       <button type="button" role="tab" data-tab="tearoom" aria-selected="false"><span class="ic">🌿</span>제다실</button>
       <button type="button" role="tab" data-tab="cab" aria-selected="false"><span class="ic">🍵</span>찻집</button>
       <button type="button" role="tab" data-tab="store" aria-selected="false"><span class="ic">📦</span>창고</button>
+      <button type="button" role="tab" data-tab="forest" aria-selected="false" hidden><span class="ic">🌳</span>숲</button>
       <button type="button" role="tab" data-tab="dex" aria-selected="false"><span class="ic">📖</span>도감</button>
       <button type="button" role="tab" data-tab="manual" aria-selected="false"><span class="ic">📘</span>매뉴얼</button>
       <button type="button" role="tab" data-tab="settings" aria-selected="false"><span class="ic">⚙️</span>설정</button>
@@ -1453,6 +1467,7 @@ body { margin: 0; }
 <script src="app-garden.js"></script>
 <script src="app-shop.js"></script>
 <script src="app-teashop.js"></script>
+<script src="app-forest.js"></script>
 <script src="app-dex.js"></script>
 <script src="app-manual.js"></script>
 <script src="app-cloud.js"></script>
