@@ -345,7 +345,7 @@ function addLog(st, type, text, ctx) {
 }
 function flushPending(st, ctx) {
   if (st._fertNew > 0) { addLog(st, 10, `비료 ${st._fertNew}개가 만들어졌어요`, ctx); st._fertNew = 0; }
-  if (st._autoSold && st._autoSold.n) { addLog(st, 13, `손님이 찻잔 ${st._autoSold.n}잔을 사 갔어요 · +${st._autoSold.sum.toLocaleString('ko-KR')}원`, ctx); st._autoSold = { n: 0, sum: 0 }; }
+  if (st._autoSold && st._autoSold.n) { const pt = st._autoSold.k ? teaPriceText(st, { frozen: st._autoSold.k === 'sleep', month: 12 }) : ''; addLog(st, 13, `손님이 찻잔 ${st._autoSold.n}잔을 사 갔어요 · +${st._autoSold.sum.toLocaleString('ko-KR')}원${pt ? ` · ${pt}` : ''}`, ctx); st._autoSold = { n: 0, sum: 0 }; }   // P34 철 값
   if (st._driedNew > 0) { addLog(st, 12, `꽃방에서 꽃잎 ${st._driedNew}장이 다 말랐어요`, ctx); st._driedNew = 0; }
   if (st._rackBagNew > 0) { addLog(st, 12, `누에 일꾼이 말린 꽃잎 ${st._rackBagNew}장이 티백이 됐어요`, ctx); st._rackBagNew = 0; }   // P28-10-02
   const b = st._bloomNew;
@@ -1159,9 +1159,16 @@ function brew(st, teaIds, blendIds) {
   for (const b of blends) { st.blends.splice(st.blends.indexOf(b), 1); st.cups.push({ ...b, id: nid(st), kind: 'blend', brewAbs: cal.abs }); }
   return ok(`차 ${teas.length + blends.length}잔을 우렸어요 ☕`);
 }
+// P34 (10-30 사용자 요청): 겨울(12 · 1 · 2월) · 꽃잠(쉼달 · 꽃샘달)엔 찻값이 비쌈 — 손으로 팔든 나비 일꾼 · 손님(자동 판매)이 팔든 같은 배율 (⬜ 추천값, 사용자가 바꿀 수 있게 상수 하나)
+const TEA_PRICE_MUL = { winter: 1.2, sleep: 1.3 };
+const teaPriceKind = cal => !cal ? null : cal.frozen ? 'sleep' : [12, 1, 2].includes(cal.month) ? 'winter' : null;
+const teaPriceMul = cal => { const k = teaPriceKind(cal); return k ? TEA_PRICE_MUL[k] : 1; };
+// 찻잔 카드 · 판매 알림의 한 마디: "❄️ 겨울 값 ×1.2" · 🐢 느긋하게 보기면 숫자 없이 "조금 비싸요". 평달은 ''
+const teaPriceText = (st, cal) => { const k = teaPriceKind(cal); if (!k) return ''; return `${k === 'sleep' ? '🌙 꽃잠 값' : '❄️ 겨울 값'} · ${slowView(st) ? '조금 비싸요' : `×${TEA_PRICE_MUL[k]}`}`; };
 function cupValue(st, c, cal) {
   const v = c.kind === 'blend' ? blendValue(c) : teaItemValue(st, c, cal);
-  return cupCold(c, cal) ? Math.round(v * COLD_RATE / 10) * 10 : v;
+  const m = teaPriceMul(cal);
+  return Math.round(v * (cupCold(c, cal) ? COLD_RATE : 1) * m / 10) * 10;
 }
 // P17-11 자동 판매: 찻집이 열려 있으면 카운터의 찻잔이 1시간(게임 시간 = 배속 1에서 현실 1시간)마다 한 잔씩, 먼저 우린 것부터 팔림
 const CUP_SELL_H = 1;
@@ -1215,7 +1222,7 @@ function autoSell(st, cal, dtH, ctx) {
       if (st.dex.tea[c.type] == null) addLog(st, 9, `도감에 등록: ${FLOWERS[c.type].tea}`, ctx);
       st.dex.tea[c.type] = Math.max(st.dex.tea[c.type] || 0, c.q);
     }
-    st._autoSold = st._autoSold || { n: 0, sum: 0 }; st._autoSold.n++; st._autoSold.sum += v;
+    st._autoSold = st._autoSold || { n: 0, sum: 0 }; st._autoSold.n++; st._autoSold.sum += v; st._autoSold.k = teaPriceKind(cal);   // P34 판 달의 철 값
   }
   if (!st.cups.length) st.cupTimerH = 0;
 }
@@ -1225,7 +1232,8 @@ function sellCups(st, ids, ctx) {
   const list = (st.cups || []).filter(c => ids.includes(c.id));
   if (!list.length) return no('팔 찻잔이 없어요');
   const sum = sellCupList(st, cal, list, ctx);
-  return ok(`찻잔 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요`);
+  const pt = teaPriceText(st, cal);
+  return ok(`찻잔 ${list.length}잔을 ${sum.toLocaleString('ko-KR')}원에 팔았어요${pt ? ` · ${pt}` : ''}`);   // P34 철 값
 }
 function sellCupList(st, cal, list, ctx) {        // 찻잔 팔기 (찻집이 열렸는지는 부르는 쪽이 봄 — sellCups · 첫 손님 P22-05)
   let sum = 0;
@@ -1247,7 +1255,7 @@ function sellTea(st, ids, ctx) {                 // P17-01: 찻집에서 티백�
   if (!list.length) return no('팔 차가 없어요');
   let sum = 0;
   for (const t of list) {
-    sum += teaItemValue(st, t, cal); st.teas.splice(st.teas.indexOf(t), 1);
+    sum += Math.round(teaItemValue(st, t, cal) * teaPriceMul(cal) / 10) * 10; st.teas.splice(st.teas.indexOf(t), 1);   // P34 철 값
     if (st.dex.tea[t.type] == null) addLog(st, 9, `도감에 등록: ${FLOWERS[t.type].tea}`, ctx);   // P08-01-05-a (변경 10-06: 처음 팔 때)
     st.dex.tea[t.type] = Math.max(st.dex.tea[t.type] || 0, t.q);                                     // P08-01-06 가장 좋은 품질
   }
@@ -1260,7 +1268,7 @@ const bump = (st, k, n) => { st.stats = st.stats || {}; st.stats[k] = (st.stats[
 // 찻잔이 팔릴 때마다: 전체 · 손님(자동) · 갓 우린 · 햇차 · 블렌드 잔 수 (P19-07-01: 판매 잔 수 · 햇차 수만 새로 셈)
 function countCup(st, c, cal, auto, ctx) {
   if (st.firstGuest) st.firstGuest = false;       // P22-05 첫 잔이 팔리면 🍵 첫 손님 표는 끝
-  if (fillOrder(st, c)) { addXp(st, 'order', 1, ctx); weekNote(st, 'order', null, 1, ctx); }   // P23-01 손님 주문 · P28-05-01 등급 경험치 · P28-09
+  if (fillOrder(st, c, cal)) { addXp(st, 'order', 1, ctx); weekNote(st, 'order', null, 1, ctx); }   // P23-01 손님 주문 · P28-05-01 등급 경험치 · P28-09
   bump(st, 'cups'); if (auto) bump(st, 'autoCups');
   yearAdd(st, 'sold', 1); addXp(st, 'sell', 1, ctx);   // P28-07-01 올해 판 잔 수 · P28-05-01
   if (!cupCold(c, cal)) bump(st, 'warmCups');
@@ -1416,7 +1424,8 @@ function setTitleOn(st, k) {
 }
 
 // ---------------------------------------------------------------- 💌 손님 주문 · 기념품 (P23-01, 10-24)
-// 찻집이 열린 달마다 주문 쪽지 3장(+ 놓은 등급 장식 가짓수, P33-04). 맞는 찻잔이 팔리면(손으로든 저절로든) 손님이 기념품을 두고 감. 돈 보상 없음, 놓쳐도 벌 없음
+// 찻집이 열린 달마다 주문 쪽지 3장(+ 놓은 등급 장식 가짓수, P33-04). 맞는 찻잔이 팔리면(손으로든 저절로든) ✓ · 등급 경험치. 돈 보상 없음, 놓쳐도 벌 없음
+// P34 (10-30 사용자 요청): 기념품(12가지를 다 모은 뒤엔 비료 한 줌)은 🌙 꽃잠에 들어준 주문만 — 찻집이 매달 열려 기념품이 너무 빨리 차지 않게
 const MEMENTOS = {
   hanky: { name: '꽃수 손수건', ic: '🧣' }, button: { name: '나무 단추', ic: '🔘' }, postcard: { name: '바다 엽서', ic: '🖼️' }, shell: { name: '분홍 조개껍데기', ic: '🐚' },
   feather: { name: '파랑새 깃털', ic: '🪶' }, acorn: { name: '반들 도토리', ic: '🌰' }, ribbon: { name: '노란 리본', ic: '🎀' }, stamp: { name: '옛 우표', ic: '📮' },
@@ -1464,11 +1473,12 @@ function makeOrders(st, cal) {
   }
   st.orders = { abs: cal.abs, list: out };
 }
-function fillOrder(st, c) {
+function fillOrder(st, c, cal) {
   const os = st.orders && st.orders.list; if (!os) return null;
   const hard = x => x.kind === 'tea' ? 10 + x.stars : x.kind === 'honey' ? 5 : x.kind === 'recipe' ? 4 : x.kind === 'hat' ? 3 : 1;   // 까다로운 쪽지부터 (QA 5회차)
   const o = os.filter(x => orderMatch(x, c)).sort((a, b) => hard(b) - hard(a))[0]; if (!o) return null;
   o.done = true; bump(st, 'orders');
+  if (!(cal || calendar(st.virtual)).frozen) { addLog(st, 15, `${orderText(o)} 주문을 들어줬어요`); return { order: o, gift: null }; }   // P34 평달 · 겨울: ✓ · 경험치만
   st.dex.memento = st.dex.memento || {};
   const left = ORDER_MEMENTO_KEYS.filter(k => !st.dex.memento[k]);
   let gift = null;
@@ -3238,7 +3248,7 @@ const api = {
   DAILY_GIFT, HOUR, W, H, MONTHS, josa, SEASONS, MONTH_H, monthName, calendar, calendarAfterFlow, untilMonth, yearOf, canReset, resetKeys,
   FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, LIFE_MIN, classify, landOf, landCounts, flowerEconomy, harvestsPerYear, HARVEST_PETALS, ECON_Q,
   stars, pct, germOf, qualityRadius, stageRadius, STAGE, computeStage, landMatch, vigorOf, monthlyChange,
-  teaShopOpen, hoursToShopOpen, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
+  teaShopOpen, hoursToShopOpen, TEA_PRICE_MUL, teaPriceKind, teaPriceMul, teaPriceText, CUP_SELL_H, SEATS, CUP_SETS, SIGNS, shopOf, cupSellH, addSeat, buyDecor, autoSell, bagBlends, brew, sellCups, cupValue, cupCold, COLD_RATE, propCount, teaValue, teaItemValue, isHat, makeRaw, HAT_RATE, RAW_RATE, RAW_DECAY, isFresh, seasonKey, reservationPrice, deliverIdxOf, reservedCount, cartSummary,
   create, advance, addLog, slowView, bigView, patternView, compostable, compostItems, autoCompost, COMPOST_Q, TOOLS, canCare, harvestSlot, canMoveNow, propGrown, propYearOf, care, careAll, careAllTargets, CARE_SUPPLY, buy, buySupply, SUPPLIES, reserve, plant, propagate, move, makeTea, sellTea,
   guideKeys, guideFill, guideTap, potFlower,
   flowerAt, dexCount, DEX_TOTAL, dexTotal, blendKeys, CHAPTERS, QUESTS, TITLES, TITLE_KEYS, EXTRA_TITLE_KEYS, chapterOpen, chapterDone, checkJournal, setTitleOn, newGardenId, saveSummary, makeSave, parseSave, SAVE_FORMAT, MIGRATIONS, migrateSave, CLOUD_GAP, cloudDue, cloudAutoOk, cloudTokenUse, cloudDecide, freshGarden, freshPick, gardenBorn, firstVisitOf, applyAccount, cloudRewardPlan, giveCloudReward, inAppBrowser, outsideUrl, DECOS, DECO_KEYS, EXTRA_DECO_KEYS, decoInfo, decoTotal, decoCount, decoExtras, decoOffer, decoAt, buyDeco, placeDeco, storeDeco, decoMonths, firstFlower, questName, questWhenOf, GIFT_BY_MONTH, giftPot, STARTER_BLEND, starterText, firstGuest, firstGuestReady, MAIL_CATS, MAIL_WARN, MAIL_MAX, MAIL_LEN, kstDay, mailGiftOk, mailValue, mailCheck, mailFor, mailDeliver, mailOf, mailGiftText, mailTake, trimLetterBox, LETTER_BOX_MAX, INBOX_NEWS_MAX, NEWS_MATCH, newsKind, inboxOf, inboxUnread, inboxOpen, MINE_W, MINE_H, MINE_MAX_E, MINE_REGEN_H, MINE_DEEPEST, ORES, FOSSILS, ORE_KEYS, FOSSIL_KEYS, MINE_DEX_KEYS, mineName, mineOf, mineRegen, dig, descend, mineUp, toDeepest, freshBoard, CRAFTS, CRAFT_KEYS, canCraft, craft, mineCount, GIFTS, GIFT_KEYS, LETTERS, LETTER_KEYS, letterCount, giftsOf, sendGift, deliverLetters, letterLeftFor, RETURNS, RETURN_V, RETURN_WHERE, pickReturn, giveReturn, returnValue, returnName, returnText, returnEV, letterOf, MEMENTOS, MEMENTO_KEYS, mementoCount, orderText, orderMatch, ORDER_BASE, orderBonus, orderMax, makeOrders, fillOrder, yearScore, yearLogOf, newYearNow, yearMonth, newYearPace, graphAxis, graphYears, yearDiff, yearDiffOf, yearPace, XP, GRADE_TIERS, gradeCost, gradeName, gradeAt, gradeOf, addXp, gradeDexSync, gradeView, gradeBadge, gradeAlerts, gradeAwayLine, gradeUpText, gradeUnlockText, isGradeUpLine, gradeXpAt, GRADE_BY, gradeDexCount, newGrade, WEEKLY, WEEKLY_KEYS, WEEKLY_TIERS, WEEKLY_XP, WEEKLY_BONUS, weeklyText, weeklyRoll, weeklyOf, weekNote, weeklyFinish, weeklyView, weeklySnap, weeklyAwayLine, isWeeklyLine, PANTRY_H, PANTRY_CYCLE, PANTRY_BASE, PANTRY_PER_DECO, PANTRY_CAPS, PANTRY_ITEMS, PANTRY_KEYS, pantryOf, pantryCap, pantryDayValue, pantryTick, takePantry, pantryView, pantryCounts, GRADE_DECO_KEYS, gradeDecoOffer, HONEY_R, HIVE_MAX, HONEY_KEYS, honeyName, hiveBlooms, honeyOf, hiveTick, takeHoney, honeyCup, honeyCount, BARREL_R, barrelTick, AUTO_KEYS, AUTO_R, AUTO_Q, placedOf, basketReach, basketFlowers, basketBlooms, basketTick, FOREST_WEED_N, forestWeedWord, forestWeedTick, forestWeedOf, autoStats, isAutoLine, autoAwayLines, FARM, FARM_KEYS, FARM_STATS, farmCounts, farmMark, farmLastOf, farmLine, farmOf, AWAY_LAST_MAX, awayKeep, RACK_N, rackN, rackTick, BONUS, BONUS_KEYS, BONUS_PER, BONUS_COST, bonusPointsAt, newBonus, bonusMax, bonusLevel, bonusVal, bonusCostTo, bonusPoints, bonusUsed, bonusLeft, bonusMaxed, bonusSet, bonusView, catchUpH, SEASON_YEARS, SEASON_TITLES, SEASON_KEEP, newSeason, PATHS, PATH_KEYS, PATH_NONE, seasonPath, pathInfo, pathTitle, pathBadge, seasonTable, seasonN, seasonRows, seasonReady, seasonCanStart, seasonHint, seasonBadge, seasonBreaks, seasonStart, LAYERS, LAYER_MAX_OPEN, newLayers, TREES, TREE_KEYS, FOREST_N, TREE_BIG, TREE_STAGES, newForest, forestOpen, forestTick, plantTree, forestOf, forestCount, forestDex, forestBigSlots, forestVisitors, forestGrowDev, layerYears, layerNow, layerOf, layerSync, layerCheck, YEARLY, YEARLY_KEYS, YEARLY_ROWS, newYearly, yearlyNo, yearlyOf, yearlyTick, yearlyMark, yearlyNow, yearlyMissedAll, awayLongSnap, awayLines, awayLinesText, AWAY_MISSED_MAX, isYearlyMissLine, yearlySeen, yearlyCount, yearlyDex, yearlyPast, yearlyBloom, VISITORS, VISITOR_KEYS, VISITOR_MAX, VISITOR_P, VISITOR_GIFT_AT, newVisitors, visitorOk, visitorCells, visitorTick, visitorsOf, visitorAt, visitorTimes, visitorCall, ORDER_MEMENTO_KEYS, helperKeep, helperTick, autoLineType, GEAR, growRate, DRY_H, BLENDS, BLEND_KEYS, BLEND_RATE, RECIPE_RATE, blendRate, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends,

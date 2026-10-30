@@ -122,11 +122,11 @@ console.log('[실제 시간 흐름 (advance → onSlot)]');
 
 console.log('[주문 기념품은 그대로 12가지에서]');
 { const s = fresh('v-order'); s.orders = { abs: 1, list: [{ kind: 'any', done: false }] };
-  const r = E.fillOrder(s, { kind: 'tea', type: 'rose', q: 3 });
+  const r = E.fillOrder(s, { kind: 'tea', type: 'rose', q: 3 }, { frozen: true });   // P34 기념품은 꽃잠 주문만
   check(r && r.gift && !E.MEMENTOS[r.gift].visitor, `주문 손님은 특별 손님 기념품을 두고 가지 않음 (${E.MEMENTOS[r.gift].name})`);
   for (const k of E.ORDER_MEMENTO_KEYS) s.dex.memento[k] = true;
   s.orders = { abs: 2, list: [{ kind: 'any', done: false }] }; const f0 = s.fert;
-  const r2 = E.fillOrder(s, { kind: 'tea', type: 'rose', q: 3 });
+  const r2 = E.fillOrder(s, { kind: 'tea', type: 'rose', q: 3 }, { frozen: true });
   check(r2 && r2.gift === null && s.fert === f0 + 1, '주문 기념품 12가지를 다 모으면 비료 한 줌 (특별 손님 칸이 비어 있어도)'); }
 
 console.log('[말 한 줄 — 같은 손님 같은 달이면 같은 말]');
