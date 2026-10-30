@@ -112,7 +112,7 @@ function journalHTML() {
       <div class="jch-reward">🏅 ${has ? `<b>${E.TITLES[tk].name}</b> 칭호를 얻었어요` : `마치면 칭호 「${E.TITLES[tk].name}」`}${hb ? ` · 📖 숨은 레시피${has ? ` 「${E.BLENDS[hb].name}」` : ''}` : ''}</div></div>`;
   };
   const openHTML = chs.filter(x => x.open).map(x => card(x.c)).join('');
-  return gradeHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
+  return gradeHTML() + layerHTML() + bonusHTML() + weeklyHTML() + head('jTitles', '🏅', '칭호', got, E.TITLE_KEYS.length) + titlesHTML()
     + head('jQuests', '📜', '퀘스트', qDone, E.QUESTS.length)
     + (openHTML || '<p class="note">🌱 첫걸음을 마치면 1장이 열려요.</p>')
     + (closed.length ? foldBox('j-closed', `아직 열리지 않은 장 ${closed.length}개`, `<div class="stack">${closed.map(x => card(x.c)).join('')}</div>`) : '');
@@ -131,6 +131,33 @@ function gradeHTML() {
       ${src}${decos}
       <p class="note">🪴 ${next} · 열린 장식은 💐 화원에서 언제든 사요</p>
       ${slow ? '' : '<p class="note muted">정원에서 한 일만큼 쌓여요 · 돈으로 산 것은 세지 않아요</p>'}</div>`;
+}
+// 🌳 정원의 층 쪽 (P30-01-02, L1-2 10-30): 등급 쪽 바로 아래 · 손길 점 위 — 지금 층 · 1~4층 칩 · 다음 층 조건 두 줄 (값은 E.layerOf 그대로, 위 막대엔 넣지 않음)
+// 🐢 느긋하게 보기면 남은 해 · 조건 숫자 · "n층" 대신 새싹 그림과 "다음 층은 아직 자라는 중이에요" 한 줄 (P30-08, 판단은 E.slowView 하나)
+let layerArtURL = '';
+function layerSprout(scale) {
+  if (!layerArtURL) {
+    const A = window.LAYER_ART.sprout, c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+    A.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && A.pal[ch]) { x.fillStyle = A.pal[ch]; x.fillRect(i, j, 1, 1); } }));
+    layerArtURL = c.toDataURL();
+  }
+  return `<img class="px" src="${layerArtURL}" width="${16 * scale}" height="${16 * scale}" alt="">`;
+}
+function layerHTML() {
+  const o = E.layerOf(st), slow = E.slowView(st), N = o.next;
+  const chips = `<div class="ly-chips">${o.layers.map(l => `<span class="ly-chip ${l.open ? 'on' : ''} ${l.layer === o.layer ? 'now' : ''}"${!l.open && slow ? ' role="img" aria-label="아직 안 열린 층"' : ''}><span aria-hidden="true">${l.open ? l.icon : '?'}</span>${l.open ? esc(l.name) : slow ? '' : `${l.layer}층`}</span>`).join('')}</div>`;
+  const cond = (ok, ic, text) => `<div class="ly-cond ${ok ? 'ok' : ''}"><span aria-hidden="true">${ic}</span><span>${text}</span>${ok ? '<b class="ly-ok">✔</b>' : ''}</div>`;
+  let next = '';
+  if (!N) next = '<p class="note">모든 층을 열었어요</p>';
+  else if (slow) next = `<div class="ly-slow">${layerSprout(2)}<span>다음 층은 아직 자라는 중이에요</span></div>`;
+  else {
+    const rows = N.how ? cond(false, N.icon, `${esc(N.how)} 열려요`)
+      : cond(N.yearsLeft === 0, '🗓️', N.yearsLeft ? `${N.yearsLeft}해 더` : `${N.needYears}해가 지났어요`) + cond(N.dexOk, '📖', `꽃 도감 <span class="data">${N.dex} / ${N.needDex}</span>`);
+    const when = N.ready ? (N.held ? '조건을 다 채웠어요 · 작은 숲은 곧 업데이트로 열려요' : '새해 3월 아침에 열려요') : N.how ? '' : '흐른 해는 쉬어도 쌓여요 · 새해 3월 아침에 열려요';
+    next = `<div class="ly-next"><small>다음 층</small><b>${N.icon} ${N.layer}층 ${esc(N.name)}</b></div>${rows}${when ? `<p class="note muted">${when}</p>` : ''}`;
+  }
+  return `<div class="cab-head dex-head j-head" id="jLayer"><span class="sb-title">🌳 정원의 층</span>${slow ? '' : `<span class="dh-count data">${o.layer}층</span>`}</div>
+    <div class="card ly-card"><div class="ly-head"><span class="ly-ic" aria-hidden="true">${o.icon}</span><b>${slow ? '' : `${o.layer}층 `}${esc(o.name)}</b></div>${chips}${next}</div>`;
 }
 // 🌟 손길 점 (P28-05-02-03, M3-2 10-29): 등급 쪽 바로 아래 — 5등급마다 1점으로 장치 · 저장고 · 따라잡기를 덜어 주는 4칸을 고름 (탭을 늘리지 않음)
 // 🐢 느긋하게 보기면 숫자(남은 점 · 모은 점 · 단계 · 드는 점 · 다음 점까지 · 다음 단계)를 빼고 아이콘 · 이름 · 지금 설명 · 단추만 (판단은 E.slowView 하나)
