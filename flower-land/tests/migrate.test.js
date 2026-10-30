@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers', 'yearly']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -137,7 +137,7 @@ console.log('[🌸 새 철 season (P28-08-03)]');
 console.log('[🌳 정원의 층 layers (P30-01-01)]');
 { const LN = E.MIGRATIONS.findIndex(x => x[0].includes('정원의 층 layers'));
   const nw = E.create(MON, () => 0.5);
-  check(LN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.layers) === '{"at":{}}', '새 정원은 연 층 기록이 비어 있음 (맨 끝 보정)');
+  check(LN >= 0 && JSON.stringify(nw.layers) === '{"at":{}}', '새 정원은 연 층 기록이 비어 있음');
   check(m.layers && m.layers.at[2] === m.yearLog.length && m.layers.at[3] == null, '가장 옛 정원: 차를 판 적이 있으면 2층 연 해 = 업데이트한 해 · 광산을 판 적 없으면 3층은 아직');
   const old = copy(st); delete old.layers; old.mig = LN; old.dex.tea = { rose: 1 }; old.stats = { dug: 5 };
   old.yearLog = Array.from({ length: 20 }, (_, i) => ({ year: i + 1, season: 1, score: 1 }));
@@ -149,6 +149,19 @@ console.log('[🌳 정원의 층 layers (P30-01-01)]');
   check(JSON.stringify(nm.layers) === '{"at":{}}' && E.layerOf(nm).layer === 1, '아무것도 연 적 없는 정원은 1층 · 기록 없음');
   const has = copy(st); has.layers = { at: { 2: 3 } }; has.mig = LN; has.dex.tea = { rose: 1 };
   check(E.migrateSave(has).layers.at[2] === 3, '이미 있는 층 기록은 그대로'); }
+
+console.log('[🗓️ 올해만 오는 것 yearly (P30-05-01)]');
+{ const YN = E.MIGRATIONS.findIndex(x => x[0].includes('올해만 오는 것 yearly'));
+  const nw = E.create(MON, () => 0.5);
+  check(YN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.yearly) === '{"at":null,"years":[],"missed":[],"got":{}}', '새 정원은 빈 달력 (맨 끝 보정)');
+  check(m.yearly && m.yearly.at === null && m.yearly.missed.length === 0, '가장 옛 정원: 빈 달력 — 지난 계절을 놓친 것으로 치지 않음');
+  const old = copy(st); delete old.yearly; old.mig = YN; old.yearLog = Array.from({ length: 6 }, (_, i) => ({ year: i + 1, season: 1, score: 1 }));
+  const om = E.migrateSave(old), cal = E.calendar(om.virtual);
+  E.yearlyMark(om, cal, {});
+  check(om.yearly.missed.length === 0 && (cal.season === 4 || om.yearly.years[0].y === 7), '6해 된 정원이 업데이트 뒤 처음 열면 7해째부터 셈 · 놓친 것 없음');
+  const has = copy(st); has.yearly = { at: 5, years: [], missed: [{ k: 'firefly', f: null, y: 1 }], got: { rainbow: 1 } }; has.mig = YN;
+  const hm = E.migrateSave(has);
+  check(hm.yearly.missed[0].k === 'firefly' && hm.yearly.got.rainbow === 1, '이미 있는 달력은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

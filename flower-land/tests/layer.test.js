@@ -82,7 +82,7 @@ console.log('[새해 3월 아침에만 열림 (ctx.layerMax 4 — L3에서 켤 �
   check(E.layerOf(mid, 4).layer === 4, '그다음 월요일 3월 아침에 열림'); }
 
 console.log('[한꺼번에 안 열림 (예전 정원)]');
-{ const old = copy(st); delete old.layers; old.mig = E.MIGRATIONS.length - 1; rows(old, 40);
+{ const old = copy(st); delete old.layers; old.mig = E.MIGRATIONS.findIndex(x => x[0].includes('정원의 층 layers')); rows(old, 40);
   const om = E.migrateSave(old), lc = { live: false, rng: () => 0.5, layerMax: 4 };
   check(om.layers.at[2] === 40 && om.layers.at[3] === 40 && E.layerOf(om, 4).next.yearsLeft === 8, '40해 된 정원: 업데이트한 해가 3층 연 해 → 8해 더');
   E.advance(om, om.virtual + WEEK, lc);
