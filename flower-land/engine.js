@@ -2158,7 +2158,7 @@ const decoBuff = st => ({ bench: placedOf(st, 'bench'), basin: placedOf(st, 'bas
 // 장식 카드 · 장식 창 한 줄 (plain: 느긋하게 보기 — 숫자 없이)
 const DECO_BUFF = {
   bench: { ic: '🐾', text: '손님이 벤치 옆에도 앉아요', plain: '손님이 벤치 옆에도 앉아요' },                                   // P33-01
-  basin: { ic: '💧', text: '달이 끝날 때 둘레 1칸에서 가장 목마른 꽃 한 포기에 물을 줘요', plain: '달이 끝날 때 둘레의 목마른 꽃에 물을 줘요' },
+  basin: { ic: '💧', text: '달이 끝날 때 바로 옆 목마른 꽃 한 포기에 물을 줘요', plain: '달이 끝날 때 바로 옆 목마른 꽃에 물을 줘요' },
   chime: { ic: '🎐', text: '올해만 것이 오기 하루 전에 알려 줘요', plain: '올해만 것이 오기 전에 알려 줘요' },
   sundial: { ic: '🌙', text: '자리를 비운 동안 1주 더 따라잡아요 (최대 6주)', plain: '자리를 비운 동안 조금 더 따라잡아요' },     // P33-02
   swing: { ic: '🐾', text: '그네 옆에 앉은 손님이 한 달 더 머물러요', plain: '그네 옆에 앉은 손님이 조금 더 머물러요' },

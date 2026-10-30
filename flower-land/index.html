@@ -920,6 +920,9 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .decotiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
 .decotile { display: grid; justify-items: center; gap: 4px; padding: 10px 8px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; text-align: center; }
 .decotile small, .decotile .dk-hint { font-size: calc(11.5 * var(--u)); color: var(--muted); }
+.decocard .dk-buff, .decotile .dk-buff, .deco-pop .dk-buff { color: color-mix(in srgb, var(--good) 70%, var(--ink)); }   /* P33-03 장식의 작은 버프 한 줄 */
+.decotile .dk-buff { font-size: calc(11.5 * var(--u)); }
+.deco-pop .dk-buff { margin: 0; font-size: calc(13 * var(--u)); }
 .deco-pop { display: grid; justify-items: center; gap: 8px; text-align: center; }
 .deco-tray img.px { vertical-align: middle; }
 .deco-tray { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
