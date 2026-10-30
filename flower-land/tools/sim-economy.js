@@ -166,7 +166,7 @@ if (AUTO) console.log(`자동 장치: ${st.decos.filter(d => E.DECOS[d.key] && E
 console.log('\n주마다 목표 (✓ 끝냄)');
 Object.keys(weeks).sort((a, b) => a - b).forEach((k, i) => console.log([i + 1, ...weeks[k].goals.map(g => `${g.done ? '✓' : '·'} ${E.weeklyText(g)} ${g.got}/${g.n}`), weeks[k].bonus ? '덤' : ''].join('\t')));
 if (PATH) console.log(`길: ${E.PATHS[PATH].icon} ${E.PATHS[PATH].name} · 손님 ${E.VISITOR_KEYS.filter(k => E.VISITORS[k].path === PATH).map(k => `${E.VISITORS[k].name} ${E.visitorTimes(st, k)}번`).join('')} · 등급 ${E.gradeOf(st).grade}`);
-console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL} · 기념품 ${E.ORDER_MEMENTO_KEYS.filter(k => (st.dex.memento || {})[k]).length}/${E.ORDER_MEMENTO_KEYS.length}`);   // P34 기념품 (꽃잠 주문만)
+console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered).length}포기 · 도감 ${E.dexCount(st)}/${E.DEX_TOTAL} · 기념품 ${E.ORDER_MEMENTO_KEYS.filter(k => (st.dex.memento || {})[k]).length}/${E.ORDER_MEMENTO_KEYS.length} · 🧬 변이 ${st.flowers.filter(f => f.mut && !f.withered).length}포기 · 도감 ${E.mutDexCount(st)}종`);   // P34 기념품 (꽃잠 주문만) · P36 돌연변이 (수확 못 하는 꽃 — 돈 영향 확인)
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');
 console.log(['해', '수입', '판 잔', '꽃잎', '주문', '점수', '등급', '도감'].join('\t'));
