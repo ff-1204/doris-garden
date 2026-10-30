@@ -14,12 +14,15 @@ function yearGraphHTML() {
   const [bk, blabel, bfmt] = YEAR_BARS.find(b => b[0] === ui.yearBar) || YEAR_BARS[0], bname = blabel.slice(3);
   const rows = g.rows, n = rows.length, ax = E.graphAxis(rows.map(r => r[bk])), sx = E.graphAxis(rows.map(r => r.score));
   const pct = (v, a) => a.top ? Math.max(0, Math.min(100, v / a.top * 100)) : 0;
-  const tip = r => `${r.year}년차${slow ? '' : ` · ${bname} ${r[bk] == null ? '모름' : bfmt(r[bk])} · 정원 점수 ${r.score == null ? '모름' : r.score + '점'}${r.grade ? ` · ${r.grade}등급` : ''}`}`;
+  const many = rows.some(r => (r.season || 1) >= 2), yname = r => `${many ? `${r.season || 1}철 ` : ''}${r.year}년차`;   // 🌸 철이 둘 이상 보이면 이름에 철 (P28-08-05)
+  const tip = r => `${yname(r)}${slow ? '' : ` · ${bname} ${r[bk] == null ? '모름' : bfmt(r[bk])} · 정원 점수 ${r.score == null ? '모름' : r.score + '점'}${r.grade ? ` · ${r.grade}등급` : ''}`}`;
   const cols = rows.map(r => `<div class="yg-col" title="${tip(r)}">${r[bk] == null ? '<i class="yg-bar none"></i>' : `<i class="yg-bar" style="height:${pct(r[bk], ax)}%"></i>`}</div>`).join('');
   const pts = rows.map((r, i) => r.score == null ? null : [(i + 0.5) / n * 100, 100 - pct(r.score, sx)]);
   const segs = []; let cur = [];                 // 모르는 해(예전 정원)에서는 선을 끊음
   pts.forEach(p => { if (p) cur.push(p); else { if (cur.length) segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
   const line = `<svg class="yg-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${segs.map(sg => `<polyline points="${sg.map(p => p.map(v => +v.toFixed(2)).join(',')).join(' ')}"/>`).join('')}</svg>${pts.map(p => p ? `<i class="yg-dot" style="left:${p[0]}%;top:${p[1]}%"></i>` : '').join('')}`;
+  // 🌸 철 경계선 (P28-08-05): 새 철 첫해 왼쪽에 세로 점선 + "2철" 꼬리표, 느긋하게 보기면 선만
+  const brk = E.seasonBreaks(rows).map(b => `<i class="yg-season" style="left:${b.i / n * 100}%">${slow ? '' : `<span>${b.n}철</span>`}</i>`).join('');
   const grid = (slow ? [0] : ax.ticks).map(t => `<i class="yg-grid" style="bottom:${pct(t, ax)}%"></i>`).join('');
   const axL = slow ? '' : `<div class="yg-axis l" aria-hidden="true">${ax.ticks.map(t => `<span class="data" style="bottom:${pct(t, ax)}%">${bk === 'income' ? shortNum(t) : t}</span>`).join('')}</div>`;
   const axR = slow ? '' : `<div class="yg-axis r" aria-hidden="true">${sx.ticks.map(t => `<span class="data" style="bottom:${pct(t, sx)}%">${t}</span>`).join('')}</div>`;
@@ -27,13 +30,13 @@ function yearGraphHTML() {
   const nav = g.prev || g.next ? `<div class="yg-nav"><button type="button" class="btn small" ${g.prev ? `data-ynav="${g.from - 1}"` : 'disabled'} aria-label="앞의 해">‹ 앞</button><span class="muted">${rows[0].year}~${rows[n - 1].year}년차 · 모두 ${g.total}해</span><button type="button" class="btn small" ${g.next ? `data-ynav="${g.end + 10}"` : 'disabled'} aria-label="뒤의 해">뒤 ›</button></div>` : '';
   const seg = slow ? '' : `<span class="seg yg-seg" role="group" aria-label="막대로 볼 것">${YEAR_BARS.map(([k, l]) => `<button type="button" data-yb="${k}" aria-pressed="${k === bk}">${l}</button>`).join('')}</span>`;
   const legend = slow ? '<p class="muted yg-note">해마다 정원이 자란 모양이에요</p>' : `<div class="yg-legend"><span><i class="lg-bar"></i>${bname} (막대)</span><span><i class="lg-line"></i>정원 점수 (선 · 오른쪽)</span>${rows.some(r => r.grade) ? '<span>🌱 등급 (아래)</span>' : ''}</div>`;
-  const last = rows[n - 1], vs = slow ? null : E.yearDiffOf(st, last.year);
-  const vsLine = vs ? `<p class="yg-vs">📈 ${last.year}년차는 지난해보다 <b>${vsText(vs)}</b></p>` : '';
+  const last = rows[n - 1], vs = slow ? null : E.yearDiffOf(st, last.year, last.season);
+  const vsLine = vs ? `<p class="yg-vs">📈 ${yname(last)}는 지난해보다 <b>${vsText(vs)}</b></p>` : '';
   const cell = (r, k) => r[k] == null ? '—' : `${YEAR_BARS.find(b => b[0] === k)[2](r[k])}${r.part ? '*' : ''}`;
-  const table = slow ? '' : `<details class="yg-table"><summary>숫자로 보기</summary><table><thead><tr><th>해</th><th>수입</th><th>판 잔</th><th>꽃잎</th><th>점수</th><th>등급</th></tr></thead><tbody>${rows.map(r => `<tr><th>${r.year}년차</th>${['income', 'sold', 'harvest'].map(k => `<td class="data">${cell(r, k)}</td>`).join('')}<td class="data">${r.score == null ? '—' : r.score}</td><td class="data">${r.grade == null ? '—' : r.grade}</td></tr>`).join('')}</tbody></table>${rows.some(r => r.part) ? '<p class="muted">* 업데이트한 해라 그 뒤부터만 셌어요</p>' : ''}${rows.some(r => r.income == null) ? '<p class="muted">— 는 기록하기 전이라 몰라요</p>' : ''}</details>`;
+  const table = slow ? '' : `<details class="yg-table"><summary>숫자로 보기</summary><table><thead><tr><th>해</th><th>수입</th><th>판 잔</th><th>꽃잎</th><th>점수</th><th>등급</th></tr></thead><tbody>${rows.map(r => `<tr><th>${yname(r)}</th>${['income', 'sold', 'harvest'].map(k => `<td class="data">${cell(r, k)}</td>`).join('')}<td class="data">${r.score == null ? '—' : r.score}</td><td class="data">${r.grade == null ? '—' : r.grade}</td></tr>`).join('')}</tbody></table>${rows.some(r => r.part) ? '<p class="muted">* 업데이트한 해라 그 뒤부터만 셌어요</p>' : ''}${rows.some(r => r.income == null) ? '<p class="muted">— 는 기록하기 전이라 몰라요</p>' : ''}</details>`;
   return `${paceLine}<div class="card ygraph ${slow ? 'slow' : ''}">
     <div class="yg-head"><b>📈 해마다 정원</b>${seg}</div>${legend}
-    <div class="yg-plot ${slow ? 'bare' : ''}">${axL}<div class="yg-area" role="img" aria-label="${rows.map(tip).join(', ')}">${grid}<div class="yg-cols" style="--n:${n}">${cols}</div>${line}</div>${axR}</div>
+    <div class="yg-plot ${slow ? 'bare' : ''}">${axL}<div class="yg-area" role="img" aria-label="${rows.map(tip).join(', ')}">${grid}<div class="yg-cols" style="--n:${n}">${cols}</div>${line}${brk}</div>${axR}</div>
     ${xrow('년차', r => `<span class="data">${r.year}</span>`)}${slow || !rows.some(r => r.grade) ? '' : xrow('🌱', r => `<span class="data">${r.grade == null ? '·' : r.grade}</span>`, 'grade')}
     ${nav}${vsLine}${table}</div>`;
 }
@@ -45,9 +48,36 @@ function bonusRecHTML() {
   const left = E.bonusView(st).left;
   return left >= 1 && !E.slowView(st) ? `<div class="rec-bonus"><span>🌟 손길 점 ${left}점을 쓸 수 있어요</span><button type="button" class="btn small" data-bgo="1">고르러 가기</button></div>` : '';
 }
+// 🌸 새 철 (P28-08-05, M3-4): 꽃잠 기록 끝 한 줄 + 작은 단추 — 창 · 알림 · 재촉 없음, 안 눌러도 손해 없음
+// 느긋하게 보기여도 보임(숫자가 아니라 고르는 것) · 조건이 안 됐으면 아무것도 없음 (조건 숫자는 📘 매뉴얼에만)
+function seasonHintHTML() {
+  const t = E.seasonHint(st, E.calendar(st.virtual));
+  return t ? `<div class="rec-season"><span>${t}</span><button type="button" class="btn small" data-newseason="1">새 철 시작</button></div>` : '';
+}
+// 05 확인 창: 완전 초기화(⚙️ 설정 · 빨간 경고 · 모두 지움)와 다른 색(따뜻한 꽃 색) · 다른 자리(📖 기록 끝)
+function openSeasonStart() {
+  if (!E.seasonCanStart(st, E.calendar(st.virtual))) return renderDex(true);   // 그새 꽃잠이 끝났으면 줄만 걷음
+  const n = E.seasonN(st) + 1, files = !cloudIn();
+  openModal(`🌸 ${n}철 시작`, `<div class="season-pop stack" style="gap:10px">
+    <p class="sp-lead"><b>정원을 비우고 새 철을 시작할까요?</b><br><span class="muted">다음 월요일 3월이 새 철 1년차예요</span></p>
+    <div class="sp-row keep"><b>🌿 이어져요</b><span>정원 등급 · 🌟 손길 점 · 칭호 · 도감 · 🧺 자동 장치 · 🪑 찻집 가꾸기 · 기록</span></div>
+    <div class="sp-row clear"><b>🍂 비워져요</b><span>땅 · 꽃 · 돈(15,000원부터) · 씨앗 · 꽃잎 · 티백 · 찻잔 · 용품 · 놓은 장식은 📦 창고로</span></div>
+    ${files ? '<div class="sp-save"><span>시작 전에 💾 저장 파일을 받아 두면 좋아요</span><button type="button" class="btn small" id="seasonSave">저장</button></div>' : '<p class="note">☁️ 구글 드라이브에 저장된 직전 정원은 ⚙️ 설정에서 볼 수 있어요</p>'}
+    <p class="note">안 해도 괜찮아요. 지금 정원을 그대로 이어 가도 잃는 건 없어요.</p></div>`,
+    [{ label: '그만두기', act: () => closeModal() }, { label: '새 철 시작', primary: true, act: seasonGo }]);
+  const sb = $('#seasonSave'); if (sb) sb.addEventListener('click', () => { saveClick(); if (!IN_APP) { sb.textContent = '받았어요'; sb.disabled = true; } });
+}
+function seasonGo() {
+  const r = E.seasonStart(st, ctx);              // ctx.rng를 꼭 넘김 — 안 넘기면 땅 600칸 뽑기가 Math.random (CLAUDE.md)
+  if (!r.ok) { closeModal(); return feedback(r.msg, true); }
+  ui.selected = null; ui.cart = {}; ui.sigs = {};
+  closeModal(); save(); setTab('garden');          // 빈 정원 · 위 막대 🌸 · 철 칭호 창(showNewTitles)은 renderAll이
+  queueToast(`🌸 ${r.season}철이 시작됐어요 · 다음 월요일 3월부터 1년차예요`);
+  cloudSync('now');   // ☁️ 로그인했으면 새 철 정원을 바로 올림 (옛 철이 다른 기기에서 덮지 않게)
+}
 function recVsHTML(r) {
   if ((st.yearLog || []).length < 2) return '';
-  const d = E.slowView(st) ? null : E.yearDiffOf(st, r.year);
+  const d = E.slowView(st) ? null : E.yearDiffOf(st, r.year, r.season);   // 지난 철 카드는 그 철 안에서만 견줌 (P28-08-04)
   return `<div class="rec-vs">${d ? `<span>📈 지난해보다 <b>${vsText(d)}</b></span>` : ''}<button type="button" class="btn small" data-dt="year">${d ? '그래프 보기' : '📈 해마다 보기'}</button></div>`;
 }
 // 📊 꽃별 셈 (P28-06, 10-28): 값은 엔진 flowerEconomy만 읽음. 도감에 없는 꽃은 "?"로 가리고 정렬에서도 맨 뒤 (모르는 꽃의 순위가 드러나지 않게)
@@ -72,7 +102,7 @@ function econHTML() {
     <p class="muted ec-note">레시피 블렌드로 팔면 더 받아요. 아직 못 본 꽃은 피우면 보여요.</p></div>`;
 }
 function renderDex(force) {
-  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, st.bonus, E.slowView(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
+  const sig = JSON.stringify([ui.dexTab, ui.dexCat, ui.fold, st.dex, st.journal, st.titles, st.titleOn, E.calendar(st.virtual).idx, st.records.length, st.records[0] && !!st.records[0].snapshot, st.grade && st.grade.xp, st.bonus, E.slowView(st), E.seasonN(st), (st.yearLog || []).length, ui.yearBar, ui.yearEnd, ui.econSort, ui.dexTab === 'year' && st.yearNow && st.yearNow.income, ui.dexTab === 'journal' && st.weekly && [st.weekly.week, st.weekly.goals.map(g => g.got)]]);   // 🗓️ 이번 주 목표 (P28-09)   // 🌱 등급 쪽 (M1-4) · 📈 해마다 (M1-5)
   if (!force && ui.sigs.dex === sig) return;
   ui.sigs.dex = sig;
   const n = E.dexCount(st);
@@ -116,6 +146,7 @@ function renderDex(force) {
   } else if (ui.dexTab === 'journal') {
     body = journalHTML();
   } else {
+    const sNow = E.seasonN(st), seasonOn = sNow >= 2;   // 2철부터 카드 제목에 철 (P28-08-05)
     body = st.records.length ? st.records.map((r, ri) => {
       const total = W * H, order = LAND_KEYS.filter(k => r.counts[k]).sort((a, b) => (a === 'barren') - (b === 'barren') || r.counts[b] - r.counts[a]);
       // 한 해 카드: 왼쪽 그해 정원 그림 (없으면 점선 자리) · 오른쪽 제목과 두 칩(가장 좋은 차 · 도감) · 땅 막대 · 일지
@@ -123,9 +154,9 @@ function renderDex(force) {
       return `<div class="card record">
         <div class="rec-art">${r.snapshot ? `<img src="${r.snapshot}" alt="${r.year}년차 쉼달 아침의 정원">` : '<div class="rec-noimg"><span>🖼️</span>이 해는 정원 그림이 없어요</div>'}</div>
         <div class="stack" style="gap:10px">
-          <div class="rec-head"><h3>${r.year}년차 정원</h3><span class="muted">땅 ${land}가지</span></div>
+          <div class="rec-head"><h3>${seasonOn ? `🌸 ${r.season || 1}철 · ` : ''}${r.year}년차 정원</h3>${seasonOn && (r.season || 1) < sNow ? '<span class="rec-past">지난 철</span>' : ''}<span class="muted">땅 ${land}가지</span></div>
           ${r.score != null && !E.slowView(st) ? `<div class="rec-score"><b>🏅 정원 점수 ${r.score}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록 · 전 최고보다 +${r.score - r.prevBest}` : `최고 ${r.prevBest}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders'], ['선물', 'gifts']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${r.scoreParts[k]}`).join(' · ')}</small></div>` : ''}
-          ${recVsHTML(r)}${ri === 0 ? bonusRecHTML() : ''}
+          ${recVsHTML(r)}${ri === 0 ? bonusRecHTML() + seasonHintHTML() : ''}
           <div class="rec-chips">
             <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
             ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${r.dex} / ${r.dexTotal || 32}</b></span></span>
@@ -138,6 +169,7 @@ function renderDex(force) {
   $('#p-dex').innerHTML = `<div class="stack"><div class="sectionhead">${tabs}</div>${body}</div>`;
 }
 $('#p-dex').addEventListener('click', e => {
+  const sg = e.target.closest('button[data-newseason]'); if (sg) return openSeasonStart();   // 🌸 새 철 (P28-08-05) — data-season은 <html>의 계절 배경색이라 다른 이름
   const t = e.target.closest('[data-dt]'); if (t) { ui.dexTab = t.dataset.dt; return renderDex(true); }
   const yb = e.target.closest('[data-yb]'); if (yb) { ui.yearBar = yb.dataset.yb; return renderDex(true); }
   const yn = e.target.closest('[data-ynav]'); if (yn) { ui.yearEnd = +yn.dataset.ynav >= (st.yearLog || []).length - 1 ? null : +yn.dataset.ynav; return renderDex(true); }   // 가장 최근까지 오면 다시 '최근' (새해가 생기면 따라감)

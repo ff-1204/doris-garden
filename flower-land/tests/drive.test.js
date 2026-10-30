@@ -57,11 +57,12 @@ function fakeDrive() {
 
   console.log('[저장 · 읽기]');
   const d1 = E.makeSave(st, MON + H);
-  cur = await drive.write(JSON.stringify(d1), { gardenId: st.gardenId, savedAt: d1.savedAt, firstVisit: MON, none: null }, cur);
+  cur = await drive.write(JSON.stringify(d1), { gardenId: st.gardenId, savedAt: d1.savedAt, firstVisit: MON, season: 2, none: null }, cur);
   const up = fd.reqs[fd.reqs.length - 1];
   check(up.method === 'POST' && up.url.startsWith(Dr.UPLOAD + '?uploadType=multipart') && /^multipart\/related; boundary=/.test(up.headers['Content-Type']), '멀티파트 업로드 (upload/drive/v3/files?uploadType=multipart)');
   check(fd.files.size === 1 && [...fd.files.values()][0].name === 'garden.json', 'garden.json 하나');
-  check(cur.garden.gardenId === st.gardenId && cur.garden.savedAt === MON + H && cur.garden.firstVisit === MON, '요약(정원 이름표 · 저장 시각 · 첫 방문)은 appProperties로 돌아옴');
+  check(cur.garden.gardenId === st.gardenId && cur.garden.savedAt === MON + H && cur.garden.firstVisit === MON && cur.garden.season === 2, '요약(정원 이름표 · 저장 시각 · 첫 방문 · 몇 철)은 appProperties로 돌아옴');
+  check(Dr.metaOf({ id: 'x', name: 'garden.json', appProperties: { gardenId: 'a', savedAt: '5' } }).season === null, '철을 적기 전 파일은 season null (P28-08-05 — 철 비교를 하지 않음)');
   check(!('none' in [...fd.files.values()][0].appProperties), '빈 값은 appProperties에 넣지 않음');
   const back = E.parseSave(await drive.read(cur.garden.id));
   check(back.ok && back.data.gardenId === st.gardenId && back.data.check === d1.check, '읽은 파일이 저장 파일 검사를 통과 (같은 형식)');

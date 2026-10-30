@@ -200,10 +200,10 @@ async function cloudSync(why) {
     // P20-16 계정이 「구름 정원사」를 받은 때: 드라이브 · 이 기기가 아는 가장 이른 때 (모르면 처음 받는 계정)
     const rw = E.firstVisitOf(remote && remote.reward, cur.prev && cur.prev.reward, cloud.meta.reward);
     if (rw && rw !== cloud.meta.reward) { cloud.meta.reward = rw; cloudSaveMeta(); }
-    const d = E.cloudDecide({ gardenId: st.gardenId, actAt: st.actAt }, cloud.meta.base || null, remote);
+    const d = E.cloudDecide({ gardenId: st.gardenId, actAt: st.actAt, season: E.seasonN(st) }, cloud.meta.base || null, remote);   // P28-08-05 season: 철이 다르면 묻고 철이 큰 쪽을 먼저 (드라이브 요약에 철이 없는 예전 파일은 비교 안 함)
     if (d.act !== 'local' && document.hidden) { cloud.recheck = true; return cloudSet('idle'); }   // 화면이 숨어 있으면 돌아왔을 때 (덮어쓰지 않음)
     if (d.act === 'remote') return await cloudTake(remote);
-    if (d.act === 'ask') return await cloudAsk(remote, d.why);
+    if (d.act === 'ask') return await cloudAsk(remote, d.why, d.first);
     const gave = cloudGift();                                                                  // 맞춘 정원(이 기기 것)에 보상 → 바로 올림
     if (!gave && why === 'open' && d.why === 'mine' && (st.actAt || 0) <= (cloud.meta.lastAt || 0)) return cloudSet(cloud.meta.lastAt ? 'saved' : 'idle');   // 양쪽 다 새것이 없음
     await cloudPut(cur, why);
@@ -227,7 +227,7 @@ async function cloudPut(cur, why) {
   save();
   const d = E.makeSave(st, now);
   d.account = { firstVisit: cloud.meta.firstVisit || null, reward: cloud.meta.reward || null };   // P20-08-01 · P20-16 계정이 구름 정원사를 받은 때
-  cloud.remote = await cloudDrive.write(JSON.stringify(d), { gardenId: st.gardenId, savedAt: now, firstVisit: cloud.meta.firstVisit, reward: cloud.meta.reward }, cur, { keepalive: why === 'close' });
+  cloud.remote = await cloudDrive.write(JSON.stringify(d), { gardenId: st.gardenId, savedAt: now, firstVisit: cloud.meta.firstVisit, reward: cloud.meta.reward, season: E.seasonN(st) }, cur, { keepalive: why === 'close' });
   cloud.meta.base = { gardenId: st.gardenId, savedAt: now }; cloud.meta.lastAt = now; cloudSaveMeta();
   cloudSet('saved');
   if (why === 'now') feedback('☁️ 드라이브에 저장했어요');
@@ -264,7 +264,7 @@ async function cloudTake(meta) {
   cloudSet('saved');
 }
 // 어느 정원을 쓸까요? (P20-06-03 · 04): 고르지 않은 쪽은 ↩︎ 되돌리기 칸에
-async function cloudAsk(meta, why) {
+async function cloudAsk(meta, why, first) {
   const data = await cloudRead(meta);
   // P20-06-05 다른 정원인데 한쪽이 거의 새 정원이면 묻지 않음 (10-27, 사용자 요청) — 고르지 않은 쪽은 ↩︎ 되돌리기 칸에
   const pick = why === 'other' ? E.freshPick(E.freshGarden(st), E.freshGarden(data.game)) : null;
@@ -275,17 +275,23 @@ async function cloudAsk(meta, why) {
     if (ui.tab === 'settings') renderSettings();
     cloud.pending = 'pick'; return cloudSet('idle');                                           // 끝나면 바로 이 기기 정원을 올림
   }
-  cloud.askData = { meta, data, why };
+  cloud.askData = { meta, data, why, first };
   cloudSet('ask');
   cloudAskOpen();
 }
 function cloudAskOpen() {
   const a = cloud.askData; if (!a) return;
-  const lead = a.why === 'other' ? '드라이브에 <b>다른 정원</b>이 있어요.' : a.why === 'both' ? '두 기기에서 <b>따로 이어 했어요</b>.' : '두 정원을 <b>거의 같은 때</b> 저장했어요.';
+  const lead = a.why === 'season' ? '두 정원의 <b>철이 달라요</b>.' : a.why === 'other' ? '드라이브에 <b>다른 정원</b>이 있어요.' : a.why === 'both' ? '두 기기에서 <b>따로 이어 했어요</b>.' : '두 정원을 <b>거의 같은 때</b> 저장했어요.';
+  // P28-08-05 철이 다르면 카드마다 "🌸 2철 · 3년차", 철이 큰 쪽을 먼저(왼쪽 · 기본 단추) — 고르는 건 사람 (열린 질문 ③)
+  const sl = E.saveSummary(st), sr = E.saveSummary(a.data.game), diff = sl.season !== sr.season;
+  const first = diff ? (a.first || (sr.season > sl.season ? 'remote' : 'local')) : 'remote';
+  const side = { local: [summaryCol('이 기기 정원', sl, '이 브라우저', diff), { label: '이 기기 정원', primary: first === 'local', act: () => cloudPick('local') }],
+    remote: [summaryCol('드라이브 정원', sr, whenText(a.meta.savedAt), diff), { label: '드라이브 정원', primary: first === 'remote', act: () => cloudPick('remote') }] };
+  const order = first === 'local' ? ['local', 'remote'] : ['remote', 'local'];
   openModal('☁️ 어느 정원을 쓸까요?', `<div class="stack" style="gap:10px"><p style="margin:0">${lead} 하나를 골라 주세요.</p>
-    <div class="imp-cmp">${summaryCol('이 기기 정원', E.saveSummary(st), '이 브라우저')}<span class="imp-arrow" aria-hidden="true">·</span>${summaryCol('드라이브 정원', E.saveSummary(a.data.game), whenText(a.meta.savedAt))}</div>
-    <p class="note">고르지 않은 정원은 ⚙️ 설정 › 💾 저장의 ↩︎ 되돌리기 칸에 한 번 보관돼요. 고를 때까지 드라이브에는 저장하지 않아요.</p></div>`,
-    [{ label: '이 기기 정원', act: () => cloudPick('local') }, { label: '드라이브 정원', primary: true, act: () => cloudPick('remote') }]);
+    <div class="imp-cmp">${side[order[0]][0]}<span class="imp-arrow" aria-hidden="true">·</span>${side[order[1]][0]}</div>
+    ${diff ? '<p class="note">🌸 철이 큰 정원을 먼저 보여 드려요. 새 철을 시작한 정원인지 살펴보고 골라요.</p>' : ''}<p class="note">고르지 않은 정원은 ⚙️ 설정 › 💾 저장의 ↩︎ 되돌리기 칸에 한 번 보관돼요. 고를 때까지 드라이브에는 저장하지 않아요.</p></div>`,
+    [side[order[1]][1], side[order[0]][1]]);   // 기본 단추(먼저 보인 쪽)가 오른쪽 끝 · 처음 눌리는 자리
 }
 function cloudPick(side) {
   const a = cloud.askData; if (!a) return closeModal();

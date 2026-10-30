@@ -102,6 +102,8 @@ check(rows.length === 4 && last.season === 2 && last.year === 1 && E.seasonRows(
 check(rows.slice(0, 3).every(x => x.season === 1) && E.graphYears(st).rows.length === 4, '그래프는 철을 이어 보여 줌 — 경계는 season으로 (화면 M3-4)');
 check(E.yearDiffOf(st, 1) === null && E.yearDiffOf(st, 2, 1) !== null && E.yearDiffOf(st, 2, 1).prevYear === 1, '지난해 견줌은 철을 넘지 않음 (1철 안에서는 그대로)');
 check(st.records[0].season === 2 && st.records[0].year === 1, '한 해 기록 카드에도 철 번호');
+const brk = E.seasonBreaks(E.graphYears(st).rows);   // P28-08-05 그래프 철 경계선 (M3-4)
+check(brk.length === 1 && brk[0].i === 3 && brk[0].n === 2 && E.seasonBreaks([]).length === 0 && E.seasonBreaks(rows.slice(0, 3)).length === 0 && E.seasonBreaks([{ year: 3 }, { year: 1, season: 2 }])[0].n === 2, '그래프 철 경계선: 2철 첫 줄 자리 하나 (한 철뿐이면 없음 · 예전 줄은 1철)');
 
 console.log('[04 철마다 숨은 칭호]');
 const at = n => { const c = copy(before); c.season.n = n; c.yearLog.forEach(x => { x.season = n; }); return c; };

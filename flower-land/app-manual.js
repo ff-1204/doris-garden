@@ -1,10 +1,10 @@
 // 도리의 정원 — 화면: 📘 매뉴얼 (app.js 다음에 순서대로 불림, 이름은 app.js 첫머리 참고)
 'use strict';
 // ---------------------------------------------------------------- 📘 매뉴얼 (P21, 10-17): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄
-const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['save', '💾 저장']];
+const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
-  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st)]);
+  const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st)]);   // 🌸 새 철 카드 (P28-08-05)
   if (!force && ui.sigs.manual === sig) return;
   ui.sigs.manual = sig;
   const sec = (k, title, sub, inner) => `<section class="mn-sec" id="mn-${k}"><h2 class="mn-h">${title}${sub ? `<small>${sub}</small>` : ''}</h2>${inner}</section>`;
@@ -81,7 +81,7 @@ function renderManual(force) {
         '💐 화원 맨 아래에서 꽃다발 · 차 한 상자 · 정원 잔치를 보내요 · 답장과 함께 씨앗 · 꿀 · 광석 · 장식 같은 답례품이 하나 와요(비싼 선물일수록 좋은 것) · 오래 해서 남는 돈을 쓰는 곳이에요')),
     sec('journal', '도감일지와 칭호', '한 장을 끝내면 다음 장이 열려요',
       fig(`<div class="mn-chain">${E.CHAPTERS.map((c, i) => `${i ? arrow('›') : ''}${item(titleImg(c.title, 40, !st.titles[c.title]), `${c.no}장`, c.name)}`).join('')}</div>`,
-        `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」는 따로' : ''} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요 · 퀘스트 · 주문 · 점수가 숙제 같으면 ⚙️ 설정 › 🐢 느긋하게 보기`)
+        `칭호 ${E.TITLE_KEYS.length}개 · ${E.TITLE_KEYS.filter(k => st.titles[k] != null).length}개 얻음${cloud.on ? ' · ☁️ 구글 로그인 덤 칭호 「구름 정원사」 · 🌸 새 철 덤 칭호는 따로' : ' · 🌸 새 철 덤 칭호는 따로'} · 📖 도감 › 📔 도감일지에서 대표 칭호를 골라 달아요 · 퀘스트 · 주문 · 점수가 숙제 같으면 ⚙️ 설정 › 🐢 느긋하게 보기`)
       + fig(`<div class="mn-flow">${item(ico('🧺'), '거두기 · 팔기', '꽃잎 · 한 잔 2')}${item(ico('💌'), '주문 · 퀘스트', '15 · 10')}${item(ico('📖'), '도감 · 한 해 평가', '새 칸 5 · 1점에 1')}${arrow()}${item(ico('🌱'), '정원 등급', '씨앗 정원 1 → … 숲 정원')}${arrow()}${item(decoImg('sproutsign', 2), '등급 장식', '5등급마다 화원에')}</div>`,   // P28-05-01 🌱 정원 등급 (M1-4)
         '정원에서 한 일만큼 등급이 올라요 · 돈으로 산 것은 세지 않아요 · 끝이 없어요 · 위 막대 🌱를 누르면 📔 도감일지 맨 위에서 봐요 · 🐢 느긋하게 보기면 위 막대 · 알림 · 숫자가 숨어요')
       + fig(`<div class="mn-flow">${item(ico('🌱'), '정원 등급', `${E.BONUS_PER}등급마다`)}${arrow()}${item(ico('🌟'), '손길 점', '1점')}${arrow()}${E.BONUS_KEYS.map(k => item(ico(E.BONUS[k].icon), E.BONUS[k].name, `${E.BONUS_COST.join(' · ')}점`)).join('')}</div>`,   // P28-05-02 🌟 손길 점 (M3-2)
@@ -89,6 +89,16 @@ function renderManual(force) {
       + fig(`<div class="mn-flow">${item(ico('🗓️'), '월요일 아침', '목표 3개')}${arrow()}${item(ico('🌿'), '쉬움 · 보통 · 어려움', `🌱 +${E.WEEKLY_XP.join(' · +')}`)}${arrow()}${item(ico('🎉'), '셋 다', `덤 🌱 +${E.WEEKLY_BONUS}`)}</div>`,   // P28-09 🗓️ 주간 목표
         '이번 주 목표는 📔 도감일지 등급 아래에 있어요 · 주 안에 언제 해도 되고 꽃잠에도 돼요 · 못 끝낸 목표는 그냥 사라져요 · 돈은 주지 않아요')
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
+    // 🌸 새 철 (P28-08-05, M3-4): 조건 · 이어지는 것 · 비워지는 것 · 완전 초기화와 다른 점. 이번 철 진행 숫자는 느긋하게 보기면 숨김
+    (() => { const sr = E.seasonReady(st), n = E.seasonN(st), tk = E.SEASON_TITLES.find(k => E.TITLES[k].season > n) || E.SEASON_TITLES[E.SEASON_TITLES.length - 1];   // 다음에 받을 철 칭호 그림
+      return sec('season', '새 철', '고르는 것 · 안 해도 괜찮아요',
+        fig(`<div class="mn-flow">${item(ico('📖'), `${sr.need.years}해 기록`, '이번 철 쉼달마다')}${item(spriteImg('napmae', 'flower', 32, false, ''), `꽃 ${sr.need.flowers}종`, '도감에 모두')}${arrow()}${item(ico('🌙'), '꽃잠', '📖 기록 끝 한 줄')}${arrow()}${item(titleImg(tk, 40, st.titles[tk] == null), `${n + 1}철`, '다음 월요일 1년차')}</div>`,
+          `이번 철에 쉼달 기록을 ${sr.need.years}번 남기고 꽃 ${sr.need.flowers}종을 모두 피우면, 꽃잠에 📖 도감 › 기록 맨 위 카드 끝에 "🌸 새 철을 시작할 수 있어요"가 보여요 · 창이 뜨거나 재촉하지 않아요${E.slowView(st) ? '' : ` · 지금 이번 철 ${Math.min(sr.years, sr.need.years)} / ${sr.need.years}해 · 꽃 ${sr.flowers} / ${sr.need.flowers}종`}${n >= 2 ? ` · 지금 ${n}철` : ''}`)
+        + fig(`<div class="mn-icons">${item(ico('🌱'), '정원 등급', '그대로')}${item(ico('🌟'), '손길 점', '고른 보너스도')}${item(ico('🏅'), '칭호 · 도감', '그대로')}${item(decoImg('autobasket', 2), '자동 장치', '놓인 자리 그대로')}${item(ico('🪑'), '찻집 가꾸기', '그대로')}${item(ico('📈'), '기록', '철 구분선')}</div>`,
+          '이어져요 · 다음 철엔 장치 · 가꾸기를 다시 사지 않아 첫해가 더 빨리 굴러가요 · 손길 점은 정원 등급으로만 얻어요(새 철로 더 주지 않아요)')
+        + fig(`<div class="mn-icons">${item(ico('🟫'), '땅 · 꽃', '모두 황무지로', 'off')}${item(ico('💰'), '돈', '15,000원부터', 'off')}${item(ico('🌰'), '씨앗 · 꽃잎', '티백 · 찻잔', 'off')}${item(ico('🧤'), '용품', '처음 것으로', 'off')}${item(ico('📦'), '놓은 장식', '창고로', 'off')}</div>`,
+          '비워져요 · 2 · 3 · 5철을 시작하면 덤 칭호가 하나씩 · 위 막대에 🌸 2철')
+        + `<p class="note" style="text-align:center">⚙️ 설정의 🗑️ 처음부터 다시 시작(1년차에만)과 달라요 — 그건 등급 · 칭호 · 도감까지 <b>모두 지워요</b>. 새 철은 쌓은 것을 이어 가요</p>`); })(),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
         ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
@@ -128,6 +138,7 @@ function renderSettings() {
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>')
       + row('🌱', '등급 경험치 더하기', '등급 화면 확인용 · 퀘스트 10개 몫(100)', '<button type="button" class="btn small" id="devXp">+100</button>')
       + row('🗓️', '주간 목표', '목표 확인용 · 안 끝낸 첫 목표를 끝내거나 다음 월요일 아침으로', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devWeekly">하나 끝</button><button type="button" class="btn small" id="devWeek">다음 주</button></span>')
+      + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
       return group('💾', '저장', files ? '진행은 이 브라우저에 자동 저장돼요. 다른 기기로 옮기거나 지켜 두려면 파일로 저장하세요' : '진행은 이 브라우저와 내 구글 드라이브에 저장돼요',
@@ -140,7 +151,7 @@ function renderSettings() {
       + (brokenRaw() ? row('🧰', '열지 못한 예전 정원', '여는 중에 문제가 생겨 따로 보관한 정원이에요. 파일로 받아 운영자에게 보내 주세요', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="brokenDl">내려받기</button><button type="button" class="btn small" id="brokenDel">지우기</button></span>') : ''));
     })()}
     ${!E.canReset(st, E.calendar(st.virtual)) ? '' : group('🌱', '정원', '되돌릴 수 없어요',
-      row('🗑️', '처음부터 다시 시작', `이 브라우저의 정원 · 설정 · 보관본이 모두 지워지고 첫 안내부터 다시 시작해요${cloud.on && cloud.meta.email ? ' · 구글에서 로그아웃해요 · 드라이브에 저장한 정원은 남아요' : ''}`, '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
+      row('🗑️', '처음부터 다시 시작', `새 철과 달라요 — 모두 지워요 · 이 브라우저의 정원 · 설정 · 보관본이 모두 지워지고 첫 안내부터 다시 시작해요${cloud.on && cloud.meta.email ? ' · 구글에서 로그아웃해요 · 드라이브에 저장한 정원은 남아요' : ''}`, '<button type="button" class="btn small danger" id="resetBtn">재시작</button>', 'danger'), 'danger-group')}
     ${group('ℹ️', '정보', '',
       row(`${document.querySelector('.logo-px') ? document.querySelector('.logo-px').outerHTML.replace('width="33" height="30"', 'width="22" height="20"') : '🌱'}`, "도리의 정원 · Dori's Garden", `진행은 이 브라우저에 자동 저장돼요 ${cloudIn() ? '(☁️ 구글 드라이브에도)' : '(💾 파일로 옮길 수 있어요)'}`, '')
       + row('🔤', '글꼴', '주아 · 고운바탕 · IBM Plex (모두 SIL 오픈 폰트 라이선스)', '')
@@ -167,6 +178,7 @@ function renderSettings() {
   if (DEV) $('#skipMonth').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.slotEnd + 1000, ctx); save(); renderAll(true); feedback(`${monthName(E.calendar(st.virtual).month)}이 되었어요`); });
   if (DEV) $('#devWeekly').addEventListener('click', () => { const w = E.weeklyOf(st), i = w ? w.goals.findIndex(g => !g.done) : -1; const r = E.weeklyFinish(st, i, ctx); if (!r.ok) feedback(r.msg, true); save(); renderAll(true); });   // 개발용 (P28-09)
   if (DEV) $('#devWeek').addEventListener('click', () => { const c = E.calendar(st.virtual); E.advance(st, c.ws + 7 * 24 * E.HOUR + 1000, ctx); save(); renderAll(true); feedback('다음 주 월요일 아침이 되었어요'); });
+  if (DEV) $('#devSeason').addEventListener('click', devSeasonFill);   // 개발용 (P28-08-05)
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)
   if (DEV) $('#devMail').addEventListener('click', async () => { const n = await mailFetch(); renderSettings(); feedback(n < 0 ? '📮 편지 파일을 못 읽었어요' : n ? `📮 새 편지 ${n}통` : '📮 새로 받을 편지가 없어요', n < 0); });   // 개발용 (P29-08)
   if (DEV) $('#devMailForget').addEventListener('click', () => { st.mailGot = {}; st.letterBox = (st.letterBox || []).filter(b => !b.mail); save(); renderSettings(); feedback('📮 받은 기록을 지웠어요'); });
@@ -175,6 +187,15 @@ function renderSettings() {
     if (!resetArmed) { resetArmed = true; e.target.textContent = '한 번 더 누르면 모두 지워요'; return; }
     fullReset();
   });
+}
+// 개발용 (P28-08-05): 꽃잠까지 시간을 보내고, 이번 철 해마다 기록이 3줄이 되게 빈 줄(숫자 모름)을 채우고, 꽃 도감 13종 → 📖 기록 끝에 새 철 한 줄
+function devSeasonFill() {
+  if (!E.calendar(st.virtual).frozen) E.advance(st, st.virtual + E.untilMonth(st.virtual, c => c.frozen).hours * HOUR + 1000, ctx);
+  const n = E.seasonN(st), have = new Set(E.seasonRows(st).map(r => r.year));
+  for (let y = 1; E.seasonRows(st).length < E.SEASON_YEARS; y++) if (!have.has(y)) st.yearLog.push({ year: y, season: n, income: null, sold: null, harvest: null, orders: 0, score: null, grade: null, dex: E.dexCount(st), dexTotal: E.dexTotal(st) });
+  st.yearLog.sort((a, b) => (a.season || 1) - (b.season || 1) || a.year - b.year);
+  for (const k of FLOWER_KEYS) st.dex.flower[k] = true;
+  save(); renderAll(true); feedback(E.seasonReady(st).ready ? '🌸 새 철 조건을 채웠어요 · 📖 기록 맨 위 카드 끝을 보세요' : '조건을 다 못 채웠어요', !E.seasonReady(st).ready);
 }
 // P16-12-03 처음부터 다시 시작 = 완전 초기화 (변경 10-27, 사용자 요청): 이 게임의 저장 키 전부(정원 · 설정 · 되돌리기 칸 · 보관본 · 안내 표시)를 지우고
 // 구글 로그인도 끊은 뒤(권한도 돌려줌, 드라이브 파일은 남김) 새로고침 → 처음 온 사람처럼 첫 안내 · 이웃의 화분부터. 계정 칭호는 이어 붙이지 않음 (st.resetAt)
