@@ -82,10 +82,20 @@ function openSeasonStart() {
     ${seasonPathPickHTML()}
     <p class="note">안 해도 괜찮아요. 지금 정원을 그대로 이어 가도 잃는 건 없어요.</p></div>`,
     [{ label: '그만두기', act: () => closeModal() }, { label: '새 철 시작', primary: true, act: seasonGo }]);
-  document.querySelectorAll('.sp-paths [data-spath]').forEach(b => b.addEventListener('click', () => {   // P30-04-02 라디오처럼 하나만
+  const pathBtns = [...document.querySelectorAll('.sp-paths [data-spath]')];   // P30-04-02 라디오처럼 하나만 — 고른 카드만 Tab으로 닿고 ←→ · ↑↓로 옮김
+  const pickPath = (b, focus) => {
     ui.seasonPath = b.dataset.spath || null;
-    document.querySelectorAll('.sp-paths [data-spath]').forEach(x => x.setAttribute('aria-checked', String(x === b)));
-  }));
+    pathBtns.forEach(x => { x.setAttribute('aria-checked', String(x === b)); x.tabIndex = x === b ? 0 : -1; });
+    if (focus) b.focus();
+  };
+  pathBtns.forEach((b, i) => {
+    b.tabIndex = b.getAttribute('aria-checked') === 'true' ? 0 : -1;
+    b.addEventListener('click', () => pickPath(b));
+    b.addEventListener('keydown', e => {
+      const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!d) return;
+      e.preventDefault(); pickPath(pathBtns[(i + d + pathBtns.length) % pathBtns.length], true);
+    });
+  });
   const sb = $('#seasonSave'); if (sb) sb.addEventListener('click', () => { saveClick(); if (!IN_APP) { sb.textContent = '받았어요'; sb.disabled = true; } });
 }
 function seasonGo() {

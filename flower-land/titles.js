@@ -14,7 +14,6 @@ const ART = {
   t_cloud: ['cloud', '#1c2a3c'],   // P20-16 덤 칭호 (10-27)
   t_season2: ['stump', '#1f2620'], t_season3: ['pinwheel', '#262433'], t_season5: ['stepping', '#1a2426'],   // P28-08-04 철마다 숨은 칭호 (M3-3 10-30)
   t_path_flower: ['petalpath', '#2b2124'], t_path_tea: ['lantern', '#211d2b'], t_path_earth: ['spade', '#22251c'],   // P30-04-01 길 칭호 (L2-1 10-30) — 채도 낮은 장밋빛 · 호박빛 등불 · 흙빛 삽
-
 };
 function emblem(name, P, R) {
   const ring = (cx, cy, r, c, w) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d <= r && d > r - w) P(x, y, c); } };
