@@ -1935,11 +1935,11 @@ const NEWS_MATCH = [
   ['title', '🏅', l => l.type === 9 && l.text.startsWith('🏅 새 칭호')],
 ];
 const newsKind = l => NEWS_MATCH.find(([, , ok]) => ok(l)) || null;
-// 소식 한 줄 문장 (느긋하게 보기면 숫자 없이 — 고칠 수 없으면 null = 그 줄은 뺌, P30-08)
+// 소식 한 줄 문장 (느긋하게 보기면 숫자 없이 — 고칠 수 없으면 null = 그 줄은 뺌, P30-08). 줄 아이콘과 같은 문장 머리 아이콘은 뺌 (🏅 🏅 겹침)
 function newsText(st, l, K) {
-  if (!slowView(st)) return l.text;
-  const t = K[3] ? K[3](l.text) : l.text;
-  return /\d/.test(t) ? null : t;
+  const t = slowView(st) && K[3] ? K[3](l.text) : l.text;
+  if (slowView(st) && /\d/.test(t)) return null;
+  return t.startsWith(K[1] + ' ') ? t.slice(K[1].length + 1) : t;
 }
 const inboxSeen = st => st.mailSeenAt == null ? Infinity : st.mailSeenAt;
 const inboxNew = (st, at) => at != null && at > inboxSeen(st);

@@ -65,6 +65,7 @@ check(kinds(ib.news) === 'layer,memento,season,title,visitor,wind,yearly', `일�
 check(ib.news.length === 9, `소식 9줄 · 도감 등록 · 편지 · 쪽지 · 용돈은 뺌 (${ib.news.length})`);
 check(ib.news[0].kind === 'title' && ib.news[ib.news.length - 1].text.startsWith('올해 봄엔'), '최근 것부터');
 check(ib.news.every(n => n.icon && n.text && n.d && n.unread), '줄마다 아이콘 · 문장 · 날짜 · 안 읽음');
+check(ib.news[0].text === '새 칭호: 꽃잎 수집가' && ib.news.find(n => n.kind === 'layer' && n.text === '정원 뒤에 작은 숲이 생겼어요'), '줄 아이콘과 같은 문장 머리 아이콘은 한 번만');
 check(N.log.filter(l => l.at != null).length === 9, '시각은 소식 줄에만 적음 (다른 일지 줄은 그대로)');
 
 console.log('[연 뒤 → 새 소식]');
@@ -80,7 +81,7 @@ console.log('[30줄 상한 (열린 질문 ①)]');
 for (let i = 0; i < 40; i++) add(9, `🏅 새 칭호: 시험 ${i}`);
 ib = E.inboxOf(N);
 check(ib.news.length === E.INBOX_NEWS_MAX && E.INBOX_NEWS_MAX === 30 && ib.more, '최근 30줄 · 넘친 것이 있다고 알림 (more)');
-check(ib.news[0].text === '🏅 새 칭호: 시험 39' && ib.news[29].text === '🏅 새 칭호: 시험 10', '가장 최근 30줄');
+check(ib.news[0].text === '새 칭호: 시험 39' && ib.news[29].text === '새 칭호: 시험 10', '가장 최근 30줄');
 check(ib.unread === 30 && E.inboxUnread(N), '안 읽은 것도 30줄 안에서만 셈');
 
 console.log('[🐢 느긋하게 보기 — 숫자 없는 문장만 (P30-08)]');
@@ -88,7 +89,7 @@ N.settings.slow = true;
 ib = E.inboxOf(N);
 check(ib.news.every(n => !/\d/.test(n.text)), '소식 줄에 숫자 0개');
 { const S = copy(N); S.log = S.log.filter(l => !l.text.includes('시험')); const s = E.inboxOf(S).news;
-  check(s.some(n => n.text === '숲 바람이 잡초를 걷어 갔어요') && s.some(n => n.text === '🌸 새 철을 시작했어요 · 🍵 찻길로 걸어요') && s.some(n => n.text === '🍵 찻집이 열렸어요'), '숫자가 든 줄은 숫자 없는 문장으로 (숲 바람 · 새 철 · 층)');
+  check(s.some(n => n.text === '숲 바람이 잡초를 걷어 갔어요') && s.some(n => n.text === '새 철을 시작했어요 · 🍵 찻길로 걸어요') && s.some(n => n.text === '🍵 찻집이 열렸어요'), '숫자가 든 줄은 숫자 없는 문장으로 (숲 바람 · 새 철 · 층)');
   check(!s.some(n => n.kind === 'memento') && s.length === 9, '그래도 숫자가 남는 줄(주문 기념품 "2잔")은 뺌');
   check(!E.inboxUnread(S) && (E.inboxOpen(S), S.log.push({ y: 1, m: 3, d: 1, type: 19, text: '숲 바람이 잡초 2포기를 걷어 갔어요', at: S.virtual + 1 }), E.inboxUnread(S)), '숫자 줄이 고쳐져 보이면 점도 생김'); }
 N.settings.slow = false;

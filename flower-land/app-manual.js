@@ -1,7 +1,7 @@
 // 도리의 정원 — 화면: 📘 매뉴얼 (app.js 다음에 순서대로 불림, 이름은 app.js 첫머리 참고)
 'use strict';
 // ---------------------------------------------------------------- 📘 매뉴얼 (P21, 10-17): 글보다 도트 그림. 카드마다 그림 하나 + 한 줄
-const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['save', '💾 저장']];
+const MN_SECS = [['year', '🗓️ 한 해'], ['land', '🟫 땅'], ['flower', '🌸 꽃'], ['care', '🧤 돌보기'], ['shop', '💐 화원'], ['tea', '🍵 찻집'], ['blend', '🫖 블렌드'], ['sleep', '🌙 꽃잠'], ['deco', '🪴 꾸미기'], ['mine', '⛏️ 광산'], ['guest', '💌 주문'], ['journal', '📜 도감일지'], ['season', '🌸 새 철'], ['path', '🛤️ 철의 길'], ['inbox', '✉️ 편지함'], ['save', '💾 저장']];
 function renderManual(force) {
   const cal = E.calendar(st.virtual), mf = FLOWERS[ui.mnFlower] ? ui.mnFlower : 'chamomile', F = FLOWERS[mf];
   const sig = JSON.stringify([mf, cal.idx, Object.keys(st.titles), E.blendKeys(st).length, cloudIn(), E.slowView(st), E.seasonReady(st), E.seasonN(st), E.seasonPath(st)]);   // 🌸 새 철 카드 (P28-08-05)
@@ -114,6 +114,12 @@ function renderManual(force) {
           `🌸 새 철 확인 창 아래에서 길 하나를 골라요 · 그 철 동안은 바뀌지 않고, 다음 철에 다른 길을 걸어요${now ? ` · 지금 ${now.text}` : ''}`)
         + fig(`<div class="mn-icons">${item(ico('🗓️'), '주간 목표', '그 길 쪽이 자주')}${item(ico('🐾'), '길 손님', '그 길에만 와요')}${item(titleImg('t_path_tea', 40, st.titles.t_path_tea == null), '길 칭호', '한 철을 마치면')}${item(ico('📖'), '기록 카드', '길 색 한 줄')}</div>`,
           '길이 바꾸는 건 이 넷뿐이에요 · 돈 · 수확 · 꽃 값 · 경험치는 어느 길이든 같아요 · 📖 도감 › 📈 해마다 아래 "철마다" 표에서 지난 철과 견줘요')); })(),
+    // P31-03 ✉️ 편지함: 편지 셋 · 소식 · 점 (숫자가 없어 느긋하게 보기여도 그대로)
+    sec('inbox', '편지함', '편지와 소식을 한곳에',
+      fig(`<div class="mn-flow">${item(ico('✉️'), '위 막대 ✉️', '새로 오면 점 하나')}${arrow()}${item(ico('📮'), '✉️ 편지', '운영자 · 이웃 · 첫 방문')}${item(ico('🔔'), '🔔 소식', '알림으로 지나간 일')}</div>`,
+        '편지 칸엔 📮 운영자 편지 · ✉️ 이웃 답장 · 💌 꽃집 할머니의 첫 편지가 최근 것부터 있어요 · 누르면 그 편지를 다시 읽어요 · 🎁가 붙은 편지는 아직 선물을 안 받은 것이에요')
+      + fig(`<div class="mn-icons">${[['🗓️', '올해만 것'], ['🐾', '특별 손님'], ['🌳', '층 열림'], ['🌸', '새 철'], ['💌', '기념품'], ['🌿', '숲 바람'], ['🏅', '칭호']].map(([i, n]) => item(ico(i), n, '')).join('')}</div>`,
+        '소식 칸엔 알림 한 줄로 지나간 일이 최근 것부터 모여요 · 창을 열면 점이 사라져요 · 재촉하지 않고 수도 세지 않아요 · 더 지난 일은 📜 정원 일지 · 📖 기록에 · 🐢 느긋하게 보기면 숫자 없는 문장만')),
     sec('save', '저장', '운영자 서버에 보내지 않아요',
       (cloudIn()   // 구글 로그인 중엔 파일 저장 대신 드라이브 기준 (P20-02, 10-27)
         ? fig(`<div class="mn-icons">${item(ico('🌐'), '자동 저장', '이 브라우저에')}${arrow('›')}${item(ico('☁️'), '구글 드라이브', '내 드라이브에도')}${item(ico('↩️'), '되돌리기', '바꾸기 직전으로')}</div>`,
@@ -146,7 +152,7 @@ function renderSettings() {
   const SPEEDS = [[1, '현실', '현실 1주 = 1년'], [60, '1분=1시간', '하루가 금방'], [720, '1분=1달', '한 해가 약 14분'], [10080, '1분=1년', '한 해가 1분']];
   $('#p-settings').innerHTML = `<div class="stack setwrap"><div class="sectionhead"><span class="muted">바꾸면 바로 저장돼요</span></div>
     ${group('👀', '보기', '숨겨도 얻는 건 그대로예요',   // P28-02 느긋하게 보기 (판단은 E.slowView 하나)
-      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 층 조건 숫자 · 달력 숫자 · 숲 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요', tog('id="slowOn"', s.slow)))}
+      row('🐢', '느긋하게 보기', '퀘스트 안내 · 주문 쪽지 · 점수 · 등급 숫자 · 손길 점 숫자 · 층 조건 숫자 · 달력 숫자 · 숲 숫자 · 주간 목표 · 꽃별 셈을 숨겨요. 칭호는 알림 없이 도감에 쌓여요. ✉️ 편지함 소식은 숫자 없는 문장만', tog('id="slowOn"', s.slow)))}
     ${group('🔔', '알림', '꺼도 정원 일지에는 그대로 남아요',
       [[3, '📦', '예약 배송', '예약한 꽃이 창고에 왔을 때'], [8, '🌸', '개화와 수확', '꽃이 피어 거둘 수 있을 때'], [9, '📖', '도감 등록', '새 꽃·차·땅을 처음 만났을 때']].map(([t, ic, nm, d]) => row(ic, nm, d, tog(`data-toast="${t}"`, s.toast[t]))).join('')
       + row('🌙', '수면 시간', '이 시간의 알림은 모았다가 끝날 때 한 번에 (휴대폰 푸시용, 웹은 저장만)', tog('id="sleepOn"', s.sleep.on))
@@ -162,6 +168,7 @@ function renderSettings() {
       + row('🗓️', '올해만 것', '올해만 확인용 (P30-05) · 다음 계절 첫 달로 · 열지 않은 채 한 해(그동안 계절은 놓침)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devYSeason">다음 계절</button><button type="button" class="btn small" id="devYAway">비운 채 한 해</button></span>')
       + row('⏪', '비운 채 열기', '그동안 확인용 (P30-07) · 마지막으로 연 때를 13주(13해) 또는 3시간 전으로 돌리고 새로고침 (따라잡기는 상한까지만)', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devAway13">13해</button><button type="button" class="btn small" id="devAway3h">3시간</button></span>')
       + row('🛤️', '철의 길', '철의 길 확인용 (P30-04) · 새 철 조건을 채우고 길 카드 확인 창을 엶 · 지금 길의 손님을 다음 흐르는 달에 부름', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devPath">새 철 창</button><button type="button" class="btn small" id="devPathVisitor">길 손님</button></span>')
+      + row('✉️', '소식 채우기', '편지함 확인용 (P31) · 올해만 것 · 손님 · 층 · 숲 바람 · 칭호 소식을 일지에 쓰고 읽은 때를 그 앞으로 → 위 막대 점', '<button type="button" class="btn small" id="devInbox">채우기</button>')
       + row('🐾', '손님 부르기', '특별 손님 확인용 (P30-06) · 나무 그네를 놓고 🦔 고슴도치 할머니를 다음 흐르는 달에 부름 (세 번 부르면 기념품)', '<button type="button" class="btn small" id="devVisitor">부르기</button>')
       + row('📮', '운영자 편지', `편지 확인용 (P29) · mail.json을 다시 읽거나, 받은 기록 ${Object.keys(st.mailGot || {}).length}통과 편지함의 📮 편지를 지워요`, '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devMail">다시 읽기</button><button type="button" class="btn small" id="devMailForget">기록 지우기</button></span>'))}
     ${(() => { const us = undoSummary(), files = !cloudIn();   // 구글 로그인 중엔 💾 저장하기 · 📂 불러오기를 숨김 (P20-02, 10-27 사용자 요청)
@@ -211,6 +218,7 @@ function renderSettings() {
   if (DEV) $('#devAway13').addEventListener('click', () => devAwayOpen(13 * 7 * 24 * HOUR));   // 개발용 (P30-07)
   if (DEV) $('#devAway3h').addEventListener('click', () => devAwayOpen(3 * HOUR + 60e3));
   if (DEV) $('#devVisitor').addEventListener('click', devVisitor);   // 개발용 (P30-06)
+  if (DEV) $('#devInbox').addEventListener('click', devInboxFill);   // 개발용 (P31)
   if (DEV) $('#devPath').addEventListener('click', () => { devSeasonFill(); if (E.seasonCanStart(st, E.calendar(st.virtual))) openSeasonStart(); });   // 개발용 (P30-04-02)
   if (DEV) $('#devPathVisitor').addEventListener('click', devPathVisitor);
   if (DEV) $('#devXp').addEventListener('click', () => { E.addXp(st, 'quest', 10, ctx); save(); renderAll(true); });   // 개발용: 등급이 오르는 알림 · 위 막대 확인 (P28-05-01)
@@ -267,6 +275,17 @@ function devAwayOpen(ms) {
   try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { return feedback('저장을 못 했어요', true); }
   saveOff = true;                                 // 새로고침 직전 pagehide 저장이 lastReal을 되돌리지 않게
   location.reload();
+}
+// 개발용 (P31): ✉️ 소식 채우기 — 엔진이 쓰는 문장 꼴로 소식 줄을 일지에 쓰고(시각 at이 붙음) 읽은 때를 그 바로 앞으로 → 위 막대 점 · 창 두 칸
+function devInboxFill() {
+  const k = E.YEARLY_KEYS[0], Y = E.YEARLY[k], V = E.VISITORS[E.VISITOR_KEYS[0]];
+  st.mailSeenAt = st.virtual - 1;
+  E.addLog(st, 9, `올해 ${E.SEASONS[Y.season]}엔 ${Y.icon} ${josa(Y.word, '이/가')} 왔어요`);
+  E.addLog(st, 9, `${V.icon} ${josa(V.name, '이/가')} ${V.where}에 앉았어요`);
+  E.addLog(st, 9, '🌳 정원 뒤에 작은 숲이 생겼어요');
+  E.addLog(st, 19, E.slowView(st) ? '숲 바람이 잡초를 걷어 갔어요' : '숲 바람이 잡초 3포기를 걷어 갔어요');
+  E.addLog(st, 9, '🏅 새 칭호: 편지함 시험');
+  save(); renderAll(true); feedback('✉️ 소식 5줄을 썼어요 · 위 막대 ✉️에 점');
 }
 // 개발용 (P30-06): 🦔 고슴도치 할머니 부르기 — 나무 그네가 정원에 없으면 둘레가 빈 칸에 놓고(창고 것 · 없으면 새로), 앉아 있으면 떠난 것으로 치고, 부른 뒤 다음 흐르는 달로
 function devVisitor() {
