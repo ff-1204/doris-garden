@@ -500,13 +500,15 @@ function openDecoTile(d) {
     extra = `<p class="muted">${frozen ? '🌙 꽃잠엔 장치도 쉬어요' : n ? `지금 ${n}포기가 빨리 자라는 중이에요` : '지금 둘레에 빨리 자랄 꽃이 없어요'} · 둘레 ${E.GEAR[d.key].r}칸 (창을 닫으면 지도에 잠깐 보여요)</p>`;
     ui.gearShow = { id: d.id, until: performance.now() + 60000 };
   }
-  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${extra}</div>`, [
+  openModal(`🪴 ${esc(info.name)}`, `<div class="deco-pop">${decoImg(d.key, 4)}<p class="muted">${esc(info.desc || '')}</p>${decoBuffHTML(d.key)}${extra}</div>`, [
     { label: '📦 창고에', act: () => { closeModal(); after(E.storeDeco(st, d.id)); } },
     { label: '↔ 옮기기', primary: true, act: () => { closeModal(); ui.tool = 'deco'; ui.decoId = d.id; renderToolbar(true); } },
   ]);
   const tb = $('#modalRoot [data-takehoney]');
   if (tb) tb.onclick = () => { closeModal(); after(E.takeHoney(st, d.id, ctx), null, { label: '🍵 찻집', fn: () => setTab('cab') }); };
 }
+// P35 · P36 장식 카드 한 줄 (화원 · 창고 · 정원 장식 창이 같이 씀): 놓아야 효과 · 느긋하게 보기면 숫자 없이 (엔진 decoBuffLine)
+function decoBuffHTML(key, cls) { const t = E.decoBuffLine(st, key); return t ? `<small class="${cls || 'dk-buff'}">${esc(t)}</small>` : ''; }
 // 지도에 범위를 그리는 장식의 둘레 칸 수 (P27 장치 · P28-10 자동 수확 바구니), 없으면 null
 function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : key === 'autobasket' ? E.basketReach(st) : null; }   // P28-05-02 🧺 바구니 넓게면 둘레 2칸
 // 상태창 한 줄: 자동 수확 바구니가 맡은 꽃 (P28-10-01 · P28-05-02 바구니 넓게: 둘레 2칸에서 가까운 꽃부터 n포기 — 엔진 basketFlowers 그대로)
