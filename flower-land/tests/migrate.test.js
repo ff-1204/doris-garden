@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers', 'yearly']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'season', 'layers', 'yearly', 'visitors']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -153,7 +153,7 @@ console.log('[🌳 정원의 층 layers (P30-01-01)]');
 console.log('[🗓️ 올해만 오는 것 yearly (P30-05-01)]');
 { const YN = E.MIGRATIONS.findIndex(x => x[0].includes('올해만 오는 것 yearly'));
   const nw = E.create(MON, () => 0.5);
-  check(YN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.yearly) === '{"at":null,"years":[],"missed":[],"got":{}}', '새 정원은 빈 달력 (맨 끝 보정)');
+  check(YN === E.MIGRATIONS.length - 2 && JSON.stringify(nw.yearly) === '{"at":null,"years":[],"missed":[],"got":{}}', '새 정원은 빈 달력 (36번째 보정)');
   check(m.yearly && m.yearly.at === null && m.yearly.missed.length === 0, '가장 옛 정원: 빈 달력 — 지난 계절을 놓친 것으로 치지 않음');
   const old = copy(st); delete old.yearly; old.mig = YN; old.yearLog = Array.from({ length: 6 }, (_, i) => ({ year: i + 1, season: 1, score: 1 }));
   const om = E.migrateSave(old), cal = E.calendar(om.virtual);
@@ -162,6 +162,17 @@ console.log('[🗓️ 올해만 오는 것 yearly (P30-05-01)]');
   const has = copy(st); has.yearly = { at: 5, years: [], missed: [{ k: 'firefly', f: null, y: 1 }], got: { rainbow: 1 } }; has.mig = YN;
   const hm = E.migrateSave(has);
   check(hm.yearly.missed[0].k === 'firefly' && hm.yearly.got.rainbow === 1, '이미 있는 달력은 그대로'); }
+
+console.log('[🐾 특별 손님 visitors (P30-06-01)]');
+{ const VN = E.MIGRATIONS.findIndex(x => x[0].includes('특별 손님 visitors'));
+  const nw = E.create(MON, () => 0.5);
+  check(VN === E.MIGRATIONS.length - 1 && JSON.stringify(nw.visitors) === '{"now":[],"times":{},"gift":{},"call":null}', '새 정원은 아무도 안 온 정원 (맨 끝 보정 · 37번째)');
+  check(m.visitors && m.visitors.now.length === 0 && JSON.stringify(m.visitors.times) === '{}', '가장 옛 정원: 손님 칸이 생김');
+  const old = copy(st); delete old.visitors; old.mig = VN; const om = E.migrateSave(old);
+  check(om.visitors && om.mig === E.MIGRATIONS.length && om.visitors.call === null, '바로 앞 판 정원도 손님 칸이 생김');
+  const has = copy(st); has.visitors = { now: [{ k: 'hedgehog', x: 3, y: 3, at: 1, left: 2 }], times: { hedgehog: 2 }, gift: {}, call: null }; has.mig = VN;
+  const hm = E.migrateSave(has);
+  check(hm.visitors.times.hedgehog === 2 && hm.visitors.now[0].k === 'hedgehog', '이미 있는 손님 기록은 그대로'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
