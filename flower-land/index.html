@@ -1057,6 +1057,11 @@ img.px { image-rendering: pixelated; }
 .rc-total s { color: var(--muted); }
 .rc-total .good { color: var(--good); }
 .rc-total .rc-sum { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 2px; font-size: calc(16 * var(--u)); }
+.grade-deco-note { display: grid; gap: 6px; margin-bottom: 8px; }   /* 🌱 등급 장식 설명 (10-30) */
+.grade-deco-note .note { margin: 0; }
+.gd-steps { display: flex; flex-wrap: wrap; gap: 4px; }
+.gd-step { padding: 2px 8px; border: 1px solid var(--line); border-radius: 10px; font-size: calc(12 * var(--u)); color: var(--muted); background: var(--panel); }
+.gd-step.on { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
 .buy-ask { display: grid; justify-items: center; gap: 10px; text-align: center; }   /* 사기 전 확인 창 (10-30) */
 .buy-ask .rc-pay { justify-self: stretch; text-align: left; }
 .buy-ask p { margin: 0; }
