@@ -363,17 +363,20 @@ function giveGift() {
   return r;
 }
 function startGarden() { ui.onDismiss = null; if (st.onboarded) return closeModal(); st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); }
-// 변경 10-31 (사용자 요청 "컨셉과 핵심만 직관적으로"): 땅 · 시간 · 꽃→차 세 가지만. 물 주기 · 이웃 화분 · 할머니 꾸러미 · 이달 안내는 해 보면서 알게 (첫걸음 · 매뉴얼에 있음)
+// 변경 10-31 (사용자 요청 "컨셉과 핵심만" → "픽셀 아트 · 감성 게임처럼"): 그림책처럼 장면 셋 — 땅 · 시간 · 꽃에서 차까지. 그림은 가운데, 글은 세리프 한 줄 + 작은 한 줄.
+// 물 주기 · 이웃 화분 · 할머니 꾸러미 · 이달 안내는 해 보면서 알게 (첫걸음 · 매뉴얼에 있음)
 function onboarding() {
-  const cal = E.calendar(st.virtual);
+  const cal = E.calendar(st.virtual), f = 'chamomile';
   if (st.gift == null) ui.giftWant = E.GIFT_BY_MONTH[cal.month];   // 창을 연 채 달이 바뀌어도 화분 꽃은 열 때 것으로
-  openModal('도리의 정원', `<div class="stack" style="gap:10px">
-    <div class="ob-vis">
-      <figure>${landPixel()}<figcaption><b>꽃이 땅을 바꿔요</b>처음엔 모두 황무지. 심은 꽃 둘레가 그 꽃이 좋아하는 땅이 돼요</figcaption></figure>
-      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 — 시간이 멈추고 쉬어요</figcaption></figure>
-    </div>
-    <p class="ob-care"><span>🌱</span> 심고 → <span>🧺</span> 피면 거두고 → <span>🍵</span> 차로 우려 팔아요</p>
-    <p class="note">${cal.frozen ? `지금은 🌙 꽃잠이에요. 첫 해는 <b>월요일 아침 6시</b>에 시작해요. ` : ''}돌보지 않아도 꽃은 죽지 않아요. 천천히 즐겨 주세요.</p></div>`,
-    [{ label: '시작', primary: true, act: startGarden }]);
+  const scene = (art, line, sub) => `<section class="ob-scene">${art}<p>${line}<small>${sub}</small></p></section>`;
+  const dots = '<div class="ob-dots" aria-hidden="true"><i></i><i></i><i></i></div>';
+  const box = (k, kind, alt) => `<span class="ob-px">${spriteImg(k, kind, 32, false, alt)}</span>`, ar = '<span class="ob-ar" aria-hidden="true">›</span>';
+  const teaFlow = `<div class="ob-flow" role="img" aria-label="핀 꽃 · 말린 꽃잎 · 티백 · 찻잔">${box(f, 'flower', '핀 꽃')}${ar}${box(f, 'dried', '말린 꽃잎')}${ar}${box(f, 'teabag', '티백')}${ar}${box(f, 'tea', '찻잔')}</div>`;
+  openModal('도리의 정원', `<div class="ob-story">
+    ${scene(landPixel(), '메마른 땅에 꽃 한 포기를 심었어요.', '꽃은 저 좋아하는 땅을 둘레에 조금씩 만들어 가요')}${dots}
+    ${scene(weekPixel(cal), '여기선 한 주가 한 해예요.', '아침과 저녁에 한 달씩 흘러요 · 일요일엔 꽃들이 잠들어요')}${dots}
+    ${scene(teaFlow, '핀 꽃을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
+    <p class="ob-end">${cal.frozen ? '지금은 🌙 꽃잠이에요. 월요일 아침 6시, 첫 해가 시작돼요.<br>' : ''}서두르지 않아도 괜찮아요. 꽃은 기다려 줘요.</p></div>`,
+    [{ label: '정원 문 열기', primary: true, act: startGarden }]);
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }

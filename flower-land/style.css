@@ -413,6 +413,17 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .beq-op { font-family: var(--font-data); font-size: calc(20 * var(--u)); font-weight: 500; color: var(--muted); align-self: center; padding-bottom: 18px; }
 .beq-x { position: absolute; top: -6px; right: -14px; font-style: normal; font-family: var(--font-data); font-size: calc(11 * var(--u)); font-weight: 600; padding: 1px 5px; background: var(--good); color: var(--accent-ink); }
 @media (max-width: 420px) { .ob-vis { grid-template-columns: 1fr; justify-items: center; } .ob-vis figcaption { text-align: center; } }
+/* 첫 안내 그림책 (변경 10-31): 장면마다 도트 그림 가운데 + 세리프 한 줄, 장면 사이는 도트 점 셋 */
+.ob-story { display: grid; gap: 14px; padding: 4px 0 2px; }
+.ob-scene { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.ob-scene p { margin: 0; font-family: var(--font-display); font-size: calc(15 * var(--u)); line-height: 1.6; color: var(--ink); text-wrap: balance; }
+.ob-scene p small { display: block; font-family: var(--font-body); font-size: calc(12 * var(--u)); color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.ob-dots { display: flex; justify-content: center; gap: 6px; }
+.ob-dots i { width: 4px; height: 4px; background: var(--line); }
+.ob-flow { display: flex; align-items: center; gap: 6px; }
+.ob-px { display: grid; place-items: center; width: 44px; height: 44px; background: var(--sunk); }
+.ob-ar { color: var(--muted); font-size: calc(18 * var(--u)); line-height: 1; }
+.ob-end { margin: 4px 0 0; text-align: center; font-family: var(--font-display); font-size: calc(13 * var(--u)); color: var(--muted); line-height: 1.7; }
 /* 도감일지 · 퀘스트 · 칭호 (P19, 10-17): 네모 칸 · 도트 그림 규칙(P16-14)을 따름 */
 .j-head { margin-top: 4px; }   /* 도감일지: 🏅 칭호 → 📜 퀘스트 한 페이지 (10-17) */
 .jch { display: grid; gap: 10px; }
