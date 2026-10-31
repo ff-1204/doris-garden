@@ -2080,7 +2080,7 @@ const DECOS = {
   bonsai: { name: '매화 분재', month: 2, price: 25000, desc: '작은 화분에 핀 매화' },
   moonlamp: { name: '달 초롱', month: 13, price: 6000, desc: '꽃잠 밤을 지키는 초롱' },
   pavilion: { name: '정자', month: 14, price: 60000, desc: '정원을 내려다보는 쉼터' },
-  hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, func: true, desc: '둘레 2칸에 핀 꽃에서 달마다 꿀을 모아요' },   // P18 여름의 꿀 채집 (10-24)
+  hive: { name: '벌통', month: 6, months: [6, 7, 8], price: 15000, one: true, func: true, desc: '둘레 1칸에 핀 꽃에서 달마다 꿀을 모아요 · 기르면 넓어져요' },   // P18 여름의 꿀 채집 (10-24) · P38 0단계 둘레 1칸
   fossilcase: { name: '화석 진열장', month: 0, months: [], craft: true, desc: '광산에서 찾은 화석 네 가지' },   // 10-24 QA 6회차: 광산 재료 쓸 곳
   amberlamp: { name: '호박 등', month: 0, months: [], craft: true, desc: '호박빛이 은은한 등' },
   oldpot: { name: '옛 씨앗 화분', month: 0, months: [], craft: true, desc: '무엇이 필지 모르는 오래된 씨앗' },
@@ -2282,7 +2282,7 @@ function growRate(st, f) {
   return best;
 }
 // ---------------------------------------------------------------- 🍯 꿀 (P18, 10-24)
-// 놓인 벌통은 꽃잠이 아닌 달이 끝날 때마다 둘레 2칸(가로 · 세로 · 대각선)에 핀 꽃을 세어 꿀을 모음 (P18-03 · 04 · 09)
+// 놓인 벌통은 꽃잠이 아닌 달이 끝날 때마다 둘레 hiveR칸(가로 · 세로 · 대각선, P38 0단계 1칸 → 기르면 2 · 3칸)에 핀 꽃을 세어 꿀을 모음 (P18-03 · 04 · 09)
 // 꿀은 팔지 않음 — 찻잔에 한 숟갈 넣어 "꿀 ○○차"로 내고(값은 그대로), 종류마다 꿀 도감에 남음 (P18-07 · 08)
 const HONEY_R = 1, HIVE_MAX = 3;                  // P38 0단계(기르기 전) 둘레 · 상한 — 예전 2칸 · 6병은 이제 1단계
 const HONEY_KEYS = [...FLOWER_KEYS, 'wild'];
