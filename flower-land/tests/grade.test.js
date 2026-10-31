@@ -161,8 +161,8 @@ console.log('[🌟 돈 · 아이템으로는 못 얻음]');
 
 console.log('[🌼 기르기 7칸 표 (P28-05-02-02 · P37) — 자세한 확인은 pollen.test.js]');
 check(E.BONUS_KEYS.join() === 'basket,rack,brew,hive,weed,pantry,catchup', '7칸: 개미 · 누에 · 나비 · 꿀벌 · 무당벌레 · 입구 선반 · 따라잡기 — 값 · 품질 · 꽃 수 · 생산 배율 칸은 없음 (P17-14), 💧 물 오래는 시뮬에서 수입이 늘어 뺌');
-check(['basket', 'rack', 'pantry', 'catchup'].map(k => E.BONUS[k].vals.join('/')).join(' ') === '8/12/16/20 8/10/12/14 0/1/2/3 3/4/5', '예전 네 칸 단계 값 그대로: 바구니 8→20포기 · 건조대 8→14장 · 선반 +3칸 · 따라잡기 3→5주');
-check(E.BONUS_COST.join() === '1,2,3' && ['basket', 'rack', 'pantry', 'catchup'].map(k => E.bonusCostTo(E.bonusMax(k), k)).join() === '6,6,6,3' && E.bonusCostTo(3) === 6, '예전 네 칸 꽃가루 1 · 2 · 3알 그대로 — 바구니 · 건조대 · 선반 끝까지 6알, 따라잡기 3알 (환급 셈 호환)');
+check(['basket', 'rack', 'pantry', 'catchup'].map(k => E.BONUS[k].vals.join('/')).join(' ') === '1/2/3/4/6/8/12/16/20 1/2/3/4/6/8/10/12/14 0/1/2/3 3/4/5', '단계 값: 바구니 1→20포기 · 건조대 1→14장 (P38 작게 시작, 끝은 그대로) · 선반 +3칸 · 따라잡기 3→5주');
+check(E.BONUS_COST.join() === '1,2,3' && ['basket', 'rack', 'pantry', 'catchup'].map(k => E.bonusCostTo(E.bonusMax(k), k)).join() === '14,14,6,3' && E.bonusCostTo(3) === 6, '꽃가루: 바구니 · 건조대 끝까지 14알(P38 1·1·1·1·2·2·3·3) · 선반 6알 · 따라잡기 3알 (예전 저장은 bonusFree로 환급 셈 호환)');
 { const s = garden(c => c.month === 6, 50), f = fl(s, 'chamomile', 3, 3); f.waterH = 0; E.bonusSet(s, 'water', 1); E.care(s, 'water', [[3, 3]], ctx);
   check(f.waterH === 24 && !('water' in s.bonus), '물 한 번은 늘 2달 (물 오래 칸 없음)'); }
 
@@ -173,7 +173,7 @@ console.log('[🌟 고르기 · 거부 · 되돌리기 (P28-05-02-03)]');
   const b = E.bonusSet(s, 'rack', 1);
   check(!b.ok && b.msg === '🌼 꽃가루가 1알 모자라요' && s.bonus.rack === 0, `점이 모자라면 거부 ("${b.msg}")`);
   const c = E.bonusSet(s, 'basket', 2);
-  check(!c.ok && c.msg === '🌼 꽃가루가 2알 모자라요' && s.bonus.basket === 1, '다음 단계는 2점 — 모자라면 그대로');
+  check(!c.ok && c.msg === '🌼 꽃가루가 1알 모자라요' && s.bonus.basket === 1, '다음 단계도 1알 (P38) — 모자라면 그대로');
   const d = E.bonusSet(s, 'basket', 0);
   check(d.ok && s.bonus.basket === 0 && E.bonusLeft(s) === 1 && d.msg.includes('🌼 꽃가루 1알이 돌아왔어요'), `내리면 점이 그대로 돌아옴 ("${d.msg}")`);
   check(E.bonusSet(s, 'rack', 1).ok && E.bonusSet(s, 'rack', 0).ok && E.bonusSet(s, 'pantry', 1).ok && E.bonusLeft(s) === 0, '언제든 다시 — 다른 칸으로 옮겨도 벌칙 없음');
@@ -185,12 +185,12 @@ console.log('[🌟 고르기 · 거부 · 되돌리기 (P28-05-02-03)]');
   check(E.calendar(fr.virtual).frozen && E.bonusSet(fr, 'pantry', 1).ok, '꽃잠에도 고름'); }
 
 console.log('[🌟 bonusView · bonusMaxed — 화면(M3-2)이 읽는 것]');
-{ const s = garden(c => c.month === 6, 10); E.bonusSet(s, 'basket', 3); E.bonusSet(s, 'catchup', 2);
+{ const s = garden(c => c.month === 6, 18); E.bonusSet(s, 'basket', 8); E.bonusSet(s, 'catchup', 2);
   const v = E.bonusView(s), row = k => v.rows.find(r => r.key === k);
-  check(v.points === 9 && v.used === 9 && v.left === 0 && v.rows.length === 7 && !('slow' in v), `points · used · left · 7줄 — 느긋하게 보기 판단은 없음 (${v.points}/${v.used}/${v.left})`);
+  check(v.points === 17 && v.used === 17 && v.left === 0 && v.rows.length === 7 && !('slow' in v), `points · used · left · 7줄 — 느긋하게 보기 판단은 없음 (${v.points}/${v.used}/${v.left})`);
   const b = row('basket'), r = row('rack');
-  check(b.name === '걸음 넓히기' && b.icon === '🐜' && b.worker === 'autobasket' && b.level === 3 && b.max === 3 && b.maxed && b.costNext === null && b.desc === '맡는 꽃 20포기', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
-  check(r.level === 0 && r.costNext === 1 && r.desc === '달마다 꽃잎 8장' && r.nextDesc === '달마다 꽃잎 10장', '0단계 칸: 다음 단계 값 1점 · 지금 / 다음 설명');
+  check(b.name === '걸음 넓히기' && b.icon === '🐜' && b.worker === 'autobasket' && b.level === 8 && b.max === 8 && b.maxed && b.costNext === null && b.desc === '맡는 꽃 20포기', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
+  check(r.level === 0 && r.costNext === 1 && r.desc === '달마다 꽃잎 1장' && r.nextDesc === '달마다 꽃잎 2장', '0단계 칸: 다음 단계 값 1점 · 지금 / 다음 설명');
   check(row('catchup').desc === '오래 비워도 5주까지 따라잡아요' && row('pantry').desc === '입구 선반 칸 그대로', '따라잡기 끝 · 선반 0단계 설명');
   check(E.bonusMaxed(s, 'basket') && E.bonusMaxed(s, 'catchup') && !E.bonusMaxed(s, 'rack') && !E.bonusMaxed(s, 'gold'), 'bonusMaxed: 끝까지 올린 칸만 (P28-05-02-04 이정표, 그림은 M3-2)');
   s.grade.xp = E.gradeXpAt(2);   // 저장 파일을 손으로 고쳐 쓴 점이 총점보다 많은 경우
@@ -199,15 +199,15 @@ console.log('[🌟 bonusView · bonusMaxed — 화면(M3-2)이 읽는 것]');
 console.log('[🌟 규칙이 실제로 바뀜]');
 { const ring = s => { put(s, 'autobasket', 10, 10); for (let y = 8; y <= 12; y++) for (let x = 8; x <= 12; x++) if (x !== 10 || y !== 10) fl(s, 'chamomile', x, y); };   // 둘레 2칸에 24포기
   const tick = n => { const s = garden(c => c.month === 6); ring(s); if (n) lv(s, 'basket', n); return E.basketTick(s, E.calendar(s.virtual), ctx); };
-  check([0, 1, 2, 3].map(tick).join() === '8,12,16,20', '🧺 바구니: 바로 옆 8포기 → 둘레 2칸에서 12 · 16 · 20포기');
-  const s = garden(c => c.month === 6); ring(s); lv(s, 'basket', 1); const d = s.decos[0], pick = E.basketFlowers(s, d);
+  check([0, 1, 3, 4, 5, 6, 7, 8].map(tick).join() === '1,2,4,6,8,12,16,20', '🧺 바구니: 바로 옆 1 · 2 · 4 · 6 · 8포기 → 둘레 2칸에서 12 · 16 · 20포기 (P38)');
+  const s = garden(c => c.month === 6); ring(s); lv(s, 'basket', 6); const d = s.decos[0], pick = E.basketFlowers(s, d);
   check(pick.filter(f => Math.max(Math.abs(f.x - 10), Math.abs(f.y - 10)) === 1).length === 8, '가까운 꽃부터 (바로 옆 8포기는 늘 들어감)');
   E.basketTick(s, E.calendar(s.virtual), ctx);
   check(s.petals.every(p => Math.abs(p.q - 0.7 * E.AUTO_Q) < 1e-9) && s.petals.length === 12, '거둔 꽃잎 품질 · 한 포기 한 장은 그대로 (꽃 수 · 품질 보너스 아님)');
   const w = garden(c => c.month === 6); w.flowers.length = 0; const dead = fl(w, 'chamomile', 9, 9); dead.withered = true; ring(w); w.flowers.splice(1, 1);
   check(E.basketFlowers(w, w.decos[0]).every(f => !f.withered), '시든 꽃은 바구니 자리를 차지하지 않음'); }
 { const tick = n => { const s = garden(c => c.month === 6); put(s, 'dryrack', 0, 0); for (let i = 0; i < 20; i++) s.petals.push({ id: s.nextId++, type: 'rose', q: 0.7, seasonKey: 11 }); if (n) lv(s, 'rack', n); return E.rackTick(s, ctx); };
-  check([0, 1, 2, 3].map(tick).join() === '8,10,12,14' && E.rackN({}) === E.RACK_N, '🍂 건조대: 한 달 8 → 10 · 12 · 14장'); }
+  check([0, 1, 4, 5, 6, 7, 8].map(tick).join() === '1,2,6,8,10,12,14' && E.rackN({}) === E.RACK_N, '🍂 건조대: 한 달 1 → 2 · … · 8 · 10 · 12 · 14장 (P38)'); }
 { const s = garden(c => c.month === 6, 4), c0 = E.pantryCap(s);
   lv(s, 'pantry', 1); const c1 = E.pantryCap(s); s.bonus.pantry = 3; const c3 = E.pantryCap(s); s.grade.xp = E.gradeXpAt(25);
   check(c0 === 4 && c1 === 5 && c3 === 7 && E.pantryCap(s) === 22, `🧺 저장고: 등급 상한에 +1 · +3칸 (${c0} → ${c1} → ${c3}, 25등급이면 19 + 3 = ${E.pantryCap(s)})`);
@@ -217,8 +217,8 @@ console.log('[🌟 규칙이 실제로 바뀜]');
   check(h.join() === '504,672,840' && E.catchUpH({}) === 21 * 24, '🌙 따라잡기: 3주 → 4 · 5주 (catchUpH, 시간) — 앱 catchUp에 붙이는 것은 M3-2'); }
 { const s = garden(c => c.month === 6, 2); s.settings.slow = true;
   check(E.bonusSet(s, 'catchup', 1).ok && E.catchUpH(s) === 672 && E.bonusView(s).points === 1, '느긋하게 보기여도 똑같이 고르고 쓰임 (숨김은 화면 몫)'); }
-{ const s = { bonus: { basket: 9, rack: -2, pantry: '1', catchup: null } };
-  check(E.bonusVal(s, 'basket') === 20 && E.bonusVal(s, 'rack') === 8 && E.bonusVal(s, 'pantry') === 1 && E.bonusVal(s, 'catchup') === 3 && E.bonusVal({}, 'pantry') === 0, '이상한 저장 값은 0 ~ 끝 단계 안으로'); }
+{ const s = { bonus: { basket: 7.6, rack: -2, pantry: '1', catchup: null } };
+  check(E.bonusVal(s, 'basket') === 16 && E.bonusVal(s, 'rack') === 1 && E.bonusVal(s, 'pantry') === 1 && E.bonusVal(s, 'catchup') === 3 && E.bonusVal({}, 'pantry') === 0, '이상한 저장 값은 0 ~ 끝 단계 안으로'); }
 
 console.log('[✅ 여정 05 강도윤 05-4 · 05-5 · 07 정진우 07-5 (엔진)]');
 { // 05-4 "모은 것으로 정원 등급을 올리자 영구 보너스가 붙는다"
@@ -226,7 +226,7 @@ console.log('[✅ 여정 05 강도윤 05-4 · 05-5 · 07 정진우 07-5 (엔진)
   check(E.bonusPoints(s) === 0 && !E.bonusSet(s, 'basket', 1).ok, '05-4: 1등급엔 꽃가루가 없어 기를 수 없음');
   E.addXp(s, 'sell', (E.gradeXpAt(2) - s.grade.xp) / E.XP.sell, ctx);   // 찻잔을 팔아 2등급
   check(E.gradeOf(s).grade === 2 && E.bonusPoints(s) === 1 && E.bonusSet(s, 'basket', 1).ok, '05-4: 판 것으로 2등급이 되면 🌟 1점 → 바구니 넓게 1단계');
-  check(E.basketTick(s, E.calendar(s.virtual), ctx) === 12, '05-4: 그달 끝 자동 수확 바구니가 8포기가 아니라 12포기를 거둠');
+  check(E.basketTick(s, E.calendar(s.virtual), ctx) === 2, '05-4: 그달 끝 개미 일꾼이 1포기가 아니라 2포기를 거둠 (P38)');
   // 05-5 "꽃잠에 한 해 평가를 받고 다음 해로 이어지는 보너스를 고른다"
   E.advance(s, at(c => c.month === 13 && c.week > E.calendar(s.virtual).week) + 2 * H, ctx);
   const rec = s.records.length;
@@ -234,10 +234,10 @@ console.log('[✅ 여정 05 강도윤 05-4 · 05-5 · 07 정진우 07-5 (엔진)
   check(E.bonusSet(s, 'basket', 0).ok && E.bonusSet(s, 'rack', 1).ok && s.bonus.rack === 1, '05-5: 꽃잠에 바구니를 내려 점을 돌려받고 건조대 넉넉히를 고름');
   E.advance(s, at(c => c.month === 3 && c.week > E.calendar(s.virtual).week) + 2 * H, ctx);
   s.petals.length = 0; for (let i = 0; i < 12; i++) s.petals.push({ id: s.nextId++, type: 'rose', q: 0.7, seasonKey: 11 });
-  check(E.calendar(s.virtual).month === 3 && s.bonus.rack === 1 && E.rackTick(s, ctx) === 10, '05-5: 다음 해 3월에도 이어짐 — 자동 건조대가 한 달 10장');
+  check(E.calendar(s.virtual).month === 3 && s.bonus.rack === 1 && E.rackTick(s, ctx) === 2, '05-5: 다음 해 3월에도 이어짐 — 누에 일꾼이 한 달 2장 (P38)');
   // 07-5 (저장에 이어지는 부분): 파일로 저장해 다시 열어도 고른 보너스 · 점이 그대로 (새 철 자체는 M3-3)
   const back = E.migrateSave(E.parseSave(JSON.stringify(E.makeSave(s, 1))).data.game);
-  check(JSON.stringify(back.bonus) === JSON.stringify(s.bonus) && E.bonusLeft(back) === E.bonusLeft(s) && E.rackN(back) === 10, '07-5: 저장 · 다시 열어도 고른 보너스 · 남은 점 · 규칙이 그대로'); }
+  check(JSON.stringify(back.bonus) === JSON.stringify(s.bonus) && E.bonusLeft(back) === E.bonusLeft(s) && E.rackN(back) === 2, '07-5: 저장 · 다시 열어도 고른 보너스 · 남은 점 · 규칙이 그대로'); }
 
 console.log('[시뮬레이션 목표 (sim-economy 7 7)]');
 const out = require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '7', '7'], { encoding: 'utf8' });

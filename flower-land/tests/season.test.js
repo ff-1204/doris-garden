@@ -56,7 +56,7 @@ const ended = st.season.log[0];
 check(st.season.log.length === 1 && ended.n === 1 && ended.startedAt === mon + 0.1 * H && ended.endedAt === before.virtual && ended.years === 3 && ended.grade === E.gradeOf(st).grade && ended.sold === before.yearLog.reduce((a, x) => a + (x.sold || 0), 0), '끝난 철 한 줄: 철 · 시작 · 끝 · 걸린 해 · 끝 등급 · 판 잔 (P30-04-03 철마다 표 자리)');
 console.log('  — 이어지는 것');
 check(st.grade.xp === 20000 && same(st.grade, before.grade), '정원 등급 · 경험치');
-check(same(st.bonus, before.bonus) && E.bonusVal(st, 'basket') === 16, '🌟 고른 보너스 (바구니 2단계 → 16포기)');
+check(same(st.bonus, before.bonus) && E.bonusVal(st, 'basket') === 3 && same(st.bonusFree, before.bonusFree), '🌟 고른 보너스 (바구니 2단계 → 3포기, P38) · 덜어 준 꽃가루 bonusFree도 이어짐');
 check(E.bonusPoints(st) === pts && E.bonusLeft(st) === left, '🌟 손길 점 그대로 — 새 철 보상으로 더 생기지 않음 (열린 질문 ②)');
 check(Object.keys(before.titles).every(k => st.titles[k] === before.titles[k]) && st.titleOn === 't_record', '칭호 · 대표 칭호');
 check(same(Object.assign({}, st.dex, { deco: null }), Object.assign({}, before.dex, { deco: null })) && Object.keys(before.dex.deco).every(k => st.dex.deco[k]), '도감 전부 (꽃 · 꽃잎 · 차 · 땅 · 블렌드 · 꾸밈 · 꿀 · 광산 · 기념품 · 편지)');

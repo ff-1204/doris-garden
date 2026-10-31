@@ -16,9 +16,9 @@ console.log('[🐜 일꾼 표 — 이름만 바뀜 (키 · 값 · 조건 그대�
   check(E.FARM.map(w => w.icon).join('') === '🐜🐛🦋🐝🐌🐞' && new Set(E.FARM.map(w => w.icon)).size === 6, '아이콘이 서로 다름');
   const D = E.DECOS;
   check(D.autobasket.name === '개미 일꾼' && D.dryrack.name === '누에 일꾼' && D.teahelper.name === '나비 일꾼' && D.hive.name === '벌통' && D.barrel.name === '빗물 통', 'DECOS 이름: 개미 · 누에 · 나비 일꾼 · 벌통 · 빗물 통은 그대로');
-  check(D.autobasket.price === 40000 && D.autobasket.need === 6 && D.dryrack.price === 50000 && D.dryrack.need === 9 && D.teahelper.price === 80000 && D.teahelper.need === 12 && D.teahelper.one, '값 · 등급 · 하나만 그대로');
+  check(D.autobasket.price === 12000 && D.autobasket.need === 2 && D.dryrack.price === 18000 && D.dryrack.need === 4 && D.teahelper.price === 30000 && D.teahelper.need === 6 && D.teahelper.one, '값 · 등급 · 하나만 (P38 작게 시작: 등급 2 · 4 · 6)');
   check(D.hive.price === 15000 && D.hive.months.join() === '6,7,8' && D.barrel.price === 25000 && D.barrel.months.join() === '6,7', '벌통 · 빗물 통 값 · 파는 달 그대로');
-  check(E.AUTO_Q === 0.9 && E.RACK_N === 8 && E.AUTO_KEYS.join() === 'autobasket,dryrack,teahelper', '규칙 상수 그대로');
+  check(E.AUTO_Q === 0.9 && E.RACK_N === 1 && E.AUTO_KEYS.join() === 'autobasket,dryrack,teahelper', '규칙 상수 그대로');
   check(E.FARM.every(w => w.lines.length === 3 && w.lines.every(l => !/\d/.test(l))), '말 한 줄은 3개씩 · 숫자 없음');
 }
 
@@ -26,14 +26,14 @@ console.log('[🐜 상태: locked → shop → stored → placed]');
 {
   const st = garden(c => c.month === 3 && !c.frozen);
   let w = W(st, 'autobasket');
-  check(w.state === 'locked' && w.when === '정원 등급 6부터 와요' && !w.canBuy, '등급 6 전: 잠김 · "정원 등급 6부터 와요"');
-  st.grade.xp = E.gradeXpAt(6); w = W(st, 'autobasket');
-  check(w.state === 'shop' && w.canBuy && w.price === 40000, '등급 6: 데려올 수 있음 (shop)');
+  check(w.state === 'locked' && w.when === '정원 등급 2부터 와요' && !w.canBuy, '등급 2 전: 잠김 · "정원 등급 2부터 와요"');
+  st.grade.xp = E.gradeXpAt(2); w = W(st, 'autobasket');
+  check(w.state === 'shop' && w.canBuy && w.price === 12000, '등급 2: 데려올 수 있음 (shop)');
   const r = E.buyDeco(st, 'autobasket', ctx); w = W(st, 'autobasket');
-  check(r.ok && w.state === 'stored' && w.storedId === r.deco.id && st.money === 1e6 - 40000, '사면 창고에 (stored) — buyDeco 그대로');
+  check(r.ok && w.state === 'stored' && w.storedId === r.deco.id && st.money === 1e6 - 12000, '사면 창고에 (stored) — buyDeco 그대로');
   E.placeDeco(st, r.deco.id, 5, 5); fl(st, 'chamomile', 5, 6); fl(st, 'chamomile', 9, 9); w = W(st, 'autobasket');
   check(w.state === 'placed' && w.placed.length === 1 && w.placed[0].x === 5 && w.work === '맡은 꽃 1포기', '놓으면 placed · 자리 · 맡은 꽃 1포기');
-  check(W(st, 'dryrack').state === 'locked' && W(st, 'teahelper').when === '정원 등급 12부터 와요', '누에 · 나비는 아직 잠김');
+  check(W(st, 'dryrack').state === 'locked' && W(st, 'teahelper').when === '정원 등급 6부터 와요', '누에 · 나비는 아직 잠김');
   const h = W(st, 'hive');
   check(h.state === 'locked' && h.when === '6월·7월·8월에 화원에 와요' && h.deco === '벌통' && h.name === '꿀벌', '3월 꿀벌: 여름에 화원에 와요 · 카드 이름 꿀벌 (벌통)');
   const su = garden(c => c.month === 6 && !c.frozen);
@@ -48,7 +48,7 @@ console.log('[🐞 무당벌레: 사는 게 아님 · 4층이 열리면 auto]');
   let w = W(st, 'ladybug');
   check(w.state === 'locked' && w.when === '4층 작은 숲이 열리면 와요' && w.price === undefined, '3층 정원: 잠김 · 조건 안내만');
   st.dex.tea.chamomile = 1; st.stats.dug = 1; st.layers.at[4] = 0; w = W(st, 'ladybug');
-  check(w.state === 'auto' && w.work === '달 끝마다 잡초 세 포기', '4층이 열리면 저절로 와 있음 (auto)');
+  check(w.state === 'auto' && w.work === '달 끝마다 잡초 한 포기', '4층이 열리면 저절로 와 있음 (auto) · P38 1포기부터');
   fl(st, 'chamomile', 2, 2).weedH = 0;
   monthEnd(st); w = W(st, 'ladybug');
   check(w.did === 1 && w.didText === '잡초 1포기' && st.log.some(l => l.text === '무당벌레가 잡초 1포기를 치웠어요'), '달 끝에 잡초 1포기 · 일지 "무당벌레가 …"');
@@ -56,7 +56,7 @@ console.log('[🐞 무당벌레: 사는 게 아님 · 4층이 열리면 auto]');
 
 console.log('[지난달 한 일 · 말 한 줄]');
 {
-  const st = garden(c => c.month === 6 && !c.frozen); st.grade.xp = E.gradeXpAt(9);
+  const st = garden(c => c.month === 6 && !c.frozen); st.grade.xp = E.gradeXpAt(9); st.bonus.basket = 5; st.bonusFree = { basket: 6 };   // P38 예전 0단계(8포기)로
   const b = E.buyDeco(st, 'autobasket', ctx).deco; E.placeDeco(st, b.id, 5, 5); fl(st, 'lavender', 5, 6); fl(st, 'lavender', 4, 4);
   const v = E.buyDeco(st, 'barrel', ctx).deco; E.placeDeco(st, v.id, 10, 10); fl(st, 'chamomile', 10, 11).waterH = 1;
   const twin = copy(st);
@@ -104,7 +104,7 @@ console.log('[예전 정원 — MIGRATIONS 42번째]');
   const b = E.buyDeco(st, 'autobasket', ctx).deco; E.placeDeco(st, b.id, 5, 5); fl(st, 'lavender', 5, 6);
   st.stats.autoHarvest = 40; st.log.push({ y: 1, m: 6, d: 1, type: 18, text: '자동 수확 바구니가 꽃잎 40장을 거뒀어요' });
   const FN = E.MIGRATIONS.findIndex(m => m[0].includes('awayLast'));
-  check(FN === 41 && FN === E.MIGRATIONS.length - 3, 'MIGRATIONS 42번째 (43번째 P36 · 44번째 맨 끝은 P37)');
+  check(FN === 41 && FN === E.MIGRATIONS.length - 4, 'MIGRATIONS 42번째 (43번째 P36 · 44번째 P37 · 45번째 맨 끝은 P38)');
   const old = copy(st); delete old.awayLast; delete old.farm; old.mig = FN;
   const om = E.migrateSave(old);
   check(om.awayLast === null && om.farm.mark.autoHarvest === 40 && om.farm.last === null && om.mig === E.MIGRATIONS.length, '예전 정원: awayLast null · 지금 셈을 표시로');
