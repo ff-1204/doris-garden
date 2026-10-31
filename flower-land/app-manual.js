@@ -363,18 +363,17 @@ function giveGift() {
   return r;
 }
 function startGarden() { ui.onDismiss = null; if (st.onboarded) return closeModal(); st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); }
+// 변경 10-31 (사용자 요청 "컨셉과 핵심만 직관적으로"): 땅 · 시간 · 꽃→차 세 가지만. 물 주기 · 이웃 화분 · 할머니 꾸러미 · 이달 안내는 해 보면서 알게 (첫걸음 · 매뉴얼에 있음)
 function onboarding() {
   const cal = E.calendar(st.virtual);
+  if (st.gift == null) ui.giftWant = E.GIFT_BY_MONTH[cal.month];   // 창을 연 채 달이 바뀌어도 화분 꽃은 열 때 것으로
   openModal('도리의 정원', `<div class="stack" style="gap:10px">
     <div class="ob-vis">
       <figure>${landPixel()}<figcaption><b>꽃이 땅을 바꿔요</b>처음엔 모두 황무지. 심은 꽃 둘레가 그 꽃이 좋아하는 땅이 돼요</figcaption></figure>
-      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요) · 쉼 · 샘 = 쉼달 · 꽃샘달</figcaption></figure>
+      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 — 시간이 멈추고 쉬어요</figcaption></figure>
     </div>
-    <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
-    ${st.gift == null ? `<p class="ob-care">${spriteImg((ui.giftWant = E.GIFT_BY_MONTH[cal.month]), 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요 · 정원 가운데에서 먼저 눌러 보세요</p>
-    <p class="ob-care"><span>✉️</span> 꽃집 할머니도 <b>편지와 꾸러미</b>를 보내요 · 말린 꽃잎 두 가지로 블렌딩하고, 🍵 찻집에서 <b>첫 손님</b>을 맞아 보세요</p>` : ''}
-    <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
-    <p class="note">돌보지 않아도 꽃은 죽지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
+    <p class="ob-care"><span>🌱</span> 심고 → <span>🧺</span> 피면 거두고 → <span>🍵</span> 차로 우려 팔아요</p>
+    <p class="note">${cal.frozen ? `지금은 🌙 꽃잠이에요. 첫 해는 <b>월요일 아침 6시</b>에 시작해요. ` : ''}돌보지 않아도 꽃은 죽지 않아요. 천천히 즐겨 주세요.</p></div>`,
     [{ label: '시작', primary: true, act: startGarden }]);
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }
