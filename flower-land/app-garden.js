@@ -440,12 +440,12 @@ function showVisitorBubble(v) {
 // ---------------------------------------------------------------- ⛏️ 광산 탭 (P24, 10-24 · 10-30 창 → 탭, 사용자 요청 "창고 밑에 광산 메뉴 따로"): 층 · 기력 · 8×6 판 · 가방 · 만들기
 const mineFrom = n => E.ORES[n] ? E.ORES[n].from : E.FOSSILS[n] ? E.FOSSILS[n].from : n === 'oldseed' ? 8 : 1;   // 10-31 QA: 광석 · 화석 · 옛 씨앗(8층부터) 모두 "n층부터"
 function mineGearHTML() {   // 10-31 사용자: 🔆 정원 장치를 곤충농장에서 ⛏️ 광산 "공방"으로 (규칙 · 값 그대로)
-  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear);
-  return `<div class="cab-head"><span class="sb-title">🔆 광산 공방 · 정원 장치</span><span class="muted">광부들이 만든 장치 · 다 자라기까지만 빨라져요 · 피는 달 · 품질 · 땅 · 꽃잠은 그대로</span></div>
-    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;
+  const gearKeys = E.DECO_KEYS.filter(k => E.DECOS[k].gear || (E.DECOS[k].auto && !E.DECOS[k].insect)), grade = E.gradeOf(st).grade;   // P39-09 🧺 건조 선반 · 🫖 찻집 도우미도 (곤충 아닌 장치)
+  return `<div class="cab-head"><span class="sb-title">🔆 광산 공방 · 정원 장치</span><span class="muted">광부들이 만든 장치 · 자라기를 돕거나 제다실 · 찻집 일을 덜어요 · 피는 달 · 품질 · 땅 · 꽃잠은 그대로</span></div>
+    <div class="decoshop">${gearKeys.map(k => { const D = E.DECOS[k], own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price, lock = D.need && grade < D.need;
       return `<div class="decocard"><span class="dk-art">${decoImg(k, 4)}${own ? `<span class="sc-own" title="가진 것 ${own}개 (정원 · 창고)">🪴 ${own}</span>` : ''}</span>
         <span class="dk-main"><b>${D.name}</b><small>${D.desc}${D.one ? ' · 하나만' : ''}</small></span>
-        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
+        <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : lock ? `<span class="muted">🔒 ${E.slowView(st) ? '정원이 더 자라면' : `정원 등급 ${D.need}부터`}</span>` : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '잔액 부족' : '구매'}</button>`}</span></div>`; }).join('')}</div>`;
 }
 function minePantryHTML(v, slow) {   // 10-31 사용자: 🧺 정원 저장고를 곤충농장에서 ⛏️ 광산 "입구 선반"으로 (규칙 그대로)
   if (!v) return '<p class="note muted">첫 안내를 마치면 저장고가 열려요</p>';
@@ -529,16 +529,20 @@ function openDecoTile(d) {
       <small class="muted">둘레 ${E.hiveR(st)}칸에 핀 꽃 ${bl.length}포기 · ${frozen ? '🌙 꽃잠에는 벌도 쉬어요' : h ? `이 달이 끝나면 ${E.honeyName(h.type)} ${h.jars}병` : '꽃이 피면 꿀이 모여요'} · 벌통엔 ${E.hiveMax(st)}병까지</small>
       ${hn.length ? '<button type="button" class="btn primary" data-takehoney="1">🍯 거두기</button>' : ''}</div>`;
   }
-  if (d.key === 'autobasket') {                   // P28-10-01 자동 수확 바구니: 이 달이 끝나면 거둘 꽃 · 지도에 범위
+  if (d.key === 'autobasket') {                   // P28-10-01 · P39-02 🐜 개미: 이 달이 끝나면 거둘 꽃 · 지도에 둘레
     const cal = E.calendar(st.virtual), bl = E.basketBlooms(st, d, cal);
-    extra = `<p class="muted">${cal.frozen ? '🌙 꽃잠엔 개미 일꾼도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요` : `지금 ${E.basketReach(st) > 1 ? '둘레' : '바로 옆'}에 거둘 핀 꽃이 없어요`} · 둘레 ${E.basketReach(st)}칸 ${E.bonusVal(st, 'basket')}포기까지 · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
-    ui.gearShow = { id: d.id, until: performance.now() + 60000 };
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : cal.frozen ? '🌙 꽃잠엔 개미 일꾼도 쉬어요 · 잠든 꽃은 직접 거둬요' : bl.length ? (E.slowView(st) ? '이 달이 끝나면 둘레에 핀 꽃의 꽃잎을 거둬 제다실로 보내요' : `이 달이 끝나면 핀 꽃 ${bl.length}포기의 꽃잎을 거둬 제다실로 보내요`) : '지금 둘레에 거둘 핀 꽃이 없어요'} · 바구니 용품은 안 써요 · 꽃잎 품질은 손으로 거둔 것의 90%${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+  } else if (E.INSECTS[d.key] && d.key !== 'hive') {   // P39 🐌 · 🐞 · 🪱 · 🐛 · 🦋: 맡은 일 한 줄 (곤충농장 카드와 같은 말)
+    const cal = E.calendar(st.virtual), w = E.farmOf(st).workers.find(x => x.key === d.key);
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : cal.frozen ? '🌙 꽃잠엔 곤충도 쉬어요' : esc(w.work || '')} · ${d.key === 'teahelper' ? '거둘 때 꽃잎이 늘어요' : d.key === 'earthworm' ? '석 달에 한 번 달이 끝날 때 돌봐요' : '달이 끝날 때마다 돌봐요'} (창을 닫으면 둘레가 지도에 잠깐 보여요)</p>`;
   }
-  if (d.key === 'dryrack') {                      // P28-10-02 자동 건조대: 이 달이 끝나면 널 꽃잎 · 꽃방에서 마르는 중
-    const racks = E.placedOf(st, 'dryrack').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.rackN(st));   // P28-05-02 🍂 건조대 넉넉히면 10 · 12 · 14장
-    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 누에 일꾼도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.rackN(st)}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
+  if (E.INSECTS[d.key] && d.x != null) ui.gearShow = { id: d.id, until: performance.now() + 60000 };   // P39-12-03 곤충을 누르면 둘레 칸 표시 (P27 장치와 같은 길)
+  if (d.key === 'hive' && d.x != null) extra += `<p class="muted">🐝 둘레 ${E.insectR(st, 'hive')}칸 꽃은 번식할 때 품질이 덜 깎여요 (창을 닫으면 둘레가 지도에 잠깐 보여요)</p>`;
+  if (d.key === 'dryshelf') {                     // P39-09-01 🧺 건조 선반 (예전 P28-10-02 누에 말리기): 이 달이 끝나면 널 꽃잎 · 꽃방에서 마르는 중
+    const racks = E.placedOf(st, 'dryshelf').length, frozen = E.calendar(st.virtual).frozen, mine = st.drying.filter(x => x.auto).length, take = Math.min(st.petals.length, racks * E.rackN());
+    extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : frozen ? '🌙 꽃잠엔 건조 선반도 쉬어요' : take ? `이 달이 끝나면 제다실 꽃잎 ${take}장을 꽃방에 널어요` : '지금 제다실에 널 꽃잎이 없어요'} · 하나에 한 달 ${E.rackN()}장, 오래된 꽃잎부터 · 다 마르면 티백까지 · 블렌드는 직접 해요${mine ? ` · 꽃방에서 마르는 중 ${mine}장` : ''}${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}장`}</p>`;
   }
-  if (d.key === 'teahelper') {                    // P28-10-03 찻집 일손: 열려 있으면 카운터를 채움 · 남은 티백
+  if (d.key === 'teastand') {                     // P39-09-02 🫖 찻집 도우미 (예전 P28-10-03 나비 차 우리기): 열려 있으면 카운터를 채움 · 남은 티백
     const cal = E.calendar(st.virtual), open = E.teaShopOpen(cal), bags = st.teas.length;
     extra = `<p class="muted">${d.x == null ? '정원에 놓으면 일해요' : open ? (bags ? `카운터에 갓 우린 잔이 ${E.helperKeep(st)}잔이 되게 채워요 · 남은 티백 ${bags}개` : '우릴 티백이 없어요 · 제다실에서 티백을 만들어요') : '🔒 찻집이 열리면 일해요'} · 가장 오래된 티백부터 · 블렌드 티백 · 🍯 꿀은 직접 해요${E.slowView(st) ? '' : ` · 지금까지 ${d.n || 0}잔`}</p>`;
   }
@@ -558,13 +562,14 @@ function openDecoTile(d) {
 }
 // P35 · P36 장식 카드 한 줄 (화원 · 창고 · 정원 장식 창이 같이 씀): 놓아야 효과 · 느긋하게 보기면 숫자 없이 (엔진 decoBuffLine)
 function decoBuffHTML(key, cls) { const t = E.decoBuffLine(st, key); return t ? `<small class="${cls || 'dk-buff'}">${esc(t)}</small>` : ''; }
-// 지도에 범위를 그리는 장식의 둘레 칸 수 (P27 장치 · P28-10 자동 수확 바구니), 없으면 null
-function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : key === 'autobasket' ? E.basketReach(st) : null; }   // P28-05-02 🧺 바구니 넓게면 둘레 2칸
-// 상태창 한 줄: 자동 수확 바구니가 맡은 꽃 (P28-10-01 · P28-05-02 바구니 넓게: 둘레 2칸에서 가까운 꽃부터 n포기 — 엔진 basketFlowers 그대로)
-function basketNote(f) {
-  const cal = E.calendar(st.virtual);
-  if (cal.frozen || !E.placedOf(st, 'autobasket').some(d => E.basketFlowers(st, d).includes(f))) return '';
-  return E.canCare(st, f, 'harvest', cal) ? ' · 🐜 달이 끝나면 개미 일꾼이 물어 가요' : ' · 🐜 개미 일꾼 둘레';
+// 지도에 범위를 그리는 장식의 둘레 칸 수 (P27 장치 · P39 곤충 일곱 — 기르면 1 → 2 → 3칸), 없으면 null
+function decoReach(key) { return E.GEAR[key] ? E.GEAR[key].r : E.INSECTS[key] ? E.insectR(st, key) : null; }
+// P39-12-04 꽃 상태창: 이 꽃을 돌보는 곤충 아이콘 줄 — 누르지 않아도 제목(title)에 하는 일
+const INSECT_DO = { barrel: '물', autobasket: '거두기', ladybug: '잡초', earthworm: '비료', dryrack: '가지치기', hive: '번식', teahelper: '첫 꽃잎' };
+function insectNote(f) {
+  const ks = E.insectsOn(st, f); if (!ks.length) return '';
+  const ic = k => E.FARM.find(w => w.key === k).icon;
+  return ` · <span class="sx-bugs" title="${ks.map(k => `${ic(k)} ${INSECT_DO[k]}`).join(' · ')}">${ks.map(ic).join('')} 곤충이 돌봐요</span>`;
 }
 function select(id) { ui.selected = id; ui.selTile = null; ui.sheetOpen = true; renderStatus(true); }
 function plantAt(type, x, y) {
@@ -665,7 +670,7 @@ function renderStatus(force) {
     <div class="sx-head">
       <div class="sx-art" style="background:color-mix(in srgb, ${mut ? mutPetal(f.type, mut).petal : F.petal} 16%, var(--sunk))">${spriteImg(f.type, mut ? 'mut' + mut : 'flower', 56, false, M ? M.name : F.name)}</div>
       <div class="sx-title"><h3>${M ? `🧬 ${esc(M.name)}` : F.name}</h3>${M ? `<div class="sx-mut"><b>변이 · ${mut}단계</b> · ${F.name}<br><i>${esc(M.lore)}</i></div>` : ''}<div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:calc(12 * var(--u))">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
-        <div class="muted" style="font-size:calc(12 * var(--u))">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${basketNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
+        <div class="muted" style="font-size:calc(12 * var(--u))">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${insectNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
     </div>
     ${stagePath}
