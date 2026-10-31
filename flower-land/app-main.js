@@ -147,7 +147,9 @@ function frame() {
   if (ui.tab === 'garden') draw();
   if (real - lastUi > 400) { renderAll(false); lastUi = real; }
   if (real - lastSave > 3000) { save(); lastSave = real; }
-  requestAnimationFrame(frame);
+  // 10-31 QA: 옆 탭 줄(sticky)의 top을 위 막대 실제 높이로 — 큰 글씨 · 브라우저 확대 · 좁은 폭 두 줄에서 탭이 위 막대를 덮던 것
+{ const tb = $('.topbar'); if (tb && 'ResizeObserver' in window) { const setTop = () => document.documentElement.style.setProperty('--top-h', `${Math.ceil(tb.getBoundingClientRect().height)}px`); new ResizeObserver(setTop).observe(tb); setTop(); } }
+requestAnimationFrame(frame);
 }
 // 📮 운영자 편지 (P29-04): 열 때 · 화면이 다시 보일 때 같은 사이트의 mail.json을 읽기만 함 (아무것도 보내지 않음). 못 읽으면(오프라인) 조용히 넘어감
 async function mailFetch() {

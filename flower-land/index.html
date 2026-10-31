@@ -70,7 +70,7 @@ h3 { font-family: var(--font-display); font-size: calc(16 * var(--u)); margin: 0
 
 /* ── 전체 틀 */
 .app { min-height: 100%; display: grid; grid-template-rows: auto 1fr auto; }
-.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--panel); border-bottom: 1px solid var(--line); padding: 9px 16px; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 21; background: var(--panel); border-bottom: 1px solid var(--line); padding: 9px 16px; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
 .topinfo { justify-self: end; font-size: calc(12 * var(--u)); color: var(--muted); text-align: right; line-height: 1.35; display: flex; align-items: center; gap: 10px; }
 .toptitle { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--sunk); padding: 1px 8px 1px 2px; font-size: calc(12 * var(--u)); color: var(--ink); }   /* P19-05-05 대표 칭호 */
 .toptitle[hidden] { display: none; }
@@ -136,7 +136,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); font-weight: 600; box
   .app { grid-template-rows: auto 1fr; }
   .body { grid-template-columns: 96px minmax(0, 1fr); }
   main { padding-bottom: 24px; }
-  nav.tabs { position: sticky; top: 61px; bottom: auto; left: auto; right: auto; align-self: start; grid-auto-flow: row; grid-template-columns: 1fr; border-top: 0; border-right: 1px solid var(--line); background: transparent; padding: 10px 6px; gap: 4px; order: -1; }
+  nav.tabs { position: sticky; top: var(--top-h, 61px); bottom: auto; left: auto; right: auto; align-self: start; grid-auto-flow: row; grid-template-columns: 1fr; border-top: 0; border-right: 1px solid var(--line); background: transparent; padding: 10px 6px; gap: 4px; order: -1; }
   nav.tabs button { padding: 10px 4px; border-radius: 10px; }
   nav.tabs button[aria-selected="true"] { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
 }
@@ -1479,7 +1479,7 @@ body { margin: 0; }
 :root[data-big] .iconbtn { width: 44px; height: 44px; }
 :root[data-big] .ob-care { display: block; }   /* 첫 안내 창: flex면 글 토막이 칸마다 갈라져 — 큰 글씨면 한 문단으로 흐르게 */
 :root[data-big] .ob-care span { vertical-align: middle; margin-right: 4px; }
-@media (min-width: 900px) { :root[data-big] .body { grid-template-columns: 108px minmax(0, 1fr); } :root[data-big] nav.tabs { top: 72px; } }
+@media (min-width: 900px) { :root[data-big] .body { grid-template-columns: 108px minmax(0, 1fr); } :root[data-big] nav.tabs { top: var(--top-h, 72px); } }
 /* P32-03 🐝 곤충농장으로 탭이 9 · 10칸 — 640px 이하(큰 글씨 두 줄과 같은 폭)는 큰 글씨가 아니어도 두 줄 (5칸씩, 이름은 지우지 않음) */
 @media (max-width: 640px) {
   :root { --nav-h: 112px; }
