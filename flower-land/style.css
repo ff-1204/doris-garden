@@ -414,8 +414,13 @@ canvas#map { display: block; width: 100%; touch-action: none; cursor: crosshair;
 .beq-x { position: absolute; top: -6px; right: -14px; font-style: normal; font-family: var(--font-data); font-size: calc(11 * var(--u)); font-weight: 600; padding: 1px 5px; background: var(--good); color: var(--accent-ink); }
 @media (max-width: 420px) { .ob-vis { grid-template-columns: 1fr; justify-items: center; } .ob-vis figcaption { text-align: center; } }
 /* 첫 안내 그림책 (변경 10-31): 장면마다 도트 그림 가운데 + 세리프 한 줄, 장면 사이는 도트 점 셋 */
-.ob-story { display: grid; gap: 14px; padding: 4px 0 2px; }
-.ob-scene { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.ob-story { display: grid; gap: 10px; padding: 0; }
+.ob-scene { display: grid; justify-items: center; gap: 8px; text-align: center; }
+/* 첫 안내 창만: 위 막대 · 아래 단추 줄을 얇게, 창을 더 높게 — 가운데 그림책이 스크롤 없이 보이게 (사용자 QA 10-31) */
+.modal:has(.ob-story) { max-height: min(94vh, 800px); }
+.modal:has(.ob-story) header, .modal:has(.ob-story) footer { padding: 6px 12px; }
+.modal:has(.ob-story) header h2 { font-size: calc(15 * var(--u)); }
+.modal:has(.ob-story) .content { padding: 10px 14px; }
 .ob-scene p { margin: 0; font-family: var(--font-display); font-size: calc(16 * var(--u)); font-weight: 700; line-height: 1.5; color: var(--ink); text-wrap: balance; }   /* 세리프는 400이면 Windows에서 흐려 보여 — 옆 카드 글귀(.sx-quote)처럼 700 (사용자 QA 10-31) */
 .ob-scene p small { display: block; font-family: var(--font-body); font-size: calc(12 * var(--u)); color: var(--muted); margin-top: 3px; line-height: 1.5; }
 .ob-dots { display: flex; justify-content: center; gap: 6px; }
