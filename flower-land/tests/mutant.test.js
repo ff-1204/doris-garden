@@ -175,7 +175,7 @@ console.log('[저장 · 예전 정원]');
   const got = back.ok ? E.migrateSave(back.data.game) : null;
   check(!!got && got.flowers.some(f => f.mut) && got.jar === 1 && got.dex.mutant.rose === 1 && got.decos.some(d => d.mut && d.mut.stage === 2), '저장 파일로 저장 · 열기');
   const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
-  check(MN === E.MIGRATIONS.length - 2, `MIGRATIONS ${MN + 1}번째 P36 (맨 끝은 P37)`);
+  check(MN === E.MIGRATIONS.length - 3, `MIGRATIONS ${MN + 1}번째 P36 (뒤로 P37 · 맨 끝 P38)`);
   const old = JSON.parse(JSON.stringify(s)); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
   old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 40 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
   const om = E.migrateSave(old);

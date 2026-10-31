@@ -15,11 +15,11 @@ check(E.BONUS_KEYS.join() === 'basket,rack,brew,hive,weed,pantry,catchup', '7칸
 check(E.BONUS_KEYS.map(k => E.BONUS[k].worker).join() === 'autobasket,dryrack,teahelper,hive,ladybug,,', '일꾼 카드 키 (선반 · 따라잡기는 일꾼 아님)');
 check(E.BONUS_KEYS.every(k => E.FARM_KEYS.includes(E.BONUS[k].worker) || E.BONUS[k].worker === null), '일꾼 키는 모두 곤충농장 카드에 있음');
 const val = (k, v) => typeof v === 'object' ? `${v.r}/${v.max}` : v;
-check(E.BONUS_KEYS.map(k => E.BONUS[k].vals.map(v => val(k, v)).join('>')).join(' ') === '8>12>16>20 8>10>12>14 0>1>2>3 2/6>3/9>3/12 3>4 0>1>2>3 3>4>5', '단계 값 (🐞 식성은 3 → 4 한 단계 — 시뮬로 줄임)');
-check(E.BONUS_KEYS.map(k => E.BONUS[k].cost.join('·')).join(' ') === '1·2·3 1·2·3 2·3·4 2·3 1 1·2·3 1·2', '단계마다 꽃가루 (나비 2 · 3 · 4 · 꿀벌 2 · 3 · 무당벌레 1)');
+check(E.BONUS_KEYS.map(k => E.BONUS[k].vals.map(v => val(k, v)).join('>')).join(' ') === '1>2>3>4>6>8>12>16>20 1>2>3>4>6>8>10>12>14 1>2>3>4 1/3>2/6>3/9>3/12 1>2>3>4 0>1>2>3 3>4>5', '단계 값 (P38 1부터 — 끝은 P37과 같음)');
+check(E.BONUS_KEYS.map(k => E.BONUS[k].cost.join('·')).join(' ') === '1·1·1·1·2·2·3·3 1·1·1·1·2·2·3·3 2·3·4 1·2·3 1·1·2 1·2·3 1·2', '단계마다 꽃가루 (P38 개미 · 누에 1·1·1·1·2·2·3·3 · 꿀벌 1 · 2 · 3 · 무당벌레 1 · 1 · 2)');
 check(E.BONUS_KEYS.every(k => E.BONUS[k].cost.length === E.bonusMax(k)), 'cost 칸 수 = 단계 수');
 const total = E.BONUS_KEYS.reduce((a, k) => a + E.bonusCostTo(E.bonusMax(k), k), 0);
-check(total === 36, `모두 끝단계 = 꽃가루 ${total}알 (37등급)`);
+check(total === 56, `모두 끝단계 = 꽃가루 ${total}알 (57등급 — 끝까지는 오래 하는 사람 몫)`);
 check(E.BONUS_PER === 1 && E.bonusPointsAt(2) === 1 && E.bonusPointsAt(37) === 36, '등급 1마다 1알 (BONUS_PER 그대로)');
 check(E.bonusCostTo(2, 'brew') === 5 && E.bonusCostTo(2) === 3 && E.bonusCostTo(0, 'hive') === 0, 'bonusCostTo(단계, 키) — 키가 없으면 예전 1 · 2 · 3');
 
@@ -34,11 +34,11 @@ console.log('[기르기 · 모자람 · 다시 어리게]');
   st.grade.xp = E.gradeXpAt(10);   // 9알
   check(E.bonusSet(st, 'brew', 3).ok && E.bonusLeft(st) === 0 && E.bonusUsed(st) === 9, '0 → 3단계로 바로 (2 + 3 + 4알)');
   check(E.bonusSet(st, 'brew', 1).ok && E.bonusLeft(st) === 7, '3 → 1단계: 3 + 4 = 7알 돌아옴');
-  check(E.bonusSet(st, 'hive', 2).ok && E.bonusLeft(st) === 2 && !E.bonusSet(st, 'catchup', 2).ok && E.bonusSet(st, 'catchup', 1).ok && E.bonusLeft(st) === 1, '남은 꽃가루 안에서 다른 일꾼으로 (꿀벌 5알 · 따라잡기 1알)');
+  check(E.bonusSet(st, 'hive', 3).ok && E.bonusLeft(st) === 1 && !E.bonusSet(st, 'catchup', 2).ok && E.bonusSet(st, 'catchup', 1).ok && E.bonusLeft(st) === 0, '남은 꽃가루 안에서 다른 일꾼으로 (꿀벌 6알 · 따라잡기 1알)');
   const s2 = garden(c => c.month === 6, 2);
   const p = E.bonusSet(s2, 'pantry', 1), q = E.bonusSet(s2, 'catchup', 1);
   check(p.ok && p.msg === '🧺 입구 선반이 자랐어요 · 선반 넓히기 1단계' && !q.ok && q.msg === '🌼 꽃가루가 1알 모자라요', '선반 · 따라잡기도 같은 꼴');
-  check(!E.bonusSet(s2, 'gold', 1).ok && !E.bonusSet(s2, 'weed', 2).ok && !E.bonusSet(s2, 'hive', 3).ok, '없는 칸 · 없는 단계는 거절');
+  check(!E.bonusSet(s2, 'gold', 1).ok && !E.bonusSet(s2, 'weed', 4).ok && !E.bonusSet(s2, 'hive', 4).ok, '없는 칸 · 없는 단계는 거절');
   const m0 = s2.money; E.bonusSet(s2, 'pantry', 0);
   check(s2.money === m0, '돈은 그대로 (꽃가루만)'); }
 
@@ -57,16 +57,18 @@ console.log('[🐝 꿀벌 — 멀리 날기: 둘레 · 꿀 상한 (hiveTick)]');
 { const ring = st => { for (let y = 5; y <= 15; y++) for (let x = 5; x <= 15; x++) if (x !== 10 || y !== 10) fl(st, 'lavender', x, y); };
   const st = garden(c => c.month === 7 && !c.frozen); st.flowers.length = 0; const d = put(st, 'hive', 10, 10);
   fl(st, 'lavender', 13, 10); fl(st, 'lavender', 7, 7);   // 3칸 거리 2포기
-  check(E.hiveR(st) === 2 && E.hiveMax(st) === 6 && E.hiveR(st) === E.HONEY_R && E.hiveMax(st) === E.HIVE_MAX, '0단계: 둘레 2칸 · 6병 (HONEY_R · HIVE_MAX)');
+  check(E.hiveR(st) === 1 && E.hiveMax(st) === 3 && E.hiveR(st) === E.HONEY_R && E.hiveMax(st) === E.HIVE_MAX, '0단계: 둘레 1칸 · 3병 (HONEY_R · HIVE_MAX, P38)');
   check(E.hiveBlooms(st, d).length === 0, '0단계: 3칸 떨어진 꽃은 안 셈');
   grow(st, 'hive', 1);
-  check(E.hiveR(st) === 3 && E.hiveMax(st) === 9 && E.hiveBlooms(st, d).length === 2, '1단계: 둘레 3칸 · 9병 — 3칸 꽃도 셈');
+  check(E.hiveR(st) === 2 && E.hiveMax(st) === 6 && E.hiveBlooms(st, d).length === 0, '1단계: 둘레 2칸 · 6병 (P37 0단계 값)');
   grow(st, 'hive', 2);
-  check(E.hiveR(st) === 3 && E.hiveMax(st) === 12, '2단계: 둘레 3칸 · 12병');
+  check(E.hiveR(st) === 3 && E.hiveMax(st) === 9 && E.hiveBlooms(st, d).length === 2, '2단계: 둘레 3칸 · 9병 — 3칸 꽃도 셈');
+  grow(st, 'hive', 3);
+  check(E.hiveR(st) === 3 && E.hiveMax(st) === 12, '3단계: 둘레 3칸 · 12병');
   const fill = n => { const s = garden(c => c.month === 7 && !c.frozen); s.flowers.length = 0; const h = put(s, 'hive', 10, 10); ring(s); if (n) grow(s, 'hive', n); for (let i = 0; i < 6; i++) E.hiveTick(s, ctx); return [h.honey.length, E.honeyOf(E.hiveBlooms(s, h)).jars]; };
-  const f = [0, 1, 2].map(fill);
-  check(f.map(x => x[0]).join() === '6,9,12' && f.every(x => x[1] === 3), `달마다 3병은 그대로 · 쌓아 두는 상한만 6 → 9 · 12병 (${f.map(x => x[0]).join(' · ')})`);
-  const far = garden(c => c.month === 7 && !c.frozen); far.flowers.length = 0; const fd = put(far, 'hive', 10, 10); fl(far, 'rose', 13, 13); grow(far, 'hive', 1);
+  const f = [0, 1, 2, 3].map(fill);
+  check(f.map(x => x[0]).join() === '3,6,9,12' && f.every(x => x[1] === 3), `달마다 3병은 그대로 · 쌓아 두는 상한만 3 → 6 · 9 · 12병 (${f.map(x => x[0]).join(' · ')})`);
+  const far = garden(c => c.month === 7 && !c.frozen); far.flowers.length = 0; const fd = put(far, 'hive', 10, 10); fl(far, 'rose', 13, 13); grow(far, 'hive', 2);
   check(E.hiveBlooms(far, fd).length === 1 && E.farmOf(far).workers.find(w => w.key === 'hive').desc.includes('둘레 3칸'), '곤충농장 꿀벌 설명도 둘레를 따라감'); }
 
 console.log('[🐞 무당벌레 — 식성: 달마다 잡초 (forestWeedTick) · 4층 전엔 잠김]');
@@ -77,10 +79,10 @@ console.log('[🐞 무당벌레 — 식성: 달마다 잡초 (forestWeedTick) ·
     if (n) st.bonus = Object.assign(E.newBonus(), { weed: n });
     return [st, E.forestWeedTick(st, E.calendar(st.virtual), ctx)];
   };
-  const [a, n0] = w(true, 0), [b, n1] = w(true, 1);
-  check(E.forestOpen(a) && n0 === 3 && n1 === 4 && E.FOREST_WEED_N === 3, `달마다 3 → 4포기 (${n0} · ${n1})`);
-  check(E.forestWeedWord(a) === '세 포기' && E.forestWeedWord(b) === '네 포기' && E.forestWeedOf(a).text.includes('세 포기') && E.forestWeedWord() === '세 포기', '화면 문구 "잡초 네 포기"도 따라감');
-  check(E.farmOf(b).workers.find(x => x.key === 'ladybug').work === '달 끝마다 잡초 네 포기', '곤충농장 무당벌레 일 한 줄');
+  const [a, n0] = w(true, 0), [b, n1] = w(true, 1), n23 = [2, 3].map(n => w(true, n)[1]);
+  check(E.forestOpen(a) && [n0, n1, ...n23].join() === '1,2,3,4' && E.FOREST_WEED_N === 1, `달마다 1 → 2 → 3 → 4포기 (${[n0, n1, ...n23].join(' · ')}, P38)`);
+  check(E.forestWeedWord(a) === '한 포기' && E.forestWeedWord(b) === '두 포기' && E.forestWeedOf(a).text.includes('한 포기') && E.forestWeedWord() === '한 포기', '화면 문구 "잡초 두 포기"도 따라감');
+  check(E.farmOf(b).workers.find(x => x.key === 'ladybug').work === '달 끝마다 잡초 두 포기', '곤충농장 무당벌레 일 한 줄');
   const [c] = w(false, 0);
   const r = E.bonusSet(c, 'weed', 1);
   check(!E.forestOpen(c) && !r.ok && r.msg === '4층 작은 숲이 열려야 길러요' && c.bonus.weed === 0, `4층 전엔 기를 수 없음 ("${r.msg}")`);
@@ -93,14 +95,14 @@ console.log('[🐞 무당벌레 — 식성: 달마다 잡초 (forestWeedTick) ·
 console.log('[bonusView — 카드가 읽는 값]');
 { const st = garden(c => c.month === 6, 8); E.bonusSet(st, 'basket', 2); E.bonusSet(st, 'hive', 1);
   const v = E.bonusView(st), row = k => v.rows.find(r => r.key === k);
-  check(v.points === 7 && v.used === 5 && v.left === 2 && v.nextAt === 9 && v.rows.length === 7, `모은 7 · 쓴 5 · 남은 2알 · 다음 알은 등급 9`);
+  check(v.points === 7 && v.used === 3 && v.left === 4 && v.nextAt === 9 && v.rows.length === 7, `모은 7 · 쓴 3 · 남은 4알 · 다음 알은 등급 9`);
   const b = row('basket'), h = row('hive'), r = row('brew');
-  check(b.worker === 'autobasket' && b.who === '🐜 개미 일꾼' && b.name === '걸음 넓히기' && b.level === 2 && b.costNext === 3 && b.desc === '맡는 꽃 16포기' && b.nextDesc === '맡는 꽃 20포기', '개미: 단계 · 다음 꽃가루 · 지금 / 다음 값');
-  check(h.level === 1 && h.costNext === 3 && h.desc === '둘레 3칸 · 꿀 9병까지' && h.nextDesc === '둘레 3칸 · 꿀 12병까지', '꿀벌: 둘레 · 상한 설명');
-  check(r.level === 0 && r.costNext === 2 && r.nextDesc === '카운터에 1잔 더 우려 둬요', '나비 0단계: 다음 2알');
+  check(b.worker === 'autobasket' && b.who === '🐜 개미 일꾼' && b.name === '걸음 넓히기' && b.level === 2 && b.costNext === 1 && b.desc === '맡는 꽃 3포기' && b.nextDesc === '맡는 꽃 4포기', '개미: 단계 · 다음 꽃가루 · 지금 / 다음 값');
+  check(h.level === 1 && h.costNext === 2 && h.desc === '둘레 2칸 · 꿀 6병까지' && h.nextDesc === '둘레 3칸 · 꿀 9병까지', '꿀벌: 둘레 · 상한 설명');
+  check(r.level === 0 && r.costNext === 2 && r.desc === '카운터에 손님 자리 + 1잔까지' && r.nextDesc === '카운터에 손님 자리 + 2잔까지', '나비 0단계: 다음 2알');
   st.settings.slow = true;
   const sv = E.bonusView(st);
-  check(sv.left === 2 && sv.rows[0].level === 2 && !('slow' in sv), '느긋하게 보기여도 엔진 값은 같음 (숨김은 화면 몫)'); }
+  check(sv.left === 4 && sv.rows[0].level === 2 && !('slow' in sv), '느긋하게 보기여도 엔진 값은 같음 (숨김은 화면 몫)'); }
 
 console.log('[저장 · 새 철 · 시뮬 기준값]');
 { const st = garden(c => c.month === 6, 20); E.bonusSet(st, 'brew', 2); E.bonusSet(st, 'hive', 2);

@@ -3,7 +3,8 @@ const E = require(require('path').resolve((process.argv[2] || require('path').jo
 let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails++; };
 const H = E.HOUR, M = 12 * H, ctx = { live: false, rng: () => 0.5 };
 const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 6000; i++) { const c = E.calendar(t); if (pred(c)) return t + 0.1 * H; t += H / 4; } };
-const garden = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'auto-test'; st.money = 1e6; st.grade.xp = E.gradeXpAt(12); return st; };
+const old0 = st => { st.bonus = Object.assign(E.newBonus(), st.bonus, { basket: 5, rack: 5, hive: 1, weed: 2 }); st.bonusFree = { basket: 6, rack: 6, hive: 1, weed: 2 }; return st; };   // P38 예전 0단계 값(🐜 8포기 · 🐛 8장 · 🐝 2칸 6병 · 🐞 3포기)으로 옮긴 정원 — 예전 규칙 확인은 그대로
+const garden = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'auto-test'; st.money = 1e6; st.grade.xp = E.gradeXpAt(12); return old0(st); };
 const fl = (st, type, x, y, extra) => { const f = Object.assign({ id: 7000 + st.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'bloom', bloomed: true, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 }, extra); st.flowers.push(f); return f; };
 const put = (st, key, x, y) => { const r = E.buyDeco(st, key, ctx); E.placeDeco(st, r.deco.id, x, y); return r.deco; };
 const petal = (st, type, q) => { const p = { id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: 11 }; st.petals.push(p); return p; };
@@ -12,12 +13,12 @@ const monthEnd = st => E.advance(st, E.calendar(st.virtual).slotEnd + 0.2 * H, c
 console.log('[🧺 자동 수확 바구니 — 사기]');
 {
   const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); st.money = 1e6;
-  check(E.AUTO_KEYS.includes('autobasket') && E.DECOS.autobasket.price === 40000 && E.DECOS.autobasket.need === 6, '40,000원 · 정원 등급 6부터');
+  check(E.AUTO_KEYS.includes('autobasket') && E.DECOS.autobasket.price === 12000 && E.DECOS.autobasket.need === 2, '12,000원 · 정원 등급 2부터 (P38)');
   const r0 = E.buyDeco(st, 'autobasket', ctx);
-  check(!r0.ok && r0.msg.includes('정원 등급 6') && st.money === 1e6, '등급 6 전엔 못 삼');
-  st.grade.xp = E.gradeXpAt(6);
+  check(!r0.ok && r0.msg.includes('정원 등급 2') && st.money === 1e6, '등급 2 전엔 못 삼');
+  st.grade.xp = E.gradeXpAt(2);
   const a = E.buyDeco(st, 'autobasket', ctx), b = E.buyDeco(st, 'autobasket', ctx);
-  check(a.ok && b.ok && st.money === 1e6 - 80000, '6등급이면 사고 여러 개 살 수 있음');
+  check(a.ok && b.ok && st.money === 1e6 - 24000, '2등급이면 사고 여러 개 살 수 있음');
   check([3, 6, 12, 13].every(m => E.decoOffer({ month: m }).includes('autobasket')), '늘 팖 (꽃잠에도)');
   check(E.DECO_KEYS.includes('autobasket') && !E.GRADE_DECO_KEYS.includes('autobasket'), '꾸밈 도감 칸에 들어가고 등급 장식 줄과는 따로');
 }
@@ -75,11 +76,11 @@ console.log('[🧺 따라잡기 3주 · 꽃잠을 건너뜀]');
 
 console.log('[🍂 자동 건조대 — 사기 · 오래된 꽃잎부터 하나에 8장]');
 {
-  const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); st.money = 1e6; st.grade.xp = E.gradeXpAt(8);
-  check(!E.buyDeco(st, 'dryrack', ctx).ok, '등급 9 전엔 못 삼');
-  st.grade.xp = E.gradeXpAt(9);
+  const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); st.money = 1e6; old0(st); st.grade.xp = E.gradeXpAt(3);
+  check(!E.buyDeco(st, 'dryrack', ctx).ok, '등급 4 전엔 못 삼');
+  st.grade.xp = E.gradeXpAt(4);
   const r = E.buyDeco(st, 'dryrack', ctx);
-  check(r.ok && st.money === 1e6 - 50000 && E.DECOS.dryrack.need === 9, '50,000원 · 9등급부터');
+  check(r.ok && st.money === 1e6 - 18000 && E.DECOS.dryrack.need === 4, '18,000원 · 4등급부터 (P38)');
   const ps = Array.from({ length: 10 }, (_, i) => petal(st, i % 2 ? 'rose' : 'lavender', 0.5 + i * 0.04));
   check(E.rackTick(st, ctx) === 0 && st.petals.length === 10, '창고에 있으면 쉼');
   E.placeDeco(st, r.deco.id, 0, 0);
@@ -128,11 +129,11 @@ console.log('[🍂 꽃잠엔 쉼 · 바구니와 이어서 · 따라잡기 3주]
 const bag = (st, type, q, extra) => { const t = Object.assign({ id: st.nextId++, type, q: q == null ? 0.7 : q, seasonKey: -1, hat: false }, extra); st.teas.push(t); return t; };
 console.log('[🫖 찻집 일손 — 사기 · 하나만]');
 {
-  const st = E.create(at(c => c.month === 12), () => 0.5); st.money = 1e6; st.grade.xp = E.gradeXpAt(11);
-  check(!E.buyDeco(st, 'teahelper', ctx).ok, '등급 12 전엔 못 삼');
-  st.grade.xp = E.gradeXpAt(12);
+  const st = E.create(at(c => c.month === 12), () => 0.5); st.money = 1e6; old0(st); st.grade.xp = E.gradeXpAt(5);
+  check(!E.buyDeco(st, 'teahelper', ctx).ok, '등급 6 전엔 못 삼');
+  st.grade.xp = E.gradeXpAt(6);
   const r = E.buyDeco(st, 'teahelper', ctx), r2 = E.buyDeco(st, 'teahelper', ctx);
-  check(r.ok && !r2.ok && st.money === 1e6 - 80000, '80,000원 · 하나만');
+  check(r.ok && !r2.ok && st.money === 1e6 - 30000, '30,000원 · 하나만 (P38)');
 }
 
 console.log('[🫖 열려 있으면 오래된 티백부터 카운터를 (손님 자리 + 1)잔까지]');
@@ -171,7 +172,7 @@ console.log('[🫖 P34 매달 일함 (6월 · 꽃잠) · 자리를 비운 동안
 function twin(auto) {
   const st = garden(c => c.idx === 0 && c.yh < 1);
   if (auto) { put(st, 'autobasket', 10, 10); put(st, 'dryrack', 0, 0); put(st, 'teahelper', 1, 0); }
-  else st.money -= 40000 + 50000 + 80000;   // 같은 돈에서 시작
+  else st.money -= 12000 + 18000 + 30000;   // 같은 돈에서 시작
   for (const [x, y] of [[9, 9], [10, 9], [11, 9], [9, 11], [11, 11]]) fl(st, 'dongbaek', x, y);
   const end = st.virtual + 14 * 24 * H;
   while (st.virtual < end) {

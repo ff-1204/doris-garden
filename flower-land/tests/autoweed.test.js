@@ -8,7 +8,7 @@ const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 600
 const fl = (st, type, x, y, extra) => { const f = Object.assign({ id: 7000 + st.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'bloom', bloomed: true, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 }, extra); st.flowers.push(f); return f; };
 const monthEnd = st => E.advance(st, E.calendar(st.virtual).slotEnd + 0.2 * H, ctx);
 const layer3 = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'autoweed-test'; st.onboarded = true; st.dex.tea.chamomile = 1; st.stats.dug = 1; E.weeklyOf(st); return st; };
-const open4 = st => { st.layers.at[4] = 0; return st; };
+const open4 = st => { st.layers.at[4] = 0; st.bonus.weed = 2; st.bonusFree = { weed: 2 }; return st; };   // P38 예전 0단계(3포기)로 옮긴 정원 — 숲 바람 규칙 확인은 그대로
 const weedy = st => st.flowers.filter(f => !f.withered && f.weedH <= 0);
 const plant5 = st => { fl(st, 'chamomile', 2, 2, { weedH: 0 }); fl(st, 'chamomile', 4, 2, { weedH: 0 }); fl(st, 'lavender', 6, 2, { weedH: 0 }); fl(st, 'lavender', 8, 2, { weedH: 0 }); fl(st, 'rose', 10, 2, { weedH: 50 }); fl(st, 'rose', 12, 2, { weedH: 0, withered: true }); };
 
@@ -19,7 +19,7 @@ console.log('[4층 정원: 달 끝에 잡초 난 꽃 3포기까지 (13 노을재
   check(E.forestOpen(st) && !E.forestOpen(twin), '4층 연 정원 · 3층 정원');
   const hoe0 = st.hoe, fert0 = st.fert, wc0 = st.weedCount, wk0 = JSON.stringify(st.weekly.goals.map(g => g.got)), before = E.autoStats(st);
   monthEnd(st); monthEnd(twin);
-  check(E.FOREST_WEED_N === 3 && weedy(st).length === 1 && st.flowers.slice(0, 4).filter(f => f.weedH > 23).length === 3, '잡초 난 4포기 중 3포기 걷힘 (weedH 24)');
+  check(E.FOREST_WEED_N === 1 && E.forestWeedN(st) === 3 && weedy(st).length === 1 && st.flowers.slice(0, 4).filter(f => f.weedH > 23).length === 3, '잡초 난 4포기 중 3포기 걷힘 (weedH 24)');
   check(st.flowers[0].weedH > 23 && st.flowers[1].weedH > 23 && st.flowers[2].weedH > 23 && st.flowers[3].weedH <= 0, '꽃 배열 앞에서부터 — 넷째는 다음 달');
   check(st.flowers[4].weedH > 0 && st.flowers[4].weedH < 50 && st.flowers[5].weedH === 0, '잡초 없는 꽃 · 시든 꽃은 그대로');
   check(weedy(twin).length === 4, '3층 정원은 걷히지 않음');
