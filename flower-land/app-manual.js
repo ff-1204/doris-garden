@@ -363,6 +363,10 @@ function giveGift() {
   return r;
 }
 function startGarden() { ui.onDismiss = null; if (st.onboarded) return closeModal(); st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); }
+// 변경 10-31 (사용자 요청): 첫 안내는 "더 이상 보지 않기"를 누를 때까지 열 때마다 — 이 기기 표시(localStorage, 완전 초기화면 같이 지워짐). ✕ · 바깥 · Esc는 정원만 시작하고 표시는 안 남김
+const INTRO_KEY = KEY + '-intro';
+function introDone() { try { return !!localStorage.getItem(INTRO_KEY); } catch (e) { return true; } }   // 저장소를 못 쓰면 매번 띄우지 않음
+function introOff() { try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) { /* 못 남기면 다음에 한 번 더 */ } startGarden(); }
 // 변경 10-31 (사용자 요청 "컨셉과 핵심만" → "픽셀 아트 · 감성 게임처럼"): 그림책처럼 장면 셋 — 땅 · 시간 · 꽃에서 차까지. 그림은 가운데, 글은 세리프 한 줄 + 작은 한 줄.
 // 물 주기 · 이웃 화분 · 할머니 꾸러미 · 이달 안내는 해 보면서 알게 (첫걸음 · 매뉴얼에 있음)
 function onboarding() {
@@ -377,6 +381,6 @@ function onboarding() {
     ${scene(weekPixel(cal), '여기선 한 주가 한 해예요.', '아침과 저녁에 한 달씩 흘러요 · 일요일엔 꽃들이 잠들어요')}${dots}
     ${scene(teaFlow, '핀 꽃을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
     <p class="ob-end">${cal.frozen ? '지금은 🌙 꽃잠이에요. 월요일 아침 6시, 첫 해가 시작돼요.<br>' : ''}서두르지 않아도 괜찮아요. 꽃은 기다려 줘요.</p></div>`,
-    [{ label: '더 이상 보지 않기', primary: true, act: startGarden }]);   // 변경 10-31 (사용자 요청) — 창은 한 번만 뜨니(st.onboarded) 그 뜻 그대로
+    [{ label: '더 이상 보지 않기', primary: true, act: introOff }]);   // 변경 10-31 (사용자 요청) — 누를 때까지 열 때마다 뜸 (introDone)
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }
