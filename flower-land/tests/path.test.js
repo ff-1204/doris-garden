@@ -55,8 +55,10 @@ check(E.WEEKLY_XP.join() === '20,40,80' && E.WEEKLY_BONUS === 40, '주간 목표
 { const { execFileSync } = require('child_process'), sim = path.join(__dirname, '..', 'tools', 'sim-economy.js');
   const out = p => execFileSync(process.execPath, [sim, '4', '7', '--season', ...(p ? ['--path', p] : [])], { encoding: 'utf8' });
   // 돈 표 · 끝 돈 · 해마다 기록(등급 칸 빼고) · 새 철 표만 견줌 — 주간 목표 · 등급은 길마다 끝낸 목표가 달라 경험치 합이 조금 다를 수 있음 (배율은 없음)
-  const strip = t => t.split('\n\n').filter(p => !p.startsWith('주마다')).join('\n\n').split('\n').filter(l => !l.startsWith('길:'))
-    .map(l => l.replace(/ · 끝 등급 \d+/, '').replace(/^((?:[^\t]*\t){6})[^\t]*(\t\d+\/\d+)$/, '$1-$2')).join('\n');
+  // P39 (10-31): 이웃 답례품으로 받은 장식은 정원사가 다시 사지 않아, 1철 돈 표의 장식 · 연말 돈 칸과 새 철 줄의 "시작할 때 돈"은 길마다 조금 다를 수 있음 (벌통 · 빗물 통이 화원에서 빠지며 드러남 — 수입 · 잔 · 꽃잎 · 주문 · 점수는 그대로 견줌)
+  const cols = t => { const h = t.split('\n')[0].split('\t'), ix = ['장식', '연말 돈'].map(k => h.indexOf(k)); return t.split('\n').map((l, i) => i > 0 && l.split('\t').length === h.length && /^(\d|2철)/.test(l) ? l.split('\t').filter((_, j) => !ix.includes(j)).join('\t') : l).join('\n'); };
+  const strip = t => cols(t).split('\n\n').filter(p => !p.startsWith('주마다')).join('\n\n').split('\n').filter(l => !l.startsWith('길:'))
+    .map(l => l.replace(/ · 끝 등급 \d+/, '').replace(/시작할 때 돈 \d+원/, '시작할 때 돈').replace(/장식에 쓴 돈 1철 \d+/, '장식에 쓴 돈 1철').replace(/^(\d)\t\d+(\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*)\t\d+(\t[^\t]*)$/, '$1\t-$2\t-$3').replace(/^((?:[^\t]*\t){6})[^\t]*(\t\d+\/\d+)$/, '$1-$2')).join('\n');
   const o0 = strip(out(null));
   for (const p of ['꽃길', '찻길', '흙길']) check(strip(out(p)) === o0, `시뮬 4해 + 2철 4해 --path ${p}: 돈 · 수입 · 잔 · 꽃잎 · 주문 · 점수 모두 길 없이와 같음`);
   check(o0.includes('1철 4해 · 판 잔'), '(시뮬이 2철까지 돎)'); }

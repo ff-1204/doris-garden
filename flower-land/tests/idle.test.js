@@ -7,9 +7,11 @@ const fl = (st, x, y) => { const f = { id: 7000 + st.flowers.length, type: 'lave
 
 console.log('[빗물 통 사기]');
 const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); st.money = 100000;
-check(E.decoOffer(E.calendar(st.virtual)).includes('barrel'), '6월 화원에 빗물 통');
+check(E.DECOS.barrel.auto && E.DECOS.barrel.insect, 'P39 화원엔 빗물 통이 없음 (🐌 곤충농장)');
+check(!E.buyDeco(st, 'barrel').ok, 'P39 등급 2 전엔 못 데려옴');
+st.grade.xp = E.gradeXpAt(2);
 const r = E.buyDeco(st, 'barrel'), r2 = E.buyDeco(st, 'barrel');
-check(r.ok && r2.ok && st.money === 50000, '25,000원 · 여러 개 살 수 있음');
+check(r.ok && !r2.ok && st.money === 90000, 'P39 10,000원 · 한 종류에 하나');
 
 console.log('[바로 옆 꽃에 물]');
 E.placeDeco(st, r.deco.id, 5, 5);
@@ -19,7 +21,7 @@ near[0].waterH = 20;
 check(E.barrelTick(st) === 0, '아직 촉촉하면(1달 넘게 남음) 건너뜀');
 
 console.log('[달이 끝날 때 · 꽃잠엔 쉼]');
-const ad = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); ad.money = 1e5;
+const ad = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); ad.money = 1e5; ad.grade.xp = E.gradeXpAt(2);
 const b = E.buyDeco(ad, 'barrel').deco; E.placeDeco(ad, b.id, 3, 3); const f = fl(ad, 3, 4);
 E.advance(ad, E.calendar(ad.virtual).slotEnd + 0.2 * H, { live: false, rng: () => 0.5 });
 check(f.waterH > 12 && f.thirstH === 0, '6월이 끝나면 물이 채워짐');

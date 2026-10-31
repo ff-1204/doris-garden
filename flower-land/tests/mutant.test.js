@@ -123,7 +123,7 @@ check(st.dex.mutjar.dongbaek && st.dex.mutant.dongbaek === 3, '채집 기록 · 
 const fm2 = bloomF(st, 'dongbaek', 8, 6, 0.9, { mut: true });
 check(!E.jarCapture(st, fm2.id).ok && E.jarCapture(st, fm2.id).msg.includes('유리 관이 없어요'), '유리 관이 없으면 안 됨');
 check(E.placeDeco(st, jd.id, 12, 12).ok && E.storeDeco(st, jd.id).ok && E.placeDeco(st, jd.id, 13, 12).ok, '창고 ↔ 정원 자유');
-check(E.decoCount(st) === Object.keys(st.dex.deco).filter(k => E.decoInfo(k) && !E.decoInfo(k).extra).length && !st.dex.deco.mutjar && !E.DECO_KEYS.includes('mutjar') && E.decoTotal() === 50, '꾸밈 도감 셈 · 칸(50)에 안 섞음');
+check(E.decoCount(st) === Object.keys(st.dex.deco).filter(k => E.decoInfo(k) && !E.decoInfo(k).extra).length && !st.dex.deco.mutjar && !E.DECO_KEYS.includes('mutjar') && E.decoTotal() === 54, '꾸밈 도감 셈 · 칸(54 — P39 🪱 · 🐞 · 🧺 · 🫖)에 안 섞음');
 check(!E.buyDeco(st, 'mutjar').ok, '화원에서 살 수 없음');
 check(E.decoBuffLine(st, E.decoKey(jd)) === '🧬 이 꽃의 돌연변이가 더 자주' && E.decoBuffLine(st, 'moonlamp').includes('새해 3월 아침까지 놓아 두면'), '카드 한 줄 (🫙 · 🏮)');
 check(E.mutChance(st, 'dongbaek') === 0.06 && E.mutChance(st, 'rose') === 0.01, '놓인 동백 유리 관 → 동백만 +5%');
@@ -154,7 +154,7 @@ E.MUTANT_KEYS.forEach(k => { st.dex.mutant[k] = 3; }); E.checkJournal(st, null);
 check(st.titles.t_mut39 != null && E.mutDexCells(st) === 39, '39칸 → 「기이한 정원」');
 E.MUTANT_KEYS.forEach(k => { st.dex.mutjar[k] = true; }); E.checkJournal(st, null);
 check(st.titles.t_jar13 != null, '13종 채집 → 「유리 관 수집가」');
-check(E.decoTotal() === 50 && E.decoCount(st) <= E.decoTotal(), '덤 칭호 문장은 꾸밈 도감 칸 밖');
+check(E.decoTotal() === 54 && E.decoCount(st) <= E.decoTotal(), '덤 칭호 문장은 꾸밈 도감 칸 밖');
 check(!E.TITLES.t_miracle.test({ flowers: [{ withered: false, mut: true, stage: 'bloom', q: 1, startQ: 0.5 }] }), '변이 꽃은 「한 포기의 기적」에 안 셈');
 
 console.log('[새 철]');
@@ -175,7 +175,7 @@ console.log('[저장 · 예전 정원]');
   const got = back.ok ? E.migrateSave(back.data.game) : null;
   check(!!got && got.flowers.some(f => f.mut) && got.jar === 1 && got.dex.mutant.rose === 1 && got.decos.some(d => d.mut && d.mut.stage === 2), '저장 파일로 저장 · 열기');
   const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
-  check(MN === E.MIGRATIONS.length - 3, `MIGRATIONS ${MN + 1}번째 P36 (뒤로 P37 · 맨 끝 P38)`);
+  check(MN === E.MIGRATIONS.length - 4, `MIGRATIONS ${MN + 1}번째 P36 (뒤로 P37 · P38 · 맨 끝 P39)`);
   const old = JSON.parse(JSON.stringify(s)); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
   old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 40 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
   const om = E.migrateSave(old);

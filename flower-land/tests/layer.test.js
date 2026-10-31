@@ -57,6 +57,7 @@ check(E.layerOf(st, 3).next.held, 'max 3을 넘기면 예전처럼 held (L1 · L
 E.advance(st, mon + 8 * WEEK + 2 * H, ctx);
 check(E.layerOf(st).layer === 4 && st.layers.at[4] === 8 && st.log.filter(l => l.text === '🌳 정원 뒤에 작은 숲이 생겼어요').length === 1, '새해 3월 아침에 4층 · 일지 한 줄');
 check(E.forestOpen(st) && st.forest.trees.length === 6 && st.forest.trees.every(t => t === null), '🌳 작은 숲이 열림 · 빈 자리 6칸');
+check(st.decos.filter(d => d.key === 'ladybug').length === 1 && st.decos.find(d => d.key === 'ladybug').x == null && st.log.some(l => l.type === 19 && l.text.startsWith('🐞 숲에서 무당벌레')), 'P39-08-02 4층이 열리면 🐞 무당벌레 한 마리가 창고에 · 일지 한 줄');
 
 console.log('[새해 3월 아침에만 열림 (ctx.layerMax 4 — L3에서 켤 자리)]');
 { const evs = [], lc = { live: false, rng: () => 0.5, layerMax: 4, onLayer: e => evs.push(e) };

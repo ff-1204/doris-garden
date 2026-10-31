@@ -7,13 +7,15 @@ const bloom = (st, type, x, y) => { const f = { id: E.HOUR + st.nextId++, type, 
 
 console.log('[벌통 사기]');
 const st = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5);
-st.money = 100000; st.bonus.hive = 1; st.bonusFree = { hive: 1 };   // P38 예전 0단계(둘레 2칸 · 6병)로 옮긴 정원
-check(E.decoOffer(E.calendar(st.virtual)).includes('hive'), '6월 화원에 벌통');
+st.money = 100000; st.bonus.hive = 1; st.grade.xp = E.gradeXpAt(6);   // P39 기르기 1단계(둘레 2칸 · 6병) · 등급 6부터
+check(E.DECOS.hive.auto && E.DECOS.hive.insect, 'P39 화원엔 벌통이 없음 (🐝 곤충농장에서 데려옴)');
 const r = E.buyDeco(st, 'hive');
 check(r.ok && st.money === 85000, '벌통 15,000원');
 check(!E.buyDeco(st, 'hive').ok && st.money === 85000, '벌통은 하나만');
 const st5 = E.create(at(c => c.month === 5 && !c.frozen), () => 0.5); st5.money = 100000;
-check(!E.buyDeco(st5, 'hive').ok, '5월엔 벌통이 없음');
+check(!E.buyDeco(st5, 'hive').ok, 'P39 등급 6 전엔 못 데려옴');
+st5.grade.xp = E.gradeXpAt(6);
+check(E.buyDeco(st5, 'hive').ok, 'P39 5월에도 데려옴 (언제든)');
 
 console.log('[꿀 종류 · 양]');
 check(E.honeyOf([]) === null, '핀 꽃이 없으면 꿀이 없음');
@@ -33,7 +35,7 @@ E.hiveTick(st);
 check(JSON.stringify(d.honey) === '["lavender","lavender"]' && st.log.some(l => l.text.includes('라벤더꿀 2병')), '라벤더꿀 2병 · 일지');
 for (let i = 0; i < 5; i++) E.hiveTick(st);
 check(d.honey.length === E.hiveMax(st) && E.hiveMax(st) === 6 && E.HIVE_MAX === 3, `벌통은 ${E.hiveMax(st)}병까지 (P38 0단계는 ${E.HIVE_MAX}병)`);
-const stored = E.create(st.virtual, () => 0.5); stored.money = 1e6; const sd = E.buyDeco(stored, 'hive').deco;
+const stored = E.create(st.virtual, () => 0.5); stored.money = 1e6; stored.grade.xp = E.gradeXpAt(6); const sd = E.buyDeco(stored, 'hive').deco;
 bloom(stored, 'lavender', 1, 1); E.hiveTick(stored);
 check(!sd.honey || !sd.honey.length, '창고에 있는 벌통은 꿀을 모으지 않음');
 

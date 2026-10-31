@@ -57,20 +57,20 @@ function renderManual(force) {
       fig(`<div class="mn-icons">${item(ico('🌱'), '자람', '멈춤', 'off')}${item(ico('🌿'), '잡초 · 목마름', '멈춤', 'off')}${item(ico('📉'), '품질 하락', '멈춤', 'off')}${item(ico('↔️'), '옮겨심기 · 번식', '할 수 있어요')}${item(ico('💧'), '돌보기', '할 수 있어요')}${item(ico('🧺'), '수확', '핀 꽃만 · 한 번')}${item(ico('🗓️'), '예약', '할 수 있어요')}${item(ico('🫖'), '블렌딩', '할 수 있어요')}${item(ico('🍵'), '찻집', '열려 있어요')}${item(ico('📖'), '기록', '한 해를 돌아봐요')}</div>`,
         '심기는 쉬어요 · 꽃잠엔 새로 피지 않고, 2월에 핀 채로 잠든 꽃은 꽃잠에 한 번 거둬요 · 달 상관없이 옮기고 번식해요(새해 몫 한 번) · 꽃방에 넌 꽃잎은 꽃잠 동안 마르지 않아요 · 일요일에 처음 왔다면 그 꽃잠은 <b>0년차</b>, 1년차는 월요일 아침 6시부터')),
     // 🪴 꾸미기와 꿀 절은 뺌 (P32, 10-30 사용자 요청 — 장식 · 장치 · 🐾 손님은 도감 · 말풍선에서 스스로 찾는 재미, 일꾼은 아래 🐝 곤충농장 칸)
-    // 🐝 곤충농장 (P32-04): 자동 장치 카드들을 하나로 — 일꾼 6줄(이름 · 하는 일 · 값 · 조건) + 🌼 꽃가루 · 따라잡기 한 줄씩 (P37 — 7칸 표는 넣지 않음, 카드에서 봄)
-    sec('farm', '🐝 곤충농장', '정원 일을 도와주는 작은 일꾼들',
-      `<div class="mn-farm">${E.FARM.map(w => { const D = w.wild ? null : E.DECOS[w.key];
-        const when = w.wild ? '데려오지 않아요 · 저절로 와요' : `${won(D.price)} · ${D.need ? `정원 등급 ${D.need}부터` : `${E.decoMonths(w.key).map(monthName).join('·')}에`}${D.one ? ' · 하나만' : ''}`;
-        return `<div class="mn-frow">${insectImg(w.key, 2)}<span><b>${w.icon} ${w.name}${D && D.name !== w.name ? ` <small class="muted">· ${D.name}</small>` : ''}</b><small>${esc(typeof w.desc === 'function' ? w.desc(st) : w.desc || D.desc)}</small><small class="muted">${when}</small></span></div>`; }).join('')}</div>`
+    // 🐝 곤충농장 (P32-04 · P39-12-05): 곤충 7줄(이름 · 하는 일 · 값 · 조건 — 데려오는 차례) + 🌼 꽃가루 · 따라잡기 한 줄씩 (기르기 9칸 표는 넣지 않음, 카드에서 봄)
+    sec('farm', '🐝 곤충농장', '꽃을 돌보는 작은 곤충들',
+      `<div class="mn-farm">${E.FARM.map(w => { const D = E.DECOS[w.key];
+        const when = `${won(D.price)} · 정원 등급 ${D.need}부터 · 하나만`;
+        return `<div class="mn-frow">${insectImg(w.key, 2)}<span><b>${w.icon} ${w.name}${D.name !== w.name ? ` <small class="muted">· ${D.name}</small>` : ''}</b><small>${esc(D.desc)}</small><small class="muted">${when}</small></span></div>`; }).join('')}</div>`
       + fig(`<div class="mn-icons">${item(ico('🌼'), '꽃가루', '등급이 오를 때마다 1알')}${item(ico('🌙'), '따라잡기', `최대 ${E.bonusVal(st, 'catchup')}주`)}</div>`,
-        '탭 줄 🐝 곤충농장에서 일꾼을 데려오고(💐 화원과 같은 값) · 창고에서 쉬는 일꾼을 정원에 놓고 · 지난달 한 일과 말 한 줄을 봐요 · 일꾼은 꽃 한 포기 · 꽃잎 한 장처럼 작게 시작해서 🌼 꽃가루를 먹일수록 자라요(일꾼 카드마다 먹이기 · 다시 어리게, 4층이 열리면 🐞 무당벌레도 · 🧺 입구 선반 · 🌙 늦잠은 카드 아래) · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 일꾼은 사람이 하던 손을 덜 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 켜 두지 않아도 일해요 · 정원 지도엔 바구니 · 건조대 같은 장식 그림으로 보여요')),
+        '탭 줄 🐝 곤충농장에서 곤충을 언제든 데려오고(한 종류에 하나) · 정원에 놓으면 그 자리 둘레 1칸의 꽃을 달이 끝날 때마다 돌봐요 · 🌼 꽃가루를 먹이면 둘레가 2칸 · 3칸으로 넓어져요(카드마다 먹이기 · 다시 어리게, 🧺 입구 선반 · 🌙 늦잠은 카드 아래) · 정원에서 곤충을 누르면 둘레가 지도에 보이고, 꽃 상태창엔 돌보는 곤충 아이콘이 떠요 · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 곤충은 사람이 하던 손을 덜 뿐 더 벌지는 않아요 · 꽃잠엔 쉬어요 · 말리기 · 차 우리기는 ⛏️ 광산 공방의 🧺 건조 선반 · 🫖 찻집 도우미가 맡아요')),
     sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',
       fig(`<div class="mn-flow">${item(ico('⛏️'), '기력 12', '30분마다 1칸')}${arrow()}${item(mineImg('stone', 2), '파기', '한 칸에 1')}${arrow()}${item(mineImg('stairs', 2), '계단', '아래층으로')}${arrow()}${item(mineImg('amber', 2), '깊을수록', '드문 광물')}</div>`,
         '탭 줄 ⛏️ 광산에서 들어가요 · 꺼 둔 동안에도 기력이 차고 꽃잠에도 팔 수 있어요')
       + fig(`<div class="mn-flow">${item(mineImg('dirt', 2), '흙 5', '🌱 비료')}${item(mineImg('stone', 2), '돌', '징검돌 · 물확 · 석등')}${item(mineImg('jade', 2), '비취 2', '청자 찻잔')}${item(mineImg('fossil', 2), '화석', '광산 도감')}</div>`,
         '광산에서 나온 것은 팔지 않아요 · 🔨 만들기로 정원 용품(비료 · 호미 · 가위)과 장식 · 유리 관을 돈 없이 만들어요')
       + fig(`<div class="mn-icons">${item(ico('🧺'), '입구 선반', '정원 저장고')}${item(ico('🔆'), '공방', '정원 장치')}</div>`,
-        '⛏️ 광산 탭 아래 — 🧺 선반엔 2시간마다 하나씩 쌓여 모두 거두기로 받고, 🔆 공방은 다 자라기까지만 빨라지는 장치를 팔아요(💐 화원과 같은 값)')),
+        '⛏️ 광산 탭 아래 — 🧺 선반엔 2시간마다 하나씩 쌓여 모두 거두기로 받고, 🔆 공방은 다 자라기까지만 빨라지는 장치와 🧺 건조 선반(달마다 꽃잎 4장을 널어 티백까지) · 🫖 찻집 도우미(카운터에 손님 자리보다 2잔 더)를 팔아요')),
     sec('guest', '손님 주문과 한 해 평가', '오래 하는 정원사에게',
       fig(`<div class="mn-flow">${item(ico('💌'), '주문 쪽지 3장', '달마다 · 등급 장식마다 +1')}${arrow()}${item(spriteImg('lavender', 'tea', 32, false, ''), '★4 라벤더차', '맞는 찻잔을 팔면')}${arrow()}${item(ico('🎀'), '기념품', '🌙 꽃잠 주문만')}</div>`,
         '손으로 팔든 손님이 사 가든 맞으면 ✓ · 기념품(12가지 · 도감)은 🌙 꽃잠에 들어준 주문에만 · 돈은 더 주지 않아요 · 놓쳐도 다음 달에 새 쪽지')
@@ -87,8 +87,8 @@ function renderManual(force) {
         '🌳 작은 숲 — 4층이 열리면 나무 자리 6칸 · 💐 화원 🌳 숲 줄이나 숲 탭 빈 자리에서 묘목을 돈으로 심어요 · 해가 바뀔 때마다(새해 3월 아침) 묘목 → 어린나무 → 나무 → 큰 나무(꽃잠에 심으면 다음 해 아침부터) · 물 · 돌봄 없이 자라고 시들지 않아요(쉬는 동안도 자라요) · 열매 · 돈은 나오지 않아요 · 심은 나무는 옮기거나 베지 않아요 · 큰 나무엔 🐦 박새 · 🐇 산토끼가 와 앉기도 해요 · 📖 도감 🌳 숲 24칸 · 새 철에도 숲은 그대로예요 · 🌿 4층이 열린 뒤엔 🐞 무당벌레가 달 끝마다 잡초 ' + E.forestWeedWord(st) + '를 치워요(호미 · 비료 덤 · 목표엔 안 셈, 꽃잠엔 쉼)')   // P30-02
       + fig(`<div class="mn-flow">${[0, 1, 2, 3].map(s => { const ks = E.YEARLY_KEYS.filter(k => E.YEARLY[k].season === s); return item(ico(E.YEARLY[ks[0]].icon), `${E.SEASONS[s]} 하나`, ks.map(k => E.YEARLY[k].word).join(' · ')); }).join('')}</div>`,   // P30-05-03 🗓️ 올해만 오는 것
         '🗓️ 올해만 오는 것 — 해마다 계절마다 하나씩, 한 해 4개가 정원 위에 와요 · 그 계절에 한 번 열면 봐요(켜 둘 필요 없어요) · 놓친 것은 다음 해 같은 계절에 먼저 다시 와요 · 그림뿐이라 꽃 값 · 자람은 그대로예요 · 📔 도감일지 층 아래 올해 달력 · 📖 도감 🗓️ 올해만')
-      + fig(`<div class="mn-flow">${item(ico('🌱'), '정원 등급', '오를 때마다')}${arrow()}${item(ico('🌼'), '꽃가루', '1알')}${arrow()}${item(insectImg('autobasket', 2), '일꾼 기르기', '🐝 곤충농장')}</div>`,   // P28-05-02 · P37 🌼 꽃가루
-        '🐝 곤충농장 일꾼 카드에서 꽃가루를 먹이면 일꾼이 자라요 · 손을 덜어 줄 뿐 더 벌지는 않아요 · 언제든 다시 어리게 하면 꽃가루가 돌아와요 · 끝까지 기른 개미 · 누에는 그림이 바뀌어요')
+      + fig(`<div class="mn-flow">${item(ico('🌱'), '정원 등급', '오를 때마다')}${arrow()}${item(ico('🌼'), '꽃가루', '1알')}${arrow()}${item(insectImg('earthworm', 2), '둘레 넓히기', '🐝 곤충농장')}</div>`,   // P28-05-02 · P37 · P39 🌼 꽃가루
+        '🐝 곤충농장 곤충 카드에서 꽃가루를 먹이면 둘레가 1칸 → 2칸 → 3칸으로 넓어져요(2알 · 3알) · 손을 덜어 줄 뿐 더 벌지는 않아요 · 언제든 다시 어리게 하면 꽃가루가 돌아와요')
       + fig(`<div class="mn-flow">${item(ico('🗓️'), '월요일 아침', '목표 3개')}${arrow()}${item(ico('🌿'), '쉬움 · 보통 · 어려움', `🌱 +${E.WEEKLY_XP.join(' · +')}`)}${arrow()}${item(ico('🎉'), '셋 다', `덤 🌱 +${E.WEEKLY_BONUS}`)}</div>`,   // P28-09 🗓️ 주간 목표
         '이번 주 목표는 📔 도감일지 등급 아래에 있어요 · 주 안에 언제 해도 되고 꽃잠에도 돼요 · 못 끝낸 목표는 그냥 사라져요 · 돈은 주지 않아요')
       + `<div class="mn-icons">${item(ico('🌱'), '새싹', '처음 장')}${item(ico('🌸'), '꽃', '가운데 장')}${item(ico('👑'), '정원', '마지막 장')}${item(ico('📚'), `도감 ${E.dexTotal(st)}칸`, '꽃 · 꽃잎 · 티백 · 차 · 땅 · 블렌드')}</div>`),
@@ -173,7 +173,7 @@ function renderSettings() {
     ${!DEV ? '' : group('⏩', '시간', '개발용 · 이 컴퓨터(localhost)에서만 보여요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>')
-      + row('🐝', '일꾼 다 데려오기', '곤충농장 확인용 (P32) · 정원 등급 12(일꾼은 6이면 다 와요) · 돈을 채우고 지금 화원에 있는 일꾼은 사고, 철 지난 꿀벌 · 달팽이는 창고에 바로 넣어요', '<button type="button" class="btn small" id="devFarm">데려오기</button>')
+      + row('🐝', '곤충 다 데려오기', '곤충농장 확인용 (P32 · P39) · 정원 등급 12 · 돈을 채우고 곤충 일곱을 창고에 데려와요', '<button type="button" class="btn small" id="devFarm">데려오기</button>')
       + row('🌱', '등급 경험치 더하기', '등급 화면 확인용 · 퀘스트 10개 몫(100)', '<button type="button" class="btn small" id="devXp">+100</button>')
       + row('🗓️', '주간 목표', '목표 확인용 · 안 끝낸 첫 목표를 끝내거나 다음 월요일 아침으로', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devWeekly">하나 끝</button><button type="button" class="btn small" id="devWeek">다음 주</button></span>')
       + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
@@ -261,15 +261,15 @@ function devSeasonFill() {
   save(); renderAll(true); feedback(E.seasonReady(st).ready ? '🌸 새 철 조건을 채웠어요 · 📖 기록 맨 위 카드 끝을 보세요' : '조건을 다 못 채웠어요', !E.seasonReady(st).ready);
 }
 // 개발용 (P30-01-02): 3층(찻집 · 광산)까지 열어 연 해를 적고, 해마다 기록 8줄(숫자 모름)을 쌓고, 꽃 도감 13종 → 📔 도감일지 층 쪽 "8해가 지났어요 · 13 / 13 ✔"
-// 개발용 (P32-04): 🐝 일꾼 다 데려오기 — 등급 12 · 돈을 채워 화원 흐름(buyDeco)으로 사고, 이달에 안 파는 꿀벌 · 달팽이는 창고에 바로 (무당벌레는 4층 — 🌳 작은 숲 단추로)
+// 개발용 (P32-04 · P39): 🐝 곤충 다 데려오기 — 등급 12 · 돈을 채워 곤충농장 흐름(buyDeco)으로 일곱 모두 창고에
 function devFarmFill() {
   if (E.gradeOf(st).grade < 12) st.grade.xp = Math.max(st.grade.xp, E.gradeXpAt(12));
   st.money += 300000;
-  for (const w of E.FARM.filter(x => !x.wild)) {
+  for (const w of E.FARM) {
     if ((st.decos || []).some(d => d.key === w.key)) continue;
     if (!E.buyDeco(st, w.key, ctx).ok) { (st.decos = st.decos || []).push({ id: st.nextId++, key: w.key, x: null, y: null }); st.dex.deco[w.key] = true; }
   }
-  save(); setTab('farm'); feedback('🐝 일꾼 다섯을 창고에 데려왔어요 · 카드에서 정원에 놓아요');
+  save(); setTab('farm'); feedback('🐝 곤충 일곱을 창고에 데려왔어요 · 카드에서 정원에 놓아요');
 }
 function devLayerFill() {
   if (!Object.keys(st.dex.tea).length) st.dex.tea[E.firstFlower(st) || 'chamomile'] = st.virtual;
@@ -363,18 +363,24 @@ function giveGift() {
   return r;
 }
 function startGarden() { ui.onDismiss = null; if (st.onboarded) return closeModal(); st.onboarded = true; closeModal(); giveGift(); E.checkJournal(st, ctx); save(); renderAll(true); }
+// 변경 10-31 (사용자 요청): 첫 안내는 "더 이상 보지 않기"를 누를 때까지 열 때마다 — 이 기기 표시(localStorage, 완전 초기화면 같이 지워짐). ✕ · 바깥 · Esc는 정원만 시작하고 표시는 안 남김
+const INTRO_KEY = KEY + '-intro';
+function introDone() { try { return !!localStorage.getItem(INTRO_KEY); } catch (e) { return true; } }   // 저장소를 못 쓰면 매번 띄우지 않음
+function introOff() { try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) { /* 못 남기면 다음에 한 번 더 */ } startGarden(); }
+// 변경 10-31 (사용자 요청 "컨셉과 핵심만" → "픽셀 아트 · 감성 게임처럼"): 그림책처럼 장면 셋 — 땅 · 시간 · 꽃에서 차까지. 그림은 가운데, 글은 세리프 한 줄 + 작은 한 줄.
+// 물 주기 · 이웃 화분 · 할머니 꾸러미 · 이달 안내는 해 보면서 알게 (첫걸음 · 매뉴얼에 있음)
 function onboarding() {
-  const cal = E.calendar(st.virtual);
-  openModal('도리의 정원', `<div class="stack" style="gap:10px">
-    <div class="ob-vis">
-      <figure>${landPixel()}<figcaption><b>꽃이 땅을 바꿔요</b>처음엔 모두 황무지. 심은 꽃 둘레가 그 꽃이 좋아하는 땅이 돼요</figcaption></figure>
-      <figure>${weekPixel(cal)}<figcaption><b>현실 1주 = 정원 1년</b>오전·오후 6시마다 한 달씩. 일요일은 🌙 꽃잠 (시간이 멈추고 예약해요) · 쉼 · 샘 = 쉼달 · 꽃샘달</figcaption></figure>
-    </div>
-    <p class="ob-care"><span>💧</span><span>🌿</span> 물과 잡초는 <b>하루에 한 번</b>이면 충분해요</p>
-    ${st.gift == null ? `<p class="ob-care">${spriteImg((ui.giftWant = E.GIFT_BY_MONTH[cal.month]), 'flower', 32, false, '')} 시작하면 이웃이 <b>${FLOWERS[E.GIFT_BY_MONTH[cal.month]].name}</b> 화분을 하나 나눠 줘요 · 정원 가운데에서 먼저 눌러 보세요</p>
-    <p class="ob-care"><span>✉️</span> 꽃집 할머니도 <b>편지와 꾸러미</b>를 보내요 · 말린 꽃잎 두 가지로 블렌딩하고, 🍵 찻집에서 <b>첫 손님</b>을 맞아 보세요</p>` : ''}
-    <p class="note">${cal.frozen ? `지금은 꽃잠이라 정원이 쉬고 있어요. 첫 해는 <b>월요일 아침 6시</b>(${realH(E.untilMonth(st.virtual, c => !c.frozen).hours)} 뒤)에 3월로 시작해요. 그 전에 💐 화원에서 새해 꽃을 <b>10% 싸게 예약</b>해 두면, 심을 때가 되면 창고로 와요.` : `지금은 ${monthName(cal.month)}이에요. 💐 화원에서 제철 꽃을 사서 심어 보세요.`}</p>
-    <p class="note">돌보지 않아도 꽃은 죽지 않고, 놓친 것은 다음 해에 다시 할 수 있어요. 천천히 즐겨 주세요.</p></div>`,
-    [{ label: '시작', primary: true, act: startGarden }]);
+  const cal = E.calendar(st.virtual), f = 'chamomile';
+  if (st.gift == null) ui.giftWant = E.GIFT_BY_MONTH[cal.month];   // 창을 연 채 달이 바뀌어도 화분 꽃은 열 때 것으로
+  const scene = (art, line, sub) => `<section class="ob-scene">${art}<p>${line}<small>${sub}</small></p></section>`;
+  const dots = '<div class="ob-dots" aria-hidden="true"><i></i><i></i><i></i></div>';
+  const box = (k, kind, alt) => `<span class="ob-px">${spriteImg(k, kind, 32, false, alt)}</span>`, ar = '<span class="ob-ar" aria-hidden="true">›</span>';
+  const teaFlow = `<div class="ob-flow" role="img" aria-label="핀 꽃 · 말린 꽃잎 · 티백 · 찻잔">${box(f, 'flower', '핀 꽃')}${ar}${box(f, 'dried', '말린 꽃잎')}${ar}${box(f, 'teabag', '티백')}${ar}${box(f, 'tea', '찻잔')}</div>`;
+  openModal('도리의 정원', `<div class="ob-story">
+    ${scene(landPixel(), '메마른 땅에 꽃 한 포기를 심었어요.', '꽃은 저 좋아하는 땅을 둘레에 조금씩 만들어 가요')}${dots}
+    ${scene(weekPixel(cal), '여기선 한 주가 한 해예요.', '아침과 저녁에 한 달씩 흘러요 · 일요일엔 꽃들이 잠들어요')}${dots}
+    ${scene(teaFlow, '꽃잎을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
+    <p class="ob-end">${cal.frozen ? '지금은 🌙 꽃잠이에요. 월요일 아침 6시, 첫 해가 시작돼요.<br>' : ''}서두르지 않아도 괜찮아요. 꽃은 기다려 줘요.</p></div>`,
+    [{ label: '더 이상 보지 않기', primary: true, act: introOff }]);   // 변경 10-31 (사용자 요청) — 누를 때까지 열 때마다 뜸 (introDone)
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }

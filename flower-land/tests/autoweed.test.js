@@ -1,81 +1,68 @@
-// P30-02 🌿 앞 층 손일 자동 (L3 묶음 2, 10-30): 4층(🌳 작은 숲)이 열린 정원은 꽃잠이 아닌 달 끝에 잡초 난 꽃을 앞에서 3포기까지 숲 바람이 걷어 감 (사용자 10-30)
-// 호미 · 비료 덤(weedCount) · 주간 목표 · 경험치는 손으로 한 일만 (P28-10) · 일지 한 줄 · 자리를 비운 동안 한 줄 · 느긋하게 보기면 숫자 없이 (P30-08)
+// P39-08 🐞 무당벌레 (10-31): 예전 P30-02 🌿 숲 바람(4층이 열리면 저절로 잡초 3포기)을 없애고 놓는 곤충으로 — 둘레 r칸 꽃의 잡초를 달 끝마다 치움
+// 4층이 열리면 무당벌레 한 마리를 선물로 창고에 (P39-08-02) · 호미 · 비료 덤(weedCount) · 주간 목표 · 경험치는 손으로 한 일만 (P28-10) · 느긋하게 보기면 일지에 숫자 없이 (P30-08)
 const E = require(require('path').resolve((process.argv[2] || require('path').join(__dirname, '..', 'engine.js'))));
 let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails++; };
 const H = E.HOUR, ctx = { live: false, rng: () => 0.5 };
-const copy = o => JSON.parse(JSON.stringify(o));
 const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 6000; i++) { const c = E.calendar(t); if (pred(c)) return t + 0.1 * H; t += H / 4; } };
 const fl = (st, type, x, y, extra) => { const f = Object.assign({ id: 7000 + st.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'bloom', bloomed: true, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 }, extra); st.flowers.push(f); return f; };
 const monthEnd = st => E.advance(st, E.calendar(st.virtual).slotEnd + 0.2 * H, ctx);
-const layer3 = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'autoweed-test'; st.onboarded = true; st.dex.tea.chamomile = 1; st.stats.dug = 1; E.weeklyOf(st); return st; };
-const open4 = st => { st.layers.at[4] = 0; st.bonus.weed = 2; st.bonusFree = { weed: 2 }; return st; };   // P38 예전 0단계(3포기)로 옮긴 정원 — 숲 바람 규칙 확인은 그대로
-const weedy = st => st.flowers.filter(f => !f.withered && f.weedH <= 0);
-const plant5 = st => { fl(st, 'chamomile', 2, 2, { weedH: 0 }); fl(st, 'chamomile', 4, 2, { weedH: 0 }); fl(st, 'lavender', 6, 2, { weedH: 0 }); fl(st, 'lavender', 8, 2, { weedH: 0 }); fl(st, 'rose', 10, 2, { weedH: 50 }); fl(st, 'rose', 12, 2, { weedH: 0, withered: true }); };
+const garden = pred => { const st = E.create(at(pred), () => 0.5); st.gardenId = 'autoweed-test'; st.onboarded = true; st.money = 1e6; E.weeklyOf(st); return st; };
 
-console.log('[4층 정원: 달 끝에 잡초 난 꽃 3포기까지 (13 노을재 13-5)]');
+console.log('[4층이 열려도 저절로 치우지 않음 — 숲 바람은 없앰]');
 {
-  const st = open4(layer3(c => c.month === 6 && !c.frozen)); plant5(st);
-  const twin = layer3(c => c.month === 6 && !c.frozen); plant5(twin);   // 같은 정원 · 3층
-  check(E.forestOpen(st) && !E.forestOpen(twin), '4층 연 정원 · 3층 정원');
-  const hoe0 = st.hoe, fert0 = st.fert, wc0 = st.weedCount, wk0 = JSON.stringify(st.weekly.goals.map(g => g.got)), before = E.autoStats(st);
+  const st = garden(c => c.month === 6 && !c.frozen); st.layers.at[4] = 0; st.dex.tea.chamomile = 1; st.stats.dug = 1;
+  const f = fl(st, 'chamomile', 2, 2, { weedH: 0 });
+  check(E.forestOpen(st) && typeof E.forestWeedOf === 'undefined' && typeof E.forestWeedTick === 'undefined', '4층 정원 · forestWeedTick · forestWeedOf 없음');
+  monthEnd(st);
+  check(f.weedH === 0 && !(st.stats.autoWeed > 0), '무당벌레를 놓지 않으면 잡초 그대로');
+}
+
+console.log('[🐞 데려오기 · 둘레 1칸 꽃의 잡초 (P39-08-01)]');
+{
+  const st = garden(c => c.month === 6 && !c.frozen);
+  check(E.DECOS.ladybug.insect && E.DECOS.ladybug.need === 3 && E.DECOS.ladybug.price === 12000 && E.DECOS.ladybug.one, '등급 3 · 12,000원 · 하나만');
+  check(!E.buyDeco(st, 'ladybug', ctx).ok, '등급 3 전엔 못 데려옴');
+  st.grade.xp = E.gradeXpAt(3);
+  const d = E.buyDeco(st, 'ladybug', ctx).deco; E.placeDeco(st, d.id, 5, 5);
+  const near = [fl(st, 'chamomile', 4, 4, { weedH: 0 }), fl(st, 'rose', 6, 6, { weedH: 5 })], far = fl(st, 'lavender', 7, 5, { weedH: 0 }), fresh = fl(st, 'lavender', 5, 6, { weedH: 30 });
+  const hoe0 = st.hoe, fert0 = st.fert, wc0 = st.weedCount, xp0 = st.grade.xp, wk0 = JSON.stringify(st.weekly.goals.map(g => g.got)), before = E.autoStats(st);
+  const twin = garden(c => c.month === 6 && !c.frozen); twin.grade.xp = xp0; fl(twin, 'chamomile', 4, 4, { weedH: 0 });
   monthEnd(st); monthEnd(twin);
-  check(E.FOREST_WEED_N === 1 && E.forestWeedN(st) === 3 && weedy(st).length === 1 && st.flowers.slice(0, 4).filter(f => f.weedH > 23).length === 3, '잡초 난 4포기 중 3포기 걷힘 (weedH 24)');
-  check(st.flowers[0].weedH > 23 && st.flowers[1].weedH > 23 && st.flowers[2].weedH > 23 && st.flowers[3].weedH <= 0, '꽃 배열 앞에서부터 — 넷째는 다음 달');
-  check(st.flowers[4].weedH > 0 && st.flowers[4].weedH < 50 && st.flowers[5].weedH === 0, '잡초 없는 꽃 · 시든 꽃은 그대로');
-  check(weedy(twin).length === 4, '3층 정원은 걷히지 않음');
-  check(st.hoe === hoe0 && st.hoe === twin.hoe, '호미는 안 씀');
-  check(st.weedCount === wc0 && st.fert === fert0 && st.fert === twin.fert, '비료 덤 · weedCount에 안 셈');
-  check(JSON.stringify(st.weekly.goals.map(g => g.got)) === wk0 && JSON.stringify(twin.weekly.goals.map(g => g.got)) === wk0, '주간 목표 진행 그대로');
-  check(st.grade.xp === twin.grade.xp, '등급 경험치 없음 (3층 정원과 같음)');
-  check(st.stats.autoWeed === 3 && E.autoStats(st).autoWeed === 3 && E.autoStats(twin).autoWeed === 0, 'autoStats.autoWeed 3');
-  const line = st.log.find(l => l.text === '무당벌레가 잡초 3포기를 치웠어요');
-  check(line && line.type === 19 && E.isAutoLine(line.text) && E.autoLineType(line.text) === 19, '일지 한 줄 (type 19 🌿) · 자동 줄로 묶임');
-  check(!twin.log.some(l => l.text.startsWith('무당벌레')), '3층 정원 일지엔 없음');
-  const away = E.autoAwayLines(st, before);
-  check(away.length === 1 && away[0] === '무당벌레가 잡초 3포기를 치웠어요', '자리를 비운 동안 한 줄');
-  const w = E.forestWeedOf(st);
-  check(w && w.n === 3 && w.text === '🐞 이번 달 무당벌레가 잡초 3포기를 치웠어요', '🌳 숲 탭 머리 한 줄 (이번 달 3포기)');
-  check(E.forestWeedOf(twin) === null, '3층 정원은 숲 줄 없음');
+  check(near.every(f => f.weedH > 23) && far.weedH === 0, '둘레 1칸 꽃만 · 2칸 떨어진 꽃은 그대로');
+  check(fresh.weedH > 17 && fresh.weedH <= 30, '아직 한 달 넘게 남은 꽃은 건너뜀');
+  check(st.hoe === hoe0 && st.weedCount === wc0 && st.fert === fert0, '호미 안 씀 · 비료 덤 없음');
+  check(JSON.stringify(st.weekly.goals.map(g => g.got)) === wk0 && st.grade.xp === twin.grade.xp, '주간 목표 · 경험치 그대로 (무당벌레 없는 정원과 같음)');
+  check(st.stats.autoWeed === 2, '한 일 2포기 (stats.autoWeed)');
+  const line = st.log.find(l => l.text === '무당벌레가 꽃 2포기의 잡초를 치웠어요');
+  check(line && line.type === 20 && E.isAutoLine(line.text), '일지 한 줄 (type 20 🐝) · 자동 줄로 묶임');
+  check(E.autoAwayLines(st, before).join() === '무당벌레가 꽃 2포기의 잡초를 치웠어요', '자리를 비운 동안 한 줄');
+  st.bonus.weed = 1; far.weedH = 0;
   monthEnd(st);
-  check(weedy(st).length === 0 && st.stats.autoWeed === 4, '다음 달 끝엔 남은 1포기 (3포기 미만이면 그만큼)');
-  const slow = copy(st); slow.settings.slow = true;
-  const sw = E.forestWeedOf(slow), sa = E.autoAwayLines(slow, before);
-  check(sw.n === null && sw.slow && !/\d/.test(sw.text) && sa[0] === '무당벌레가 잡초를 치웠어요', '🐢 느긋하게 보기: 숲 줄 · 비운 동안 줄에 숫자 없음');
-  const st2 = copy(st); for (const f of st2.flowers) f.weedH = 99; monthEnd(st2);
-  const later = E.forestWeedOf(st2);
-  check(later.n === 0 && later.text === '🐞 무당벌레가 달 끝마다 잡초 세 포기를 치워요', '걷을 잡초가 없던 달엔 숫자 없는 안내 한 줄');
+  check(far.weedH > 23 && E.insectR(st, 'ladybug') === 2, '🌼 기르면 둘레 2칸');
 }
 
-console.log('[10포기여도 3포기 · 꽃잠엔 쉼 · 하나만 남으면 그 하나]');
+console.log('[꽃잠 · 창고 · 느긋하게 보기]');
 {
-  const st = open4(layer3(c => c.month === 6 && !c.frozen)); for (let i = 0; i < 10; i++) fl(st, 'chamomile', 2 + 2 * i, 4, { weedH: 0 });
-  monthEnd(st);
-  check(weedy(st).length === 7 && st.stats.autoWeed === 3 && st.log.some(l => l.text === '무당벌레가 잡초 3포기를 치웠어요'), '잡초 난 꽃 10포기여도 한 달에 3포기만');
-}
-{
-  const st = open4(layer3(c => c.idx === 12)); fl(st, 'chamomile', 2, 2, { weedH: 0 });
-  monthEnd(st);
-  check(st.flowers[0].weedH === 0 && !st.stats.autoWeed, '꽃잠 달이 끝날 땐 걷지 않음');
-  const one = open4(layer3(c => c.month === 6 && !c.frozen)); fl(one, 'chamomile', 2, 2, { weedH: 0 });
-  monthEnd(one);
-  check(one.flowers[0].weedH > 23 && one.stats.autoWeed === 1, '잡초 난 꽃이 하나면 그 하나를 걷음');
+  const sl = garden(c => c.month === 13); sl.decos.push({ id: 1, key: 'ladybug', x: 2, y: 2 }); const g = fl(sl, 'chamomile', 2, 3, { weedH: 0 });
+  monthEnd(sl);
+  check(g.weedH === 0, '꽃잠 달이 끝날 땐 쉼');
+  const sto = garden(c => c.month === 6 && !c.frozen); sto.decos.push({ id: 1, key: 'ladybug', x: null, y: null }); const h = fl(sto, 'chamomile', 0, 0, { weedH: 0 });
+  monthEnd(sto);
+  check(h.weedH === 0, '창고의 무당벌레는 쉼');
+  const sv = garden(c => c.month === 6 && !c.frozen); sv.settings.slow = true; sv.decos.push({ id: 1, key: 'ladybug', x: 2, y: 2 }); fl(sv, 'chamomile', 2, 3, { weedH: 0 });
+  monthEnd(sv);
+  check(sv.log.some(l => l.text === '무당벌레가 잡초를 치웠어요') && !sv.log.some(l => l.text.startsWith('무당벌레') && /\d/.test(l.text)), '🐢 느긋하게 보기면 일지에 숫자 없이');
 }
 
-console.log('[저장 · 예전 정원]');
+console.log('[4층이 열리면 선물 한 마리 (P39-08-02)]');
 {
-  const old = layer3(c => c.month === 6 && !c.frozen); delete old.stats.autoWeed;
-  check(E.autoStats(old).autoWeed === 0 && E.autoAwayLines(old, {}).length === 0, 'stats.autoWeed가 없는 예전 정원도 0으로 읽음 (MIGRATIONS 불필요)');
-  const st = open4(layer3(c => c.month === 6 && !c.frozen)); plant5(st); monthEnd(st);
-  const re = E.parseSave(JSON.stringify(E.makeSave(st)));
-  const r = re.ok && re.data.game;
-  check(r && r.stats && r.stats.autoWeed === 3, '저장 · 불러오기 뒤에도 셈이 그대로');
-}
-
-console.log('[시뮬 기본은 그대로]');
-{
-  const out = require('child_process').execFileSync(process.execPath, [require('path').join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7'], { encoding: 'utf8' });
-  const y4 = out.split('\n')[4].split('\t');
-  check(y4[0] === '4' && y4[15] === '80720', `sim-economy 4 7 연말 80,720원 그대로 (${y4[15]}) — P34 찻집 매달 · 겨울 · 꽃잠 값 (예전 22,310원)`);
+  const st = garden(c => c.month === 6 && !c.frozen);
+  const d = E.ladybugGift(st, ctx);
+  check(d && d.x == null && st.decos.filter(x => x.key === 'ladybug').length === 1 && st.dex.deco.ladybug, '창고에 한 마리 · 꾸밈 도감에도');
+  check(st.log.some(l => l.type === 19 && l.text === '🐞 숲에서 무당벌레가 왔어요 · 📦 창고에 있어요'), '일지 한 줄 (📮 편지함 소식 🐞)');
+  check(E.ladybugGift(st, ctx) === null && st.decos.filter(x => x.key === 'ladybug').length === 1, '이미 있으면 더 주지 않음');
+  const K = E.newsKind({ type: 19, text: '🐞 숲에서 무당벌레가 왔어요 · 📦 창고에 있어요' });
+  check(K && K[0] === 'wind', '소식으로 보임');
 }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

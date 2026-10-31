@@ -163,8 +163,9 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.addEventListener('pagehide', save);
 
 resize(); renderAll(true);
-if (window.__brokenSave) brokenNotice(() => { if (!st.onboarded) onboarding(); });
-else if (!st.onboarded) onboarding();
+const introDue = () => !st.onboarded || !introDone();   // 첫 안내: 시작 전이거나 "더 이상 보지 않기"를 아직 안 눌렀으면 (10-31). 비운 동안 요약은 창이 닫힌 뒤 frame이 보여 줌
+if (window.__brokenSave) brokenNotice(() => { if (introDue()) onboarding(); });
+else if (introDue()) onboarding();
 else showAway();
 mailFetch();                                      // 📮 운영자 편지 (P29-04)
 cloudStart();                                     // ☁️ 구글 드라이브 (P20-04 ~ 06, 클라이언트 ID가 없으면 아무것도 안 함)

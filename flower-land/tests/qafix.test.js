@@ -25,13 +25,13 @@ check(!E.plant(dd, it.id, 2.5, 3, () => 0).ok && !E.plant(dd, it.id, '2', 3, () 
 check(E.placeDeco(dd, deco.id, 4, 4).msg.endsWith('놓았어요') && E.placeDeco(dd, deco.id, 5, 4).msg.endsWith('옮겼어요'), '처음엔 "놓았어요", 옮기면 "옮겼어요"');
 
 console.log('[창고에 넣는 벌통의 꿀]');
-const hv = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); hv.money = 1e6;
+const hv = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); hv.money = 1e6; hv.grade.xp = E.gradeXpAt(6);
 const hd = E.buyDeco(hv, 'hive').deco; E.placeDeco(hv, hd.id, 3, 3); hd.honey = ['lavender', 'wild'];
 const sr = E.storeDeco(hv, hd.id);
 check(sr.ok && sr.msg.includes('꿀 2병') && hv.honey.lavender === 1 && hv.honey.wild === 1 && !hd.honey.length, '꿀은 꿀 선반으로 함께 거둠');
 
 console.log('[벌통은 달이 끝날 때 실제로 모음]');
-const ad = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); ad.money = 1e6;
+const ad = E.create(at(c => c.month === 6 && !c.frozen), () => 0.5); ad.money = 1e6; ad.grade.xp = E.gradeXpAt(6);
 const ah = E.buyDeco(ad, 'hive').deco; E.placeDeco(ad, ah.id, 10, 10);
 for (let i = 0; i < 3; i++) ad.flowers.push({ id: 8000 + i, type: 'lavender', x: 9 + i, y: 11, q: 0.7, startQ: 0.7, stage: 'bloom', withered: false, bloomed: true, ageH: 3000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1 });
 const cal0 = E.calendar(ad.virtual);

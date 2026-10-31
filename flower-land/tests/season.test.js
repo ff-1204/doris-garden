@@ -41,8 +41,8 @@ st.drying.push({ id: 8005, type: 'rose', q: 1, leftH: 3 }); st.dried.push({ id: 
 st.cups.push({ id: 8008, kind: 'tea', type: 'rose', q: 1, brewAbs: 0 }); st.reservations.push({ type: 'rose', qty: 1, year: 4, deliverIdx: 0 });
 st.orders = [{ kind: 'any' }]; st.pantry.items.push({ k: 'water' }); st.honey = { rose: 2 }; st.mine.bag = { stone: 3 }; st.mine.deepest = 12; st.mine.depth = 5;
 st.tiles[0] = { t: 22, m: 70, life: 9 }; st.tiles[1] = { t: 5, m: 10, life: 9 };
-st.decos.push({ id: 9001, key: 'bench', x: 5, y: 5 }, { id: 9002, key: 'autobasket', x: 6, y: 6 }, { id: 9003, key: 'hive', x: 9, y: 9, honey: ['rose', 'rose'] }, { id: 9004, key: 'teahelper', x: 0, y: 0 }, { id: 9005, key: 'growlight', x: 12, y: 12 });
-for (const k of ['bench', 'autobasket', 'hive', 'teahelper', 'growlight']) st.dex.deco[k] = true;
+st.decos.push({ id: 9001, key: 'bench', x: 5, y: 5 }, { id: 9002, key: 'autobasket', x: 6, y: 6 }, { id: 9003, key: 'hive', x: 9, y: 9, honey: ['rose', 'rose'] }, { id: 9004, key: 'teastand', x: 0, y: 0 }, { id: 9005, key: 'growlight', x: 12, y: 12 });
+for (const k of ['bench', 'autobasket', 'hive', 'teastand', 'growlight']) st.dex.deco[k] = true;
 st.shop.seats = 3; st.shop.cups.push('celadon'); st.shop.cup = 'celadon';
 st.grade.xp = 20000; E.bonusSet(st, 'basket', 2); E.bonusSet(st, 'rack', 1);
 E.setTitleOn(st, 't_record'); st.letterBox.push({ k: 'test', at: 1 }); st.mailGot = { 'a-1': 5 }; st.settings.sleep.on = false; st.settings.slow = true;
@@ -67,7 +67,7 @@ check(same(st.settings, before.settings) && same(st.account, before.account) && 
 check(same(st.shop, before.shop), '🪑 찻집 가꾸기 (산 자리 · 찻잔 세트 · 간판, 열린 질문 ①)');
 const dk = id => st.decos.find(d => d.id === id);
 check(dk(9002).x === 6 && dk(9002).y === 6 && dk(9004).x === 0 && E.placedOf(st, 'autobasket').length === 1, '🧺 자동 장치는 놓인 자리 그대로 (열린 질문 ①)');
-check(dk(9001).x === null && dk(9003).x === null && dk(9005).x === null && before.decos.every(d => dk(d.id)), '나머지 장식은 창고 🪴로 (산 장식 · 생장등은 보유 목록에 남음)');
+check(dk(9003).x === 9 && dk(9001).x === null && dk(9005).x === null && before.decos.every(d => dk(d.id)), '🐝 벌통(P39 곤충)도 제자리 · 나머지 장식은 창고 🪴로 (산 장식 · 생장등은 보유 목록에 남음)');
 check(st.onboarded && st.gift === before.gift && st.startedInSleep === before.startedInSleep && st.titles.t_sleep == null, '첫 안내 · 이웃의 화분 표시 — 「꽃잠에 온 손님」을 새로 주지 않음');
 check(st.nextId >= 10000 && same(st.weekly, before.weekly), '이름표 번호 · 이번 주 목표(월요일에 저절로 바뀜)');
 console.log('  — 비워지는 것');
@@ -94,7 +94,7 @@ E.advance(st, mon + 3 * WEEK + 9 * 12 * H + H, ctx);   // 목요일 저녁 찻�
 const brew0 = st.stats.autoBrew || 0;
 for (let i = 0; i < 3; i++) st.teas.push({ id: 7000 + i, type: 'chamomile', q: 1, seasonKey: -1, hat: false });
 E.advance(st, st.virtual + H, ctx);
-check((st.stats.autoBrew || 0) > brew0, '이어진 찻집 일손이 첫해부터 우림 — 장치를 다시 사지 않음');
+check((st.stats.autoBrew || 0) > brew0, '이어진 🫖 찻집 도우미가 첫해부터 우림 — 장치를 다시 사지 않음');
 check(st.money < 123456, '수입 배율 없음: 돈은 15,000원에서 다시 (보너스는 손 · 시간만)');
 E.advance(st, mon + 3 * WEEK + REST, ctx);
 const rows = E.yearLogOf(st), last = rows[rows.length - 1];

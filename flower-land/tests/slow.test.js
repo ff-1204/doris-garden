@@ -74,8 +74,6 @@ console.log('[P30-08 새 화면: 느긋하게 보기면 숫자 없이 · 얻는 
   check(lo.layer === 4 && lo.name === '작은 숲', 'layerOf는 값을 그대로 돌려줌 (숨김은 화면이 E.slowView로)');
   const fo = E.forestOf(on);
   check(fo.slow === true && E.forestOf(off).slow === false, 'forestOf(...).slow');
-  const wo = E.forestWeedOf(on);
-  check(wo && wo.slow && wo.n === null && !/\d/.test(wo.text), 'forestWeedOf: 숫자 없음');
   check(!on.log.some(l => l.text.startsWith('무당벌레') && /\d/.test(l.text)), '일지 숲 바람 줄에 숫자 없음');
   const two = copy(off); two.season = Object.assign(two.season || {}, { n: 2 });
   const twoSlow = copy(two); twoSlow.settings.slow = true;

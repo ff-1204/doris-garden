@@ -68,7 +68,7 @@ console.log('[한 번만 · 예전 저장 · 다시 시작]');
   check(!E.giftPot(st, ctx).ok && st.letterBox.length === 1 && st.dried.length === 2, '화분과 함께 한 번만');
   const old = copy(E.create(at(c => c.idx === 0), () => 0.5)); old.onboarded = true; old.gift = 5; delete old.firstGuest; old.mig = E.MIGRATIONS.findIndex(x => x[0].includes('firstGuest'));
   const m = E.migrateSave(old);
-  check(m.firstGuest === false && !E.firstGuestReady(m) && !E.giftPot(m, ctx).ok && !m.letterBox.length && !m.dried.length, '이미 화분을 받은 예전 정원은 꾸러미 없음');
+  check(m.firstGuest === false && !E.firstGuestReady(m) && !E.giftPot(m, ctx).ok && !m.letterBox.filter(b => !b.mail).length && !m.dried.length, '이미 화분을 받은 예전 정원은 꾸러미 없음 (P39 📮 안내 편지만)');
   const re = start(c => c.idx === 0);
   check(re.firstGuest === true && re.letterBox.some(b => b.k === 'welcome'), '처음부터 다시 시작한 정원(새 정원)은 다시 받음'); }
 

@@ -1,15 +1,17 @@
 // 경제 시뮬레이션: 부지런한 정원사가 몇 해 동안 어떻게 벌고 쓰는지 (node flower-land/tools/sim-economy.js [해 수] [씨앗] [--no-spend] [--no-grade-deco])
 // --no-spend: 찻집 가꾸기 · 장식을 사지 않는 정원사 (P17-14-08 기준선과 비교할 때)
 // --no-grade-deco: 🌱 등급 장식(P28-05-01)만 사지 않음 (등급 장식 전과 비교할 때)
-// --auto: 🧺 자동 장치(P28-10)를 사서 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 장치가 더 벌어 주지 않아서). 바구니 3 · 건조대 2 · 일손 1까지, 맡긴 일은 손으로 안 함
-// --bonus: 🌼 일꾼 기르기(P28-05-02 · P37) 7칸을 처음부터 모두 끝단계로 기른 정원사 (꽃가루와 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry · --layer4와 함께 써야 개미 · 누에 · 나비 · 선반 · 무당벌레가 일함
+// --auto: 🐝 곤충 일곱(P39)과 정원 장치 둘(🧺 건조 선반 2 · 🫖 찻집 도우미 1)을 데려와 맡기는 정원사 — 기본 정원사는 사지 않음(손으로 다 하면 더 벌어 주지 않아서)
+//   곤충은 등급이 닿고 값 + 20,000원이 남으면 하나씩, 둘레에 꽃이 가장 많은 빈칸에 놓고 해마다 3월에 다시 그 자리로 옮김 · 맡긴 돌봄(🐌 물 · 🐞 잡초 · 🪱 비료 · 🐛 가지치기 · 🐜 거두기)은 손으로 안 함
+//   --insects=barrel,teahelper처럼 몇 가지만 (장식 키 — dryshelf · teastand도) · 곤충마다 하나씩 켠 표를 잴 때 (P39-13)
+// --bonus: 🌼 기르기(P28-05-02 · P37 · P39) 9칸을 처음부터 모두 끝단계로 기른 정원사 (꽃가루와 상관없이 — 경제를 흔드는지 보는 가장 센 경우). --auto · --pantry와 함께 써야 곤충 · 선반이 일함
 //   --bonus=rack,basket처럼 몇 칸만 끝단계로 · --bonus brew=2(또는 --bonus=brew=2,hive=1)처럼 단계를 정할 수도 · --bonus all = 모두 끝단계 (P37)
 // --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
 // --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
 // --path 꽃길|찻길|흙길 (또는 flower|tea|earth): 🛤️ 철의 길(P30-04-01) — 1철부터 그 길을 걷는 정원으로 봄(실제로는 2철부터 고름) · --season이면 2철도 그 길. 돈 · 수확은 길 없이와 같아야 함 (P17-14)
-// --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도, 달 끝마다 숲 바람이 잡초를 걷어 감. 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
+// --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도. P39부터 숲 바람은 없고 4층이 열리면 🐞 무당벌레를 선물로 받음 (--auto면 놓음)
 // --decos: P35 · P36 이달의 장식 14가지(3월 ~ 꽃샘달)를 처음부터 맨 위 줄에 놓은 정원 — 사는 돈은 같게(정원사는 기본처럼 그 달에 또 사서 창고에 둠). 연말 돈이 기본과 ±5% 안이어야 함 (P17-14)
-// --workers (P37): --auto에 더해 🐛 누에 · 🦋 나비 · 🐝 꿀벌을 처음부터 놓은 정원 — 기르기(rack · brew · hive) 가중치를 잴 때. 공짜로 놓으니 연말 돈은 기본과 견주지 않고 --workers끼리만
+// --workers (P37 · P39): --auto에 더해 곤충 일곱 · 장치 둘을 처음부터 공짜로 (등급 · 값 없이 — 등급 8에 닿기 전의 🦋도 잴 수 있게). 공짜로 놓으니 연말 돈은 기본과 견주지 않고 --workers끼리만
 // --hold: P34 겨울(12 · 1 · 2월) · 꽃잠에만 모아 파는 정원사 (철 값 TEA_PRICE_MUL) · --hold=sleep: 꽃잠에만 파는 정원사 (꽃잠 값 · 꽃잠 기념품) — 기본 정원사는 찻집이 열린 달마다 팖
 // 정책: 판매 기간마다 꽃마다 3포기까지 사서 3칸 간격으로 심고, 2시간마다 돌보기 · 용품은 모자라기 전에 삼
 //       꽃잎은 모두 꽃방에 말리고, 찻집이 열리면 레시피 블렌드 → 블렌드 티백, 남은 말린 꽃잎은 티백 → 모두 우려 바로 판매
@@ -30,7 +32,10 @@ const BONUS_LV = Object.fromEntries(BONUS.split(',').filter(Boolean).map(p => p.
 for (const k of Object.keys(BONUS_LV)) if (k !== 'all' && !E.BONUS[k]) { console.error(`모르는 일꾼 칸: ${k} (${E.BONUS_KEYS.join(' · ')})`); process.exit(1); }
 if (BONUS) st.bonus = Object.fromEntries(E.BONUS_KEYS.map(k => [k, 'all' in BONUS_LV ? E.bonusMax(k) : k in BONUS_LV ? Math.min(E.bonusMax(k), BONUS_LV[k] == null ? E.bonusMax(k) : BONUS_LV[k]) : 0]));   // P28-05-02 · P37 --bonus
 if (PATH) st.season.path = PATH;   // P30-04-01 --path
-if (WORKERS) ['dryrack', 'teahelper', 'hive'].forEach((k, i) => st.decos.push({ id: st.nextId++, key: k, x: i, y: 0 }));   // P37 --workers: 🐛 누에 · 🦋 나비 · 🐝 꿀벌을 처음부터 맨 위 줄에 (값 · 등급 없이 — 시뮬 정원사는 9 · 12등급에 닿지 못해 기르기를 잴 수 없어서)
+const INSECTS_ARG = (process.argv.find(a => a.startsWith('--insects=')) || '').replace('--insects=', '').split(',').filter(Boolean);
+for (const k of INSECTS_ARG) if (!E.DECOS[k] || !E.DECOS[k].auto) { console.error(`모르는 곤충 · 장치: ${k} (${E.AUTO_KEYS.join(' · ')})`); process.exit(1); }
+// P39 --auto가 데려오는 것: 곤충 일곱(데려오는 차례) 하나씩 · 🧺 건조 선반 2 · 🫖 찻집 도우미 1 (--insects면 그것만)
+const WANT = [...E.FARM_KEYS.map(k => [k, 1]), ['dryshelf', 2], ['teastand', 1]].filter(([k]) => !INSECTS_ARG.length || INSECTS_ARG.includes(k));
 const LAYER4 = process.argv.includes('--layer4') || process.argv.includes('--forest');
 const HOLD = process.argv.includes('--hold=sleep') ? 'sleep' : process.argv.includes('--hold') ? 'season' : null;   // P34
 if (process.argv.includes('--decos')) E.MONTH_DECO_KEYS.concat(['moonlamp', 'pavilion']).forEach((k, i) => st.decos.push({ id: st.nextId++, key: k, x: E.W - 1 - i, y: 0 }));   // P35 --decos (dex.deco는 안 적어 사는 것은 기본과 같음 · 자동 장치는 맨 위 줄 왼쪽부터라 오른쪽 끝부터)
@@ -59,23 +64,19 @@ function act() {
   for (const k of E.decoOffer(cal)) if (!NO_SPEND && !E.DECOS[k].gear && !E.DECOS[k].auto && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('장식', () => E.buyDeco(st, k));
   // 🌱 등급 장식 (P28-05-01): 등급이 닿은 것 가운데 아직 없는 것을 같은 기준(값 + 20,000원 남음)으로 하나씩
   for (const k of E.gradeDecoOffer(st)) if (!NO_SPEND && !NO_GRADE_DECO && !(st.dex.deco || {})[k] && st.money >= E.DECOS[k].price + 20000) spend('등급 장식', () => E.buyDeco(st, k));
-  // 🧺 자동 장치 (P28-10, --auto): 등급이 닿고 값 + 20,000원이 남으면 하나씩 사서 놓음
-  if (AUTO) for (const [k, max] of [['autobasket', 3], ['dryrack', 2], ['teahelper', 1]]) {
+  // 🐝 곤충 · 🧺 장치 (P28-10 · P39, --auto): 등급이 닿고 값 + 20,000원이 남으면 하나씩 사서 놓음 (--workers는 공짜로 처음부터)
+  if (AUTO) for (const [k, max] of WANT) {
     const D = E.DECOS[k];
-    if (st.decos.filter(d => d.key === k).length >= max || E.gradeOf(st).grade < D.need || st.money < D.price + 20000) continue;
-    const free = (x, y) => !E.flowerAt(st, x, y) && !E.decoAt(st, x, y), near = (f, x, y) => Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= E.basketReach(st);
-    let best = null;
-    if (k === 'autobasket') for (let y = 0; y < E.H; y++) for (let x = 0; x < E.W; x++) {   // 바구니는 다른 바구니가 안 맡은 꽃이 둘레에 가장 많은 빈칸 (없으면 사지 않음)
-      if (!free(x, y)) continue;
-      const n = st.flowers.filter(f => !f.withered && near(f, x, y) && !E.placedOf(st, 'autobasket').some(d => near(f, d.x, d.y))).length;
-      if (n && (!best || n > best[2])) best = [x, y, n];
-    }
-    else for (let x = 0; x < E.W && !best; x++) if (free(x, 0)) best = [x, 0];   // 건조대 · 일손은 자리 상관없음 → 맨 위 줄
+    if (st.decos.filter(d => d.key === k).length >= max) continue;
+    if (!WORKERS && (E.gradeOf(st).grade < D.need || st.money < D.price + 20000)) continue;
+    const best = D.insect ? bestTile(k) : topTile();   // 곤충은 둘레에 꽃이 가장 많은 빈칸 (꽃이 없으면 아직) · 장치는 자리 상관없음 → 맨 위 줄
     if (!best) continue;
-    const r = spend('자동 장치', () => E.buyDeco(st, k, ctx)); if (!r.ok) continue;
-    E.placeDeco(st, r.deco.id, best[0], best[1]);
+    const d = WORKERS ? E.addDeco(st, k) : (spend('자동 장치', () => E.buyDeco(st, k, ctx)).deco || null); if (!d) continue;
+    E.placeDeco(st, d.id, best[0], best[1]);
   }
-  const baskets = E.placedOf(st, 'autobasket'), racks = E.placedOf(st, 'dryrack').length, helper = E.placedOf(st, 'teahelper').length > 0;
+  if (AUTO && cal.idx === 0 && moved !== cal.week) { moved = cal.week; for (const k of E.INSECT_KEYS) for (const d of E.placedOf(st, k)) { const b = bestTile(k, d); if (b) E.placeDeco(st, d.id, b[0], b[1]); } }   // 해마다 3월: 꽃 자리가 바뀌었으면 옮김
+  if (LAYER4 && AUTO) for (const d of st.decos.filter(d => d.key === 'ladybug' && d.x == null)) { const b = bestTile('ladybug'); if (b) E.placeDeco(st, d.id, b[0], b[1]); }   // 4층 선물 🐞
+  const racks = E.placedOf(st, 'dryshelf').length, helper = E.placedOf(st, 'teastand').length > 0;
   if (!cal.frozen) {
     // 꽃 사기 (꽃마다 정원 + 창고 3포기까지, 돈은 2,000원 남김)
     for (const k of E.FLOWER_KEYS) {
@@ -92,10 +93,12 @@ function act() {
     }
     // 돌보기
     const tiles = st.flowers.map(f => [f.x, f.y]);
-    const kept = new Set(baskets.flatMap(d => E.basketFlowers(st, d)).map(f => f.x + ',' + f.y)), byBasket = ([x, y]) => kept.has(x + ',' + y);   // 바구니가 맡은 꽃은 맡김 (--auto, --bonus면 둘레 2칸에서 20포기까지)
-    for (const t of ['water', 'weed', 'prune', 'harvest', 'fert']) for (const tl of tiles) if (t !== 'harvest' || !byBasket(tl)) E.care(st, t, [tl], ctx);
+    // P39 곤충이 맡은 돌봄은 손으로 안 함 (🐌 물 · 🐞 잡초 · 🐛 가지치기 · 🐜 거두기 · 🪱 비료 — 곤충은 달 끝에 일함)
+    const BY = { water: 'barrel', weed: 'ladybug', prune: 'dryrack', harvest: 'autobasket', fert: 'earthworm' };
+    const kept = t => { const k = BY[t]; return new Set(st.flowers.filter(f => E.insectNear(st, k, f) && (k !== 'autobasket' || !f.mut)).map(f => f.x + ',' + f.y)); };
+    for (const t of ['water', 'weed', 'prune', 'harvest', 'fert']) { const own = kept(t); for (const tl of tiles) if (!own.has(tl[0] + ',' + tl[1])) E.care(st, t, [tl], ctx); }
     for (const f of st.flowers) E.propagate(st, f.id, rng, ctx);
-    // 꽃잎은 모두 꽃방에 (--auto: 건조대가 달 끝에 가져갈 만큼 오래된 것은 남김)
+    // 꽃잎은 모두 꽃방에 (--auto: 🧺 건조 선반이 달 끝에 가져갈 만큼 오래된 것은 남김)
     const leave = racks * E.rackN(st);
     if (st.petals.length > leave) E.dryPetals(st, st.petals.slice(leave).map(p => p.id));
   }
@@ -111,8 +114,8 @@ function act() {
     }
     const loose = st.blends.filter(b => !b.bagged); if (loose.length) E.bagBlends(st, loose.map(b => b.id), ctx);
     if (st.dried.length) E.makeTeaDried(st, st.dried.map(d => d.id), ctx);
-    if (st.teas.length || st.blends.length) E.brew(st, helper ? [] : st.teas.map(t => t.id), st.blends.map(b => b.id));   // --auto: 티백은 일손이 우림
-    const mine = (st.cups || []).filter(c => !helper || c.kind === 'blend');   // 일손이 우린 잔은 카운터가 팖
+    if (st.teas.length || st.blends.length) E.brew(st, helper ? [] : st.teas.map(t => t.id), st.blends.map(b => b.id));   // --auto: 티백은 🫖 찻집 도우미가 우림
+    const mine = (st.cups || []).filter(c => !helper || c.kind === 'blend');   // 도우미가 우린 잔은 카운터가 팖
     if (mine.length) {
       for (const c of mine) add(yr, c.kind === 'blend' ? (c.recipe ? '찻집: 레시피 블렌드' : '찻집: 블렌드') : '찻집: 티백 차', E.cupValue(st, c, cal));
       add(yr, '잔 수', mine.length);
@@ -122,6 +125,19 @@ function act() {
     }
   }
 }
+// P39 곤충 놓을 자리 (꽃 심는 3칸 간격 사이): 둘레(insectR)에 든 꽃(시든 꽃 빼고, 🐛은 가지치기하는 꽃 · 🐜은 변이 아닌 꽃)이 가장 많은 빈칸 — 같으면 위 · 왼쪽부터. self = 이미 놓인 그 곤충(제자리도 후보)
+function bestTile(k, self) {
+  const r = E.insectR(st, k), ok = f => !f.withered && (k !== 'dryrack' || E.FLOWERS[f.type].prune) && (k !== 'autobasket' || !f.mut);
+  let best = null;
+  for (let y = 0; y < E.H; y++) for (let x = 0; x < E.W; x++) {
+    const o = E.decoAt(st, x, y); if (E.flowerAt(st, x, y) || (o && o !== self) || spots.some(([a, b]) => a === x && b === y)) continue;   // 꽃 심을 자리(3칸 간격)는 비워 둠
+    const n = st.flowers.filter(f => ok(f) && Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= r).length;
+    if (n && (!best || n > best[2])) best = [x, y, n];
+  }
+  return best;
+}
+const topTile = () => { for (let x = 0; x < E.W; x++) if (!E.flowerAt(st, x, 0) && !E.decoAt(st, x, 0)) return [x, 0]; return null; };
+let moved = null;
 let end = st.virtual + YEARS * 7 * 24 * H, seasonAt = null;
 let lastIdx = E.calendar(st.virtual).idx, help0 = st.helpYear;
 const weeks = {};
@@ -167,7 +183,7 @@ console.log(['주', '등급', '이름', '+등급', '경험치', '+경험치', ..
     console.log([ylabel(+yr), g.grade, g.name, g.grade - pg, g.xp, g.xp - px, ...Object.keys(E.XP).map(k => (by[k] || 0) - (pb[k] || 0))].join('\t'));
     pg = g.grade; px = g.xp; pb = by;
   } }
-if (AUTO) console.log(`자동 장치: ${st.decos.filter(d => E.DECOS[d.key] && E.DECOS[d.key].auto).map(d => `${E.DECOS[d.key].name}(${d.x},${d.y}) ${d.n || 0}`).join(' · ') || '없음'} · 거둠 ${st.stats.autoHarvest || 0} · 티백 ${st.stats.autoBags || 0} · 우림 ${st.stats.autoBrew || 0}`);
+if (AUTO) console.log(`곤충 · 장치: ${st.decos.filter(d => E.DECOS[d.key] && E.DECOS[d.key].auto).map(d => `${E.DECOS[d.key].name}(${d.x},${d.y})`).join(' · ') || '없음'} · 거둠 ${st.stats.autoHarvest || 0} · 나비 꽃잎 ${st.stats.autoPetal || 0} · 물 ${st.stats.autoWater || 0} · 잡초 ${st.stats.autoWeed || 0} · 비료 ${st.stats.autoFert || 0} · 가지치기 ${st.stats.autoPrune || 0} · 티백 ${st.stats.autoBags || 0} · 우림 ${st.stats.autoBrew || 0}`);
 // 🗓️ 주간 목표 (P28-09): 주마다 뽑힌 3개 · 진행 · 끝냈는지 (정원사는 목표를 따로 쫓지 않고 늘 하던 대로)
 console.log('\n주마다 목표 (✓ 끝냄)');
 Object.keys(weeks).sort((a, b) => a - b).forEach((k, i) => console.log([i + 1, ...weeks[k].goals.map(g => `${g.done ? '✓' : '·'} ${E.weeklyText(g)} ${g.got}/${g.n}`), weeks[k].bonus ? '덤' : ''].join('\t')));

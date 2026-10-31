@@ -306,7 +306,18 @@ function openModal(title, html, buttons) {
   };
   const first = root.querySelector('[data-mb]:last-child') || root.querySelector('[data-close]');
   if (first) first.focus();
+  snapModal();
 }
+// 글자 흐림 (10-31, 사용자 QA): 창을 가운데 놓으면 125% 같은 배율에서 창 · 스크롤 영역이 기기 픽셀 반 칸에 걸려 글자가 번짐 — 둘의 세로 위치를 기기 픽셀에 맞춤 (0.5px 안쪽, 눈에 안 보임)
+function snapModal() {
+  const m = $('#modalRoot .modal'), c = $('#modalRoot .content');
+  if (!m) return;
+  const d = window.devicePixelRatio || 1, snap = v => Math.round(v * d) / d;
+  m.style.translate = c.style.translate = '';
+  const r = m.getBoundingClientRect(); m.style.translate = `0 ${(snap(r.top) - r.top).toFixed(3)}px`;
+  const rc = c.getBoundingClientRect(); c.style.translate = `0 ${(snap(rc.top) - rc.top).toFixed(3)}px`;
+}
+window.addEventListener('resize', snapModal);
 function dismissModal() { const f = ui.onDismiss; ui.onDismiss = null; closeModal(); if (f) f(); }
 function closeModal() {
   if (ui.gearShow) ui.gearShow.until = performance.now() + 3000;   // P27 장치 범위는 창을 닫은 뒤 3초
@@ -316,9 +327,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalR
 
 // 📜 이벤트 로그 (P11-02-04)
 // 일지 한 줄마다 알림 종류 아이콘 (P11-01 번호)
-const LOG_IC = { 17: '✉️', 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯', 15: '💌', 16: '🪣', 18: '🧺', 19: '🌿' };   // 19: P30-02 숲 바람
+const LOG_IC = { 17: '✉️', 1: '🌰', 3: '📦', 4: '💐', 7: '📖', 8: '🌸', 9: '📖', 10: '🌱', 11: '🎁', 12: '🍂', 13: '☕', 14: '🍯', 15: '💌', 16: '🪣', 18: '🧺', 19: '🌿', 20: '🐝' };   // 19: P30-02 숲 바람 · 20: P39 곤충 돌봄 (물 · 잡초 · 비료 · 가지치기)
 // 일지 묶음 (거르기 단추와 아이콘 바탕색): 꽃 · 배송 · 도감 · 그 밖
-const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom', 15: 'etc', 16: 'etc', 17: 'etc', 18: 'bloom', 19: 'etc' };
+const LOG_KIND = { 8: 'bloom', 3: 'ship', 4: 'ship', 7: 'book', 9: 'book', 1: 'etc', 10: 'etc', 11: 'etc', 12: 'bloom', 13: 'etc', 14: 'bloom', 15: 'etc', 16: 'etc', 17: 'etc', 18: 'bloom', 19: 'etc', 20: 'bloom' };
 const LOG_KINDS = [['all', '전체'], ['bloom', '🌸 개화·수확'], ['ship', '📦 배송·예약'], ['book', '📖 도감·기록'], ['etc', '🌱 그 밖']];
 function logHTML(log, kind) {
   const list = kind && kind !== 'all' ? log.filter(l => (LOG_KIND[l.type] || 'etc') === kind) : log;
