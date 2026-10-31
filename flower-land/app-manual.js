@@ -379,7 +379,7 @@ function onboarding() {
   openModal('도리의 정원', `<div class="ob-story">
     ${scene(landPixel(), '메마른 땅에 꽃 한 포기를 심었어요.', '꽃은 저 좋아하는 땅을 둘레에 조금씩 만들어 가요')}${dots}
     ${scene(weekPixel(cal), '여기선 한 주가 한 해예요.', '아침과 저녁에 한 달씩 흘러요 · 일요일엔 꽃들이 잠들어요')}${dots}
-    ${scene(teaFlow, '핀 꽃을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
+    ${scene(teaFlow, '꽃잎을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
     <p class="ob-end">${cal.frozen ? '지금은 🌙 꽃잠이에요. 월요일 아침 6시, 첫 해가 시작돼요.<br>' : ''}서두르지 않아도 괜찮아요. 꽃은 기다려 줘요.</p></div>`,
     [{ label: '더 이상 보지 않기', primary: true, act: introOff }]);   // 변경 10-31 (사용자 요청) — 누를 때까지 열 때마다 뜸 (introDone)
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
