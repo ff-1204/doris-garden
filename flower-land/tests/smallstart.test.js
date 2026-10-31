@@ -22,16 +22,16 @@ console.log('[시작값 — 새 정원 0단계는 모두 둘레 1칸]');
   check(E.FARM_KEYS.every(k => E.insectR(st, k) === 1) && E.hiveMax(st) === 3 && E.HONEY_R === 1 && E.HIVE_MAX === 3, '곤충 7 모두 둘레 1칸 · 🐝 꿀 3병');
   check(E.rackN() === 4 && E.helperKeep(st) === E.shopOf(st).seats + 2, '🧺 선반 4장 · 🫖 손님 자리 + 2잔 (기르기 없음)'); }
 
-console.log('[P37 · P38 때 저장 → 지금 (MIGRATIONS 45 · 46번째를 거쳐)]');
+console.log('[P37 · P38 때 저장 → 지금 (MIGRATIONS 45 · 46 · 47번째를 거쳐)]');
 { const P38N = E.MIGRATIONS.findIndex(x => x[0].includes('P38'));
   // P37 저장 (P38 옮기기 전): 개미 끝 · 누에 1 · 나비 2 · 꿀벌 1 · 무당벌레 1 · 선반 1 · 늦잠 2
   const s = garden(c => c.month === 6 && !c.frozen, 40); s.bonus = Object.assign(E.newBonus(), { basket: 3, rack: 1, brew: 2, hive: 1, weed: 1, pantry: 1, catchup: 2 }); delete s.bonusFree; delete s.mailGot; s.mig = P38N;
   const m = E.migrateSave(s);
-  check(E.FARM_KEYS.every(k => m.bonus[E.INSECTS[k]] === 0) && m.bonus.pantry === 1 && m.bonus.catchup === 2, '곤충 칸은 0단계 · 선반 · 늦잠은 그대로');
-  check(E.bonusUsed(m) === 1 + 3 && E.bonusLeft(m) === 39 - 4, `쓴 꽃가루는 선반 · 늦잠 4알만 — 곤충에 쓴 꽃가루는 모두 돌아옴 (남은 ${E.bonusLeft(m)}알)`);
+  check(E.FARM_KEYS.every(k => m.bonus[E.INSECTS[k]] === 0) && !('pantry' in m.bonus) && !('catchup' in m.bonus), '곤충 칸은 0단계 · 선반 · 늦잠 칸은 없어짐 (P40)');
+  check(E.bonusUsed(m) === 0 && E.bonusLeft(m) === 39, `쓴 꽃가루는 모두 돌아옴 — 곤충 · 선반 · 늦잠 (남은 ${E.bonusLeft(m)}알)`);
   check(Object.keys(m.bonusFree).length === 0, '덜어 준 셈(bonusFree)도 곤충 칸은 지움');
   const r = E.bonusSet(m, 'basket', 2);
-  check(r.ok && E.bonusLeft(m) === 30 && E.insectR(m, 'autobasket') === 3, '다시 먹이면 새 비용표 (개미 둘레 3칸 = 5알)'); }
+  check(r.ok && E.bonusLeft(m) === 34 && E.insectR(m, 'autobasket') === 3, '다시 먹이면 새 비용표 (개미 둘레 3칸 = 5알)'); }
 
 console.log('[시뮬 (P17-14)]');
 { const { execFileSync } = require('child_process');
