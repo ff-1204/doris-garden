@@ -36,7 +36,9 @@ bad({ id: '' }, 'id가 빔');
 bad({ id: '11월 인사' }, 'id에 한글 · 빈칸');
 bad({ text: '가'.repeat(E.MAIL_LEN.text + 1) }, '문구가 너무 김');
 bad({ title: '가'.repeat(E.MAIL_LEN.title + 1) }, '제목이 너무 김');
-bad({ gifts: [{ cat: 'money', key: 'won', n: 1000 }] }, '돈은 못 넣음');
+bad({ gifts: [{ cat: 'money', key: 'won', n: 50001 }] }, '돈은 5만 원을 넘으면 못 넣음 (10-31)');
+bad({ gifts: [{ cat: 'money', key: 'won', n: 30000 }, { cat: 'money', key: 'won', n: 30000 }] }, '돈 두 번 합쳐도 5만 원까지');
+bad({ gifts: [{ cat: 'money', key: 'cash', n: 1000 }] }, '돈 키는 won만');
 bad({ gifts: [{ cat: 'title', key: 't_visit', n: 1 }] }, '칭호는 못 넣음');
 bad({ gifts: [{ cat: 'seed', key: 'nope', n: 1 }] }, '모르는 꽃 키');
 bad({ gifts: [{ cat: 'tea', key: 'rose', n: 1 }] }, '팔 수 있는 것(차)은 종류에 없음');
@@ -90,12 +92,18 @@ console.log('[받기 · 두 번 안 받음]');
   E.mailDeliver(s, [all], now, ctx);
   check(E.mailTake(s, all.id, ctx).ok, '기간이 지나도(편지함에 있으면) 선물을 받을 수 있음 — mailTake는 날짜를 보지 않음'); }
 { const s = garden(kst('2026-10-10'));
-  const m = Object.assign(copy(good), { gifts: [{ cat: 'seed', key: 'rose', n: 1 }, { cat: 'money', key: 'won', n: 99999 }, { cat: 'seed', key: 'nope', n: 3 }] });
+  const m = Object.assign(copy(good), { gifts: [{ cat: 'seed', key: 'rose', n: 1 }, { cat: 'money', key: 'won', n: 99999 }, { cat: 'seed', key: 'nope', n: 3 }] });   // 99,999원은 상한 밖이라 건너뜀
   E.mailDeliver(s, [m], now, ctx);
   const b = E.mailOf(s, good.id), money0 = s.money;
-  check(b && b.mail.gifts.length === 1 && b.mail.gifts[0].key === 'rose', '손댄 파일: 모르는 선물 · 돈은 건너뛰고 편지는 옴');
+  check(b && b.mail.gifts.length === 1 && b.mail.gifts[0].key === 'rose', '손댄 파일: 모르는 선물 · 상한 밖 돈은 건너뛰고 편지는 옴');
   E.mailTake(s, good.id, ctx);
-  check(s.money === money0, '돈은 들어오지 않음'); }
+  check(s.money === money0, '상한 밖 돈은 들어오지 않음'); }
+{ const s = garden(kst('2026-10-10')), money0 = s.money;   // 10-31: 돈 선물 (한 통 5만 원까지)
+  const m = Object.assign(copy(good), { id: 'money-ok', gifts: [{ cat: 'money', key: 'won', n: 20000 }] });
+  check(E.mailCheck(m).length === 0 && E.mailMoney(m) === 20000 && E.mailValue(m) === 0, '돈 2만 원 편지는 통과 · 물건 값은 0');
+  E.mailDeliver(s, [m], now, ctx);
+  const r = E.mailTake(s, 'money-ok', ctx);
+  check(r.ok && s.money === money0 + 20000 && r.msg.includes('지갑'), '받기를 누르면 지갑에 2만 원'); }
 { const s = garden(kst('2026-10-10'));
   const n = E.mailDeliver(s, [{ id: 'x' }, null, Object.assign(copy(good), { id: 'bad-date', start: '2026-11-31' }), 'text'], now, ctx);
   check(n === 0 && !Object.keys(s.mailGot).length, '모양이 틀린 편지는 통째로 건너뜀 (기록도 안 남김)');
