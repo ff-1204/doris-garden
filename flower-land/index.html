@@ -731,6 +731,8 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .cc-bonus { font-size: calc(11 * var(--u)); font-weight: 700; color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--panel)); border-radius: 999px; padding: 0 6px; }
 .news-row { display: flex; align-items: center; gap: 10px; }
 .news-row .shop-news { flex: 1; min-width: 0; }
+.news-row .news-side { align-self: stretch; justify-content: center; }   /* 10-31 사용자: ✉️ 편지함 단추를 옆 간판 카드와 같은 높이로 */
+.news-row .news-side .topinbox-btn { height: 100%; min-height: 0; padding-inline: 14px; border-radius: 14px; }
 .teacard.blendcard { border: 1.5px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 4%, var(--panel)); }   /* 블렌드는 도감처럼 점선 */
 .teacard.fresh { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
 .cab-empty { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px dashed var(--line); border-radius: 14px; background: var(--panel); font-size: calc(13 * var(--u)); }
