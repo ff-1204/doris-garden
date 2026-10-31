@@ -63,7 +63,7 @@ function renderManual(force) {
         const when = w.wild ? '데려오지 않아요 · 저절로 와요' : `${won(D.price)} · ${D.need ? `정원 등급 ${D.need}부터` : `${E.decoMonths(w.key).map(monthName).join('·')}에`}${D.one ? ' · 하나만' : ''}`;
         return `<div class="mn-frow">${insectImg(w.key, 2)}<span><b>${w.icon} ${w.name}${D && D.name !== w.name ? ` <small class="muted">· ${D.name}</small>` : ''}</b><small>${esc(typeof w.desc === 'function' ? w.desc(st) : w.desc || D.desc)}</small><small class="muted">${when}</small></span></div>`; }).join('')}</div>`
       + fig(`<div class="mn-icons">${item(ico('🌼'), '꽃가루', '등급이 오를 때마다 1알')}${item(ico('🌙'), '따라잡기', `최대 ${E.bonusVal(st, 'catchup')}주`)}</div>`,
-        '탭 줄 🐝 곤충농장에서 일꾼을 데려오고(💐 화원과 같은 값) · 창고에서 쉬는 일꾼을 정원에 놓고 · 지난달 한 일과 말 한 줄을 봐요 · 🌼 꽃가루를 일꾼에게 먹이면 자라요(일꾼 카드마다 먹이기 · 다시 어리게, 4층이 열리면 🐞 무당벌레도 · 🧺 입구 선반 · 🌙 늦잠은 카드 아래) · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 일꾼은 사람이 하던 손을 덜 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 켜 두지 않아도 일해요 · 정원 지도엔 바구니 · 건조대 같은 장식 그림으로 보여요')),
+        '탭 줄 🐝 곤충농장에서 일꾼을 데려오고(💐 화원과 같은 값) · 창고에서 쉬는 일꾼을 정원에 놓고 · 지난달 한 일과 말 한 줄을 봐요 · 일꾼은 꽃 한 포기 · 꽃잎 한 장처럼 작게 시작해서 🌼 꽃가루를 먹일수록 자라요(일꾼 카드마다 먹이기 · 다시 어리게, 4층이 열리면 🐞 무당벌레도 · 🧺 입구 선반 · 🌙 늦잠은 카드 아래) · 🌙 지난번 자리를 비운 동안 다시 보기도 여기서 해요 · 일꾼은 사람이 하던 손을 덜 뿐 더 벌지는 않아요(꽃잎 품질 90%) · 켜 두지 않아도 일해요 · 정원 지도엔 바구니 · 건조대 같은 장식 그림으로 보여요')),
     sec('mine', '정원 뒤 광산', '기다리는 동안 조금씩',
       fig(`<div class="mn-flow">${item(ico('⛏️'), '기력 12', '30분마다 1칸')}${arrow()}${item(mineImg('stone', 2), '파기', '한 칸에 1')}${arrow()}${item(mineImg('stairs', 2), '계단', '아래층으로')}${arrow()}${item(mineImg('amber', 2), '깊을수록', '드문 광물')}</div>`,
         '탭 줄 ⛏️ 광산에서 들어가요 · 꺼 둔 동안에도 기력이 차고 꽃잠에도 팔 수 있어요')
@@ -173,7 +173,7 @@ function renderSettings() {
     ${!DEV ? '' : group('⏩', '시간', '개발용 · 이 컴퓨터(localhost)에서만 보여요',
       `<div class="speedgrid" role="group" aria-label="배속">${SPEEDS.map(([v, l, d]) => `<button type="button" data-speed="${v}" aria-pressed="${st.speed === v}"><b>${l}</b><small>${d}</small></button>`).join('')}</div>`
       + row('⏭', '다음 달로 건너뛰기', '지금 달을 바로 끝내요', '<button type="button" class="btn small" id="skipMonth">다음 달</button>')
-      + row('🐝', '일꾼 다 데려오기', '곤충농장 확인용 (P32) · 정원 등급 12 · 돈을 채우고 지금 화원에 있는 일꾼은 사고, 철 지난 꿀벌 · 달팽이는 창고에 바로 넣어요', '<button type="button" class="btn small" id="devFarm">데려오기</button>')
+      + row('🐝', '일꾼 다 데려오기', '곤충농장 확인용 (P32) · 정원 등급 12(일꾼은 6이면 다 와요) · 돈을 채우고 지금 화원에 있는 일꾼은 사고, 철 지난 꿀벌 · 달팽이는 창고에 바로 넣어요', '<button type="button" class="btn small" id="devFarm">데려오기</button>')
       + row('🌱', '등급 경험치 더하기', '등급 화면 확인용 · 퀘스트 10개 몫(100)', '<button type="button" class="btn small" id="devXp">+100</button>')
       + row('🗓️', '주간 목표', '목표 확인용 · 안 끝낸 첫 목표를 끝내거나 다음 월요일 아침으로', '<span class="row" style="gap:6px"><button type="button" class="btn small" id="devWeekly">하나 끝</button><button type="button" class="btn small" id="devWeek">다음 주</button></span>')
       + row('🌸', '새 철 조건 채우기', '새 철 확인용 (P28-08) · 이번 철 해마다 기록 3줄 · 꽃 13종 도감 · 꽃잠으로', '<button type="button" class="btn small" id="devSeason">채우기</button>')
@@ -314,7 +314,7 @@ function devInboxFill() {
   E.addLog(st, 9, `올해 ${E.SEASONS[Y.season]}엔 ${Y.icon} ${josa(Y.word, '이/가')} 왔어요`);
   E.addLog(st, 9, `${V.icon} ${josa(V.name, '이/가')} ${V.where}에 앉았어요`);
   E.addLog(st, 9, '🌳 정원 뒤에 작은 숲이 생겼어요');
-  E.addLog(st, 19, E.slowView(st) ? '무당벌레가 잡초를 치웠어요' : '무당벌레가 잡초 3포기를 치웠어요');
+  E.addLog(st, 19, E.slowView(st) ? '무당벌레가 잡초를 치웠어요' : '무당벌레가 잡초 1포기를 치웠어요');
   E.addLog(st, 9, '🏅 새 칭호: 편지함 시험');
   save(); renderAll(true); feedback('✉️ 소식 5줄을 썼어요 · 위 막대 ✉️에 점');
 }

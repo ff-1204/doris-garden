@@ -16,7 +16,7 @@ const insectImg = (k, scale) => { const w = E.FARM.find(f => f.key === k); retur
 // P37 🌼 일꾼 기르기 (10-31): 카드마다 단계 점(●●○) · "🌼 기르기 n단계 · 다음: 이름 — 값 (꽃가루 n알)" · 먹이기 · 다시 어리게
 // 🐢 느긋하게 보기면 단계 · 꽃가루 · 다음 값을 숨기고 "조금 더 부지런해요"만 (기르기 전엔 말 없이 단추만)
 // 아직 데려오지 않은 일꾼(🔒 · 💐 화원)은 먹이기를 막음 — 꽃가루를 미리 쓰는 헷갈림 막기 (P37 검토). 🐞 무당벌레는 4층 전엔 줄째 없음
-const growDots = r => `<span class="fm-dots" aria-label="기르기 ${r.level} / ${r.max}단계">${'●'.repeat(r.level)}${'○'.repeat(r.max - r.level)}</span>`;
+const growDots = r => `<span class="fm-dots" aria-label="기르기 ${r.level} / ${r.max}단계">${r.max > 4 ? `${r.level} / ${r.max}` : `${'●'.repeat(r.level)}${'○'.repeat(r.max - r.level)}`}</span>`;   // P38 8단계(🐜 · 🐛)는 점 대신 "n / 8"
 function growHTML(r, left, slow, away) {
   if (!r || !r.open) return '';                     // 🐞 무당벌레는 4층이 열린 뒤에만
   const can = !away && !r.maxed && r.costNext <= left;
