@@ -1310,7 +1310,7 @@ img.px { image-rendering: pixelated; image-rendering: crisp-edges; flex: none; d
 .modal header, .modal footer { padding: 14px 16px; display: flex; align-items: center; gap: 8px; }
 .modal header { border-bottom: 1px solid var(--line); }
 .modal footer { border-top: 1px solid var(--line); justify-content: flex-end; flex-wrap: wrap; }
-.modal .content { padding: 14px 16px; overflow-y: auto; }
+.modal .content { padding: 14px 16px; overflow-y: auto; background: var(--panel); }   /* 배경을 불투명하게 — 스크롤 층이 투명하면 글자가 흐리게 그려짐 (10-31) */
 .modal header h2 { font-size: calc(18 * var(--u)); flex: 1; }
 .logview { font-size: calc(13 * var(--u)); display: grid; gap: 0; }
 .logview .sep { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; font-size: calc(11.5 * var(--u)); color: var(--muted); }

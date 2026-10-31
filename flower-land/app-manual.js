@@ -377,6 +377,6 @@ function onboarding() {
     ${scene(weekPixel(cal), '여기선 한 주가 한 해예요.', '아침과 저녁에 한 달씩 흘러요 · 일요일엔 꽃들이 잠들어요')}${dots}
     ${scene(teaFlow, '핀 꽃을 거두어, 말리고, 차로 우려요.', '찻집에 손님이 들르면 한 잔 내어 드려요')}
     <p class="ob-end">${cal.frozen ? '지금은 🌙 꽃잠이에요. 월요일 아침 6시, 첫 해가 시작돼요.<br>' : ''}서두르지 않아도 괜찮아요. 꽃은 기다려 줘요.</p></div>`,
-    [{ label: '정원 문 열기', primary: true, act: startGarden }]);
+    [{ label: '더 이상 보지 않기', primary: true, act: startGarden }]);   // 변경 10-31 (사용자 요청) — 창은 한 번만 뜨니(st.onboarded) 그 뜻 그대로
   ui.onDismiss = startGarden;                     // ✕ · 바깥 · Esc로 닫아도 시작 (QA 15회차)   // 0장 첫 방문: 누르자마자 칭호 (P19, 10-17)
 }

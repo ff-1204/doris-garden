@@ -306,7 +306,18 @@ function openModal(title, html, buttons) {
   };
   const first = root.querySelector('[data-mb]:last-child') || root.querySelector('[data-close]');
   if (first) first.focus();
+  snapModal();
 }
+// 글자 흐림 (10-31, 사용자 QA): 창을 가운데 놓으면 125% 같은 배율에서 창 · 스크롤 영역이 기기 픽셀 반 칸에 걸려 글자가 번짐 — 둘의 세로 위치를 기기 픽셀에 맞춤 (0.5px 안쪽, 눈에 안 보임)
+function snapModal() {
+  const m = $('#modalRoot .modal'), c = $('#modalRoot .content');
+  if (!m) return;
+  const d = window.devicePixelRatio || 1, snap = v => Math.round(v * d) / d;
+  m.style.translate = c.style.translate = '';
+  const r = m.getBoundingClientRect(); m.style.translate = `0 ${(snap(r.top) - r.top).toFixed(3)}px`;
+  const rc = c.getBoundingClientRect(); c.style.translate = `0 ${(snap(rc.top) - rc.top).toFixed(3)}px`;
+}
+window.addEventListener('resize', snapModal);
 function dismissModal() { const f = ui.onDismiss; ui.onDismiss = null; closeModal(); if (f) f(); }
 function closeModal() {
   if (ui.gearShow) ui.gearShow.until = performance.now() + 3000;   // P27 장치 범위는 창을 닫은 뒤 3초
