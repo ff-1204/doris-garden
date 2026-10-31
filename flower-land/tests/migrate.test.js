@@ -15,7 +15,7 @@ check(E.migrateSave(cut) === null, '땅 칸 수가 틀리면 null');
 
 console.log('[가장 옛 정원]');
 const old = copy(st);
-for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'bonusFree', 'season', 'layers', 'yearly', 'visitors', 'mailSeenAt']) delete old[k];
+for (const k of ['water', 'shears', 'hoe', 'basket', 'drying', 'dried', 'blends', 'cups', 'gardenId', 'mig', 'account', 'actAt', 'letterBox', 'resetAt', 'yearLog', 'yearNow', 'grade', 'yearPace', 'weekly', 'pantry', 'bonusFree', 'season', 'layers', 'yearly', 'visitors', 'mailSeenAt', 'pollenExtra']) delete old[k];
 delete old.settings.slow;
 for (const k of ['petal', 'blend', 'bagBlend', 'teabag', 'form']) delete old.dex[k];
 old.dex.tea = { chamomile: true }; old.teas = [{ id: 900, type: 'lavender', q: 3 }];
@@ -118,8 +118,8 @@ console.log('[🌟 등급 보너스 bonus (P28-05-02)]');
   check(BN >= 0 && zero(E.create(MON, () => 0.5).bonus) && zero(m.bonus), '새 정원 · 예전 정원 모두 0단계 (P39 곤충 칸은 0단계로)');
   const old = copy(st); delete old.bonus; delete old.bonusFree; delete old.mailGot; old.mig = BN; old.grade.xp = 5000; const om = E.migrateSave(old);
   check(zero(om.bonus) && om.mig === E.MIGRATIONS.length && E.bonusPoints(om) === E.gradeOf(om).grade - 1 && E.bonusLeft(om) === E.bonusPoints(om), 'bonus가 없는 정원은 0단계로 · 🌼 꽃가루는 지금 등급으로 바로 셈');
-  const got = copy(st); got.bonus = { pantry: 2 }; delete got.bonusFree; delete got.mailGot; got.mig = BN; const gm = E.migrateSave(got);
-  check(gm.bonus.pantry === 2 && gm.bonus.basket === 0 && Object.keys(gm.bonus).length === E.BONUS_KEYS.length && E.bonusUsed(gm) === 3, '이미 고른 칸(선반)은 그대로, 빠진 칸만 0 · 쓴 꽃가루 3알 그대로'); }
+  const got = copy(st); got.bonus = { worm: 0, dry: 2 }; delete got.bonusFree; delete got.mailGot; got.mig = BN; const gm = E.migrateSave(got);
+  check(gm.bonus.dry === 2 && gm.bonus.basket === 0 && Object.keys(gm.bonus).length === E.BONUS_KEYS.length && E.bonusUsed(gm) === 2, '이미 고른 칸(말리는 속도)은 그대로, 빠진 칸만 0 · 쓴 꽃가루 2알 그대로'); }
 
 console.log('[🌸 새 철 season (P28-08-03)]');
 { const SN = E.MIGRATIONS.findIndex(x => x[0].includes('새 철 season'));
@@ -210,7 +210,7 @@ console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
 console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 · P28-03)]');
 { const BN = E.MIGRATIONS.findIndex(x => x[0].includes('settings.big'));
   const FN = E.MIGRATIONS.findIndex(x => x[0].includes('awayLast'));
-  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 5, '41번째 보정 · 바로 뒤 42번째 P32 awayLast · farm');
+  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 6, '41번째 보정 · 바로 뒤 42번째 P32 awayLast · farm');
   check(m.settings.big === false && m.settings.pattern === false, '가장 옛 정원: 둘 다 꺼짐');
   const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN; const om = E.migrateSave(old);
   check(om.settings.big === false && om.settings.pattern === false && om.mig === E.MIGRATIONS.length, '바로 앞 판 정원도 둘 다 꺼짐');
@@ -219,7 +219,7 @@ console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 
 
 console.log('[🧬 돌연변이 mut · dex.mutant · dex.mutjar · jar · mutBoost (P36)]');
 { const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
-  check(MN === 42 && MN === E.MIGRATIONS.length - 4, '43번째 보정 (바로 뒤 44번째 P37 · 45번째 P38 · 46번째 P39)');
+  check(MN === 42 && MN === E.MIGRATIONS.length - 5, '43번째 보정 (바로 뒤 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40)');
   check(m.jar === 0 && m.mutBoost === null && JSON.stringify(m.dex.mutant) === '{}' && JSON.stringify(m.dex.mutjar) === '{}', '가장 옛 정원: 유리 관 0 · 빈 돌연변이 도감');
   const old = copy(st); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
   old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 12 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
@@ -231,21 +231,21 @@ console.log('[🧬 돌연변이 mut · dex.mutant · dex.mutjar · jar · mutBoo
 
 console.log('[🌼 꽃가루 · 일꾼 기르기 bonus.brew · hive · weed (P37)]');
 { const PN = E.MIGRATIONS.findIndex(x => x[0].includes('P37'));
-  check(PN === 43 && PN === E.MIGRATIONS.length - 3, '44번째 보정 (바로 뒤 45번째 P38 · 46번째 P39)');
+  check(PN === 43 && PN === E.MIGRATIONS.length - 4, '44번째 보정 (바로 뒤 45번째 P38 · 46번째 P39 · 47번째 P40)');
   const old = copy(st); old.bonus = { basket: 2, rack: 1, pantry: 3, catchup: 1 }; delete old.bonusFree;
   const om = steps(old, PN, PN + 1);   // 이 보정만
   check(om.bonus.basket === 2 && om.bonus.rack === 1 && om.bonus.pantry === 3 && om.bonus.catchup === 1 && om.bonus.brew === 0 && om.bonus.hive === 0 && om.bonus.weed === 0, '이 보정만: 예전 네 칸 그대로 · 새 세 칸 0'); }
 
 console.log('[🐜 작게 시작하는 일꾼 bonus 단계 옮김 · bonusFree (P38)]');
 { const XN = E.MIGRATIONS.findIndex(x => x[0].includes('P38'));
-  check(XN === 44 && XN === E.MIGRATIONS.length - 2, '45번째 보정 (바로 뒤 46번째 P39)');
+  check(XN === 44 && XN === E.MIGRATIONS.length - 3, '45번째 보정 (바로 뒤 46번째 P39 · 47번째 P40)');
   const old = copy(st); old.bonus = { basket: 3, rack: 2, brew: 1, hive: 2, weed: 1, pantry: 0, catchup: 2 }; delete old.bonusFree;
   const om = steps(old, XN, XN + 1);   // 이 보정만 (P38 때 비용표 — 지금 BONUS는 P39라 단계 이름표만 봄)
   check(om.bonusFree && typeof om.bonusFree === 'object' && om.bonus.catchup === 2 && om.bonus.pantry === 0, '이 보정만: 덜어 준 셈 bonusFree가 생기고 선반 · 늦잠은 그대로');
   const nw = E.create(MON, () => 0.5); check(JSON.stringify(nw.bonusFree) === '{}' && E.bonusUsed(nw) === 0, '새 정원은 bonusFree 빈 칸'); }
 
 console.log('[🐝 곤충은 모두 꽃을 돕는다 (P39-11)]');
-{ check(P39N === 45 && P39N === E.MIGRATIONS.length - 1, '46번째 보정 (맨 끝)');
+{ check(P39N === 45 && P39N === E.MIGRATIONS.length - 2, '46번째 보정 (바로 뒤 47번째 P40)');
   const p38 = copy(st); p38.mig = P39N; delete p38.mailGot; p38.grade.xp = E.gradeXpAt(30);
   p38.bonus = Object.assign(E.newBonus(), { basket: 8, rack: 7, brew: 1, hive: 3, weed: 3, pantry: 2, catchup: 1 }); p38.bonusFree = { basket: 8, rack: 8, hive: 1, weed: 3 };   // P38 끝단계 일꾼 (P38 비용표로 쓴 꽃가루 — 덜어 준 몫 빼고)
   p38.decos.push({ id: 9101, key: 'dryrack', x: 0, y: 0 }, { id: 9102, key: 'dryrack', x: 1, y: 0 }, { id: 9103, key: 'dryrack', x: null, y: null }, { id: 9104, key: 'teahelper', x: 2, y: 0 }, { id: 9105, key: 'autobasket', x: 5, y: 5, n: 40 });
@@ -254,8 +254,8 @@ console.log('[🐝 곤충은 모두 꽃을 돕는다 (P39-11)]');
   p38.flowers.push({ id: 9201, type: 'rose', x: 7, y: 7, q: 0.7, harvestKey: cal.abs, bloomKey: cal.abs }, { id: 9202, type: 'rose', x: 8, y: 7, q: 0.7, harvestKey: -1, bloomKey: -1 });
   const leftBefore = E.bonusPoints(p38) - 6 - 3;   // 선반 2단계 3알 · 늦잠 1단계 1알 + 그 밖에 → 아래에서 셈
   const om = E.migrateSave(p38);
-  check(['barrel', 'basket', 'weed', 'worm', 'rack', 'hive', 'brew'].every(k => om.bonus[k] === 0) && om.bonus.pantry === 2 && om.bonus.catchup === 1, '곤충 칸은 모두 0단계 · 🧺 선반 · 🌙 늦잠은 그대로 (P39-11-02)');
-  check(['basket', 'rack', 'hive', 'weed'].every(k => !(k in om.bonusFree)) && E.bonusUsed(om) === 3 + 1 && E.bonusLeft(om) === E.bonusPoints(om) - 4, `쓴 꽃가루는 모두 돌아옴 — 남은 ${E.bonusLeft(om)}알 (선반 · 늦잠 4알만 씀)`);
+  check(['barrel', 'basket', 'weed', 'worm', 'rack', 'hive', 'brew'].every(k => om.bonus[k] === 0) && !('pantry' in om.bonus) && !('catchup' in om.bonus), '곤충 칸은 모두 0단계 (P39-11-02) · 🧺 선반 · 🌙 늦잠은 47번째 P40에서 없어짐');
+  check(['basket', 'rack', 'hive', 'weed'].every(k => !(k in om.bonusFree)) && E.bonusUsed(om) === 0 && E.bonusLeft(om) === E.bonusPoints(om), `쓴 꽃가루는 모두 돌아옴 — 남은 ${E.bonusLeft(om)}알 (P40까지 거치면 선반 · 늦잠 4알도)`);
   check(om.decos.filter(d => d.key === 'dryshelf').length === 3 && om.decos.filter(d => d.key === 'teastand').length === 1 && om.decos.filter(d => d.key === 'dryshelf' || d.key === 'teastand').every(d => d.x == null), '누에 3 · 나비 1 → 🧺 건조 선반 3 · 🫖 찻집 도우미 1을 창고에 덤 (P39-09-03)');
   check(om.decos.filter(d => d.key === 'dryrack').length === 3 && om.decos.find(d => d.id === 9105).x === 5 && om.decos.find(d => d.id === 9105).n === 40, '가진 곤충 · 놓은 자리는 그대로 (여럿 가진 누에도 그대로)');
   check(om.decos.filter(d => d.key === 'ladybug').length === 1 && om.dex.deco.dryshelf && om.dex.deco.ladybug, '4층이 열린 정원은 🐞 무당벌레 하나 (P39-11-03) · 꾸밈 도감에도');
@@ -270,6 +270,16 @@ console.log('[🐝 곤충은 모두 꽃을 돕는다 (P39-11)]');
   check(PL && !PL.mail.text.includes('건조 선반') && !PL.mail.text.includes('무당벌레도') && !pm.decos.some(d => ['dryshelf', 'teastand', 'ladybug'].includes(d.key)), '곤충이 없던 정원: 편지만 (덤 · 🐞 없음)');
   const nw = E.create(MON, () => 0.5);
   check(!nw.letterBox.some(b => b.mail && b.mail.id === 'p39-insects'), '새 정원엔 편지가 안 옴'); }
+
+console.log('[🌼 그 밖에 세 칸 bonus.grow · dry · pollen · pollenExtra (P40-04) — 자세한 건 p40.test.js]');
+{ const P40N = E.MIGRATIONS.findIndex(x => x[0].includes('P40-04'));
+  check(P40N === 46 && P40N === E.MIGRATIONS.length - 1, '47번째 보정 (맨 끝)');
+  const old = copy(st); old.mig = P40N; delete old.pollenExtra; old.grade.xp = E.gradeXpAt(20);
+  old.bonus = Object.assign({}, old.bonus, { pantry: 2, catchup: 1 }); delete old.bonus.grow; delete old.bonus.dry; delete old.bonus.pollen;
+  const om = E.migrateSave(old);
+  check(!('pantry' in om.bonus) && !('catchup' in om.bonus) && Object.keys(om.bonus).length === E.BONUS_KEYS.length && om.bonus.grow === 0 && om.bonus.dry === 0 && om.bonus.pollen === 0, '🧺 선반 · 🌙 늦잠 칸은 지우고 새 세 칸은 0단계');
+  check(E.bonusUsed(om) === 0 && E.bonusLeft(om) === 19 && om.pollenExtra === 0 && om.mig === E.MIGRATIONS.length, '두 칸에 쓴 꽃가루 4알은 모두 돌아옴 · 더 받은 꽃가루 0');
+  check(E.create(MON, () => 0.5).pollenExtra === 0, '새 정원은 pollenExtra 0'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);
