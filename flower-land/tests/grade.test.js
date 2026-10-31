@@ -190,7 +190,7 @@ console.log('[🌟 bonusView · bonusMaxed — 화면이 읽는 것]');
   const b = row('basket'), r = row('worm');
   check(b.name === '둘레 넓히기' && b.icon === '🐜' && b.worker === 'autobasket' && b.level === 2 && b.max === 2 && b.maxed && b.costNext === null && b.desc === '둘레 3칸 핀 꽃 거두기', '끝까지 올린 칸: costNext 없음 · 지금 값 설명');
   check(r.worker === 'earthworm' && r.level === 0 && r.costNext === 2 && r.desc === '둘레 1칸 꽃에 비료' && r.nextDesc === '둘레 2칸 꽃에 비료', '0단계 칸: 다음 단계 값 2알 · 지금 / 다음 설명');
-  check(row('pollen').desc === '등급이 오를 때 꽃가루 2알' && row('pollen').val === '2알' && row('pollen').nextVal === '3알' && row('dry').desc === '꽃방에서 1달이면 말라요' && row('dry').val === '×1' && row('grow').nextDesc === '꽃이 다 자라기까지 ×2 빨라요' && row('hive').desc === '둘레 1칸 번식 · 꿀 3병까지' && b.val === null, '꽃가루 1단계 · 말리는 속도 0단계 · 자라는 속도 다음 · 꿀벌 설명 · 값 줄(val)은 그 밖에 칸만');
+  check(row('pollen').desc === '등급이 오를 때 꽃가루 2알' && row('pollen').val === '2알' && row('pollen').nextVal === '3알' && row('dry').desc === '꽃잎이 1달 만에 말라요' && row('dry').val === '×1' && row('grow').nextDesc === '꽃이 다 자라기까지 ×2 빨라요' && row('hive').desc === '둘레 1칸 번식 · 꿀 3병까지' && b.val === null, '꽃가루 1단계 · 말리는 속도 0단계 · 자라는 속도 다음 · 꿀벌 설명 · 값 줄(val)은 그 밖에 칸만');
   check(E.bonusMaxed(s, 'basket') && !E.bonusMaxed(s, 'pollen') && !E.bonusMaxed(s, 'rack') && !E.bonusMaxed(s, 'gold'), 'bonusMaxed: 끝까지 올린 칸만');
   s.grade.xp = E.gradeXpAt(2);   // 저장 파일을 손으로 고쳐 쓴 점이 총점보다 많은 경우
   check(E.bonusLeft(s) < 0 && E.bonusView(s).left === 0 && E.bonusSet(s, 'basket', 1).ok, '쓴 점이 총점보다 많아도 화면 left는 0 · 내리기는 됨'); }

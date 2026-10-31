@@ -2587,7 +2587,7 @@ const BONUS = {                                  // vals[단계] = 그 단계에
   hive: { worker: 'hive', who: '🐝 꿀벌', name: '둘레 넓히기', icon: '🐝', vals: [{ r: 1, max: 3 }, { r: 2, max: 6 }, { r: 3, max: 9 }], cost: [2, 3], desc: v => `둘레 ${v.r}칸 번식 · 꿀 ${v.max}병까지` },   // P39-06 hiveR · hiveMax
   brew: { worker: 'teahelper', who: '🦋 나비 일꾼', name: '둘레 넓히기', icon: '🦋', ...INSECT_STEPS, desc: v => `둘레 ${v}칸 꽃의 첫 꽃잎 +1` },   // P39-03
   grow: { worker: null, who: '🌱 자라는 속도', name: '자라는 속도', icon: '🌱', ...SPEED_STEPS, desc: v => v > 1 ? `꽃이 다 자라기까지 ×${v} 빨라요` : '꽃이 자라는 빠르기 그대로예요', short: v => `×${v}` },   // P40-01 growRate
-  dry: { worker: null, who: '🌾 말리는 속도', name: '말리는 속도', icon: '🌾', ...SPEED_STEPS, desc: v => v > 1 ? `꽃방에서 1달 → ${dryText(v)}이면 말라요` : '꽃방에서 1달이면 말라요', short: v => `×${v}` },   // P40-02 dryRate
+  dry: { worker: null, who: '🌾 말리는 속도', name: '말리는 속도', icon: '🌾', ...SPEED_STEPS, desc: v => v > 1 ? `꽃잎이 1달 → ${dryText(v)} 만에 말라요` : '꽃잎이 1달 만에 말라요', short: v => `×${v}` },   // P40-02 dryRate
   pollen: { worker: null, who: '🌼 꽃가루 늘리기', name: '꽃가루 늘리기', icon: '🌼', vals: [1, 2, 3], cost: [3, 5], desc: v => `등급이 오를 때 꽃가루 ${v}알`, short: v => `${v}알` },   // P40-03 addXp → pollenExtra
 };
 const BONUS_KEYS = Object.keys(BONUS);
@@ -2622,11 +2622,14 @@ function bonusSet(st, key, level) {
     const short = bonusUsedAt(st, key, level) - bonusUsedAt(st, key, from) - bonusLeft(st);
     if (short > 0) return no(`🌼 꽃가루가 ${short}알 모자라요`);
     st.bonus[key] = level;
+    if (!B.worker) return ok(`${B.who} ${level}단계 · ${B.short(B.vals[level])}`, { level });   // P40 그 밖에 칸은 "🌱 자라는 속도 2단계 · ×3"
     return ok(`${josa(B.who, '이/가')} 자랐어요 · ${B.name} ${level}단계`, { level });
   }
   const back = bonusUsedAt(st, key, from) - bonusUsedAt(st, key, level);
   st.bonus[key] = level;                          // 다시 어리게는 늘 됨 — 꽃가루가 그대로 돌아옴 (P28-05-02-03)
-  return ok(`${josa(B.who, '을/를')} 다시 어리게 했어요${back ? ` · 🌼 꽃가루 ${back}알이 돌아왔어요` : ''}`, { level });   // P38 덜어 준 단계는 돌아올 꽃가루 없음
+  const backText = back ? ` · 🌼 꽃가루 ${back}알이 돌아왔어요` : '';   // P38 덜어 준 단계는 돌아올 꽃가루 없음
+  if (!B.worker) return ok(`${B.who} ${level}단계로 내렸어요${backText}`, { level });
+  return ok(`${josa(B.who, '을/를')} 다시 어리게 했어요${backText}`, { level });
 }
 function bonusView(st) {                          // 🐝 곤충농장 일꾼 카드 · 🌼 그 밖에 줄이 읽음 (P37) — 느긋하게 보기 판단은 넣지 않음
   const points = bonusPoints(st), used = bonusUsed(st);

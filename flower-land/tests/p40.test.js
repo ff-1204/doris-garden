@@ -63,7 +63,7 @@ console.log('[🌼 꽃가루 늘리기 (P40-03)]');
   E.addXp(st, 'quest', Math.ceil((E.gradeXpAt(7) - st.grade.xp) / E.XP.quest), ctx);
   check(E.gradeOf(st).grade === 7 && E.pollenExtra(st) === 3 && E.bonusPoints(st) === 9, '한 번에 두 등급 → 2알씩');
   const back = E.bonusSet(st, 'pollen', 0);
-  check(back.ok && back.msg.includes('🌼 꽃가루 3알이 돌아왔어요') && E.pollenExtra(st) === 3 && E.bonusLeft(st) === 9, '다시 어리게: 낸 3알만 돌아오고 더 받은 3알은 그대로');
+  check(back.ok && back.msg === '🌼 꽃가루 늘리기 0단계로 내렸어요 · 🌼 꽃가루 3알이 돌아왔어요' && E.pollenExtra(st) === 3 && E.bonusLeft(st) === 9, '다시 어리게: 낸 3알만 돌아오고 더 받은 3알은 그대로');
   st.grade.xp = E.gradeXpAt(200); set(st, 'pollen', 2); const ex = E.pollenExtra(st), g = E.gradeOf(st).grade;
   E.addXp(st, 'quest', Math.ceil((E.gradeXpAt(g + 1) - st.grade.xp) / E.XP.quest), ctx);
   check(E.pollenExtra(st) === ex + 2, '2단계: 등급마다 3알 (2알 더)'); }

@@ -337,7 +337,7 @@ function awayDiff(b) {
   E.awayKeep(st, a, Date.now());                  // P32-02 🐝 곤충농장에서 지난번 것을 다시 보게 (줄 · 돈 · 시간만 저장)
   return a;
 }
-// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 · 🌙 늦잠(🌼 기르기)이면 4 · 5주 P28-05-02 · P37, 그 이상은 건너뜀)
+// 자리를 비운 동안 흐른 시간 따라잡기 (최대 3주 E.CATCHUP_WEEKS — P40에서 🌙 늦잠을 없앰, 그 이상은 건너뜀)
 function catchUp() {
   ctx.live = false;                               // 따라잡는 동안 생긴 알림은 일지에만
   const now = Date.now(), gap = Math.max(0, now - st.lastReal), CAP = E.catchUpH(st) * HOUR;

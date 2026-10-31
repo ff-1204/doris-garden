@@ -38,7 +38,7 @@ console.log('[기르기 · 모자람 · 다시 어리게]');
   check(E.bonusSet(st, 'hive', 2).ok && E.bonusLeft(st) === 3 && E.bonusSet(st, 'pollen', 1).ok && E.bonusLeft(st) === 0, '남은 꽃가루 안에서 다른 칸으로 (꿀벌 5알 · 꽃가루 늘리기 3알)');
   const s2 = garden(c => c.month === 6, 2);
   const p = E.bonusSet(s2, 'grow', 1), q = E.bonusSet(s2, 'pollen', 1);
-  check(p.ok && p.msg === '🌱 자라는 속도가 자랐어요 · 자라는 속도 1단계' && !q.ok && q.msg === '🌼 꽃가루가 3알 모자라요', '그 밖에 칸도 같은 꼴');
+  check(p.ok && p.msg === '🌱 자라는 속도 1단계 · ×2' && !q.ok && q.msg === '🌼 꽃가루가 3알 모자라요', '그 밖에 칸도 같은 꼴');
   check(!E.bonusSet(s2, 'gold', 1).ok && !E.bonusSet(s2, 'weed', 3).ok && !E.bonusSet(s2, 'hive', 3).ok, '없는 칸 · 없는 단계는 거절');
   const m0 = s2.money; E.bonusSet(s2, 'grow', 0);
   check(s2.money === m0, '돈은 그대로 (꽃가루만)'); }
