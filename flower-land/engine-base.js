@@ -353,5 +353,11 @@ function blendRecipe(parts, st) {
   return blendKeys(st).find(k => BLENDS[k].parts.slice().sort().join('|') === s) || null;
 }
 // 만든 블렌드는 b.recipe를 따르고(숨은 레시피 포함), 미리보기처럼 recipe가 없으면 재료로 찾음
+// P79-05 (11-05 사용자 "블랜딩 종류가 아닌거는 블랜딩 안되게"): 레시피 밖 짝은 못 만듦 — 막힐 때 보여 줄 가까운 레시피(고른 꽃이 많이 든 차례 · 최대 2)
+function blendNear(parts, st) {
+  const has = k => BLENDS[k].parts.filter(p => parts.includes(p)).length;
+  return blendKeys(st).filter(k => has(k)).sort((a, b) => has(b) - has(a) || BLENDS[a].parts.length - BLENDS[b].parts.length).slice(0, 2);
+}
+const blendNearText = (parts, st) => { const n = blendNear(parts, st); return n.length ? `가까운 블렌드: ${n.map(k => `${BLENDS[k].name}(${BLENDS[k].parts.map(p => FLOWERS[p].name).join(' + ')})`).join(' · ')}` : '📖 레시피에서 짝을 골라요'; };
 const blendValue = (b, st) => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS[k], b.q, false), 0) * (('recipe' in b ? b.recipe : blendRecipe(b.parts, st)) ? RECIPE_RATE : BLEND_RATE) / 10) * 10;
 

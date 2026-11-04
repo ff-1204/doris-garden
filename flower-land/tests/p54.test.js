@@ -66,10 +66,10 @@ console.log('[🍵 찻집 · 제다실 — 말리기 · 티백 · 블렌드 · �
   s.petals.push({ id: s.nextId++, type: 'rose', q: 0.8, seasonKey: -1 });
   check(!E.makeTea(s, [s.petals[0].id], ctx).ok && by(s, 'teabag') === 2, 'P77-C 꽃잎 수: 꽃잎이 모자라 못 만들면 없음');
   for (let i = 0; i < 10; i++) s.dried.push({ id: s.nextId++, type: 'rose', q: 0.8 });   // P77-C 티백 하나 · 블렌드 한 몫 (장미 5장씩)
-  for (let i = 0; i < 7; i++) s.dried.push({ id: s.nextId++, type: 'lavender', q: 0.8 });   // 블렌드 한 몫 (라벤더 7장)
+  for (let i = 0; i < 5; i++) s.dried.push({ id: s.nextId++, type: 'hibiscus', q: 0.8 });   // 블렌드 한 몫 (히비스커스 5장 — P79-05 레시피 붉은 여름)
   E.makeTeaDried(s, s.dried.filter(d => d.type === 'rose').slice(0, 5).map(d => d.id), ctx);
   check(by(s, 'teabag') === 3, 'P77-C 꽃잎 수: 말린 꽃잎 티백(장미 5장)도 +1');
-  check(E.blend(s, ['rose', 'lavender'].map(t => s.dried.find(d => d.type === t).id), ctx).ok && s.dried.length === 0 && by(s, 'blend') === 3, 'P77-C 꽃잎 수: 블렌드 한 잔(꽃 종류마다 petals장) +3');
+  check(E.blend(s, ['rose', 'hibiscus'].map(t => s.dried.find(d => d.type === t).id), ctx).ok && s.dried.length === 0 && by(s, 'blend') === 3, 'P77-C 꽃잎 수: 블렌드 한 잔(꽃 종류마다 petals장) +3');
   const x0 = s.grade.xp; E.bagBlends(s, s.blends.map(b => b.id), ctx);
   check(s.grade.xp === x0, '블렌드 티백 만들기는 없음 (블렌드에 들어 있음)');
   if (E.teaShopOpen(cal)) { E.brew(s, s.teas.map(t => t.id), s.blends.map(b => b.id)); check(s.grade.xp === x0, '우리기는 없음 (팔기에 들어 있음)');

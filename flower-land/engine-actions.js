@@ -340,6 +340,7 @@ function blend(st, ids, ctx) {
   const picked = st.dried.filter(p => ids.includes(p.id)), parts = [...new Set(picked.map(p => p.type))];   // P77-C 고른 건 꽃 종류 — 꽃마다 좋은 것부터 petals장(티백 하나 몫)씩
   if (parts.length < 2 || parts.length > 3) return no('말린 꽃잎 2~3가지를 골라 주세요');
   if (picked.length !== parts.length) return no('서로 다른 꽃의 꽃잎을 골라 주세요');
+  if (!blendRecipe(parts, st)) return no(`정해진 블렌드만 만들 수 있어요 · ${blendNearText(parts, st)}`);   // P79-05 레시피 밖 짝은 막음 (예전에 만든 블렌드는 × 1.2 그대로 팖)
   const short = parts.filter(t => st.dried.filter(p => p.type === t).length < FLOWERS[t].petals);
   if (short.length) return no(`블렌드엔 꽃마다 티백 하나 몫이 들어가요 · ${short.map(t => `${FLOWERS[t].name} ${FLOWERS[t].petals - st.dried.filter(p => p.type === t).length}장`).join(' · ')} 더 모아요`);
   const list = parts.flatMap(t => st.dried.filter(p => p.type === t).sort((a, b) => b.q - a.q).slice(0, FLOWERS[t].petals));

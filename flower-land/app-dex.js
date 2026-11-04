@@ -239,7 +239,7 @@ function openDexDetail(kind, k) {
       <div class="row"><b>${B.name}</b><span class="chip">블렌드</span>${q != null ? `<span class="stars">${starStr(q)}</span>` : ''}</div>
       <p class="note"><b>맛</b> ${B.taste}</p>   <!-- P79-02 -->
       ${B.story ? `<p class="note">${B.original ? '🌱' : '🍵'} ${B.story}</p>` : ''}
-      <p class="note">🌿 제다실 🫖 블렌딩에서 언제든 만들어요. 값은 재료 찻값을 더한 것의 <b class="val-up">×1.5</b>예요 (레시피에 없는 블렌드는 ×1.2)</p></div>`, [{ label: '닫기', act: closeModal }]);
+      <p class="note">🌿 제다실 🫖 블렌딩에서 언제든 만들어요. 값은 재료 찻값을 더한 것의 <b class="val-up">×1.5</b>예요 (정해진 블렌드만 만들어요 · 예전에 만든 이름 없는 블렌드는 ×1.2)</p></div>`, [{ label: '닫기', act: closeModal }]);
   }
   if (kind === 'land') {
     const L = LANDS[k], makers = FLOWER_KEYS.filter(f => homeLand(FLOWERS[f]) === k).map(f => FLOWERS[f].name);

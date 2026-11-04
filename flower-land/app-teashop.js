@@ -160,6 +160,7 @@ function openBlendConfirm() {
   if (sel.length < 2) return;
   const lack = sel.filter(p => st.dried.filter(x => x.type === p.type).length < FLOWERS[p.type].petals);   // P77-C 꽃마다 티백 하나 몫(petals장)
   if (lack.length) return feedback(`블렌드엔 꽃마다 티백 하나 몫이 들어가요 · ${lack.map(p => `${FLOWERS[p.type].name} ${FLOWERS[p.type].petals - st.dried.filter(x => x.type === p.type).length}장`).join(' · ')} 더 모아요`, true);
+  if (!E.blendRecipe(sel.map(p => p.type), st)) return feedback(`정해진 블렌드만 만들 수 있어요 · ${E.blendNearText(sel.map(p => p.type), st)}`, true);   // P79-05
   const used = sel.reduce((a, p) => a + FLOWERS[p.type].petals, 0);
   const parts = sel.map(p => p.type), recipe = E.blendRecipe(parts, st), q = sel.reduce((a, p) => a + p.q, 0) / sel.length;
   const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`, val = E.blendValue({ parts, q, recipe });
@@ -254,9 +255,9 @@ function renderCab(force) {
       <div class="bl-row">
         <div class="bl-slots">${[0, 1, 2].map(i => sel[i] ? `<button type="button" class="bl-slot on" data-bunsel="${sel[i].id}" title="${FLOWERS[sel[i].type].name} 빼기" style="--pc:${FLOWERS[sel[i].type].petal}">${spriteImg(sel[i].type, 'dried', 32, false, '')}<small>${FLOWERS[sel[i].type].name}</small></button>` : `<span class="bl-slot ${i < 2 ? '' : 'opt'}" ${i < 2 ? '' : 'title="세 번째는 넣어도, 안 넣어도 돼요"'}>+${i < 2 ? '' : '<small>더</small>'}</span>`).join('')}</div>
         <span class="bl-arrow" aria-hidden="true">→</span>
-        <div class="bl-out">${parts.length >= 2 ? `<b>${recipe ? `✨ ${E.BLENDS[recipe].name}` : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`}</b><span><span class="stars">${starStr(avg)}</span></span><small class="bl-taste"><b>맛</b> ${E.teaTaste('blend', recipe, parts)}</small>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
+        <div class="bl-out">${parts.length >= 2 && !recipe ? `<b class="val-down">정해진 블렌드가 아니에요</b><small class="bl-taste">${E.blendNearText(parts, st)}</small>` : parts.length >= 2 ? `<b>✨ ${E.BLENDS[recipe].name}</b><span><span class="stars">${starStr(avg)}</span></span><small class="bl-taste"><b>맛</b> ${E.teaTaste('blend', recipe, parts)}</small>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
       </div>
-      <button type="button" class="btn primary bl-go" data-blend="1" ${parts.length >= 2 ? '' : 'disabled'}>블렌딩</button>   <!-- 칸 바로 아래 · 레시피 위 (11-01 사용자 요청 — 넓은 화면에서 오른쪽 끝에 멀리 있던 것) -->
+      <button type="button" class="btn primary bl-go" data-blend="1" ${parts.length >= 2 && recipe ? '' : 'disabled'}>블렌딩</button>   <!-- 칸 바로 아래 · 레시피 위 (11-01 사용자 요청 — 넓은 화면에서 오른쪽 끝에 멀리 있던 것) -->
       ${bookHTML}
     </div>` : '';
   // 🏷️ 티백 (찻집): 생화 티백 · 티백 · 블렌드 티백 → 🫖 우림

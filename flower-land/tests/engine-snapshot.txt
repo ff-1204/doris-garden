@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 616개 (Object.keys 차례)
+공개 이름 618개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -135,6 +135,8 @@
   DEX_TOTAL number 16dc368a89b428b2
   dexTotal function f44f76b9a5983eb3
   blendKeys function df5072e5e995e29f
+  blendNear function b8c50df5fdd6277c
+  blendNearText function 9fd201993a1c6c4e
   FLOWER_TASTE object 41c15a4c6737ff78
   teaTaste function 5c75bad7e7ab78b4
   CHAPTERS object f8ebf39073c8f535
@@ -614,9 +616,9 @@
   blendValue function 3ba3394e081a6323
   dryPetals function 248b72e7c69cfc30
   makeTeaDried function 41ffa2f25c19ea7e
-  blend function bc1ce951e062b1c4
+  blend function 72780a70d52170ad
   sellBlends function b56d2383cacc1a3f
-공개 값 모두 25b987af577a37d6
+공개 값 모두 48696cbf99b4decd
 보정 MIGRATIONS 56줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507

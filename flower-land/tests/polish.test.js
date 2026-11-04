@@ -4,8 +4,8 @@ let fails = 0; const check = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') +
 const H = E.HOUR;
 const at = pred => { let t = Date.UTC(2026, 9, 5, 0, 0); for (let i = 0; i < 6000; i++) { const c = E.calendar(t); if (pred(c)) return t + 0.1 * H; t += H / 4; } };
 const st = E.create(at(c => c.month === 12 && !c.frozen), () => 0.5);
-st.dried.push({ id: 1, type: 'chamomile', q: 0.95 }, { id: 2, type: 'rose', q: 0.92 }, { id: 3, type: 'lavender', q: 0.95 }, { id: 4, type: 'rose', q: 0.7 });
-// P77-C 블렌드엔 꽃마다 petals장 — 같은 품질로 채움 (캐모마일 12 · 장미 ★5 5 · 라벤더 7 · 장미 ★4 5)
+st.dried.push({ id: 1, type: 'chamomile', q: 0.95 }, { id: 2, type: 'rose', q: 0.92 }, { id: 3, type: 'hibiscus', q: 0.95 }, { id: 4, type: 'rose', q: 0.7 });
+// P77-C 블렌드엔 꽃마다 petals장 — 같은 품질로 채움 (캐모마일 12 · 장미 ★5 5 · 히비스커스 5 — P79-05 레시피 붉은 여름 · 장미 ★4 5)
 { let i = 100; for (const d of st.dried.slice()) for (let n = 1; n < E.FLOWERS[d.type].petals; n++) st.dried.push({ id: i++, type: d.type, q: d.q }); }
 const a = E.blend(st, [1, 2]).blend, b = E.blend(st, [3, 4]).blend;
 check(a.hat === true && b.hat === false && st.dried.length === 0, 'P77-C ★5 꽃잎만이면 햇차, 하나라도 아니면 아님 (장미는 좋은 것부터 5장)');
