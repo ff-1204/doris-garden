@@ -317,23 +317,36 @@ const DRY_H = MONTH_H;                           // P12-07-02: 꽃방에 널면 
 const BLEND_RATE = 1.2, RECIPE_RATE = 1.5;        // P12-08-04: 따로 만든 차 값의 합 × 1.2 / 레시피에 있는 이름 있는 블렌드는 × 1.5 (10-06)
 // P12-08-06: 도감에 모이는 이름 있는 블렌드 9가지 (10-06: 6 → 9) (재료가 정확히 같아야 함)
 const BLENDS = {   // P12-08-06 (10-06 검토: 실제로 파는 짝으로 바꿈 · 9가지)
-  springfield: { name: '봄 들판', parts: ['chamomile', 'rose'], story: '캐모마일과 장미는 꽃차 가게에서 흔히 함께 파는 짝이에요. 사과 향에 장미 향이 얹혀요.' },
-  sleepnight: { name: '잠드는 밤', parts: ['chamomile', 'lavender'], story: '잠들기 전에 많이 마시는 블렌드예요. 여러 차 회사에서 캐모마일 라벤더로 팔아요.' },
-  violetdusk: { name: '보랏빛 저녁', parts: ['lavender', 'bpea'], story: '파란 버터플라이피에 라벤더 향을 더한 블렌드예요. 레몬을 넣으면 보랏빛으로 바뀌어요.' },
-  redsummer: { name: '붉은 여름', parts: ['hibiscus', 'rose'], story: '새콤한 히비스커스와 장미를 섞은 붉은 차예요. 차갑게 우려도 맛있어요.' },
-  pondmorning: { name: '연못의 아침', parts: ['lotus', 'jasmine'], story: '연꽃 향과 재스민 향을 함께 입힌 차는 베트남과 중국에서 오래 만들어 왔어요.' },
-  autumngarden: { name: '가을 정원', parts: ['gamguk', 'jasmine'], story: '국화와 재스민은 중국에서 오래 함께 우려 온 짝이에요. 달큰하고 시원한 맛이에요.' },
-  sunfield: { name: '햇살 들판', parts: ['marigold', 'chamomile'], story: '금빛 메리골드와 캐모마일을 섞은 노란 차예요. 허브차 가게에서 자주 보는 짝이에요.' },
-  sunsetcomb: { name: '노을빛 볏', parts: ['celosia', 'rose'], story: '맨드라미차는 맛이 순해서 장미를 더해 향을 살리는 블렌딩을 권해요.' },
-  plumwinter: { name: '겨울 매화향', parts: ['maehwa', 'napmae'], story: '한겨울에 피는 두 매화를 섞은 정원만의 블렌드예요. 실제로 파는 짝은 아니에요.', original: true },
+  springfield: { taste: '사과 향에 장미 향 · 부드러운 단맛', name: '봄 들판', parts: ['chamomile', 'rose'], story: '캐모마일과 장미는 꽃차 가게에서 흔히 함께 파는 짝이에요. 사과 향에 장미 향이 얹혀요.' },
+  sleepnight: { taste: '포근한 꽃향 · 차분한 단맛', name: '잠드는 밤', parts: ['chamomile', 'lavender'], story: '잠들기 전에 많이 마시는 블렌드예요. 여러 차 회사에서 캐모마일 라벤더로 팔아요.' },
+  violetdusk: { taste: '시원한 라벤더 향 · 순한 맛', name: '보랏빛 저녁', parts: ['lavender', 'bpea'], story: '파란 버터플라이피에 라벤더 향을 더한 블렌드예요. 레몬을 넣으면 보랏빛으로 바뀌어요.' },
+  redsummer: { taste: '새콤한 맛 · 장미 향 뒷맛', name: '붉은 여름', parts: ['hibiscus', 'rose'], story: '새콤한 히비스커스와 장미를 섞은 붉은 차예요. 차갑게 우려도 맛있어요.' },
+  pondmorning: { taste: '맑은 연꽃 향 · 달콤한 재스민', name: '연못의 아침', parts: ['lotus', 'jasmine'], story: '연꽃 향과 재스민 향을 함께 입힌 차는 베트남과 중국에서 오래 만들어 왔어요.' },
+  autumngarden: { taste: '쌉쌀한 국화 · 시원한 뒷맛', name: '가을 정원', parts: ['gamguk', 'jasmine'], story: '국화와 재스민은 중국에서 오래 함께 우려 온 짝이에요. 달큰하고 시원한 맛이에요.' },
+  sunfield: { taste: '구수한 맛 · 사과 향 단맛', name: '햇살 들판', parts: ['marigold', 'chamomile'], story: '금빛 메리골드와 캐모마일을 섞은 노란 차예요. 허브차 가게에서 자주 보는 짝이에요.' },
+  sunsetcomb: { taste: '순한 맛 · 장미 향이 살아요', name: '노을빛 볏', parts: ['celosia', 'rose'], story: '맨드라미차는 맛이 순해서 장미를 더해 향을 살리는 블렌딩을 권해요.' },
+  plumwinter: { taste: '맑은 매화 향 · 달큰한 뒷맛', name: '겨울 매화향', parts: ['maehwa', 'napmae'], story: '한겨울에 피는 두 매화를 섞은 정원만의 블렌드예요. 실제로 파는 짝은 아니에요.', original: true },
+  // P79-01 (11-05) 새 블렌드 넷: 같은 철에 피는 짝 · 실제로 파는 짝 셋 + 정원만의 짝 하나 — 도감 93 → 101칸
+  bluejasmine: { taste: '달콤한 재스민 향 · 푸른 빛깔', name: '푸른 재스민', parts: ['bpea', 'jasmine'], story: '버터플라이피에 재스민 향을 입힌 파란 차예요. 여름 꽃차 가게에서 자주 보는 짝이에요.' },
+  rosejasmine: { taste: '장미 향 · 재스민 단맛 두 겹', name: '꽃향 두 겹', parts: ['rose', 'jasmine'], story: '장미와 재스민을 함께 넣은 꽃향 가득한 차예요. 향긋한 블렌드로 흔히 팔아요.' },
+  duskhill: { taste: '새콤한 맛 · 시원한 꽃향', name: '노을 언덕', parts: ['hibiscus', 'lavender'], story: '히비스커스에 라벤더를 더한 붉은 차예요. 허브차 가게에서 자주 함께 섞어요.' },
+  goldautumn: { taste: '구수한 맛 · 쌉쌀한 국화 향', name: '금빛 가을', parts: ['marigold', 'gamguk'], story: '가을에 함께 피는 메리골드와 감국을 섞은 정원만의 블렌드예요. 실제로 파는 짝은 아니에요.', original: true },
   // P19-08-03 숨은 레시피: 그 칭호를 얻어야 레시피 · 도감에 나타나고 이름이 붙음 (10-17, 열린 질문 ⑩)
-  threegarden: { name: '세 정원의 오후', parts: ['chamomile', 'rose', 'lavender'], story: '들판 · 장미 울타리 · 언덕의 꽃을 한 잔에 담은 정원만의 블렌드예요. 블렌드 연구가에게만 알려 줘요.', original: true, hidden: 't_blend' },
-  snowcamellia: { name: '동백 눈길', parts: ['dongbaek', 'maehwa'], story: '눈 속에 피는 동백과 매화를 섞은 정원만의 블렌드예요. 나무를 기다린 사람에게만 알려 줘요.', original: true, hidden: 't_tree' },
+  threegarden: { taste: '꽃향 세 겹 · 부드러운 단맛', name: '세 정원의 오후', parts: ['chamomile', 'rose', 'lavender'], story: '들판 · 장미 울타리 · 언덕의 꽃을 한 잔에 담은 정원만의 블렌드예요. 블렌드 연구가에게만 알려 줘요.', original: true, hidden: 't_blend' },
+  snowcamellia: { taste: '은은한 단맛 · 맑은 매화 향', name: '동백 눈길', parts: ['dongbaek', 'maehwa'], story: '눈 속에 피는 동백과 매화를 섞은 정원만의 블렌드예요. 나무를 기다린 사람에게만 알려 줘요.', original: true, hidden: 't_tree' },
 };
 const ALL_BLEND_KEYS = Object.keys(BLENDS);
+// P79-02 (11-05) 맛 한 줄: 꽃 차는 FLOWER_TASTE · 이름 있는 블렌드는 BLENDS[k].taste · 이름 없는 블렌드는 꽃마다 첫 낱말을 이어서
+const FLOWER_TASTE = { chamomile: '사과 향 · 부드러운 단맛', bpea: '은은한 풀 향 · 순한 맛', hibiscus: '새콤한 맛 · 붉은 빛깔', marigold: '구수한 맛 · 살짝 쌉쌀', celosia: '순하고 구수한 맛',
+  lavender: '시원한 꽃향 · 살짝 쌉쌀', jasmine: '달콤한 꽃향 · 깔끔한 뒷맛', gamguk: '쌉쌀한 국화 향 · 단 뒷맛', rose: '장미 향 · 은은한 단맛', lotus: '맑은 연꽃 향 · 구수함',
+  dongbaek: '은은한 단맛 · 부드러움', maehwa: '맑은 매화 향 · 새콤함', napmae: '달큰한 향 · 맑은 맛' };
+function teaTaste(kind, key, parts) {           // kind 'tea'(key = 꽃) · 'blend'(key = 레시피 키 | null, parts = 꽃 키들)
+  if (kind === 'blend') return key && BLENDS[key] ? BLENDS[key].taste : (parts || []).map(k => (FLOWER_TASTE[k] || '').split(' · ')[0]).filter(Boolean).join(' · ');
+  return FLOWER_TASTE[key] || '';
+}
 const BLEND_KEYS = ALL_BLEND_KEYS.filter(k => !BLENDS[k].hidden);
 const blendKeys = st => ALL_BLEND_KEYS.filter(k => !BLENDS[k].hidden || (st && st.titles && st.titles[BLENDS[k].hidden] != null));
-const DEX_TOTAL = FLOWER_KEYS.length * 5 + BLEND_KEYS.length + LAND_KEYS.length + BLEND_KEYS.length;   // 씨앗·묘목 13 · 꽃 13 · 꽃잎 13 · 티백(꽃 13 + 블렌드 9) · 차 13 · 땅 10 · 블렌드 9 = 93 (P08-03, P08-04, P12-08-06)
+const DEX_TOTAL = FLOWER_KEYS.length * 5 + BLEND_KEYS.length + LAND_KEYS.length + BLEND_KEYS.length;   // 씨앗·묘목 13 · 꽃 13 · 꽃잎 13 · 티백(꽃 13 + 블렌드 13) · 차 13 · 땅 10 · 블렌드 13 = 101 (P08-03, P08-04, P12-08-06 · P79-01 93 → 101)
 const dexTotal = st => DEX_TOTAL + (blendKeys(st).length - BLEND_KEYS.length) * 2;   // 숨은 레시피를 열면 블렌드 · 블렌드 티백 칸이 하나씩 늘어남
 function blendRecipe(parts, st) {
   const s = parts.slice().sort().join('|');

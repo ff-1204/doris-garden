@@ -120,7 +120,7 @@ E.mutSync(st, null);
 check(st.dex.mutant.dongbaek === 1 && E.mutDexCount(st) === 1 && E.mutDexCells(st) === 1, '놓인 변이 꽃 1단계 → 도감 1칸');
 f1.q = 0.5; E.mutSync(st, null); check(st.dex.mutant.dongbaek === 2 && E.mutDexCells(st) === 2, '품질이 떨어져 2단계를 보면 2칸');
 f1.q = 0.95; E.mutSync(st, null); check(st.dex.mutant.dongbaek === 2, '돌봐서 1단계로 돌아가도 본 칸은 그대로');
-check(E.dexCount(st) === dex0 && E.dexTotal(st) === tot0 && E.DEX_TOTAL === 93 && E.gradeDexCount(st) === gdx0, '기본 도감 · 93칸 · 등급 도감 칸 그대로');
+check(E.dexCount(st) === dex0 && E.dexTotal(st) === tot0 && E.DEX_TOTAL === 101 && E.gradeDexCount(st) === gdx0, '기본 도감 · 101칸 · 등급 도감 칸 그대로');
 check(!st.dex.flower.dongbaek, '변이 꽃은 꽃 도감에 등록하지 않음');
 { const tw = mk(7); bloomF(tw, 'dongbaek', 4, 4, 0.9); E.checkJournal(st, null); E.checkJournal(tw, null);   // 같은 자리에 보통 꽃을 둔 쌍둥이 정원과 견줌
   check(JSON.stringify(Object.keys(st.journal.done).sort()) === JSON.stringify(Object.keys(tw.journal.done).sort()), '퀘스트는 그대로 (변이로 끝나는 퀘스트 없음)'); }

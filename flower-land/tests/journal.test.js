@@ -15,7 +15,7 @@ check(E.chapterOpen(first, 'c0') && first.titles.t_visit == null, '0장은 처�
 first.onboarded = true;   // 첫 안내 창의 '시작'
 E.checkJournal(first, ctx);
 check(first.journal.done.c0_visit != null && first.titles.t_visit != null && first._newTitles.includes('t_visit'), "'시작'을 누르면 퀘스트 완료 · 칭호 「정원 문을 연 사람」");
-check(E.DEX_TOTAL === 93 && E.BLEND_KEYS.length === 9, '숨은 레시피는 기본 도감 93칸에 들지 않음');
+check(E.DEX_TOTAL === 101 && E.BLEND_KEYS.length === 13, '숨은 레시피는 기본 도감 101칸에 들지 않음 (P79 블렌드 13)');
 
 console.log('[장이 열리는 순서]');
 const st = E.create(MON + H, () => 0.5);

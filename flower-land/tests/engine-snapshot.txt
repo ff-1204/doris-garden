@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 614개 (Object.keys 차례)
+공개 이름 616개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -132,9 +132,11 @@
   farmGift function 551230791599671b
   flowerAt function 5cd227aec388d7b8
   dexCount function 5790981d5fbf0834
-  DEX_TOTAL number 6e4001871c0cf27c
+  DEX_TOTAL number 16dc368a89b428b2
   dexTotal function f44f76b9a5983eb3
   blendKeys function df5072e5e995e29f
+  FLOWER_TASTE object 41c15a4c6737ff78
+  teaTaste function 5c75bad7e7ab78b4
   CHAPTERS object f8ebf39073c8f535
   QUESTS object 0ec03ed12aadac1d
   TITLES object 1db7c441226e972e
@@ -604,8 +606,8 @@
   annualSpanH function b55c7f129b3a51c1
   pickFlower function 34a3b0939b544f4a
   DRY_H number 6b51d431df5d7f14
-  BLENDS object 2058797f63aa9d76
-  BLEND_KEYS object 9beb6fa5d0dc23f8
+  BLENDS object d70374063fc3607c
+  BLEND_KEYS object 3fabf272dde4c90b
   BLEND_RATE number 77ac319bfe1979e2
   RECIPE_RATE number 9f29a130438b8117
   blendRecipe function adc62e38b6026acd
@@ -614,7 +616,7 @@
   makeTeaDried function 41ffa2f25c19ea7e
   blend function bc1ce951e062b1c4
   sellBlends function b56d2383cacc1a3f
-공개 값 모두 93e25edb98e080e3
+공개 값 모두 25b987af577a37d6
 보정 MIGRATIONS 56줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
@@ -674,16 +676,16 @@
   56. R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐 · 9db8e59a9a917488
 새 정원 create 2318a575eb29c6e5
 새 정원 30시간 뒤 07bfcb7ddd09bc5b
-새 정원 두 주(정원 두 해) 뒤 2a5b147bca751668
+새 정원 두 주(정원 두 해) 뒤 8780d43334852bc8
 옛 저장: 가장 옛 정원 (30시간) ff43f0f1ce844d1f
-옛 저장: 가장 옛 정원 (두 주) 1c71cc33eefc7df4
-옛 저장: 두 주 정원을 0번째부터 8f4fe7cd8fe297f7
-옛 저장: 두 주 정원을 10번째부터 8f4fe7cd8fe297f7
-옛 저장: 두 주 정원을 20번째부터 cd098c2fdbc4674f
-옛 저장: 두 주 정원을 30번째부터 cd098c2fdbc4674f
-옛 저장: 두 주 정원을 40번째부터 cd098c2fdbc4674f
-옛 저장: 두 주 정원을 48번째부터 2a5b147bca751668
-옛 저장: 두 주 정원을 55번째부터 2a5b147bca751668
+옛 저장: 가장 옛 정원 (두 주) 30038d418cb9d84f
+옛 저장: 두 주 정원을 0번째부터 629363dc784c2e00
+옛 저장: 두 주 정원을 10번째부터 629363dc784c2e00
+옛 저장: 두 주 정원을 20번째부터 8dfe9eae26d80ffa
+옛 저장: 두 주 정원을 30번째부터 8dfe9eae26d80ffa
+옛 저장: 두 주 정원을 40번째부터 8dfe9eae26d80ffa
+옛 저장: 두 주 정원을 48번째부터 8780d43334852bc8
+옛 저장: 두 주 정원을 55번째부터 8780d43334852bc8
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave 123f0c301912fab6
-저장 파일 parseSave 123f0c301912fab6
+저장 파일 makeSave 85a59f4c11e44427
+저장 파일 parseSave 85a59f4c11e44427

@@ -75,7 +75,7 @@ console.log('[도감 칸 · 13칸 칭호]');
   const f = bloom(t, 'rose', 5, 5); E.preserve(t, f.id, ctx); E.advance(t, MON + 26 * H, ctx);
   check(E.presCount(t) === 13 && t.titles.t_pres13 != null, '13칸을 다 모으면 「시간을 멈춘 정원사」');
   check(E.TITLES.t_pres13.extra && !E.TITLE_KEYS.includes('t_pres13') && E.TITLE_KEYS.length === 19, '덤 칭호 (칭호 19개 그대로)');
-  { const c0 = E.dexCount(t); t.dex.pres = {}; check(E.dexCount(t) === c0 && E.DEX_TOTAL === 93, '기본 도감 93칸 그대로 · dexCount에 안 셈'); for (const k of E.FLOWER_KEYS) t.dex.pres[k] = true; }
+  { const c0 = E.dexCount(t); t.dex.pres = {}; check(E.dexCount(t) === c0 && E.DEX_TOTAL === 101, '기본 도감 101칸 그대로 · dexCount에 안 셈'); for (const k of E.FLOWER_KEYS) t.dex.pres[k] = true; }
   const d = E.presDexOf(t); check(d.flower.length === 13 && d.flower.every(x => x.got) && d.mut.length === 13 && d.mut.every(x => !x.got && x.name === null), '📖 🌹 쪽: 꽃 13 · 변이 13 (안 본 변이는 이름 없음)'); }
 
 console.log('[🧬 변이 꽃 프리저브드 · 변이 칭호]');

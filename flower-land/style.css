@@ -703,6 +703,9 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .qbar i { display: block; height: 100%; border-radius: inherit; background: var(--pc); }
 .cc-meta { font-size: var(--fs-sm); color: var(--muted); line-height: 1.4; }
 .cc-meta b { color: var(--ink); white-space: nowrap; }
+.cc-taste { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }   /* P79-02 맛 한 줄 */
+.cc-taste b { color: var(--ink); font-weight: 600; margin-right: var(--sp-1); }
+.bl-out .bl-taste, .bl-rec .bl-taste { color: var(--muted); word-break: keep-all; }
 .cc-price { display: flex; align-items: baseline; gap: var(--sp-3); }
 .cc-price b { font-size: var(--fs-xl); }
 .cc-price .muted { font-size: var(--fs-sm); }

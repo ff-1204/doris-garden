@@ -237,6 +237,7 @@ function openDexDetail(kind, k) {
         <span class="beq-op">=</span><span class="beq-i out">${spriteImg(B.parts[0], 'tea', 64, false, '')}<small>${B.name}</small><em class="beq-x">×1.5</em></span>
       </div></div>
       <div class="row"><b>${B.name}</b><span class="chip">블렌드</span>${q != null ? `<span class="stars">${starStr(q)}</span>` : ''}</div>
+      <p class="note"><b>맛</b> ${B.taste}</p>   <!-- P79-02 -->
       ${B.story ? `<p class="note">${B.original ? '🌱' : '🍵'} ${B.story}</p>` : ''}
       <p class="note">🌿 제다실 🫖 블렌딩에서 언제든 만들어요. 값은 재료 찻값을 더한 것의 <b class="val-up">×1.5</b>예요 (레시피에 없는 블렌드는 ×1.2)</p></div>`, [{ label: '닫기', act: closeModal }]);
   }
@@ -255,6 +256,7 @@ function openDexDetail(kind, k) {
     <div class="dex-chain">${steps.map(([kd, nm, on], i) => `${i ? '<span class="dc-arrow">›</span>' : ''}<button type="button" class="dc-step ${kd === cur[0] ? 'on' : ''} ${on ? '' : 'locked'}" ${on ? `data-dk="${kd}"` : 'disabled'} title="${on ? nm : '아직 몰라요'}">${spriteImg(k, kd, 36, !on, on ? nm : '')}<small>${on ? ['씨앗·묘목', '꽃', '꽃잎', '티백', '차'][i] : '???'}</small></button>`).join('')}</div>
     <div class="row"><b>${F.name}</b><span class="chip">${LIFE[F.life]}</span><span class="chip">${FORM[F.form].name}</span></div>
     <p style="margin:0">${F.story}</p>
+    <p class="note"><b>맛</b> ${F.tea} — ${E.teaTaste('tea', k)}</p>   <!-- P79-02 -->
     ${flowerStrip(F, E.calendar(st.virtual).idx)}
     <div class="gauges">${envGauges(F, null)}</div>
     <dl class="kv">

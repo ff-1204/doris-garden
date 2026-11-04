@@ -6,7 +6,7 @@ const ctx = { live: false, rng: () => 0.5, toast() {} };
 const MON = (() => { const d = new Date(2026, 9, 5, 6, 0, 0); return d.getTime(); })();
 const st = E.create(MON);
 check(E.calendar(st.virtual).month === 3, '3월에서 시작');
-check(E.DEX_TOTAL === 93, '도감 전체 93칸 (씨앗·묘목 13 · 꽃 13 · 꽃잎 13 · 티백 22(꽃 13 + 블렌드 9) · 차 13 · 땅 10 · 블렌드 9)');
+check(E.DEX_TOTAL === 101, '도감 전체 101칸 (씨앗·묘목 13 · 꽃 13 · 꽃잎 13 · 티백 26(꽃 13 + 블렌드 13) · 차 13 · 땅 10 · 블렌드 13 — P79)');
 check(Object.keys(E.FLOWERS).every(k => true) && E.BLEND_KEYS.every(b => E.BLENDS[b].parts.every(p => E.FLOWERS[p])), '블렌드 재료는 모두 있는 꽃');
 
 // 꽃잎을 손으로 넣고 말리기

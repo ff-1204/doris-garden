@@ -247,14 +247,14 @@ function renderCab(force) {
   const haveDried = new Set(st.dried.map(p => p.type)), canMake = k => E.BLENDS[k].parts.every(p => haveDried.has(p));
   const recKeys = E.blendKeys(st).slice().sort((x, y) => canMake(y) - canMake(x)), readyN = E.blendKeys(st).filter(canMake).length;
   const bookHTML = `<details class="bl-book"${ui.bookOpen ?? readyN > 0 ? ' open' : ''}><summary>📖 레시피 <span class="data">${gotN} / ${E.blendKeys(st).length}</span>${readyN ? ` · <b class="val-up">지금 만들 수 있어요 ${readyN}</b>` : ''}</summary>
-        <div class="bl-recs">${recKeys.map(k => { const B = E.BLENDS[k], got = st.dex.blend[k] != null, ok = canMake(k), inner = `${got ? '✓ ' : ''}<b>${B.name}</b> <small>${B.parts.map(p => FLOWERS[p].name).join(' + ')}</small>`; return ok ? `<button type="button" class="bl-rec ready ${got ? 'got' : ''} ${recipe === k ? 'on' : ''}" aria-pressed="${recipe === k}" data-recipe="${k}" title="재료를 블렌딩 칸에 담아요">🫖 ${inner}</button>` : `<span class="bl-rec ${got ? 'got' : ''}">${inner}</span>`; }).join('')}</div></details>`;
+        <div class="bl-recs">${recKeys.map(k => { const B = E.BLENDS[k], got = st.dex.blend[k] != null, ok = canMake(k), inner = `${got ? '✓ ' : ''}<b>${B.name}</b> <small>${B.parts.map(p => FLOWERS[p].name).join(' + ')}</small> <small class="bl-taste">· ${B.taste}</small>`; return ok ? `<button type="button" class="bl-rec ready ${got ? 'got' : ''} ${recipe === k ? 'on' : ''}" aria-pressed="${recipe === k}" data-recipe="${k}" title="재료를 블렌딩 칸에 담아요">🫖 ${inner}</button>` : `<span class="bl-rec ${got ? 'got' : ''}">${inner}</span>`; }).join('')}</div></details>`;
   const blendBox = true ? `
     <div class="cab-head" id="tr-blend"><span class="sb-title">🫖 블렌딩</span><span class="muted">말린 꽃잎 2~3가지 · 꽃마다 티백 하나 몫</span></div>
     <div class="blendbox">
       <div class="bl-row">
         <div class="bl-slots">${[0, 1, 2].map(i => sel[i] ? `<button type="button" class="bl-slot on" data-bunsel="${sel[i].id}" title="${FLOWERS[sel[i].type].name} 빼기" style="--pc:${FLOWERS[sel[i].type].petal}">${spriteImg(sel[i].type, 'dried', 32, false, '')}<small>${FLOWERS[sel[i].type].name}</small></button>` : `<span class="bl-slot ${i < 2 ? '' : 'opt'}" ${i < 2 ? '' : 'title="세 번째는 넣어도, 안 넣어도 돼요"'}>+${i < 2 ? '' : '<small>더</small>'}</span>`).join('')}</div>
         <span class="bl-arrow" aria-hidden="true">→</span>
-        <div class="bl-out">${parts.length >= 2 ? `<b>${recipe ? `✨ ${E.BLENDS[recipe].name}` : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`}</b><span><span class="stars">${starStr(avg)}</span></span>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
+        <div class="bl-out">${parts.length >= 2 ? `<b>${recipe ? `✨ ${E.BLENDS[recipe].name}` : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`}</b><span><span class="stars">${starStr(avg)}</span></span><small class="bl-taste"><b>맛</b> ${E.teaTaste('blend', recipe, parts)}</small>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
       </div>
       <button type="button" class="btn primary bl-go" data-blend="1" ${parts.length >= 2 ? '' : 'disabled'}>블렌딩</button>   <!-- 칸 바로 아래 · 레시피 위 (11-01 사용자 요청 — 넓은 화면에서 오른쪽 끝에 멀리 있던 것) -->
       ${bookHTML}
@@ -264,16 +264,19 @@ function renderCab(force) {
   const teaCards = teas.map(t => { const F = FLOWERS[t.type]; return `<div class="shopcard cabcard teacard ${t.raw ? 'raw' : ''} ${t.hat ? 'hat' : ''}" style="--pc:${SPR.tea[t.type] || F.petal}">
       <div class="sc-art"><span class="sc-pair">${spriteImg(t.type, 'teabag', 52, false, `${F.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(t.type, 'tea', 30, false, F.tea)}</span></span><span class="chip sc-form">${t.raw ? '🌸 생화 티백' : '🏷️ 티백'}</span><span class="sc-count">×${t.ids.length}</span></div>
       <div class="cc-name"><b>${F.tea}</b><span class="stars">${starStr(t.q)}</span></div>
+      <div class="cc-taste"><b>맛</b> ${E.teaTaste('tea', t.type)}</div>   <!-- P79-02 맛 한 줄 -->
       ${t.hat || t.fresh ? `<div class="cc-meta">${teaTags({ ...t, raw: false })}</div>` : ''}
       <button type="button" class="btn primary" data-brew="${t.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`; }).join('')
     + bagged.map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
       <div class="sc-art"><span class="sc-pair">${spriteImg(b.parts[0], 'teabag', 52, false, `${b.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(b.parts[0], 'tea', 30, false, b.name)}</span></span><span class="chip sc-form blend">🫖 블렌드 티백</span></div>
       <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starStr(b.q)}</span></div>
+      <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
       <button type="button" class="btn primary" data-brewblend="${b.id}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`).join('');
   // 🫖 블렌드 (제다실): 아직 티백이 아닌 블렌드 → 🏷️ 티백
   const looseCards = loose.map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
       <div class="sc-art"><span class="blend-art n${b.parts.length}">${b.parts.map(p => spriteImg(p, 'dried', 40, false, FLOWERS[p].name)).join('')}</span><span class="chip sc-form blend">🫖 블렌드</span></div>
       <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starStr(b.q)}</span></div>
+      <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
       <button type="button" class="btn primary" data-bagblend="${b.id}">🏷️ 티백</button></div>`).join('');
   // ☕ 찻잔 (P17-10): 우린 차. 같은 꽃·꼬리표·식음이 같으면 한 장
   const cupKey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal), c.honey || '', E.cupSteeping(st, c)].join('|');
@@ -284,6 +287,7 @@ function renderCab(force) {
   const cupCards = cupGroups.map(g => { const isB = g.kind === 'blend', isH = g.kind === 'honey', key = isB ? g.parts[0] : g.type, nm = isB ? `${g.recipe ? '✨ ' : ''}${g.name}` : isH ? E.honeyTeaName(g.type) : FLOWERS[g.type].tea; return `<div class="shopcard cabcard teacard cupcard ${g.cold ? 'cold' : ''}" style="--pc:${isH ? '#d99a2b' : SPR.tea[key] || FLOWERS[key].petal}">
       <div class="sc-art"><span class="cup-steam">${isH ? honeyImg(g.type, 4) : spriteImg(key, 'tea', 64, false, nm)}</span><span class="chip sc-form">${g.steep ? '🫖 우리는 중' : g.cold ? '🧊 식은 차' : '☕ 갓 우림'}</span><span class="sc-count">×${g.ids.length}</span>${shopOpen && firstUp && g.ids.includes(firstUp.id) ? '<span class="sc-next-up">다음 차례</span>' : ''}</div>
       <div class="cc-name"><b>${isH ? '🍵 ' : g.honey ? '🍯 꿀 ' : ''}${esc(nm)}</b>${isH ? '' : `<span class="stars">${starStr(g.q)}</span>`}</div>
+      ${isH ? '' : `<div class="cc-taste"><b>맛</b> ${isB ? E.teaTaste('blend', g.recipe, g.parts) : E.teaTaste('tea', g.type)}</div>`}
       <div class="cc-meta"><span class="data">한 잔 ${won(E.cupValue(st, st.cups.find(x => x.id === g.ids[0]), cal))}</span>${E.teaPriceText(st, cal) ? ` <span class="chip price-chip">${E.teaPriceText(st, cal)}</span>` : ''} · ${g.steep ? `<b class="steep-left" data-steep="${g.steep.id}">${E.steepText(st, g.steep)}</b>` : g.cold ? '식어서 <b class="val-down">값이 반</b>' : '다음 6시 전에 팔면 제값'}${isB ? (g.hat ? ' <span class="chip hat-chip">🍃 햇차</span>' : '') : isH ? '' : teaTags(g)}${g.honey && !isH ? ` <span class="chip honey-chip">🍯 ${E.honeyName(g.honey)}</span>` : ''}${st.orders && !E.slowView(st) && st.orders.list.some(o => E.orderMatch(o, g)) ? ' <span class="chip order-chip">💌 주문에 맞아요</span>' : ''}</div>
       ${!g.honey && honeyLeft ? `<button type="button" class="btn small honey-btn" data-honeycup="${g.ids.join(',')}">🍯 꿀 한 숟갈</button>` : ''}
       <button type="button" class="btn primary" data-sellcup="${g.ids.join(',')}" ${shopOpen && !g.steep ? '' : 'disabled'}>${g.steep ? '🫖 우리는 중' : '💰 팔기'}</button></div>`; }).join('');
