@@ -1,0 +1,58 @@
+도리의 정원 (Dori's Garden) — 저작권 안내 / Copyright Notice
+
+Copyright (c) 2026 도리의 정원 운영자 (ff-1204). All rights reserved.
+모든 권리 보유.
+
+이 저장소는 오픈소스가 아니에요. 소스 코드를 공개한 것은 열람과 플레이를
+위해서이지, 사용 허락이 아니에요.
+
+[한국어]
+
+1. 허용하는 것
+   - 배포된 사이트(https://ff-1204.github.io/doris-garden/)에서 게임을 즐기기
+   - 개인적인 학습 · 참고 목적으로 코드를 읽기
+
+2. 허락 없이 할 수 없는 것
+   - 코드 · 기획 · 글 · 도트 그림 · 칭호 · 세계관 등 이 저장소의 어떤 부분이든
+     복제 · 수정 · 번역 · 재배포 · 공개 게시 · 호스팅 (포크 · 클론한 것을 그대로
+     또는 고쳐서 운영하는 것 포함)
+   - 상업적 이용 (판매 · 광고 수익 · 유료 서비스 · 홍보물 등 모든 영리 목적)
+   - 파생 저작물 제작 (다른 게임 · 앱 · 콘텐츠의 바탕으로 삼는 것)
+   - 인공지능 · 기계학습 모델의 학습 · 미세조정 · 평가 · 검색 증강(RAG) 데이터로
+     사용하거나, 그런 목적의 수집(크롤링 · 스크래핑)에 포함시키기
+
+3. 예외
+   - 글꼴(주아 · 고운바탕 · IBM Plex)은 각각 SIL Open Font License 1.1을 따라요.
+     flower-land/terms.html 의 오픈소스 고지를 보세요.
+   - 그 밖에 저작권법이 허용하는 공정한 이용(인용 등)은 막지 않아요.
+
+4. 위반 시 운영자는 저작권법에 따른 권리를 행사할 수 있어요.
+   사용 허락이 필요하면 dorimhan@kakao.com 으로 연락해 주세요.
+
+[English]
+
+This repository is NOT open source. The source is published for viewing and
+play only; publication does not grant any license.
+
+1. Permitted
+   - Playing the game at https://ff-1204.github.io/doris-garden/
+   - Reading the code for personal study and reference
+
+2. Not permitted without prior written permission
+   - Copying, modifying, translating, redistributing, publicly posting or
+     hosting any part of this repository (code, design, text, pixel art,
+     titles, setting), including running a fork or clone as-is or modified
+   - Any commercial use (sale, ad revenue, paid services, promotion, etc.)
+   - Creating derivative works (using it as the basis of another game, app
+     or content)
+   - Using any part of it as data for training, fine-tuning, evaluating or
+     retrieval-augmenting artificial-intelligence or machine-learning models,
+     or including it in crawling / scraping for such purposes
+
+3. Exceptions
+   - The fonts (Jua, Gowun Batang, IBM Plex) are licensed under the SIL Open
+     Font License 1.1; see the open-source notice in flower-land/terms.html.
+   - Fair use as permitted by applicable copyright law is not restricted.
+
+4. The operator may enforce these rights under applicable copyright law.
+   For permission requests, contact dorimhan@kakao.com.

@@ -1,0 +1,684 @@
+# 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
+공개 이름 609개 (Object.keys 차례)
+  DAILY_GIFT number 0604cd3138feed20
+  HOUR number c48664a448d8a63d
+  W number 624b60c58c9d8bfb
+  H number f5ca38f748a1d6ea
+  MONTHS object 59fd83a7605ddfdc
+  josa function e4fe4a1e59036ac0
+  SEASONS object 9f5807f18e725dbe
+  MONTH_H number 6b51d431df5d7f14
+  monthName function 8a78cc1b863c9ab7
+  calendar function 7752609e749a4279
+  calendarAfterFlow function ef560a6f34d06d9b
+  untilMonth function c1d9ffa25ea41413
+  yearOf function b3a48fecb05c580b
+  canReset function c648398a72731367
+  resetKeys function e8ad15bdeb06ef3a
+  FLOWERS object 19ab526c98898b20
+  FLOWER_KEYS object 80c8815137eef05f
+  FORM object a19bb1a55c981215
+  LIFE object e270b7c5cfa42440
+  LANDS object d6393e27ad8394cd
+  LAND_KEYS object bee2a56734aef6ec
+  LIFE_MIN number a976726b1d1bda3e
+  classify function 40b587eba6fcded5
+  landOf function 89eda1d78ecb7dd6
+  landCounts function 6c259de05f477770
+  flowerEconomy function ab72799e0a35862e
+  harvestsPerYear function 88a28305b8f8c8b8
+  PETAL_BASE number ef2d127de37b942b
+  ANT_PETALS_MAX number ef2d127de37b942b
+  bagMul function 8fef4cfd00ca4ce3
+  harvestCount function 733e9ff045290ed4
+  antCount function db5c75a7880539eb
+  bagPetals function a93cbe520ce267cd
+  ECON_Q object 74abd197b2fb59ec
+  stars function bc29f7fac50bc963
+  pct function 693c22a756107d99
+  germOf function fd8ba963841f400a
+  GERM_FULL_M number 6b51d431df5d7f14
+  GERM_FADE_M number 2c624232cdd22177
+  GERM_SOON_M number 4a44dc15364204a8
+  defaultRng function 522d44395fe468ab
+  qualityRadius function cc1c48cdceeb0f2b
+  stageRadius function 3f6700091b6e3ece
+  STAGE object 67175247bd4a6ba5
+  computeStage function 20d354d541f9efb3
+  landMatch function dcf9e619d05435de
+  vigorOf function 1a4108b1d00a6371
+  monthlyChange function 1ac9ee92109896d0
+  teaShopOpen function a81d472589752987
+  hoursToShopOpen function 76acdb3ee94ab1e3
+  TEA_PRICE_MUL object b040acb4cda5086a
+  teaPriceKind function 4331fe8afb3aa218
+  teaPriceMul function 930c10d4bf4ae7fb
+  teaPriceText function 42a617bb40613760
+  CUP_SELL_H number 6b86b273ff34fce1
+  STEEP_H number 0602d7c813c1f6e7
+  steepLeftH function d293287ba5ad9962
+  cupSteeping function 16667d2b60bca5df
+  readyCups function dca30e35de6d311d
+  steepText function 1f10f43b36b5522b
+  SEATS object d13d1a76db875089
+  CUP_SETS object 13e82867fd0aa7c5
+  SIGNS object 365654d936a7352e
+  shopOf function 5dc51984fade0aa9
+  cupSellH function 4a288f5007f34c03
+  addSeat function 5c43acaf1e38ab2c
+  buyDecor function f669adcd822a111a
+  autoSell function 2f846ac6de76610f
+  bagBlends function 5251d174cca13142
+  brew function 2fbd4c06e251d91e
+  sellCups function 8abcc885832ac97a
+  cupValue function b968a453050c604e
+  cupCold function 31a11c0238ea921e
+  COLD_RATE number d2cbad71ff333de6
+  propCount function 584fc1492f58de94
+  teaValue function d5ca2f5a5956e121
+  teaItemValue function 22877c105529f176
+  isHat function 94da4f30275146cc
+  makeRaw function 28e0cfe0d831aff8
+  HAT_RATE number b05e244762b1e472
+  RAW_RATE number 8139b33952401b3e
+  RAW_DECAY number 5feceb66ffc86f38
+  isFresh function 7d6d0b00f12e76cc
+  seasonKey function c3dfea71dcd471db
+  reservationPrice function 5baa91f9d1569519
+  deliverIdxOf function 9771c2d0473e2e37
+  reservedCount function f789919997b56fbe
+  cartSummary function cc148ac92da4b565
+  create function ed58047dca40a1f9
+  advance function 4ba385b967e5cd88
+  addLog function 25ea2d8cb4b0ceca
+  slowView function 7c80808c1c44146d
+  bigView function bb5a8d41f02fc777
+  patternView function 721527b5aa5c3f2d
+  compostable function e651394217218c44
+  compostItems function 7e6209645a0dff4b
+  autoCompost function 3388c7cee035e217
+  COMPOST_Q number 0602d7c813c1f6e7
+  TOOLS object 20662319dbf626a7
+  canCare function bf32bdb6c2926ff2
+  harvestSlot function 6b32ec2b062d183d
+  canMoveNow function 04e1386b28b5df8c
+  propGrown function 84b3cefa7c4916e3
+  propYearOf function 93ec618e00c90965
+  care function 3828773d28aa7d64
+  careAll function 651f52c24b2158ce
+  careAllTargets function f5cb31ce8ea261e0
+  CARE_SUPPLY object 6efcec53da094c43
+  buy function 4c592b6919d0888e
+  buySupply function a551cbeb1aee1910
+  SUPPLIES object 9d10a8caebb563f4
+  PETAL_BUY_RATE number b4af4e0d40391d3a
+  PETAL_BUY_Q number 14be4b45f18e0d8c
+  petalPrice function c6639d4253735639
+  buyPetal function 44624ce8951c4a64
+  reserve function ad815560d62024d1
+  plant function f0d9faf75f52bbf2
+  propagate function 1fecaea324b0b3fa
+  move function 54b49a7915137e34
+  makeTea function 3cd033790177ec77
+  sellTea function 0cb159f80acfb15c
+  guideKeys function b3feb38d8c773072
+  guideFill function 02760a5c41ecdbea
+  guideTap function 4071ddb5b101de53
+  potFlower function c29f4bff4d999448
+  FARM_GIFT number 39e5b4830d4d9c14
+  FARM_GIFT_IDX number 4a44dc15364204a8
+  FARM_GIFT_FROM string 1dc6b37e514d1f65
+  farmGiftId function 3dc8297ff867c8ea
+  farmGift function 551230791599671b
+  flowerAt function 5cd227aec388d7b8
+  dexCount function 5790981d5fbf0834
+  DEX_TOTAL number 6e4001871c0cf27c
+  dexTotal function f44f76b9a5983eb3
+  blendKeys function df5072e5e995e29f
+  CHAPTERS object f8ebf39073c8f535
+  QUESTS object 0ec03ed12aadac1d
+  TITLES object 1db7c441226e972e
+  TITLE_KEYS object 608a1031549abdf4
+  EXTRA_TITLE_KEYS object 46efe5fe7484a69a
+  chapterOpen function 8c57145f10062db3
+  chapterDone function 19482a84d2674e84
+  checkJournal function 81ab1ba7201e5943
+  setTitleOn function 448336fb0e18da65
+  TITLE_PERKS object be3ab781b3e31889
+  TOP_BOOST number b05e244762b1e472
+  titlePerk function b5a0d412410d8718
+  PRES_H number c2356069e9d1e79c
+  PRES_RATE number 4a44dc15364204a8
+  PRES_MUT_RATE number d4735e3a265e16ee
+  PRES_TITLE_KEYS object 3acb4ec20af75aa5
+  presValue function 5f2230a587758544
+  presName function a0ae92f0a3df6b78
+  presFull function 68420f5aaaa362fd
+  presReason function 6e8b6869eaa66321
+  preserve function d337c343939b77f8
+  presTick function c4cc2c6be72b3918
+  presDex function 12077928d9d010ea
+  presCount function eb4dd3ae54090006
+  presMutCount function 3d5f63add3a70e4f
+  presLeftH function 82e04af4cc35c9b9
+  presDexOf function 0ef674a9beab7539
+  sellPreserved function 5c6f2f8b4d169c88
+  titlePerkText function 0313bfac1a77c6ea
+  topDecoOf function a9fc98fcee5671e8
+  setTopDeco function 9a9a7e9347a70d74
+  clearTopDeco function e7208f7bac26d90a
+  newGardenId function 4485d12d06a4c5bc
+  saveSummary function ce95d80e3fdc59fc
+  SHARE_URL string d3060a218583a9ce
+  shareCard function dcb9ea69d02ad9be
+  makeSave function 01f4e3cc0e6f512a
+  parseSave function 3a9607fb3b290252
+  SAVE_NUMS object a4b789bcb6998521
+  cleanSave function a0326e65af8fee8c
+  SAVE_FORMAT number 6b86b273ff34fce1
+  MIGRATIONS object 8d20883cf9e8fdbb
+  migrateSave function f45e906b90c35da5
+  CLOUD_GAP number 6ce318969619d1c3
+  cloudDue function d8b021348e446c23
+  cloudAutoOk function 9f788d7170164ef3
+  cloudTokenUse function 10090ccfada3ba73
+  cloudDecide function 204dc83e0f086705
+  freshGarden function 9dcdb73d41e3cb18
+  freshPick function b738d83e4d8664e2
+  gardenBorn function e5d7b8c3ee0a69f3
+  firstVisitOf function b1a40201aa236f4a
+  applyAccount function e2dedd92a59612c7
+  cloudRewardPlan function 8db12e66c695fe22
+  giveCloudReward function 3930df2ae1c11d6a
+  inAppBrowser function 38b67bf3f9fade5e
+  outsideUrl function ec7fc43f1844fe3c
+  DECOS object ffd5504a58878db7
+  DECO_KEYS object 30e5350fb5cc0d64
+  EXTRA_DECO_KEYS object a64d9e02680ac4e3
+  MUT_BASE number 312b95ee5a344d2f
+  MUT_SLEEP number 0602d7c813c1f6e7
+  MUT_JAR number 0602d7c813c1f6e7
+  MUT_MAX number 9e08a62f297ef682
+  MUT_INHERIT number d2cbad71ff333de6
+  MUT_SLEEP_KEYS object c70fa95ca1e4bdd0
+  MUTANTS object 18e10ffd5f394dc7
+  MUTANT_KEYS object 80c8815137eef05f
+  MUT_TITLE_KEYS object 6b2408fd83426a02
+  mutStage function db0ea2b9fe0a6286
+  mutShown function 542e152265a7d2f7
+  decoKey function 169aa0bf40815621
+  mutJarsOf function 3b134c75bec165a8
+  mutChance function 47fe8cf80cbd1e92
+  mutRoll function a0e6370943c98214
+  mutSeed function 33619e3e008c2e2d
+  mutSee function cbcdd15c8a861cbb
+  mutSync function 56573be52fcc481f
+  mutDexCount function af18d4654b7e9b45
+  mutDexCells function ab6df5713d29ce5b
+  mutDex function 278391d75f9559af
+  jarCapture function 7baef3e52d91035a
+  mutDev function 3cd62471a877dc65
+  MONTH_DECO_Q number 8139b33952401b3e
+  MONTH_DECO_KEYS object 56d1899cdd832ef5
+  monthDecoOf function a59b539d8ea28006
+  monthDecoBoost function 05b894edc4631671
+  monthDecoLift function 3ccddcf1dd3abc29
+  DECO_BUFF object 011caa974ae03147
+  decoActive function 06bc3642b40a472d
+  decoBuffLine function b0ef171ced3763e5
+  decoInfo function 0c44623de4c9893b
+  decoTotal function c19b261b66ac1956
+  decoCount function a76c23dd7f62ed10
+  decoExtras function b7ba19644c9cd5ed
+  decoOffer function bce7d9ab7ccee047
+  decoAt function a48a8852e5013503
+  addDeco function 302375b6a6ed06db
+  buyDeco function 567b60a1423d931e
+  placeDeco function dd083df2f70b3238
+  storeDeco function bf05537d6b0114b6
+  decoMonths function ebff334ee1bc6723
+  firstFlower function f30c95e462e0a6a8
+  questName function 79e0fe144612a0bd
+  questWhenOf function 4b7f94c345a50bdb
+  GIFT_BY_MONTH object 721e3ce2694df26f
+  giftPot function b338563ae75cff13
+  STARTER_BLEND object dfb57e8bda1df546
+  starterText function a4084dd7ef5c37db
+  firstGuest function 599ba81956134b1e
+  firstGuestReady function dc35c81d1e8d5ee0
+  MAIL_CATS object 80fcb5ab30c69146
+  MAIL_WARN number 39e5b4830d4d9c14
+  MAIL_MAX number 891937cb335016e9
+  MAIL_MONEY_MAX number 60734f174b2035e5
+  mailMoney function 8c90cff4fe4d421e
+  MAIL_LEN object 3ef428100a0d530f
+  kstDay function c3cf358c32f6bfd3
+  mailGiftOk function e11ad91f6f41a764
+  mailValue function b78c450d7fe8ac84
+  mailCheck function d4a0f86597e64bf5
+  mailFor function c2362bb95253d7bf
+  mailDeliver function 4269ead09d12231d
+  mailOf function 30c69df4808855c6
+  mailGiftText function 78737dbe24db76f3
+  mailTake function a23bbe3d450462d5
+  trimLetterBox function 729b0db8706b59d0
+  LETTER_BOX_MAX number 39fa9ec190eee7b6
+  INBOX_NEWS_MAX number 624b60c58c9d8bfb
+  NEWS_MATCH object 9c7704a076719d88
+  newsKind function cb0e5c6d65ea603b
+  inboxOf function 0095ea5457fb5d09
+  inboxUnread function a9fb13504f91630f
+  inboxOpen function 5b060b1237fc05b8
+  MINE_W number e7f6c011776e8db7
+  MINE_H number e7f6c011776e8db7
+  MINE_MAX_E number e629fa6598d73276
+  MINE_REGEN_H number eb1b2b0497e39847
+  MINE_DEEPEST number f5ca38f748a1d6ea
+  mineMaxE function 548ca3b71cef5613
+  jewelP function d159d409e1566e3f
+  WORKSHOP object 3c05063a5a852b20
+  WORKSHOP_KEYS object 59050334d5b05501
+  WORKSHOP_BUFF object e80eada4e386d999
+  DECO_REACH object 912d18b45769a88b
+  BASIN_H number e7f6c011776e8db7
+  LAMP_Q number 312b95ee5a344d2f
+  FOSSIL_E number 4e07408562bedb8b
+  AMBER_P number 312b95ee5a344d2f
+  OLDPOT_Q number 0602d7c813c1f6e7
+  decoNear function bae82a40231ac64d
+  waterSet function 905b8efe01f4eb7f
+  lampTick function f6a6a532f630936f
+  workshopLock function e31157cf6ce83d37
+  workshopBuy function fbb2b954aa3e3dc8
+  JEWEL_P number 0602d7c813c1f6e7
+  JEWEL_BASE number 5a0b83e19c5750ee
+  JEWEL_STEP number 0604cd3138feed20
+  jewelWon function 3818df4b6549469a
+  DESCEND_WON number 81a83544cf93c245
+  ORES object b175ee90e089495c
+  FOSSILS object 59bff1852a030aa0
+  ORE_KEYS object b50b1dbd641db36e
+  FOSSIL_KEYS object 4c5477f5b9f994c8
+  MINE_DEX_KEYS object 778c859e1842058c
+  mineName function ef2ab7d1aab52a01
+  mineOf function 0001d3a8d0300392
+  mineRegen function d24089c755c2bee8
+  dig function ec8c202e820c822b
+  descend function b8bd69c9c93ac42d
+  mineUp function 664d6890ed572fd7
+  toDeepest function 14f426d5648b879f
+  freshBoard function 3e90daacc6637fbc
+  CRAFTS object 0fa4ce50e99fe18a
+  CRAFT_KEYS object 54b41c009e264629
+  canCraft function a8b4ef5fc16930e2
+  craft function f71999756ef454ef
+  mineCount function 5d2007b6b75eea42
+  GIFTS object c61e313f33120bde
+  GIFT_KEYS object dc0c4c68a3e916e3
+  LETTERS object 2a0edb95fc04871c
+  LETTER_KEYS object 29104319b9aa9358
+  letterCount function 5a7ee82617addb8f
+  giftsOf function 76d1150539871d8a
+  sendGift function 429523e77a7d300e
+  deliverLetters function 9678c45cf25cdd16
+  letterLeftFor function 784db589a2c77e76
+  RETURNS object 995792ceda653da5
+  RETURN_V object 2ecf24ff4732a903
+  RETURN_WHERE object d79806ddfe60cebb
+  pickReturn function cb1031a5fe7dfe12
+  giveReturn function 8d3633856f3fa9e5
+  returnValue function 7dccf5502b84f45d
+  returnName function 47cb58673bc0f483
+  returnText function a2d9c042a60e7f6f
+  returnEV function d6dd6c55fca66820
+  letterOf function 891712557b7a36dc
+  MEMENTOS object 48f32b0a22c5c973
+  MEMENTO_KEYS object 5393b5e95d1a3281
+  mementoCount function 6363f4750c27c12e
+  orderText function a814011c5e23c1f6
+  orderMatch function 951d70c10cee543f
+  ORDER_BASE number 4e07408562bedb8b
+  orderBonus function 81fcf437727d1cf0
+  orderMax function 235e17ea01a59b1e
+  makeOrders function d26f9623479f207b
+  fillOrder function f580f4739e408d8a
+  countCup function 8f697330b843375b
+  yearScore function 804666ae59bc7d1e
+  yearLogOf function ee9950c23d7e0184
+  newYearNow function e160256ded7742e4
+  yearMonth function 459c2c4968d09e52
+  newYearPace function d2760deaa7104e4b
+  graphAxis function 1a516997b7138aad
+  graphYears function f6852a9e6638c149
+  yearDiff function e21da246e41de27d
+  yearDiffOf function 450c1077f7518709
+  yearPace function 07d37ebe297a2809
+  XP object 693fb78b59267f3b
+  GRADE_TIERS object 5396bac7c898c029
+  gradeCost function a56f7c6bd57b19f5
+  gradeName function f1251f8fbfa697a7
+  gradeAt function 09cc435e7cbd7265
+  gradeOf function 2e9763cd40d8032a
+  addXp function 0746f4f4ab9199ae
+  gradeDexSync function f66bc57eb59a131b
+  gradeView function d29c2a7f02adbeb9
+  gradeBadge function a6e5e02ef2550f4f
+  gradeAlerts function cc76b66c96b7a27e
+  gradeAwayLine function 198fe855e4847dde
+  gradeUpText function 7a629817cdf2edf5
+  gradeUnlockText function 3735d1234359bfe6
+  isGradeUpLine function ba20c5b943a54b79
+  gradeXpAt function e4289a29201f497e
+  GRADE_BY object d52113a174ac4860
+  GRADE_GROUPS object fa00b79a5d1d1d5f
+  gradeDexCount function ade4d886059636ee
+  newGrade function e14e7796b80599b1
+  WEEKLY object f8a9712da3f6b9ed
+  WEEKLY_KEYS object af66ffb1f5da3b0c
+  WEEKLY_TIERS object f879beceb42dedfb
+  WEEKLY_XP object bc4da72381f8cf8b
+  WEEKLY_BONUS number d59eced1ded07f84
+  weeklyText function 7abb36e127638682
+  weeklyRoll function 7abea8db019211a1
+  weeklyOf function 46b40811d0a6fcab
+  weekNote function 419dd77c7d8fbc02
+  weeklyFinish function acd460e6ab88b124
+  weeklyView function 1efdd8c5bbf56cfd
+  weeklySnap function 14bd7b5b0ade4332
+  weeklyAwayLine function e7cc6d3053f35c15
+  isWeeklyLine function d1c80b3a483baa9b
+  PANTRY_H number d4735e3a265e16ee
+  pantryH function cd838229f456ac86
+  PANTRY_CYCLE object 468f5adcf0d18b0c
+  PANTRY_BASE number 4b227777d4dd1fc6
+  PANTRY_PER_DECO number 4e07408562bedb8b
+  PANTRY_CAPS object 599118cfd5ae0bd1
+  PANTRY_ITEMS object ec7144dc922aa5f7
+  PANTRY_KEYS object 16d68002c35f9b8c
+  pantryOf function ae778017abfacb62
+  pantryCap function bd891f9d172047c1
+  pantryDayValue function 433fffbbd3dd10e3
+  pantryTick function a3f313e9e3e9feef
+  takePantry function 95a9bfb70834eded
+  pantryView function f62836f7726b4622
+  pantryCounts function 26bb1ed5d6579208
+  GRADE_DECO_KEYS object 8c35ec66e613b8db
+  gradeDecoOffer function f0534f4ab48c9f3a
+  HONEY_R number d4735e3a265e16ee
+  HIVE_MAX number 4e07408562bedb8b
+  hiveR function 93c2de9d7ef1eaf8
+  hiveMax function 8c35de187d4e0a45
+  HONEY_KEYS object 87464f4ba0164de5
+  honeyName function dd2ffab40d011743
+  hiveBlooms function 7021f5b025dd21c8
+  honeyOf function d9c0a1b105b51110
+  hiveTick function b980fd7d6d02006d
+  takeHoney function 70c4cb419e42109c
+  honeyCup function bf93f339e3052dcd
+  honeyCount function 64ed197af68c7b51
+  honeyLeft function 0e0c38615ccd3a90
+  honeyIn function 53fc686f53f828eb
+  HONEY_TEA_RATE number 221764976efe0413
+  HONEY_TEA_WILD number 0604cd3138feed20
+  honeyTeaName function 8a2210a40491f6c9
+  honeyTeaValue function f5d387babe14d497
+  INSECT_LINE object ace206e08098fd7d
+  insectLine function c8945738a88fd5e4
+  propQuality function 876c3b8c33048705
+  barrelTick function ebf1ac31817c4a78
+  AUTO_KEYS object 954458e8ef4223a4
+  AUTO_Q number 8139b33952401b3e
+  placedOf function bd92eb43b9bf9bce
+  basketFlowers function 01123c2c22a07950
+  basketBlooms function 8b3092204652f3cd
+  basketTick function 90e0875c4f26da7b
+  INSECTS object 467d4441f2b41a71
+  INSECT_KEYS object c776fd5423521bab
+  INSECT_CARE object cddab640bb2b78f4
+  insectR function d649354d3955376e
+  insectFlowers function 080ac82fb82a26aa
+  insectNear function a1b06e6bba48d85e
+  insectsOn function ff9783c96415e47e
+  insectCareTick function f27fddc43e5b718e
+  insectTick function 28bae3a6fe7d33a1
+  INSECT_SUPPLY object 8256f265dbfefd24
+  INSECT_TOOL object ca13602dc974aa36
+  insectCraft function 8c21236ec22039d9
+  insectDig function 1e9b936a8b5d6c1a
+  insectTake function 721f64d159720d1f
+  insectShort function 49d9cf969168963e
+  harvestYear function c60c7277e4e470e9
+  ladybugGift function 92bab32434ddd92b
+  autoStats function 16b900c561d876e9
+  isAutoLine function 1d536ce52481b26e
+  autoAwayLines function a5e01e735643784f
+  FARM object bc2eb992c8f19fac
+  FARM_KEYS object c776fd5423521bab
+  FARM_STATS object d19f4fe234317fa9
+  farmCounts function 3101c3790b4e1d25
+  farmMark function 4c8f2af4cc86894b
+  farmLastOf function 5a797f32344e2311
+  farmLine function 22ec4e610658be00
+  farmOf function 2b6275b153bd146a
+  AWAY_LAST_MAX number 1a6562590ef19d10
+  awayKeep function 17c65be683505859
+  SHELF_N number 4b227777d4dd1fc6
+  TEASTAND_KEEP number d4735e3a265e16ee
+  rackN function f259cd5640d79907
+  rackTick function de99fab921ea6278
+  autoDryTick function 3e2d6ef2d25657c8
+  BONUS object 247d1d8af38d1b2e
+  BONUS_KEYS object 1708609d9241a533
+  BONUS_PER number 6b86b273ff34fce1
+  BONUS_COST object a615eeaee21de517
+  bonusPointsAt function 1b4940dfacfaad47
+  newBonus function ac13f80924776ebb
+  bonusMax function a017154584354d88
+  bonusLevel function 172a436fc4f80cb1
+  bonusVal function c9ed756291f2bbd6
+  bonusCostTo function 8f8ad8cdb430b5bd
+  BONUS_OLD object 536a0ca6860e399b
+  bonusOpen function 94c0eb53f1f6a07f
+  pollenGot function d2d71df64fcb4af8
+  POLLEN_WON number 0f8eb4b72b6e0c9e
+  P41_LETTER string f5985404f5504fd6
+  bonusOwned function ce21278de5aeffa1
+  bonusPrice function 0f951807ecbdfca5
+  bonusNeed function 3a17b364283e1f30
+  bonusHas function 8b119d1e735c4ba8
+  bonusStepName function c8ee959d6ebccbd4
+  bonusOpenedAt function 2ec494eb7fbafaf9
+  seedQ function 15c5deef73b59baa
+  seedQAt function 42547a21c265b3b8
+  SEED_Q0 number d2cbad71ff333de6
+  SEED_Q_STEP number a7e46abf169710b3
+  seedUpText function c13079535f1ee761
+  bonusOpenText function a47c1f6060d0f308
+  awayHome function 4e01e07dc9bfa12c
+  bonusMaxed function 7e1048a42104d77f
+  bonusSet function d3d3f95ca5c8c10c
+  bonusView function 6d946e1028377d39
+  SPEED_V number 2c624232cdd22177
+  catchUpH function 9e24f4c6a2205398
+  CATCHUP_WEEKS number 4e07408562bedb8b
+  SPEED_STEPS object 67057af86704c3ef
+  dryText function b3d6bc1bb4104427
+  timeText function cff32660146948ea
+  flowLeftH function 9cf971850d49e047
+  dryRate function cd30a1a989f87e48
+  dryLeftH function 1414834f94332c3f
+  pollenExtra function 8efdb566df2e505f
+  SEASON_YEARS number 4e07408562bedb8b
+  SEASON_TITLES object 041a86d0b459276d
+  SEASON_KEEP object 66092680d05b3a95
+  newSeason function 7bc11e1f2071b8d8
+  PATHS object 12278ece41ac3935
+  PATH_KEYS object a6155a88ac53fe28
+  PATH_NONE object 4faea2d0675be350
+  seasonPath function a8acc91aa9b830c7
+  pathInfo function 530d8d9edbb7c996
+  pathTitle function 92234775a878d02b
+  pathBadge function 2b0df0067dafd6b3
+  seasonTable function ee9971f9c6926524
+  seasonN function 4545ebef28be0415
+  seasonRows function 1d51ae791cc8f5bd
+  seasonReady function 2fb68dbff2c88428
+  seasonCanStart function 6dd2e5f7c2a2eca6
+  seasonHint function 5d3b445f7579c102
+  seasonBadge function cf5dd0c887758a04
+  seasonBreaks function c6dbf32b0ddc58d9
+  seasonStart function eb4c088e42e06753
+  LAYERS object b006fb385234da14
+  LAYER_MAX_OPEN number 4b227777d4dd1fc6
+  newLayers function 5bc16795cef785d9
+  TREES object 79905af1a9a35959
+  TREE_KEYS object a0a144d5b0dc07c6
+  FOREST_N number e7f6c011776e8db7
+  TREE_BIG number 4e07408562bedb8b
+  TREE_STAGES object 0643a26b037aa182
+  newForest function 575e7efcbc24225d
+  forestOpen function 40d463c3a72214e1
+  forestTick function b247449c1ba0df79
+  plantTree function 25046cc07fababaa
+  forestOf function 7f78cb40ab6d8807
+  forestCount function 66793be0faf057b8
+  forestDex function 5839ab06d2791181
+  forestBigSlots function 07e60ff62829475a
+  forestVisitors function 3b1d4f1e31f16a13
+  forestGrowDev function f611c7b3838e00a4
+  layerYears function fd49cb41a835f79d
+  layerNow function 8216cd4ff619c814
+  layerOf function 0faa108fe3ea488b
+  layerSync function f61dd53af380dd0d
+  layerCheck function f55052f22bbff6c2
+  YEARLY object c4d81b0b772e988b
+  YEARLY_KEYS object eb0e41ad0cc7565c
+  YEARLY_ROWS number f5ca38f748a1d6ea
+  newYearly function 50a390cb3282c8b7
+  yearlyNo function a28e320de5d84261
+  yearlyOf function f65471cba0d614b9
+  yearlyTick function 6bfdb6b52587d682
+  yearlyMark function 10062861fb8bf7e4
+  yearlyNow function c5ad624b9d1b4d0f
+  yearlyMissedAll function c3ff7b6267959614
+  awayLongSnap function 1c74590eefeac4fc
+  awayLines function 711715a2dd3cc420
+  awayLinesText function 8f533c30750a9b42
+  AWAY_MISSED_MAX number 4b227777d4dd1fc6
+  isYearlyMissLine function 620e39c83f3a229b
+  yearlySeen function 7b11bb3cf0fe05af
+  yearlyCount function 06b688e7c3e56e9a
+  yearlyDex function ab3021ba223ef548
+  yearlyPast function 596f93acdf961c8d
+  VISITORS object 51a6213035220fbf
+  VISITOR_KEYS object 4901107e280033e4
+  VISITOR_MAX number d4735e3a265e16ee
+  VISITOR_P number e965f1b975608cb0
+  VISITOR_GIFT_AT number 4e07408562bedb8b
+  newVisitors function a2f0329a86265118
+  visitorOk function 6568860993b4bf83
+  visitorCells function a072a2b78cae5d6d
+  visitorTick function 3e219a827863a6ea
+  visitorsOf function b62f7810f3884117
+  visitorAt function 64be59e4b2e358cd
+  visitorTimes function 98494f10557b2e07
+  visitorCall function da2b91fe07f9565d
+  ORDER_MEMENTO_KEYS object bbb430ff501d9821
+  helperKeep function 70eba5512e5e5d3b
+  helperTick function 1110c7e2da73ed4c
+  autoLineType function 7a40b1ecfdd9980c
+  GEAR object c04a0ec0512a0a0c
+  growRate function 46789ed0c1f3823f
+  wallSet function 3e2057e48637b3a8
+  wallBlocks function 8d511a60ece3263f
+  bloomLeads function e280a6d3266ec1a0
+  bloomLeftFlowH function b46976e7d8f77f82
+  bloomLeftH function 845147f1309c97b8
+  RIPE_H number e7f6c011776e8db7
+  ripeOn function f5b552397ee1282a
+  annualSpanH function b55c7f129b3a51c1
+  pickFlower function 34a3b0939b544f4a
+  DRY_H number 6b51d431df5d7f14
+  BLENDS object 2058797f63aa9d76
+  BLEND_KEYS object 9beb6fa5d0dc23f8
+  BLEND_RATE number 77ac319bfe1979e2
+  RECIPE_RATE number 9f29a130438b8117
+  blendRecipe function adc62e38b6026acd
+  blendValue function 3ba3394e081a6323
+  dryPetals function 248b72e7c69cfc30
+  makeTeaDried function 41ffa2f25c19ea7e
+  blend function bc1ce951e062b1c4
+  sellBlends function b56d2383cacc1a3f
+공개 값 모두 e084e0e28c4e0629
+보정 MIGRATIONS 56줄
+   1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
+   2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
+   3. 가게 → 화원 (10-05) · 9d6d295294ab451c
+   4. 꽃잎 도감: 이미 거둔 꽃(차 · 꽃잎이 있는 꽃) 등록 · 0a1cb3ab45050756
+   5. 블렌드 도감 · f1e5b2a0f344a0f7
+   6. 정원 이름표 gardenId (P20) · c16f6b018e8c0a46
+   7. 블렌드 티백 도감 · 384a3b445ae9f7b9
+   8. 티백 도감: 만든 적 있는 차는 티백으로도 등록 · 24e39014b65e565b
+   9. 씨앗 · 묘목 도감: 가진 적 있는 것(창고 · 심은 꽃 · 핀 적 있는 꽃) 등록 · d631aa5278a4e8c4
+  10. 찻집 가꾸기 (P17-15, 10-24) · b54e1b077545ee7b
+  11. 정원 장식 · 꾸밈 도감 · 이미 얻은 칭호의 문장 장식 (P17-16, 10-24) · 4fbb585cee803ede
+  12. 꿀 선반 · 꿀 도감 (P18, 10-24) · f87b1c7cac65947f
+  13. 이웃의 화분 · 첫 꽃 (P22, 10-24): 이미 시작한 정원은 화분을 받지 않고 1장은 캐모마일 그대로 · 3db40e3d8bb40862
+  14. ⛏️ 광산 · 광산 도감 (P24, 10-24) · 43814a62a7a78744
+  15. 💌 손님 주문 · 기념품 도감 · 🏅 정원 점수 (P23, 10-24) · a8e69c61802999df
+  16. 직접 피운 꽃 (QA 4회차, 10-24): 지금까지 핀 꽃은 화분 꽃만 빼고 직접 피운 것으로 · 25e798e4987f391b
+  17. 올해 본 것 (정원 점수, QA 6회차) — 올해 일지의 "피었어요"로 핀 꽃을 채움 (QA 7회차) · 619b96e68dedf19c
+  18. 💐 이웃에게 선물 · ✉️ 편지 도감 (P26, 10-24) · d07300f94a038e85
+  19. 심은 뒤 흐른 시간 lifeH (QA 12회차, 10-24): 지금까지는 자란 시간과 같음 · f73f2240efa577ea
+  20. 꽃잠 번식 표시 propRest · 꽃잠 안내를 닫은 주 restClosed (QA 19회차, 10-27) · fe3d8f47ef2aa986
+  21. ☁️ 계정 기록 account · 마지막으로 손댄 때 actAt (P20-06 · 08, 10-27): 예전 정원은 모름(null) · b5f17c72fb74b859
+  22. 🎁 답례품 · 받은 편지함 letterBox (P26-06, 10-27): 예전에 받은 편지에는 답례품을 소급하지 않음 · 08aa96f980a2c9f4
+  23. 처음부터 다시 시작한 때 resetAt (P16-12-03 완전 초기화, 10-27): 예전 정원은 null — 예전 재시작 정원도 계정 칭호를 이어 받던 그대로 · 84222c8489ed7aa0
+  24. 첫걸음 🌸 정원의 첫 꽃 돌보기 guide.pot (P22-02 변경 10-27): 이미 다른 단계를 했거나 · 마쳤거나 · 닫은 정원은 ✓ · 10257cd40d82f4bd
+  25. 📈 해마다 기록 yearLog · 올해 쌓는 중 yearNow (P28-07-01, 10-27): 남은 한 해 기록(최근 10개)으로 해 · 점수 · 도감 · 주문을 채우고 수입 · 판 잔 · 꽃잎은 모름(null). 올해는 업데이트 뒤부터만 셈(part) · e2c259f12129a373
+  26. 🐢 느긋하게 보기 settings.slow (P28-02, 10-27): 예전 정원은 꺼짐 · 96d4f2e90b0c76a7
+  27. 🌱 정원 등급 grade (P28-05-01, 10-27): 예전 정원은 남은 기록으로 경험치를 어림 — 꽃잎은 말린 수 · 해마다 기록 중 큰 쪽, 판 잔 · 주문 · 퀘스트 · 도감 칸 · 남은 한 해 평가(최근 10개, 장식 · 선물 몫 빼고). 지난 해마다 기록의 grade는 모름(null) 그대로 · f5b2281eb6df4a95
+  28. 📈 그래프 견줌 yearPace (P28-07-02, 10-28): 달마다 쌓인 수입 · 경험치 — 예전 정원은 올해 시작 값을 몰라(xp0 null) 다음 쉼달 기록부터 셈 · 30df3f89f9d34889
+  29. 🗓️ 주마다 바뀌는 목표 weekly (P28-09, 10-28): 예전 정원은 null — 다음 확인 때 이번 주 목표를 뽑음 · db99b9d58c89b2d9
+  30. 🧺 정원 저장고 pantry (P28-04, 10-28): 예전 정원은 빈 저장고 — 연 뒤부터 쌓임 (지난 시간을 거슬러 채우지 않음) · e2543c74e3685fe6
+  31. 🎁 첫 방문 꾸러미 · 🍵 첫 손님 firstGuest (P22-05, 10-28): 예전 정원은 꾸러미 없음(false) — 아직 화분을 받지 않은 정원은 화분과 함께 받음 · d0f5c6da79bccff4
+  32. 📮 운영자 편지 받은 기록 mailGot (P29, 10-28): 예전 정원은 빈 기록 — 지금 기간인 편지는 다음에 열 때 받음 · 072abf74e0b9a0eb
+  33. 🌟 등급 보너스 bonus (P28-05-02, M3-1 10-29): 예전 정원은 모든 칸 0단계 — 🌟 손길 점은 지금 등급으로 바로 셈 · cf4ba4027e10465a
+  34. 🌸 새 철 season (P28-08-03, M3-3 10-30): 예전 정원은 1철 · 시작한 때는 모름(null) · 해마다 기록 줄과 한 해 기록 카드는 1철 · ad086ca8a0645867
+  35. 🌳 정원의 층 layers (P30-01-01, L1-1 10-30): 이미 찻집 · 광산을 연 정원은 2 · 3층 연 해 = 업데이트한 해(지금 해마다 기록 줄 수) — 4층이 한꺼번에 열리지 않게 · c654657e88930bd1
+  36. 🗓️ 올해만 오는 것 yearly (P30-05-01, L1-3 10-30): 예전 정원은 빈 달력 — 다음에 열 때부터 셈 (지난 계절을 놓친 것으로 치지 않음) · cd37420b94765c5b
+  37. 🐾 특별 손님 visitors (P30-06-01, L1-6 10-30): 예전 정원은 아무도 안 온 정원 — 다음 달부터 조건이 맞으면 옴 · cc194fe83ce50a46
+  38. 🛤️ 철의 길 season.path (P30-04-01, L2-1 10-30): 예전 정원 · 끝난 철은 길 없이(null) — 모르는 길 이름도 길 없이 · ab66b14549e84324
+  39. 🌳 작은 숲 forest (P30-03, L3-1 10-30): 예전 정원은 빈 숲(자리 6칸 · 도감 없음) — 4층이 열리면 심을 수 있음 · a1df9daa1e245071
+  40. ✉️ 편지함 mailSeenAt (P31-01, 10-30): 예전 정원은 지금 연 것으로 — 처음엔 점 없음 (예전 편지 · 일지 줄엔 시각이 없어 모두 읽음) · 3325a7cce1a299f7
+  41. 🔠🧩 큰 글씨 settings.big · 땅 무늬 settings.pattern (P28-01 · P28-03, M4 10-30): 예전 정원은 둘 다 꺼짐 · 4f235ec518b7c6a9
+  42. 🐝 곤충농장 awayLast · farm (P32-02, 10-30): 예전 정원은 다시 볼 요약 없음 · 지난 한 달 셈은 지금부터 (그동안 한 일을 지난달로 세지 않게) · 470840283cd92a91
+  43. 🧬 돌연변이 꽃 mut · 도감 dex.mutant · dex.mutjar · 🫙 유리 관 jar · 꽃잠 장식 보정 mutBoost (P36, 10-30): 이미 핀 꽃은 굴리지 않음(mut false — 「처음 필 때」가 지났음) · 아직 안 핀 꽃은 처음 필 때 굴림 · 9aaea553b6d57e28
+  44. 🌼 꽃가루 · 일꾼 기르기 bonus.brew · hive · weed (P37, 10-31): 새 세 칸은 0단계 — 예전 네 칸 단계 · 쓴 꽃가루는 그대로 · cf4ba4027e10465a
+  45. 🐜 작게 시작하는 일꾼 bonus 단계 옮김 · bonusFree (P38, 10-31): 예전 단계 값과 같은 새 단계로 (🐜 8포기 → 5단계 · 🐛 8장 → 5단계 · 🐝 2칸 6병 → 1단계 · 🐞 3포기 → 2단계, 🦋 · 선반 · 늦잠은 그대로) · 더 드는 꽃가루는 덜어 줌 · 351b13a7f354c8f5
+  46. 🐝 곤충은 모두 꽃을 돕는다 (P39-11, 10-31): 곤충 기르기 칸은 0단계로 · 쓴 꽃가루는 모두 돌려줌(덜어 준 꽃가루 bonusFree도 그 칸은 지움) · 🐛 누에 · 🦋 나비 수만큼 🧺 건조 선반 · 🫖 찻집 도우미 덤 · 4층이 열렸으면 🐞 · 꽃마다 그해 거둔 해 hy · 📮 안내 편지 · 7ec6c56f79e46801
+  47. 🌼 그 밖에 세 칸 bonus.grow · dry · pollen · pollenExtra (P40-04, 10-31): 🧺 선반 넓히기 · 🌙 늦잠 칸을 없애 쓴 꽃가루는 모두 돌려줌(그 칸 bonusFree도 지움) · 새 세 칸은 0단계 · 더 받은 꽃가루 0 · b06d0e9728bf548e
+  48. 💰 꽃가루를 없애고 돈 + 등급으로 bonusOwn (P41-05, 10-31): 기르기 칸은 모두 0단계(🌼 꽃가루 늘리기 칸은 지움) · 받은 꽃가루(등급으로 받은 것 + pollenExtra — 덜어 준 bonusFree는 받은 적이 없어 빼고)를 1알 5,000원으로 돈에 · 📮 안내 편지 (이 기기 한 번) · 34a48e4ff6a85ec2
+  49. 🌱🌾 두 속도 8단계 speedSteps (P42, 11-01): 예전 ×2 · ×3 단계(1 · 2)를 같은 배수의 새 단계(2 · 4)로 — 쓰는 단계 bonus · 산 단계 bonusOwn 둘 다, 돈은 그대로 · 07a6e0c97e5fb307
+  50. ⛏️ 광산 5×5 · 기력 15 (P43-05, 11-01): 예전 48칸 판이면 같은 층의 새 25칸 판으로 (가방 · 층 · 가장 깊이는 그대로), 기력은 15로 자름 · a34fb2d655184fd8
+  51. ⛏️ 광산 6×6 (P48, 11-01): 파던 25칸 판이면 같은 층의 새 36칸 판으로 (가방 · 층 · 가장 깊이 · 기력은 그대로) · a6866a5ddde126c4
+  52. ⬆️ 위 칸 장식 topDeco (P52, 11-01): 예전 정원은 빈 위 칸(null)으로 · f96956d8e511187b
+  53. 🌹 프리저브드 플라워 (P53, 11-01): 🧪 특수 용액 presol · 꽃방 유리 돔 preserving · 창고 preserved · 도감 dex.pres · dex.presMut · 670c471d32d8b6b7
+  54. 🍯 꿀은 바로 창고로 (P65-01, 11-03): 예전 벌통에 쌓인 꿀(d.honey)을 창고 꿀 칸(st.honey — 예전 찻집 꿀 선반 그대로)으로 · 꿀 도감도 · 개미 표시 antKey는 없으면 그대로 · 65c1ae8c6830be55
+  55. 🌸 다시 피는 꽃 ripeH · ripeT (P72-01, 11-04): 핀 꽃은 핀 채로(이번 달에 이미 거둔 꽃은 다 자람으로 · 시계 0), 다 자란 꽃은 시계 0부터 · 앞선 달력 leadH · leadEnd는 지움 · f1a0d0d657fc5a20
+  56. R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐 · 9db8e59a9a917488
+새 정원 create 2318a575eb29c6e5
+새 정원 30시간 뒤 07bfcb7ddd09bc5b
+새 정원 두 주(정원 두 해) 뒤 2a5b147bca751668
+옛 저장: 가장 옛 정원 (30시간) ff43f0f1ce844d1f
+옛 저장: 가장 옛 정원 (두 주) 1c71cc33eefc7df4
+옛 저장: 두 주 정원을 0번째부터 8f4fe7cd8fe297f7
+옛 저장: 두 주 정원을 10번째부터 8f4fe7cd8fe297f7
+옛 저장: 두 주 정원을 20번째부터 cd098c2fdbc4674f
+옛 저장: 두 주 정원을 30번째부터 cd098c2fdbc4674f
+옛 저장: 두 주 정원을 40번째부터 cd098c2fdbc4674f
+옛 저장: 두 주 정원을 48번째부터 2a5b147bca751668
+옛 저장: 두 주 정원을 55번째부터 2a5b147bca751668
+옛 저장: 쓸 수 없는 정원 null · null
+저장 파일 makeSave 123f0c301912fab6
+저장 파일 parseSave 123f0c301912fab6
