@@ -641,7 +641,8 @@ function renderStatus(force) {
 function renderTileStatus(force) {
   const el = $('#status'), [x, y] = ui.selTile, tl = st.tiles[y * W + x], land = E.landOf(tl), cal = E.calendar(st.virtual);
   const pl = plantable(), keys = Object.keys(pl);
-  const sig = JSON.stringify(['tile', x, y, land, Math.round(tl.t), Math.round(tl.m), pl, cal.frozen, ui.sheetOpen]);
+  const dps = E.decoPlaceable(st, x, y);   // P78-02 (11-05) 이 칸에 바로 놓을 장식 — 창고에 있는 종류마다 하나
+  const sig = JSON.stringify(['tile', x, y, land, Math.round(tl.t), Math.round(tl.m), pl, cal.frozen, ui.sheetOpen, dps.map(d => [d.key, d.n])]);
   if (!force && ui.sigs.status === sig) return;
   ui.sigs.status = sig;
   const best = k => Math.max(...st.items.filter(i => i.type === k && E.germOf(i) > 0).map(i => i.q));
@@ -678,7 +679,9 @@ function renderTileStatus(force) {
     <div class="sx-sec">🌰 이 칸에 심기${keys.length && !cal.frozen ? ` <span class="muted" style="font-family:var(--font-body);font-weight:400;font-size:var(--fs-sm)">${keys.length}가지 · 누르면 바로 심어요</span>` : ''}</div>
     ${cal.frozen ? '<p class="note">꽃잠엔 심기가 쉬어요 · 화원에서 다음 해 꽃을 예약해 두세요</p><div><button type="button" class="btn small" data-go="shop">💐 예약</button></div>'
       : keys.length ? `<div class="pgrid">${list}</div>`
-      : '<p class="note">창고에 지금 심을 게 없어요 · 화원에서 제철 꽃을 사 보세요</p><div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}`;
+      : '<p class="note">창고에 지금 심을 게 없어요 · 화원에서 제철 꽃을 사 보세요</p><div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}
+    ${dps.length ? `<div class="sx-sec">🪴 이 칸에 놓기 <span class="muted" style="font-family:var(--font-body);font-weight:400;font-size:var(--fs-sm)">${dps.length}가지 · 누르면 바로 놓아요</span></div>
+    <div class="dplace">${dps.map(d => { const max = E.decoMax(d.key); return `<button type="button" class="dpcard" data-decoat="${d.id}" title="누르면 이 칸에 놓아요"><span class="dk-art">${decoImg(d.key, 2)}</span><span class="dp-main"><b>${esc(E.decoInfo(d.key).name)}</b><small>창고에 ${d.n}개${max ? ` · 최대 ${max}` : ''}</small></span></button>`; }).join('')}</div>` : ''}`;
 }
 function careOn(f, t) { tapPot(f); return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // 꽃 둘레 돌보기 단추 (10-06): 고른 꽃에 지금 할 수 있는 돌보기만 꽃 위에 부채꼴로. (상태창의 다섯 칸은 뺌)
@@ -725,10 +728,11 @@ ringEl.addEventListener('click', e => {
   const f = st.flowers.find(x => x.id === ui.selected); if (f) careOn(f, b.dataset.ring);
 });
 $('#status').addEventListener('click', e => {
-  const b = e.target.closest('[data-act], [data-plantat], [data-care]'); if (!b || b.disabled) return;
+  const b = e.target.closest('[data-act], [data-plantat], [data-decoat], [data-care]'); if (!b || b.disabled) return;
   const f = st.flowers.find(x => x.id === ui.selected);
   if (b.dataset.care && f) return careOn(f, b.dataset.care);
   if (b.dataset.plantat && ui.selTile) return plantAt(b.dataset.plantat, ui.selTile[0], ui.selTile[1]);
+  if (b.dataset.decoat && ui.selTile) { const r = E.placeDeco(st, +b.dataset.decoat, ui.selTile[0], ui.selTile[1]); if (r.ok) { ui.selTile = null; ui.sheetOpen = false; } return after(r); }   // P78-02
   const sd = selDecoOf();                         // 장식 상태창 단추 (11-01)
   if (sd && b.dataset.act === 'decoStore') { ui.selDeco = null; return after(E.storeDeco(st, sd.id)); }
   if (sd && b.dataset.act === 'decoTop') { ui.selDeco = null; ui.sheetOpen = false; return after(E.setTopDeco(st, sd.id)); }   // P52 ⬆️ 정원에서 빠져 위 칸으로

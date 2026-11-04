@@ -275,13 +275,14 @@ $('#p-store').addEventListener('click', e => {
 // P17-16 창고의 🪴 장식: 종류마다 한 칸 · 창고에 있는 것 / 정원에 놓은 것
 function decoStoreHTML() {
   const ds = st.decos || []; if (!ds.length) return '';
-  const keys = [...new Set(ds.map(E.decoKey))];   // P36-04 🫙 유리 관은 종 · 단계마다 한 칸
   const td = E.topDecoOf(st);                     // P52 ⬆️ 위 칸에 단 장식은 창고 칸에서 따로 셈
-  const tiles = keys.map(k => { const all = ds.filter(d => E.decoKey(d) === k), inStore = all.filter(d => d.x == null && d !== td), out = all.filter(d => d.x != null).length, up = all.includes(td), hang = inStore[0] || all.find(d => d.x != null);
-    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small>${[up ? '🎀 대표 장식' : '', inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : ''].filter(Boolean).join(' · ')}</small>${decoBuffHTML(k)}
-      ${inStore.length || up ? `<button type="button" class="btn small primary" data-decoplace="${(inStore[0] || td).id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}${hang ? `<button type="button" class="btn small" data-decotop="${hang.id}">🎀 대표로 달기</button>` : ''}</div>`; }).join('');
+  // P78-01 (11-05): 종류별 묶음 · 칸마다 "가진 n / 최대 1"(한 종류에 하나) 또는 "가진 n개 · 제한 없음" — 🫙 유리 관은 종 · 단계마다 한 칸 (P36-04)
+  const tile = ({ key: k, all, store: inStore, out, max }) => { const up = all.includes(td), hang = inStore[0] || all.find(d => d.x != null);
+    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small class="dk-max"><span>가진 ${all.length}${max ? '' : '개'}</span> <span>${max ? `/ 최대 ${max}` : '· 제한 없음'}</span></small><small>${[up ? '🎀 대표 장식' : '', inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : ''].filter(Boolean).join(' · ')}</small>${decoBuffHTML(k)}
+      ${inStore.length || up ? `<button type="button" class="btn small primary" data-decoplace="${(inStore[0] || td).id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}${hang ? `<button type="button" class="btn small" data-decotop="${hang.id}">🎀 대표로 달기</button>` : ''}</div>`; };
+  const groups = E.decoGroups(st).map(g => `<div class="deco-group"><span class="dg-head">${g.name} <span class="sh-n">${g.items.reduce((s, i) => s + i.all.length, 0)}</span></span><div class="decotiles">${g.items.map(tile).join('')}</div></div>`).join('');
   const topRow = `<div class="decotop"><span>🎀 대표 장식</span>${td ? `<span class="dk-art">${decoImg(E.decoKey(td), 2)}</span><b>${esc(E.decoInfo(E.decoKey(td)).name)}</b><button type="button" class="btn small" data-decodown="1">내리기</button>` : '<span class="muted">비어 있어요 · 장식 하나를 대표로 달 수 있어요</span>'}</div>`;
-  return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div>${topRow}<div class="decotiles">${tiles}</div>`;
+  return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div>${topRow}${groups}`;
 }
 // 비료로 만들기 확인 창 (P06-16): 씨앗·묘목 › 비료, 몇 개 바꿀지 −/+
 function openCompost(ids, n) {

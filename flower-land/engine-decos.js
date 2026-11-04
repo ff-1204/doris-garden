@@ -283,6 +283,34 @@ function placeDeco(st, id, x, y) {
   if (down) st.topDeco = null;                     // P52 ⬆️ 위 칸에 단 장식을 정원에 놓으면 위 칸에서 내려옴
   return ok(`${josa(decoInfo(decoKey(d)).name, '을/를')} ${moved ? '옮겼어요' : '놓았어요'}${down ? ' · 대표 장식에서 내렸어요' : ''}`);
 }
+// ---------------------------------------------------------------- 📦 창고 장식 묶음 · 최대 수 (P78, 11-05)
+// 창고 장식 칸을 종류별로 묶음 — 화원 · 공방 · 곤충농장에서 들어오는 길 그대로. 최대 수는 있는 규칙만(one = 한 종류에 하나, 11-05 사용자 "있는 규칙 그대로") · 그 밖엔 null(제한 없음)
+const DECO_GROUPS = [
+  { key: 'month', name: '🌸 이달의 장식' }, { key: 'grade', name: '🌱 등급 장식' }, { key: 'craft', name: '⛏️ 공방 장식' },
+  { key: 'gear', name: '🔆 정원 장치' }, { key: 'insect', name: '🐝 곤충 일꾼' }, { key: 'keep', name: '🏅 기념 장식' },
+];
+function decoGroupOf(key) {
+  const D = decoInfo(key); if (!D) return 'keep';
+  if (D.insect) return 'insect';
+  if (D.func) return 'gear';
+  if (D.grade) return 'grade';
+  if (D.craft) return 'craft';
+  return D.title || D.extra || D.jar ? 'keep' : 'month';
+}
+const decoMax = key => { const D = decoInfo(key); return D && D.one ? 1 : null; };
+// 창고 장식 칸 묶음: [{ key, name, items: [{ key, all, store, out }] }] — store = 창고에 있는 것(🎀 위 칸 빼고) · out = 정원에 놓은 것
+function decoGroups(st) {
+  const ds = st.decos || [], td = topDecoOf(st), keys = [...new Set(ds.map(decoKey))];
+  return DECO_GROUPS.map(g => ({ key: g.key, name: g.name, items: keys.filter(k => decoGroupOf(k) === g.key).map(k => {
+    const all = ds.filter(d => decoKey(d) === k);
+    return { key: k, all, store: all.filter(d => d.x == null && d !== td), out: all.filter(d => d.x != null).length, max: decoMax(k) };
+  }) })).filter(g => g.items.length);
+}
+// 빈 칸을 눌렀을 때 바로 놓을 수 있는 장식 (P78-02): 꽃 · 장식이 없는 정원 칸이면 창고에 있는 장식 종류마다 하나 [{ key, id, n }]
+function decoPlaceable(st, x, y) {
+  if (!inGarden(x, y) || flowerAt(st, x, y) || decoAt(st, x, y)) return [];
+  return decoGroups(st).flatMap(g => g.items.filter(i => i.store.length).map(i => ({ key: i.key, id: i.store[0].id, n: i.store.length, group: g.key })));
+}
 // ---------------------------------------------------------------- 🌱 처음 피기까지 앞당김 (P61-02, 11-03 사용자 확정)
 // 🌱 자라는 속도(BONUS.grow)는 예전엔 다 자라기까지(싹 · 새싹 · 자라는 중 → 다 자람, ageH)만 빨랐음 — 다 자란 뒤 피는 달을 기다리는 동안은 그대로라 ×5여도 늦게 피었음
 // 이제 심은 뒤 처음 피기까지(bloomKey === -1) 다 자란 꽃은 기다리는 동안도 같은 배율로: 꽃마다 자기 달력이 달력보다 f.leadH(흐르는 시간)만큼 앞서 감 (걸음마다 dtH × (빠르기 − 1))

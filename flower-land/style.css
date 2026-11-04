@@ -923,6 +923,15 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .decotiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-4); }
 .decotile { display: grid; justify-items: center; gap: var(--sp-2); padding: var(--sp-5) var(--sp-4); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-lg); text-align: center; }
 .decotile small, .decotile .dk-hint { font-size: calc(11.5 * var(--u)); color: var(--muted); }
+.deco-group { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-5); }   /* P78-01 창고 장식 종류별 묶음 */
+.deco-group .dg-head { font-weight: 700; font-size: var(--fs-md); }
+.decotile .dk-max { font-family: var(--font-data); color: var(--ink); }
+.decotile .dk-max span { white-space: nowrap; }
+.dplace { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-3); }   /* P78-02 빈 칸에 놓을 장식 */
+.dpcard { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-lg); text-align: left; font-size: var(--fs-sm); color: var(--ink); min-width: 0; }
+.dpcard:hover { border-color: var(--accent); }
+.dpcard .dp-main { display: grid; gap: var(--sp-1); min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
+.dpcard .dp-main small { color: var(--muted); }
 /* 장식 상태창 (11-01): 창 대신 옆 상태창 — 설명 · 하는 일 줄 */
 .sx-deco { display: grid; gap: var(--sp-3); }
 .sx-deco p { margin: 0; font-size: var(--fs-md); line-height: 1.5; }
@@ -1527,7 +1536,7 @@ body { margin: 0; }
 .pat-key span { display: inline-flex; align-items: center; gap: var(--sp-2); }
 
 /* ── 디자인 규칙 (P57): 맨 위 주석의 공통 컴포넌트 규칙 — 새 카드 격자 · 한 칸 카드 · 단추 줄을 만들면 여기 목록에 클래스를 더함 */
-:is(.shopgrid, .argrid, .pgrid, .dexgrid, .decotiles, .up-grid, .ttl-grid, .mine-bag, .orders, .mn-lands, .mn-blends, .fo-grid, .yc-grid, .gr-decos, .decoshop, .mine-crafts, .rc-list, .suptiles, .ws-shop, .stack) > * { min-width: 0; }
+:is(.shopgrid, .argrid, .pgrid, .dplace, .deco-group, .dexgrid, .decotiles, .up-grid, .ttl-grid, .mine-bag, .orders, .mn-lands, .mn-blends, .fo-grid, .yc-grid, .gr-decos, .decoshop, .mine-crafts, .rc-list, .suptiles, .ws-shop, .stack) > * { min-width: 0; }
 :is(.shopcard, .pcard, .dexcard, .decotile, .up-tile, .ttl-card, .fo-slot, .gr-deco, .mine-it) { grid-template-columns: minmax(0, 1fr); }
 :is(.sc-name, .fcard .top) { display: flex; flex-wrap: wrap; min-width: 0; }
 :is(.sc-name, .fcard .top) > b { min-width: 0; overflow-wrap: anywhere; }
