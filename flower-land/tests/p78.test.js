@@ -44,4 +44,16 @@ const empty = E.create(new Date(2026, 4, 10, 12).getTime(), () => 0.5); empty.de
 check(E.decoPlaceable(empty, 1, 1).length === 0 && E.decoGroups(empty).length === 0, '장식이 없으면 빈 목록');
 void w;
 
+console.log('[P81 지금 효과 한 줄]');
+{ const s = E.create(new Date(2026, 4, 10, 12).getTime(), () => 0.5); s.decos = [];
+  const ef = k => E.decoEffect(s, k).line;
+  ['basin', 'ladybug', 'arch', 'greenhouse', 'cloudstone', 't:t_visit'].forEach(k => E.addDeco(s, k));
+  check(ef('cloudstone') === '🌼 보기만 바뀌는 꾸밈 장식이에요' && ef('t:t_visit') === '🌼 보기만 바뀌는 꾸밈 장식이에요', '효과 없는 꾸밈 · 칭호 문장');
+  check(ef('basin').includes('물이 6시간 더 가요') && ef('basin').endsWith('아직 놓지 않아 효과가 없어요') && !E.decoEffect(s, 'basin').active, '창고에만 있으면 효과 줄 + "아직 놓지 않아"');
+  E.placeDeco(s, s.decos.find(d => d.key === 'basin').id, 1, 1);
+  check(ef('basin').endsWith('정원에 1개 놓음') && E.decoEffect(s, 'basin').active, '놓으면 "정원에 1개 놓음"');
+  check(/둘레 \d칸 꽃에서/.test(ef('ladybug')) && ef('greenhouse').includes('2배'), '곤충은 지금 둘레 칸 수 · 장치는 배율 숫자');
+  E.placeDeco(s, s.decos.find(d => d.key === 'arch').id, 2, 2);
+  check(ef('arch').includes(`(지금 ${E.orderMax(s)}장)`), '등급 장식은 놓으면 지금 주문 쪽지 수'); }
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

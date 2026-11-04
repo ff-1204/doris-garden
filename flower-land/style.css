@@ -928,8 +928,13 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .decotile small, .decotile .dk-hint { font-size: calc(11.5 * var(--u)); color: var(--muted); }
 .deco-group { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-5); }   /* P78-01 창고 장식 종류별 묶음 */
 .deco-group .dg-head { font-weight: 700; font-size: var(--fs-md); }
-.decotile .dk-max { font-family: var(--font-data); color: var(--ink); }
-.decotile .dk-max span { white-space: nowrap; }
+.decotile, .decotop { position: relative; }
+.decotile .dk-n { font-size: var(--fs-sm); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }   /* P81-02 개수 한 줄 */
+.decotile[data-decotip], .decotop[data-decotip] { cursor: help; }
+.dk-tip { display: none; position: absolute; left: var(--sp-2); right: var(--sp-2); bottom: var(--sp-2); z-index: 2; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-sm); background: var(--ink); color: var(--panel); font-size: var(--fs-xs); line-height: 1.45; text-align: left; word-break: keep-all; overflow-wrap: anywhere; pointer-events: none; }   /* P81-03 지금 효과 — 카드 안쪽 아래에 겹쳐 띄움 */
+.decotop .dk-tip { left: auto; right: var(--sp-2); bottom: auto; top: calc(100% + var(--sp-1)); max-width: min(320px, 90%); }
+@media (hover: hover) { [data-decotip]:hover > .dk-tip { display: block; } }
+[data-decotip]:focus-visible > .dk-tip, [data-decotip].tip > .dk-tip { display: block; }
 .dplace { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-3); }   /* P78-02 빈 칸에 놓을 장식 */
 .dpcard { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-lg); text-align: left; font-size: var(--fs-sm); color: var(--ink); min-width: 0; }
 .dpcard:hover { border-color: var(--accent); }
@@ -1104,7 +1109,7 @@ img.px { image-rendering: pixelated; }
 .suptile:hover { border-color: var(--accent); }
 .suptile .si { font-size: calc(24 * var(--u)); line-height: 1.2; }
 .suptile b { font-size: var(--fs-md); }
-.suptile small { font-size: calc(11.5 * var(--u)); color: var(--muted); font-family: var(--font-data); }
+.suptile small { font-size: calc(11.5 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }   /* P81-04 고정폭 글꼴은 한글 사이가 벌어져 보여서 본문 글꼴로 */
 .suptile.low small, .suptile.empty small { color: var(--warn); font-weight: 600; }
 .suptile.empty .si { filter: grayscale(1); opacity: .55; }
 .suptile .sp { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: var(--fs-md); font-weight: 700; background: var(--accent); color: var(--accent-ink); opacity: .85; }

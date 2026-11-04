@@ -306,6 +306,18 @@ function decoGroups(st) {
     return { key: k, all, store: all.filter(d => d.x == null && d !== td), out: all.filter(d => d.x != null).length, max: decoMax(k) };
   }) })).filter(g => g.items.length);
 }
+// P81-03 (11-05) 창고 장식 카드를 누르거나 올리면 보이는 "지금 효과" 한 줄 — 효과 줄 · 놓은 수. 효과가 없는 꾸밈은 그렇다고
+function decoEffect(st, key) {
+  const base = String(key).split(':')[0], D = DECOS[base] && has(DECOS, base) ? DECOS[base] : null;
+  const placed = (st.decos || []).filter(d => decoKey(d) === key && d.x != null).length;
+  let line = '';
+  if (D && D.insect && INSECT_LINE[base]) line = insectLine(st, base);
+  else if (DECO_BUFF[base]) line = decoBuffLine(st, base);
+  else if (D && D.grade) line = `💌 놓아 두면 주문 쪽지 +1장${placed ? ` (지금 ${orderMax(st)}장)` : ''}`;
+  else if (D && (D.func || base === 'stonewall')) line = D.desc;
+  if (!line) return { line: '🌼 보기만 바뀌는 꾸밈 장식이에요', placed, active: false };
+  return { line: `${line} · ${placed ? `정원에 ${placed}개 놓음` : '아직 놓지 않아 효과가 없어요'}`, placed, active: placed > 0 };
+}
 // 빈 칸을 눌렀을 때 바로 놓을 수 있는 장식 (P78-02): 꽃 · 장식이 없는 정원 칸이면 창고에 있는 장식 종류마다 하나 [{ key, id, n }]
 function decoPlaceable(st, x, y) {
   if (!inGarden(x, y) || flowerAt(st, x, y) || decoAt(st, x, y)) return [];

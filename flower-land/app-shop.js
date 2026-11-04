@@ -249,7 +249,6 @@ function renderStore(force) {
       return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
     }).join('')}${st.presol > 0 ? `<button type="button" class="suptile" data-presinfo="1" title="프리저브드를 만드는 용액 · ⛏️ 광산 만들기"><span class="si">🧪</span><b>특수 용액</b><small>${st.presol}병 남음</small></button>` : ''}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
     ${honeyStoreHTML()}
-    ${decoStoreHTML()}
     ${presStoreHTML()}
     ${pend || resv ? `<div class="cab-head"><span class="sb-title">🚚 도착할 것</span><span class="muted">때가 되면 창고로 들어와요</span></div><div class="argrid">${pend}${resv}</div>` : ''}
     ${rows ? `
@@ -257,7 +256,8 @@ function renderStore(force) {
       <span class="right"><select id="storeSort" class="plantsel" aria-label="정렬"><option value="flower">꽃별</option><option value="month">심는 달별</option><option value="quality">품질별</option><option value="got">받은 날짜별</option></select></span></div>
     ${nowCards ? `<div class="shopgrid">${nowCards}</div>` : `<div class="cab-empty slim"><span>🌱</span><div class="muted">${cal.frozen ? '꽃잠엔 심기도 쉬어요' : `${monthName(cal.month)}에 심는 꽃이 창고에 없어요`}</div></div>`}
     ${laterCards ? `<div class="cab-head"><span class="sb-title">📦 나중에 심을 것 <span class="sh-n">${total - nowN}</span></span><span class="muted">심는 때가 오면 위로 올라가요</span></div><div class="shopgrid">${laterCards}</div>` : ''}`
-    : '<div class="cab-empty"><span>📦</span><div><b>창고가 비어 있어요</b><br><span class="muted">화원에서 제철 꽃을 사면 여기에 들어와요</span></div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}</div>`;
+    : '<div class="cab-empty"><span>📦</span><div><b>창고가 비어 있어요</b><br><span class="muted">화원에서 제철 꽃을 사면 여기에 들어와요</span></div><button type="button" class="btn small primary" data-go="shop">💐 화원</button></div>'}
+    ${decoStoreHTML()}</div>`;   // P81-01 장식은 맨 밑
   const ss = $('#storeSort'); if (ss) ss.value = ui.storeSort;   // 창고가 비면 정렬 칸이 없음
 }
 $('#p-store').addEventListener('change', e => { if (e.target.id === 'storeSort') { ui.storeSort = e.target.value; renderStore(true); } });
@@ -269,6 +269,7 @@ $('#p-store').addEventListener('click', e => {
   const dp = e.target.closest('[data-decoplace]'); if (dp) { ui.tool = 'deco'; ui.decoId = +dp.dataset.decoplace; return setTab('garden', true); }
   const dt = e.target.closest('[data-decotop]'); if (dt) return after(E.setTopDeco(st, +dt.dataset.decotop));   // P52 ⬆️
   if (e.target.closest('[data-decodown]')) return after(E.clearTopDeco(st));
+  const tp = e.target.closest('[data-decotip]'); if (tp && !e.target.closest('button')) { const on = !tp.classList.contains('tip'); document.querySelectorAll('#p-store [data-decotip].tip').forEach(x => x.classList.remove('tip')); tp.classList.toggle('tip', on); return; }   // P81-03 휴대폰: 누르면 효과 한 줄
   const b = e.target.closest('[data-plant]'); if (!b) return;
   ui.tool = 'plant'; ui.plantType = b.dataset.plant; setTab('garden', true);
 });
@@ -276,13 +277,15 @@ $('#p-store').addEventListener('click', e => {
 function decoStoreHTML() {
   const ds = st.decos || []; if (!ds.length) return '';
   const td = E.topDecoOf(st);                     // P52 ⬆️ 위 칸에 단 장식은 창고 칸에서 따로 셈
-  // P78-01 (11-05): 종류별 묶음 · 칸마다 "가진 n / 최대 1"(한 종류에 하나) 또는 "가진 n개 · 제한 없음" — 🫙 유리 관은 종 · 단계마다 한 칸 (P36-04)
-  const tile = ({ key: k, all, store: inStore, out, max }) => { const up = all.includes(td), hang = inStore[0] || all.find(d => d.x != null);
-    return `<div class="decotile"><span class="dk-art">${decoImg(k, 3)}</span><b>${esc(E.decoInfo(k).name)}</b><small class="dk-max"><span>가진 ${all.length}${max ? '' : '개'}</span> <span>${max ? `/ 최대 ${max}` : '· 제한 없음'}</span></small><small>${[up ? '🎀 대표 장식' : '', inStore.length ? `창고에 ${inStore.length}개` : '', out ? `정원에 ${out}개` : ''].filter(Boolean).join(' · ')}</small>${decoBuffHTML(k)}
-      ${inStore.length || up ? `<button type="button" class="btn small primary" data-decoplace="${(inStore[0] || td).id}">🪴 놓기</button>` : '<span class="muted dk-hint">정원에서 눌러 옮겨요</span>'}${hang ? `<button type="button" class="btn small" data-decotop="${hang.id}">🎀 대표로 달기</button>` : ''}</div>`; };
+  // P81 (11-05 사용자 "장식은 개수 및 버튼만 표시하고, 호버하면 현재 효과 얼마인지"): 카드엔 그림 · 이름 · 개수 · 놓기만. 효과는 올리거나(PC) 카드를 누르면(휴대폰) 한 줄
+  //   개수: 한 종류에 하나면 "1/1"(가진 수 / 최대), 그 밖엔 "×2" · 정원에 놓은 것은 "📍1" — 묶음은 P78-01 그대로
+  const tip = k => `<span class="dk-tip" role="tooltip">${esc(E.decoEffect(st, k).line)}</span>`;
+  const tile = ({ key: k, all, store: inStore, out, max }) => { const up = all.includes(td), nm = esc(E.decoInfo(k).name);
+    return `<div class="decotile" tabindex="0" data-decotip="1" aria-label="${nm} · 누르면 효과를 보여 줘요"><span class="dk-art">${decoImg(k, 3)}</span><b>${nm}</b><span class="dk-n">${max ? `${all.length}/${max}` : `×${all.length}`}${out ? ` · 📍${out}` : ''}</span>
+      ${inStore.length || up ? `<button type="button" class="btn small primary" data-decoplace="${(inStore[0] || td).id}">🪴 놓기</button>` : '<span class="muted dk-hint">모두 정원에 있어요</span>'}${tip(k)}</div>`; };
   const groups = E.decoGroups(st).map(g => `<div class="deco-group"><span class="dg-head">${g.name} <span class="sh-n">${g.items.reduce((s, i) => s + i.all.length, 0)}</span></span><div class="decotiles">${g.items.map(tile).join('')}</div></div>`).join('');
-  const topRow = `<div class="decotop"><span>🎀 대표 장식</span>${td ? `<span class="dk-art">${decoImg(E.decoKey(td), 2)}</span><b>${esc(E.decoInfo(E.decoKey(td)).name)}</b><button type="button" class="btn small" data-decodown="1">내리기</button>` : '<span class="muted">비어 있어요 · 장식 하나를 대표로 달 수 있어요</span>'}</div>`;
-  return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">꽃이 없는 칸에 놓아요 · 땅은 바뀌지 않아요</span></div>${topRow}${groups}`;
+  const topRow = `<div class="decotop" ${td ? 'tabindex="0" data-decotip="1"' : ''}><span>🎀 대표 장식</span>${td ? `<span class="dk-art">${decoImg(E.decoKey(td), 2)}</span><b>${esc(E.decoInfo(E.decoKey(td)).name)}</b><button type="button" class="btn small" data-decodown="1">내리기</button>${tip(E.decoKey(td))}` : '<span class="muted">비어 있어요 · 정원 장식을 눌러 대표로 달 수 있어요</span>'}</div>`;
+  return `<div class="cab-head"><span class="sb-title">🪴 장식 <span class="sh-n">${ds.length}</span></span><span class="muted">카드를 누르면 지금 효과가 보여요</span></div>${topRow}${groups}`;
 }
 // 비료로 만들기 확인 창 (P06-16): 씨앗·묘목 › 비료, 몇 개 바꿀지 −/+
 function openCompost(ids, n) {
