@@ -233,7 +233,7 @@ function onSlot(st, cal, ctx) {
   if (st._helperBrew) { addLog(st, 13, `찻집 도우미가 찻잔 ${st._helperBrew}잔을 우렸어요`, ctx); st._helperBrew = 0; }   // P39-09-02 🫖 (예전 P28-10-03 나비) 달마다 한 줄 (잔마다 남기면 일지가 넘침)
   if (cal.idx === 0) weeklyOf(st);                                             // P28-09 월요일 아침 6시: 이번 주 목표 (지난 주 것은 벌칙 없이 사라짐)
   const ended = calendar(st.virtual - 1000);
-  if (!ended.frozen) { hiveTick(st, ctx); insectTick(st, ended, ctx); } else lampTick(st);   // P44-04 🏮 석등: 꽃잠 달 끝에 둘레 꽃 품질 +1%   // P39 🐝 곤충 일곱이 둘레 꽃을 돌봄 (물 · 잡초 · 비료 · 가지치기 → 개미 거두기) · 🧺 건조 선반 (개미가 거둔 꽃잎을 선반이 바로 넒)
+  if (!ended.frozen) { hiveTick(st, ctx); insectTick(st, ended, ctx); } else { lampTick(st); presDecoTick(st, ended); }   // P44-04 🏮 석등: 꽃잠 달 끝에 둘레 꽃 품질 +1% · P84-02 🌹 +0.5%   // P39 🐝 곤충 일곱이 둘레 꽃을 돌봄 (물 · 잡초 · 비료 · 가지치기 → 개미 거두기) · 🧺 건조 선반 (개미가 거둔 꽃잎을 선반이 바로 넒)
   farmMark(st, ended);                                                         // P32-02 🐝 곤충농장: 지난 한 달 일꾼들이 한 일 (꽃잠 달도 — 찻집 · 티백은 흐르는 시간에 일함)
   if (teaShopOpen(cal)) { makeOrders(st, cal); if (!slowView(st)) addLog(st, 15, '찻집에 새 주문 쪽지가 왔어요', ctx); }   // P23-01 · 느긋하게 보기면 쪽지 소식은 남기지 않음 (P28-02) · P34 달마다
   else if (st.orders) st.orders = null;   // 닫힌 달엔 쪽지를 치움 (P34부터는 닫힌 달이 없음)

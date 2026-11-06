@@ -93,6 +93,7 @@ function monthDecoLift(st, it, cal) {
 const DECO_BUFF = Object.fromEntries(MONTH_DECO_KEYS.map(k => { const m = monthName(DECOS[k].month); return [k, { text: `🌸 ${m} 꽃을 심으면 품질 ${pct(MONTH_DECO_Q)}%부터`, plain: `🌸 ${m} 꽃을 반겨요` }]; }));
 DECO_BUFF.moonlamp = DECO_BUFF.pavilion = { text: '🧬 정원에 놓아 두면 처음 피는 꽃의 돌연변이가 더 자주', plain: '🧬 정원에 놓아 두면 처음 피는 꽃의 돌연변이가 더 자주' };   // P62-02 — 꽃이 처음 필 때 정원에 놓여 있으면 (예전 P36-01: 꽃잠 동안 놓였으면 그 해)
 DECO_BUFF.mutjar = { text: '🧬 이 꽃의 돌연변이가 더 자주', plain: '🧬 이 꽃의 돌연변이가 더 자주' };
+DECO_BUFF.pres = { text: '🌹 둘레 1칸 꽃은 🌙 꽃잠 12시간마다 품질 +0.5%', plain: '🌹 둘레 꽃은 🌙 꽃잠에 아주 조금씩 좋아져요' };   // P84-02 (PRES_DECO_Q)
 // P44-04 ⛏️ 광산 공방 효과 (놓아야 · 느긋하게 보기면 숫자 없이) — 이달의 장식(P35) 줄이 있는 셋은 두 줄을 이어 씀
 const WORKSHOP_BUFF = {
   stepstone: { text: '👣 둘레 1칸 꽃은 땅이 안 맞아도 품질이 떨어지지 않아요', plain: '👣 둘레 꽃은 땅이 안 맞아도 품질이 떨어지지 않아요' },
@@ -251,7 +252,6 @@ function sellPreserved(st, ids, ctx) {            // 💐 화원에서 팔기
   addLog(st, 13, `🌹 프리저브드 ${list.length}개를 화원에 ${sum.toLocaleString('ko-KR')}원에 팔았어요`, ctx);
   return ok(`🌹 프리저브드 ${list.length}개를 ${sum.toLocaleString('ko-KR')}원에 팔았어요`, { sum });
 }
-// P75-01 카드 표시 (11-04 사용자 확정): 정원에 놓여 있어야 효과가 나는 장식 → 'place' (📍 놓아야 효과) · 보기만 바뀌는 장식 → null. 사면 바로 켜지는 것(🌼 넓히기 · 속도)은 화면이 'buy'(✨ 사면 바로)로
 // P84 🌹 프리저브드 장식 (11-06 사용자 "프리저브드 장식으로 만들거나 팔거나" · 놓으면 작은 효과): 창고(st.preserved) ↔ 정원(st.decos, key 'pres') 사이를 오감 — 놓인 동안엔 st.preserved에 없어 못 팖
 //   효과: 🏮 석등(둘레 2칸 · +1%)보다 작게 둘레 1칸 · 꽃잠 달 끝마다 품질 +0.5%. 여러 개가 겹쳐도 한 꽃에 한 번(상한) · 그 달에 놓거나 옮긴 것은 다음 달 끝부터(d.at) — 놓기 · 거두기를 되풀이해 거저 얻지 못하게
 //   놓기 · 거두기엔 경험치가 없고, 한 해 평가의 장식 점수에도 안 듦 · 🎀 대표 장식으로 달지 않음 · 새 철엔 창고로 돌아옴 (startSeason)
@@ -264,6 +264,7 @@ function presDecoTick(st, ended) {                // onSlot: 꽃잠 달이 끝�
   for (const f of st.flowers) if (!f.withered && f.q < 1 && ds.some(d => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= DECO_REACH.pres)) { f.q = Math.min(1, f.q + PRES_DECO_Q); n++; }
   return n;
 }
+// P75-01 카드 표시 (11-04 사용자 확정): 정원에 놓여 있어야 효과가 나는 장식 → 'place' (📍 놓아야 효과) · 보기만 바뀌는 장식 → null. 사면 바로 켜지는 것(🌼 넓히기 · 속도)은 화면이 'buy'(✨ 사면 바로)로
 const decoActive = key => { const k = String(key).split(':')[0], D = DECOS[k]; return D && (D.func || DECO_BUFF[k] || k === 'stonewall' || k === 'mutjar') ? 'place' : null; };
 const decoBuffLine = (st, key) => { const B = DECO_BUFF[String(key).split(':')[0]]; return B ? (slowView(st) ? B.plain : B.text) : ''; };
 function addDeco(st, key) {
@@ -295,9 +296,9 @@ function placeDeco(st, id, x, y) {
   const o = decoAt(st, x, y);
   if (o && o !== d) return no('이 자리에는 이미 장식이 있어요');
   const moved = d.x != null && (d.x !== x || d.y !== y), down = st.topDeco === id;
-  d.x = x; d.y = y;
   if (fromStore) { st.preserved.splice(st.preserved.findIndex(z => z.id === id), 1); (st.decos = st.decos || []).push(d); }
   if (d.key === 'pres' && (fromStore || moved)) d.at = calendar(st.virtual).abs;   // P84-02 이 달 끝엔 아직 효과 없음
+  d.x = x; d.y = y;
   if (down) st.topDeco = null;                     // P52 ⬆️ 위 칸에 단 장식을 정원에 놓으면 위 칸에서 내려옴
   return ok(`${josa(decoInfo(decoKey(d)).name, '을/를')} ${moved ? '옮겼어요' : '놓았어요'}${down ? ' · 대표 장식에서 내렸어요' : ''}`);
 }
