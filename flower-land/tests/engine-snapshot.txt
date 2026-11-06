@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 637개 (Object.keys 차례)
+공개 이름 634개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -89,7 +89,7 @@
   reservedCount function f789919997b56fbe
   cartSummary function cc148ac92da4b565
   create function ed58047dca40a1f9
-  advance function 2f3f45be5045bddc
+  advance function 120a40bc997eca97
   addLog function 25ea2d8cb4b0ceca
   slowView function 7c80808c1c44146d
   bigView function bb5a8d41f02fc777
@@ -148,7 +148,7 @@
   chapterDone function 19482a84d2674e84
   checkJournal function 81ab1ba7201e5943
   setTitleOn function 448336fb0e18da65
-  TITLE_PERKS object be3ab781b3e31889
+  TITLE_PERKS object 6587d26bd12abb3a
   TOP_BOOST number b05e244762b1e472
   titlePerk function b5a0d412410d8718
   PRES_H number c2356069e9d1e79c
@@ -180,14 +180,14 @@
   SAVE_NUMS object bb37ff2ae79b5101
   cleanSave function a0326e65af8fee8c
   SAVE_FORMAT number 6b86b273ff34fce1
-  MIGRATIONS object 7c871c4956452543
+  MIGRATIONS object 6870ed1ad275aeba
   migrateSave function f45e906b90c35da5
   CLOUD_GAP number 6ce318969619d1c3
   cloudDue function d8b021348e446c23
   cloudAutoOk function 9f788d7170164ef3
   cloudTokenUse function 10090ccfada3ba73
   cloudDecide function 204dc83e0f086705
-  freshGarden function 8e5d2513b3c70296
+  freshGarden function 245a7b804981a154
   freshPick function b738d83e4d8664e2
   gardenBorn function e5d7b8c3ee0a69f3
   firstVisitOf function b1a40201aa236f4a
@@ -394,7 +394,7 @@
   gradeUnlockText function 3735d1234359bfe6
   isGradeUpLine function ba20c5b943a54b79
   gradeXpAt function e4289a29201f497e
-  GRADE_BY object d52113a174ac4860
+  GRADE_BY object fe2146b261bdc7f4
   GRADE_GROUPS object fa00b79a5d1d1d5f
   gradeDexCount function ade4d886059636ee
   newGrade function e14e7796b80599b1
@@ -423,10 +423,7 @@
   pantryOf function ae778017abfacb62
   pantryCap function bd891f9d172047c1
   pantryDayValue function 433fffbbd3dd10e3
-  pantryTick function a3f313e9e3e9feef
-  takePantry function 95a9bfb70834eded
-  pantryView function f62836f7726b4622
-  pantryCounts function 26bb1ed5d6579208
+  pantryTick function 10f05a1902521190
   GRADE_DECO_KEYS object 8c35ec66e613b8db
   gradeDecoOffer function f0534f4ab48c9f3a
   HONEY_R number d4735e3a265e16ee
@@ -484,7 +481,7 @@
   farmMark function 4c8f2af4cc86894b
   farmLastOf function 5a797f32344e2311
   farmLine function 22ec4e610658be00
-  farmOf function 2b6275b153bd146a
+  farmOf function ecac3b93481f7d87
   AWAY_LAST_MAX number 1a6562590ef19d10
   awayKeep function 17c65be683505859
   SHELF_N number 4b227777d4dd1fc6
@@ -519,7 +516,7 @@
   SEED_Q_STEP number a7e46abf169710b3
   seedUpText function c13079535f1ee761
   bonusOpenText function a47c1f6060d0f308
-  awayHome function 4e01e07dc9bfa12c
+  awayHome function 91293e0add2faddb
   bonusMaxed function 7e1048a42104d77f
   bonusSet function d3d3f95ca5c8c10c
   bonusView function 6d946e1028377d39
@@ -637,8 +634,8 @@
   bagNeed function 8540ff828f4fbdb5
   blendMax function 549369a9e01bd5b6
   blendPlan function 4a18ad0172cdcfd0
-공개 값 모두 bcf6a6f11edf8781
-보정 MIGRATIONS 59줄
+공개 값 모두 1a4d65262dcc0586
+보정 MIGRATIONS 60줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
    3. 가게 → 화원 (10-05) · 9d6d295294ab451c
@@ -698,18 +695,19 @@
   57. 🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐 · b22f0a0c9967ac46
   58. 🌹 프리저브드 장식 (P84, 11-06): 창고 칸 st.preserved를 늘 배열로 · 꽃을 모르는 pres 장식은 지움 (그림을 그릴 수 없어서) · a9bdde8b0db74d03
   59. ⛏️ 자동 캐기 돌려주기 · 쓸 돈 (P91, 11-06 사용자 확정): 예전 값으로 쓴 돈 전액을 돌려주고 켜져 있던 것은 끔(예산을 정해 다시 켜게) · 재료 · 보석은 그대로. 저장마다 한 번 — autoPaid를 0으로 비워 다시 돌려주지 않음 · d433ff5d7dddd48f
-새 정원 create b5426b473fdbceb1
-새 정원 30시간 뒤 f2021676bd67ef76
-새 정원 두 주(정원 두 해) 뒤 46555660ba9d2607
-옛 저장: 가장 옛 정원 (30시간) d6bd58ce630dc6b1
-옛 저장: 가장 옛 정원 (두 주) fe29f4f73f536625
-옛 저장: 두 주 정원을 0번째부터 da185deeee00cebc
-옛 저장: 두 주 정원을 10번째부터 da185deeee00cebc
-옛 저장: 두 주 정원을 20번째부터 99096bc54ac51b2a
-옛 저장: 두 주 정원을 30번째부터 99096bc54ac51b2a
-옛 저장: 두 주 정원을 40번째부터 99096bc54ac51b2a
-옛 저장: 두 주 정원을 48번째부터 46555660ba9d2607
-옛 저장: 두 주 정원을 58번째부터 46555660ba9d2607
+  60. 🧺 저장고 자동 (P90, 11-06): 쌓여 있던 것은 잃지 않게 한 번에 넣어 줌 (거두기가 없어짐) · 7e34260abc5514cf
+새 정원 create cc0f2e78f2f6d602
+새 정원 30시간 뒤 2a40d10861178311
+새 정원 두 주(정원 두 해) 뒤 b630342889a5fdad
+옛 저장: 가장 옛 정원 (30시간) 4950afde59a34b0d
+옛 저장: 가장 옛 정원 (두 주) 7c1c515847e0ebaa
+옛 저장: 두 주 정원을 0번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 10번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 20번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 30번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 40번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 48번째부터 b630342889a5fdad
+옛 저장: 두 주 정원을 59번째부터 b630342889a5fdad
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave a743a6e6d0c9afdd
-저장 파일 parseSave a743a6e6d0c9afdd
+저장 파일 makeSave 6a5463cb1edf9407
+저장 파일 parseSave 6a5463cb1edf9407

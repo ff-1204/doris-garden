@@ -45,7 +45,7 @@ console.log('[문구]');
 
 console.log('[예전 저장 ×2 · ×3 → 같은 배수 (MIGRATIONS 49번째)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P42'));
-  check(N === 48 && N === E.MIGRATIONS.length - 11, '49번째 보정 (바로 뒤 50번째 P43 · 51번째 P48)');
+  check(N === 48 && N === E.MIGRATIONS.length - 12, '49번째 보정 (바로 뒤 50번째 P43 · 51번째 P48)');
   const old = copy(garden(12)); old.mig = N; delete old.speedSteps; old.mailGot = { [E.P41_LETTER]: 1 }; /* P41 옮기기를 이미 한 정원 */ old.bonus.grow = 2; old.bonus.dry = 1; old.bonusOwn = { grow: 2, dry: 2, barrel: 1 }; const m0 = old.money;
   const m = E.migrateSave(old);
   check(m.bonus.grow === 4 && m.bonus.dry === 2 && E.bonusVal(m, 'grow') === 3 && E.bonusVal(m, 'dry') === 2, '쓰는 단계: ×3 → 4단계 · ×2 → 2단계 (배수 그대로)');

@@ -102,6 +102,7 @@ for (let i = 0; i < 3; i++) E.addSeat(buy);
 for (const [kind, list] of [['cup', E.CUP_SETS], ['sign', E.SIGNS]]) for (const k of Object.keys(list)) E.buyDecor(buy, kind, k);
 for (const k of E.GIFT_KEYS) E.sendGift(buy, k);
 const bought = buy.items.length + buy.decos.length;
+E.pantryOf(buy).h = 0;   // P90 이 한 시간에 작은 것이 들어오면 경험치가 늘어서
 E.advance(buy, buy.virtual + H, ctx);
 check(bought > 3 && JSON.stringify(buy.grade) === JSON.stringify(b0), `씨앗 · 용품 · 장식 · 찻집 가꾸기 · 선물을 사도 경험치 그대로 (${b0.xp})`);
 check(E.gradeDexCount(buy) === b0.dex, '사서 생기는 씨앗 · 묘목 · 꾸밈 · 편지 도감은 등급 도감 칸에 넣지 않음');

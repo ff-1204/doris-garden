@@ -142,7 +142,7 @@ function rackTick(st, ctx) {
 }
 // P72-02 ⚙️ 자동 건조기 (11-04 사용자 확정): 정원에 하나라도 놓여 있으면 제다실에 꽃잎이 생기는 즉시(손 · 개미 · 저장고 · 화원에서 산 꽃잎) 장수 제한 없이 꽃방에 넒
 //   손으로 넌 것처럼 꽃방 시간(🌾 말리는 속도 반영) 뒤 말린 꽃잎 칸으로 — 티백은 만들지 않음(건조 선반과 다름) · 말린 수(stats.dried)는 손으로 넌 것만 · 꽃잠에도 (꽃방이 꽃잠에도 마르니)
-//   부르는 곳: flushPending(손 · 모두 거두기 · advance 끝) · insectTick(🐜 개미 다음 · 🧺 건조 선반 앞) · advance의 달이 바뀐 뒤 · takePantry · buyPetal
+//   부르는 곳: flushPending(손 · 모두 거두기 · advance 끝) · insectTick(🐜 개미 다음 · 🧺 건조 선반 앞) · advance의 달이 바뀐 뒤 · pantryDone · buyPetal
 function autoDryTick(st) {
   if (!st.petals.length || !placedOf(st, 'autodryer').length) return 0;
   const list = st.petals.splice(0);
@@ -208,7 +208,8 @@ const AUTO_STATS = [['autoHarvest', '개미 일꾼', n => `이 꽃잎 ${n}장을
   ['autoPrune', '누에 일꾼', n => `이 꽃 ${n}포기의 가지를 쳤어요`, '이 가지를 쳤어요', 20, []],
   ['autoBags', '건조 선반', n => `에서 꽃잎이 말라 티백 ${n}개가 됐어요`, '에서 꽃잎이 말라 티백이 됐어요', 12, ['자동 건조대']],
   ['autoBrew', '찻집 도우미', n => `가 찻잔 ${n}잔을 우렸어요`, '가 차를 우렸어요', 13, ['찻집 일손']],
-  ['autoDry', '자동 건조기', n => `가 꽃잎 ${n}장을 꽃방에 널었어요`, '가 꽃잎을 꽃방에 널었어요', 12, []]];   // P72-02
+  ['autoDry', '자동 건조기', n => `가 꽃잎 ${n}장을 꽃방에 널었어요`, '가 꽃잎을 꽃방에 널었어요', 12, []],   // P72-02
+  ['autoPantry', '그동안 받은 것', n => ` ${n}개가 창고 · 광산 주머니 · 제다실로 들어왔어요`, '이 창고 · 광산 주머니 · 제다실로 들어왔어요', 12, []]];   // P90
 // 옛 일지 줄 (P38까지 — 누에 말리기 · 나비 차 우리기): 머리말이 지금 곤충과 겹쳐 아이콘만 따로 (isAutoLine은 위 머리말로 알아봄)
 const AUTO_OLD_LINES = [[/^누에 일꾼이 (꽃잎|말린)/, 12], [/^나비 일꾼이 찻잔/, 13]];
 const autoStats = st => Object.fromEntries(AUTO_STATS.map(([k]) => [k, ((st.stats || {})[k]) || 0]));
@@ -219,11 +220,10 @@ function autoAwayLines(st, before) {
   const now = autoStats(st), b = before || {};
   return AUTO_STATS.filter(([k]) => now[k] > (b[k] || 0)).map(([k, who, many, plain]) => who + (slowView(st) ? plain : many(now[k] - (b[k] || 0))));
 }
-// P41 R-04 돌아왔을 때 한 창: 곤충이 한 일(autoAwayLines 줄 — 화면이 isAutoLine으로 골라 모음) 옆에 지금 🧺 입구 선반 · 꽃방에서 다 마른 꽃잎 (느긋하게 보기면 숫자 없이)
+// P41 R-04 돌아왔을 때 한 창: 곤충이 한 일(autoAwayLines 줄 — 화면이 isAutoLine으로 골라 모음) 옆에 지금 꽃방에서 다 마른 꽃잎 (느긋하게 보기면 숫자 없이)
 function awayHome(st) {
-  const slow = slowView(st), p = pantryView(st), dried = (st.dried || []).length, drying = (st.drying || []).length;
+  const slow = slowView(st), dried = (st.dried || []).length, drying = (st.drying || []).length;
   return {
-    pantry: p && p.has ? p : null,
     dried: dried ? (slow ? '🍂 꽃방에 다 마른 꽃잎이 기다려요' : `🍂 꽃방에 다 마른 꽃잎 ${dried}장이 기다려요`) : null,
     drying: !dried && drying ? (slow ? '🌾 꽃방에서 꽃잎이 마르고 있어요' : `🌾 꽃방에서 꽃잎 ${drying}장이 마르고 있어요`) : null,
   };
@@ -273,7 +273,8 @@ function honeyCup(st, cupId, k) {                  // 찻잔에 꿀 한 숟갈 (
 }
 const honeyCount = st => Object.keys((st.dex && st.dex.honey) || {}).filter(k => HONEY_KEYS.includes(k)).length;
 // ---------------------------------------------------------------- 🧺 정원 저장고 (P28-04, M2-7 10-28)
-// 흐르는 시간 2시간마다 한 칸씩 작은 것이 상한까지 쌓이고, "모두 거두기" 한 번으로 받음. 꽃잠엔 멈춤(advance가 흐르는 달에만 부름) · 따라잡기 3주 안에서만 (catchUp)
+// P90 (11-06 사용자 "칸을 없애고 쌓일 것이 자동으로 들어오게"): 흐르는 시간 2시간마다 작은 것 하나가 창고 · 광산 주머니 · 제다실로 바로 들어옴. 꽃잠엔 멈춤(advance가 흐르는 달에만 부름)
+// 한 번의 advance(자리를 비운 뒤 따라잡기 한 번)에서 받는 양은 상한(pantryCap)까지 — 예전에 칸이 차면 멈추던 것과 같은 양이라 경제가 늘지 않음
 // 돈 고리 막기 (P17-14): 하루(12칸) 가치가 하루 용돈보다 작게(pantryDayValue). 🍂 떨어진 꽃잎은 아직 안 거둔 핀 꽃의 이달 수확을 바구니 1번으로 대신 거둠(품질 90%, 자동 수확 바구니와 같음)이라 새 돈이 아님
 //   — 핀 꽃이나 바구니가 없으면 흙 (바구니 없이 거두면 돈이 모자란 정원에 공짜 수확이 됨: 시뮬에서 찾음)
 // 상한은 정원 등급 표 하나로만 늘어남 (등급 보너스 체계 P28-05-02는 따로)
@@ -304,48 +305,35 @@ function pantryDrop(st, k, cal) {
   pickFlower(f, cal); st.basket--;   // 그 꽃의 수확을 저장고가 바구니로 대신함 · P72-01 다시 다 자람 → RIPE_H 뒤 다시 핌
   return { k, type: f.type, q: f.q * AUTO_Q, seasonKey: seasonKey(st, cal) };
 }
-function pantryTick(st, cal, dtH) {               // advance에서 흐르는 달에만
+// 하나를 받음 (P90 — 예전 takePantry가 하던 일): 창고 · 광산 주머니 · 제다실 · 도감 · 올해 꽃잎 · 경험치. 주간 목표에는 세지 않음 (장치처럼). 일지엔 남기지 않음 — 돌아왔을 때 창에 한 줄 (AUTO_STATS autoPantry)
+function pantryGive(st, it, ctx) {
+  const m = st.mine || (st.mine = newMine());
+  if (it.k === 'water') st.water = (st.water || 0) + 1;
+  else if (it.k === 'fert') st.fert += 1;
+  else if (it.k === 'dirt' || it.k === 'quartz') {
+    m.bag[it.k] = (m.bag[it.k] || 0) + 1;
+    st.dex.mine = st.dex.mine || {};
+    if (MINE_DEX_KEYS.includes(it.k) && !st.dex.mine[it.k]) { st.dex.mine[it.k] = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(it.k)}`, ctx); }
+  } else if (it.k === 'petal' && FLOWERS[it.type]) {
+    st.petals.push({ id: nid(st), type: it.type, q: it.q, seasonKey: it.seasonKey, auto: true });
+    if (!st.dex.petal[it.type]) { st.dex.petal[it.type] = true; addLog(st, 9, `도감에 등록: ${FLOWERS[it.type].name} 꽃잎`, ctx); }
+    yearAdd(st, 'harvest', 1); addXp(st, 'harvest', 1, ctx);   // 거둔 꽃잎은 사람이 거둔 것과 같은 양
+  } else return;
+  pantryOf(st).got++; bump(st, 'autoPantry', 1);
+}
+function pantryTick(st, cal, dtH, room, ctx) {    // advance에서 흐르는 달에만 · room = 이번 advance에서 더 받을 수 있는 양 { n, got }
   if (!pantryOn(st)) return;
-  const p = pantryOf(st), cap = pantryCap(st);
-  if (p.items.length >= cap) { p.h = 0; return; }   // 가득 차면 더 쌓이지 않음 (놓친 벌칙도 없음)
+  const p = pantryOf(st);
+  if (room.n <= 0) { p.h = 0; return; }           // 상한까지 받으면 그 뒤로 멈춤 (놓친 벌칙도 없음)
   p.h += dtH;
   const ph = pantryH(st);
-  while (p.h >= ph - 1e-9 && p.items.length < cap) { p.h -= ph; p.items.push(pantryDrop(st, PANTRY_CYCLE[p.n % PANTRY_CYCLE.length], cal)); p.n++; }
-  if (p.items.length >= cap) p.h = 0;
+  while (p.h >= ph - 1e-9 && room.n > 0) { p.h -= ph; pantryGive(st, pantryDrop(st, PANTRY_CYCLE[p.n % PANTRY_CYCLE.length], cal), ctx); p.n++; room.n--; room.got = true; }
+  if (room.n <= 0) p.h = 0;
 }
-function pantryCounts(items) {
-  const c = {}; for (const it of items) c[it.k] = (c[it.k] || 0) + 1;
-  return PANTRY_KEYS.filter(k => c[k]).map(k => ({ k, n: c[k], ...PANTRY_ITEMS[k] }));
-}
-function takePantry(st, ctx) {
-  const p = pantryOf(st);
-  if (!p.items.length) return no('저장고가 비었어요 · 2시간마다 하나씩 쌓여요');
-  const list = pantryCounts(p.items), m = st.mine || (st.mine = newMine());
-  let petals = 0;
-  for (const it of p.items) {
-    if (it.k === 'water') st.water = (st.water || 0) + 1;
-    else if (it.k === 'fert') st.fert += 1;
-    else if (it.k === 'dirt' || it.k === 'quartz') {
-      m.bag[it.k] = (m.bag[it.k] || 0) + 1;
-      st.dex.mine = st.dex.mine || {};
-      if (MINE_DEX_KEYS.includes(it.k) && !st.dex.mine[it.k]) { st.dex.mine[it.k] = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(it.k)}`, ctx); }
-    } else if (it.k === 'petal') {
-      st.petals.push({ id: nid(st), type: it.type, q: it.q, seasonKey: it.seasonKey, auto: true }); petals++;
-      if (!st.dex.petal[it.type]) { st.dex.petal[it.type] = true; addLog(st, 9, `도감에 등록: ${FLOWERS[it.type].name} 꽃잎`, ctx); }
-    }
-  }
-  if (petals) { yearAdd(st, 'harvest', petals); addXp(st, 'harvest', petals, ctx); }   // 거둔 꽃잎은 사람이 거둔 것과 같은 양 (주간 목표에는 세지 않음 — 장치처럼)
-  addXp(st, 'pantry', 1, ctx);   // P54 거두기 한 번 (꽃잎은 위에서 거두기로 셈)
-  p.got += p.items.length; p.items = [];
-  autoDryTick(st);                                 // P72-02 떨어진 꽃잎도 바로 꽃방에
-  const text = list.map(x => `${x.ic} ${x.name} ${x.n}`).join(' · ');
-  return ok(`🧺 저장고에서 거뒀어요 · ${text}`, { list, petals });
-}
-// 화면이 읽는 것: 쌓인 칸 · 상한 · 종류별 수 · 다음 칸까지 남은 시간. 🐢 느긋하게 보기면 숫자(n · cap · next)는 null — 거두기는 그대로 (P28-02)
-function pantryView(st) {
-  if (!pantryOn(st)) return null;
-  const p = pantryOf(st), cap = pantryCap(st), slow = slowView(st), full = p.items.length >= cap;
-  return { has: p.items.length > 0, full, list: pantryCounts(p.items), n: slow ? null : p.items.length, cap: slow ? null : cap, next: slow || full ? null : Math.max(0, pantryH(st) - p.h), slow };
+function pantryDone(st, room, ctx) {              // advance 끝: 받은 게 있으면 경험치 한 번 (P54 — 예전 거두기 한 번) · 떨어진 꽃잎도 바로 꽃방에 (P72-02)
+  if (!room.got) return;
+  addXp(st, 'pantry', 1, ctx);
+  autoDryTick(st);
 }
 function storeDeco(st, id) {
   const d = (st.decos || []).find(z => z.id === id);
@@ -515,7 +503,7 @@ function farmOf(st) {
     : !busy.length ? (cal.frozen ? '🌙 꽃잠엔 곤충도 쉬어요' : `곤충들이 ${timeText((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1))} 뒤에 일해요`)
     : slow ? '지난달에도 곤충들이 부지런히 일했어요' : `지난달 곤충들이 ${busy.map(w => `${w.icon} ${w.didText}`).join(' · ')}`;
   const a = st.awayLast;
-  return { workers, home, month, pantry: pantryView(st), bonus: bonusView(st), catchup: { weeks: slow ? null : CATCHUP_WEEKS, last: a ? { h: slow ? null : a.h, n: a.lines.length } : null }, slow };
+  return { workers, home, month, bonus: bonusView(st), catchup: { weeks: slow ? null : CATCHUP_WEEKS, last: a ? { h: slow ? null : a.h, n: a.lines.length } : null }, slow };
 }
 // 지난번 "자리를 비운 동안" 한 장을 저장 (P32-02): 화면 awayDiff 결과 중 줄 · 돈 · 시간 · 🍃 그동안 글만, 줄은 최근 50줄 — 다시 보기는 농장 탭
 const AWAY_LAST_MAX = 50;

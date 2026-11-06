@@ -52,13 +52,14 @@ const EMPTY_DEX = ['petal', 'tea', 'teabag', 'bagBlend', 'blend', 'honey', 'mine
 function freshGarden(st) {
   if (!st) return false;
   if (!st.onboarded) return true;
+  const got = (st.pantry && st.pantry.got) || 0;   // P90 저절로 들어온 작은 것은 받은 것이라 새 정원으로 침
   const none = a => !a || a.every(x => x.gift === true || x.k === 'welcome' || !!x.mail), sh = st.shop || newShop();   // P22-05 꾸러미(gift) · 꽃집 할머니 편지 · 📮 운영자 편지(P29)는 받은 것이라 빼고 봄
   return (st.flowers || []).every(f => f.origin === '이웃')
     && ['items', 'reservations', 'pending', 'petals', 'teas', 'drying', 'dried', 'blends', 'cups', 'letterBox'].every(k => none(st[k]))
     && (st.decos || []).every(d => { const i = decoInfo(d.key); return !!(i && (i.title || i.extra)); })        // 칭호 문장 · 덤 장식만 (산 장식 없음)
-    && Object.values(st.stats || {}).every(v => !v)                                                               // 판매 · 찻잔 · 주문 · 선물 · 광산
-    && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).every(x => k === 'letter' && x === 'welcome'))
-    && st.water === 10 && st.shears === 5 && st.hoe === 10 && st.basket === 10 && (st.shovel == null || st.shovel === 10) && !st.fert
+    && Object.entries(st.stats || {}).every(([k, v]) => !v || k === 'autoPantry')                                                               // 판매 · 찻잔 · 주문 · 선물 · 광산
+    && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).every(x => (k === 'letter' && x === 'welcome') || (k === 'mine' && PANTRY_ITEMS[x])))
+    && st.water >= 10 && st.water <= 10 + got && st.shears === 5 && st.hoe === 10 && st.basket === 10 && (st.shovel == null || st.shovel === 10) && !(st.fert > got)
     && sh.seats === 1 && (sh.cups || []).length <= 1 && (sh.signs || []).length <= 1;
 }
 // "어느 정원을 쓸까요?"(다른 정원) 전에: 한쪽이 거의 새 정원이면 묻지 않음. 이 기기가 새 정원이면(둘 다 새것이어도) 드라이브 것, 드라이브만 새것이면 이 기기 것, 아니면 null(묻기)
@@ -336,6 +337,11 @@ const MIGRATIONS = [
     if (paid <= 0) return;
     s.money = (+s.money || 0) + paid; st0.autoPaid = 0; st0.autoRefund = (st0.autoRefund || 0) + paid;
     addLog(s, 18, slowView(s) ? '⛏️ 자동 캐기에 쓴 돈을 돌려드렸어요' : `⛏️ 자동 캐기에 쓴 ${paid.toLocaleString('ko-KR')}원을 돌려드렸어요`);
+  }],
+  ['🧺 저장고 자동 (P90, 11-06): 쌓여 있던 것은 잃지 않게 한 번에 넣어 줌 (거두기가 없어짐)', s => {
+    const p = s.pantry; if (!p || !Array.isArray(p.items)) return;
+    for (const it of p.items) pantryGive(s, it);
+    p.items = [];
   }],
 ];
 const P41_LETTER = 'p41-money', POLLEN_WON = 5000;   // P41-05 📮 안내 편지 이름표 · 꽃가루 1알 = 5,000원

@@ -36,7 +36,7 @@ console.log('[🐞 데려오기 · 둘레 2칸 꽃의 잡초 (P39-08-01 · P61-0
   check(st.stats.autoWeed === 2, '한 일 2포기 (stats.autoWeed)');
   const line = st.log.find(l => l.text === '무당벌레가 꽃 2포기의 잡초를 치웠어요');
   check(line && line.type === 20 && E.isAutoLine(line.text), '일지 한 줄 (type 20 🐝) · 자동 줄로 묶임');
-  check(E.autoAwayLines(st, before).join() === '무당벌레가 꽃 2포기의 잡초를 치웠어요', '자리를 비운 동안 한 줄');
+  check(E.autoAwayLines(st, before).filter(l => !l.startsWith('그동안 받은 것')).join() === '무당벌레가 꽃 2포기의 잡초를 치웠어요', '자리를 비운 동안 한 줄');
   st.bonus.weed = 1; far.weedH = 0;
   monthEnd(st);
   check(far.weedH > 23 && E.insectR(st, 'ladybug') === 4, '🌼 기르면 둘레 4칸');

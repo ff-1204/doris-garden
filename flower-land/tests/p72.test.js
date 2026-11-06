@@ -63,7 +63,7 @@ console.log('[P72-01 🌱 자라는 속도 · 변이 꽃 · 한해살이 · 화�
 console.log('[P72-01 예전 저장 — MIGRATIONS 55번째]');
 { const st = garden(c => c.month === 6 && !c.frozen), cal = E.calendar(st.virtual);
   const N = E.MIGRATIONS.findIndex(x => x[0].includes('P72-01'));
-  check(N === 54 && N === E.MIGRATIONS.length - 5, 'MIGRATIONS 55번째 · 맨 끝');
+  check(N === 54 && N === E.MIGRATIONS.length - 6, 'MIGRATIONS 55번째 · 맨 끝');
   const old = copy(st); old.mig = N;
   old.flowers = [
     { id: 1, type: 'rose', x: 1, y: 1, stage: 'bloom', ageH: 999, harvestKey: -1, bloomKey: cal.abs, leadH: 3, leadEnd: 99 },

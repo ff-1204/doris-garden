@@ -102,10 +102,10 @@ function renderShop(force) {
         <span class="dk-buy"><span class="sc-price">${won(D.price)}</span>${D.one && own ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn primary" data-decobuy="${k}" ${short ? 'disabled' : ''}>${short ? '돈이 모자라요' : '사기'}</button>`}</span></div>`; }).join('')}</div>` : '';
   // P28-05-01 🌱 등급 장식 (M1-4, 10-28): 정원 등급이 닿으면 달과 상관없이 늘 팖 · 안 열린 것은 잠가 둠 (느긋하게 보기여도 그대로 — 꾸미기는 쉬는 즐거움)
   const gNow = E.gradeOf(st).grade;
-  // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 정원 저장고 +3칸 (장식이 아니라 정원 등급이 주는 것 · 🌼 꽃가루는 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
+  // 10-30 사용자 요청: 등급 장식 카드마다 "그 등급이 되면" 🧺 자리를 비운 동안 받는 양 +3개 (장식이 아니라 정원 등급이 주는 것 · 🌼 꽃가루는 등급마다라 여기엔 안 적음). 느긋하게 보기면 숫자 없이
   const gSlow = E.slowView(st);
   const gradeGift = (g, k) => { const cap = E.PANTRY_CAPS.find(c => c[0] === g), n = E.orderMax(st) + (E.placedOf(st, k).length ? 0 : 1);   // 이 장식을 놓았을 때의 최대 쪽지 수
-    const pantry = cap ? `🧺 정원 저장고 ${gSlow ? '칸이 늘어요' : `+${E.PANTRY_PER_DECO}칸 (${cap[1]}칸)`} · ` : '';
+    const pantry = cap ? `🧺 자리를 비운 동안 받는 양이 늘어요${gSlow ? '' : ` (+${E.PANTRY_PER_DECO}개 · ${cap[1]}개까지)`} · ` : '';
     return `<small class="dk-grade">${pantry}💌 ${gSlow ? '최대 주문 쪽지가 늘어요' : `최대 주문 쪽지 +1장 (${n}장)`}</small>`; };   // 10-31 사용자: "최대 주문 쪽지 +1장 (N장)"   // P33-04 (10-30): 놓은 등급 장식 가짓수만큼 주문 쪽지 +1 — 저장고 줄 뒤에 붙임 (사용자 요청)   // 10-30 "🌱 n등급이 되면" 머리말은 뺌 (사용자 요청)
   const gradeSection = `<div class="cab-head"><span class="sb-title">🌱 등급 장식</span><span class="muted">정원 등급이 오르면 하나씩 들어와요</span></div>
     <div class="decoshop">${E.GRADE_DECO_KEYS.map(k => { const D = E.DECOS[k], open = D.grade <= gNow, own = (st.decos || []).filter(d => d.key === k).length, short = st.money < D.price;

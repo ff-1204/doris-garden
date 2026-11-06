@@ -94,9 +94,7 @@ console.log('[🐝 곤충 — 🐜 거둔 꽃잎 · 꿀 · 저장고]');
   check(n === 2 * E.antCount(ctx.rng) && by(s, 'bug') === n * E.XP.harvest && by(s, 'harvest') === h0, `P77-C 꽃잎 수: 🐜 장미 2포기 × 3장 · 거둔 꽃잎은 꽃잎 한 장 2 그대로 · 묶음만 곤충 (${n}장)`);
   const hive = { id: s.nextId++, key: 'hive', x: 6, y: 6, honey: ['rose', 'rose', 'lavender'] }; s.decos.push(hive);
   check(E.takeHoney(s, hive.id, ctx).ok && by(s, 'honey') === 3, '꿀 한 병마다 +1');
-  const p = E.pantryOf(s); p.items = [{ k: 'water' }, { k: 'fert' }, { k: 'dirt' }];
-  check(E.takePantry(s, ctx).ok && by(s, 'pantry') === 1, '🧺 저장고 거두기 한 번 +1 (칸 수와 상관없이)');
-  check(!E.takePantry(s, ctx).ok && by(s, 'pantry') === 1, '빈 저장고는 없음');
+  { const b0 = by(s, 'pantry'); s.onboarded = true; E.pantryOf(s).h = 0; E.advance(s, s.virtual + 6.2 * E.HOUR, ctx); check(by(s, 'pantry') === b0 + 1, '🧺 작은 것을 받은 진행 한 번에 +1 (받은 수와 상관없이, P90)'); }
   const t = fresh(), f = bloom(t, 'rose', 2, 2, { waterH: 0 }); t.decos.push({ id: t.nextId++, key: 'barrel', x: 2, y: 3 }); const x0 = t.grade.xp;
   f.waterH = 0; for (const [x, y] of [[1, 2], [3, 2], [1, 3], [3, 3], [1, 4], [2, 4], [3, 4]]) bloom(t, 'rose', x, y, { waterH: 0 });   // 🐌 둘레 8칸 모두 목마른 꽃 (8 × 0.2 = 1.6)
   E.insectTick(t, E.calendar(t.virtual), ctx);
@@ -154,7 +152,7 @@ console.log('[시뮬 (sim-economy 4 7) — 부지런한 정원사 20~30% 빨리]
 { const out = require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7'], { encoding: 'utf8' });
   const line = (/등급 닿은 때\(해\): ([^\n]*)/.exec(out) || [])[1] || '', reach = Object.fromEntries(line.split(' · ').map(x => x.split(' ').map(Number)));
   const r25 = reach[25] / 3.65;   // P54 전 25등급 3.65해 · 26등급 3.86해(4년 끝)
-  check(Math.abs(reach[25] - 1.12) < 0.05, `P77-C 꽃잎 수: 25등급에 닿는 때 ${reach[25]}해 (P54 전 3.65해의 ${Math.round(r25 * 100)}% — 손 수확이 한 번에 1 ~ petals장이라 거두기 경험치가 늘어 1.12해) (P72-01 1.38해 · P54 2.65해)`);
+  check(Math.abs(reach[25] - 1.19) < 0.05, `P77-C 꽃잎 수: 25등급에 닿는 때 ${reach[25]}해 (P54 전 3.65해의 ${Math.round(r25 * 100)}% — 손 수확이 한 번에 1 ~ petals장이라 거두기 경험치가 늘어 1.12해 · P90 작은 것이 핀 꽃을 대신 거둬 1.19해) (P72-01 1.38해 · P54 2.65해)`);
   const y4 = out.split('주마다 정원 등급')[1].split('\n').find(l => l.startsWith('4\t')).split('\t');
   check(+y4[1] > 26, `4년 끝 등급 ${y4[1]} (P54 전 26)`); }
 
