@@ -705,6 +705,9 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .cc-meta b { color: var(--ink); white-space: nowrap; }
 .cc-taste { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }   /* P79-02 맛 한 줄 */
 .cc-taste b { color: var(--ink); font-weight: 600; margin-right: var(--sp-1); }
+.cc-need, .bl-need { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }   /* P82-02 티백 1개에 드는 꽃잎 수 */
+.bl-need { font-size: var(--fs-sm); }
+.bc-qty { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-3) var(--sp-4); margin-top: var(--sp-4); }   /* P82-01 몇 잔 만들까요 */
 .bl-out .bl-taste, .bl-rec .bl-taste { color: var(--muted); word-break: keep-all; }
 .cc-price { display: flex; align-items: baseline; gap: var(--sp-3); }
 .cc-price b { font-size: var(--fs-xl); }
@@ -969,20 +972,21 @@ img.px { image-rendering: pixelated; }
 /* P59 🪑 찻집 가꾸기를 찻집 화면에 (11-02): 간판 아래 작은 카페 — 크림빛 벽 · 고르기 줄은 가로로 밀어 봄
    P60 ☕ 카페 손님 · 주문 쪽지 (11-02): 세 칸(minmax(0, 1fr)) — 큰 손님 도트 / 화면 폭을 가로지르는 긴 나무 카운터 / 손님 폭만 한 쪽지. 🪧 간판은 접어 둠(details)
    P60 덧붙임 (11-02 사용자 "그림처럼 큼직큼직하게"): 크기는 카페 장면 폭(container query)에 따라 정수배 — --gs 손님(16px ×4 ~ ×12) · --cs 앞 찻잔 · --ss 쪽지 차 그림 · --sf 쪽지 글씨 */
-.cafe { display: grid; gap: var(--sp-4); padding: var(--sp-5) var(--sp-6) var(--sp-6); border-radius: var(--r-xl); background: color-mix(in srgb, #e9c99a 18%, var(--panel)); border: 1px solid color-mix(in srgb, #b07a4a 35%, var(--line)); }
+.cafe { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-xl); background: color-mix(in srgb, #e9c99a 18%, var(--panel)); border: 1px solid color-mix(in srgb, #b07a4a 35%, var(--line)); }
 .cafe > * { min-width: 0; }
-.cafe-scene { container-type: inline-size; position: relative; display: grid; gap: var(--sp-4); padding: var(--sp-8) var(--sp-3) var(--sp-5); border-radius: var(--r-lg); border: 1px solid color-mix(in srgb, #9b6a3e 30%, var(--line)); overflow: hidden;
+.cafe-scene { container-type: inline-size; position: relative; display: grid; gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-lg); border: 1px solid color-mix(in srgb, #9b6a3e 30%, var(--line)); overflow: hidden;
   background: repeating-linear-gradient(90deg, transparent 0 22px, color-mix(in srgb, #9b6a3e 12%, transparent) 22px 24px),
     linear-gradient(180deg, color-mix(in srgb, #f6e2bf 50%, var(--panel)), color-mix(in srgb, #e9cfa4 45%, var(--panel))); }
 .cafe-scene > * { min-width: 0; }
-.cf-seats { --gs: 4; --cs: 1; --ss: 2; --sf: var(--fs-sm); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; margin: 0 calc(-1 * var(--sp-3));
+/* P82-03 주문칸 크기 ½ (11-06 사용자): --gs 4 ~ 12 → 2 ~ 6 · 도트는 16px 정수배 그대로, 쪽지 글씨는 375px에서 예전 크기를 지킴 */
+.cf-seats { --gs: 2; --cs: 1; --ss: 1; --sf: var(--fs-sm); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; margin: 0 calc(-1 * var(--sp-3));
   --ct: calc(16px * var(--gs)); --cb: calc(18px * var(--gs) + 6px);
   background: linear-gradient(180deg, transparent 0 var(--ct), #a87448 var(--ct) calc(var(--ct) + 1px * var(--gs)), #8a5a34 calc(var(--ct) + 1px * var(--gs)) var(--cb), #5e3d22 var(--cb) calc(var(--cb) + 3px), transparent calc(var(--cb) + 3px)); }
-@container (min-width: 270px) { .cf-seats { --gs: 5; --cs: 2; } }
-@container (min-width: 300px) { .cf-seats { --gs: 6; --sf: var(--fs-md); } }
-@container (min-width: 480px) { .cf-seats { --gs: 8; --cs: 3; --ss: 3; --sf: var(--fs-lg); } }
-@container (min-width: 700px) { .cf-seats { --gs: 10; --sf: var(--fs-xl); } }
-@container (min-width: 960px) { .cf-seats { --gs: 12; --cs: 4; --ss: 4; --sf: var(--fs-2xl); } }
+@container (min-width: 270px) { .cf-seats { --gs: 3; } }
+@container (min-width: 300px) { .cf-seats { --sf: var(--fs-md); } }
+@container (min-width: 480px) { .cf-seats { --gs: 4; --cs: 2; } }
+@container (min-width: 700px) { .cf-seats { --gs: 5; --sf: var(--fs-base); } }
+@container (min-width: 960px) { .cf-seats { --gs: 6; --ss: 2; --sf: var(--fs-lg); } }
 .cf-seat { display: grid; grid-template-rows: calc(16px * var(--gs)) calc(2px * var(--gs) + 6px) auto; justify-items: stretch; min-width: 0; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; line-height: 1.2; text-align: center; }
 .cf-guest { position: relative; display: grid; place-items: end center; min-width: 0; }
 .cf-guest > img.px:first-child { width: calc(16px * var(--gs)); height: calc(16px * var(--gs)); image-rendering: pixelated; }
@@ -999,17 +1003,18 @@ img.px { image-rendering: pixelated; }
 .cf-seat.add:hover:not(:disabled) .cf-guest { border-style: solid; }
 .cf-seat.add:disabled { cursor: default; }
 .cf-seat.rest .cf-guest { opacity: .55; }
-/* 주문 쪽지: 카운터 앞에 붙은 종이 (P23 쪽지 색) — 폭은 손님 폭쯤 */
-.cf-slip { position: relative; justify-self: center; display: grid; justify-items: center; gap: var(--sp-2); width: min(calc(100% - 2 * var(--sp-4)), calc(16px * var(--gs) + 24px)); min-width: 0; margin-top: calc(-1 * var(--sp-1)); padding: var(--sp-4) var(--sp-3) var(--sp-5); background: #fbf6e9; color: #4a3a28; border: 1px dashed #c9b48a; border-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); font-size: var(--fs-sm); word-break: keep-all; overflow-wrap: anywhere; box-shadow: 0 3px 0 rgba(0, 0, 0, .06); }
-.cf-slip .cf-sh { font-size: var(--fs-sm); color: #a0603a; font-weight: 600; }
+/* 주문 쪽지: 카운터 앞에 붙은 종이 (P23 쪽지 색) — 손님이 작아져도(P82-03) 글이 들어가게 폭은 손님 폭 + 여유 · 표시 · 그림 · 글은 한 흐름 */
+.cf-slip { position: relative; justify-self: center; display: block; width: min(calc(100% - var(--sp-3)), calc(16px * var(--gs) + 96px)); min-width: 0; margin-top: calc(-1 * var(--sp-1)); padding: var(--sp-2) var(--sp-2) var(--sp-3); background: #fbf6e9; color: #4a3a28; border: 1px dashed #c9b48a; border-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); font-size: var(--fs-sm); word-break: keep-all; overflow-wrap: anywhere; box-shadow: 0 3px 0 rgba(0, 0, 0, .06); }
+.cf-slip .cf-sh { margin-right: var(--sp-1); font-size: var(--fs-sm); color: #a0603a; font-weight: 600; }
+.cf-slip .cf-sh:empty { display: none; }
 .cf-slip b { font-weight: 600; font-size: var(--sf); line-height: 1.3; }
-.cf-slip img.px { width: calc(16px * var(--ss)); height: calc(16px * var(--ss)); image-rendering: pixelated; }
+.cf-slip img.px { display: inline-block; margin-right: var(--sp-1); vertical-align: middle; width: calc(16px * var(--ss)); height: calc(16px * var(--ss)); image-rendering: pixelated; }
 .cf-slip.done { opacity: .6; }
 .cf-slip.done b { text-decoration: line-through; }
 .cf-slip.done .cf-sh { color: #4f8a50; }
 .cf-slip.idle { background: color-mix(in srgb, #fbf6e9 60%, transparent); border-style: dotted; }
 .cf-slip.idle b { font-weight: 400; color: #7a6a52; }
-.cf-more { position: absolute; top: -6px; right: -6px; padding: 0 var(--sp-2); border-radius: var(--r-pill); background: #c0566a; color: #fff; font-size: var(--fs-xs); font-weight: 700; line-height: 1.5; }
+.cf-more { position: absolute; bottom: calc(-1 * var(--sp-2)); right: 0; padding: 0 var(--sp-2); border-radius: var(--r-pill); background: #c0566a; color: #fff; font-size: var(--fs-xs); font-weight: 700; line-height: 1.5; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cf-slip { background: #3a3326; color: #f0e4c8; border-color: #6e5e3e; } :root:not([data-theme="light"]) .cf-slip .cf-sh { color: #e6a87a; } :root:not([data-theme="light"]) .cf-slip.idle { background: #2f2a22; } :root:not([data-theme="light"]) .cf-slip.idle b { color: #c8b898; } :root:not([data-theme="light"]) .cf-slip.done .cf-sh { color: #8fc48f; } }
 :root[data-theme="dark"] .cf-slip { background: #3a3326; color: #f0e4c8; border-color: #6e5e3e; }
 :root[data-theme="dark"] .cf-slip .cf-sh { color: #e6a87a; }

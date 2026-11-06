@@ -21,7 +21,7 @@ function openTeaConfirm(ids, mode, counts) {
     <div class="rc-list">${groups.map(g => { const F = FLOWERS[g.type], fr = fresh(g), k = key(g), n = counts[k], hat = E.isHat(g.q); return `<div class="rc-item tc-item ${n ? '' : 'off'}" style="--pc:${SPR.tea[g.type] || F.petal}">
       <span class="rc-art tc-pair">${spriteImg(g.type, dried ? 'dried' : 'petal', 26, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'teabag', 34, false, `${F.name} ${what}`)}</span>
       <span class="rc-main"><b>${F.name} ${raw ? '생화 티백' : '티백'}${hat ? ' <span class="chip hat-chip">🍃 햇차</span>' : ''}${fr ? ' <span class="chip fresh-chip">✨ 제철</span>' : ''}</b>
-        <small><span class="stars">${starStr(g.q)}</span> · ${dried ? '말린 ' : ''}${F.name} 꽃잎 ${g.ids.length}장 중 · 하나에 ${per(g)}장${maxOf(g) ? '' : ` · ${per(g) - g.ids.length}장 더 모아요`}</small></span>
+        <small><span class="stars">${starStr(g.q)}</span> · ${dried ? '말린 ' : ''}${F.name} 꽃잎 ${g.ids.length}장 중 · 티백 1개 = 꽃잎 ${per(g)}장${maxOf(g) ? '' : ` · <b class="val-down">${per(g) - g.ids.length}장 더 모아요</b>`}</small></span>
       <span class="stepper"><button type="button" data-tq="${k}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-tq="${k}|+" ${n >= maxOf(g) ? 'disabled' : ''} aria-label="늘리기">+</button></span>
       </div>`; }).join('')}</div>
     <div class="rc-notes">${raw ? '<span>🌸 말리지 않고 바로 티백으로 · <b class="val-down">값 −10%</b></span><span>🏷️ 티백이 되는 순간 지금 품질 그대로 멈춰요 · 생화로 두면 <b class="val-down">12시간에 20%씩 줄어요</b></span>' : `<span>🏷️ 티백이 되면 지금 품질 그대로 멈춰요</span><span>🍵 티백은 찻집으로 가서 한 잔씩 우려 팔아요</span>`}<span>🍃 ★5 꽃잎은 햇차가 돼요 · <b class="val-up">값 +10%</b></span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 ${dried ? '꽃방' : '제다실'}에 있어요 · 좋은 꽃잎부터 써요</span>` : ''}</div></div>`;
@@ -155,26 +155,34 @@ function openBrewConfirm(teaIds, blendIds, counts, cup, honeyKs) {   // honeyKs:
   });
 }
 // 블렌딩 확인 창 (P12-08): 재료 말린 꽃잎 → 블렌드 찻잔, 이름 · ★ · 값, 처음 만드는 이름 있는 블렌드면 도감 안내
-function openBlendConfirm() {
+// P82-01 만들 잔 수 n: −/+ · 최대, 가진 꽃잎으로 만들 수 있는 만큼까지 · 쓰이는 꽃잎 수가 바로 바뀜
+function openBlendConfirm(n = 1) {
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)).filter(Boolean);
   if (sel.length < 2) return;
   const lack = sel.filter(p => st.dried.filter(x => x.type === p.type).length < FLOWERS[p.type].petals);   // P77-C 꽃마다 티백 하나 몫(petals장)
   if (lack.length) return feedback(`블렌드엔 꽃마다 티백 하나 몫이 들어가요 · ${lack.map(p => `${FLOWERS[p.type].name} ${FLOWERS[p.type].petals - st.dried.filter(x => x.type === p.type).length}장`).join(' · ')} 더 모아요`, true);
   if (!E.blendRecipe(sel.map(p => p.type), st)) return feedback(`정해진 블렌드만 만들 수 있어요 · ${E.blendNearText(sel.map(p => p.type), st)}`, true);   // P79-05
-  const used = sel.reduce((a, p) => a + FLOWERS[p.type].petals, 0);
-  const parts = sel.map(p => p.type), recipe = E.blendRecipe(parts, st), q = sel.reduce((a, p) => a + p.q, 0) / sel.length;
-  const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`, val = E.blendValue({ parts, q, recipe });
-  const sep = sel.reduce((a, p) => a + E.teaValue(FLOWERS[p.type], p.q, false), 0);
+  const parts = sel.map(p => p.type), recipe = E.blendRecipe(parts, st), max = E.blendMax(st, parts);
+  n = Math.max(1, Math.min(max, n));
+  const plan = E.blendPlan(st, parts, n), used = plan.reduce((a, c) => a + c.list.length, 0), q = plan.reduce((a, c) => a + c.q, 0) / n;
+  const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
   const body = `<div class="rc">
     <div class="bc-hero" style="--pc:${SPR.tea[parts[0]] || FLOWERS[parts[0]].petal}">
-      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 36, false, '')}<small>${FLOWERS[p.type].name} ${FLOWERS[p.type].petals}장</small></span>`).join('<b class="bc-plus">+</b>')}</div>
+      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 36, false, '')}<small>${FLOWERS[p.type].name} ${FLOWERS[p.type].petals * n}장</small><small class="muted">${st.dried.filter(x => x.type === p.type).length}장 중</small></span>`).join('<b class="bc-plus">+</b>')}</div>
       <span class="bc-arrow">↓</span>
       <div class="bc-out">${spriteImg(parts[0], 'tea', 56, false, name)}<div><b>${recipe ? '✨ ' : ''}${name}</b><span class="stars">${starStr(q)}</span></div></div></div>
-    <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 남아요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.blendKeys(st).length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${used}장이 들어가요(꽃마다 티백 하나 몫) · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
+    <div class="bc-qty"><b>몇 잔 만들까요?</b><span class="stepper"><button type="button" data-bn="-" ${n <= 1 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-bn="+" ${n >= max ? 'disabled' : ''} aria-label="늘리기">+</button></span><button type="button" class="btn small" data-bn="max" ${n >= max ? 'disabled' : ''}>최대 ${max}잔</button></div>
+    <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 남아요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.blendKeys(st).length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${used}장이 들어가요(한 잔에 꽃마다 티백 하나 몫) · 좋은 꽃잎부터 써요 · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
   openModal('🫖 블렌딩', body, [
     { label: '취소', act: () => closeModal() },
-    { label: `🫖 블렌딩 · 꽃잎 ${used}장`, primary: true, act: () => { closeModal(); const r = E.blend(st, ui.blendSel, ctx); if (r.ok) ui.blendSel = []; after(r, 'blended'); } },
+    { label: `🫖 블렌딩 · ${n}잔 (꽃잎 ${used}장)`, primary: true, act: () => { closeModal(); const r = E.blend(st, ui.blendSel, ctx, n); if (r.ok) ui.blendSel = []; after(r, 'blended'); } },
   ]);
+  $('#modalRoot').querySelectorAll('[data-bn]').forEach(b => b.onclick = () => openBlendConfirm(b.dataset.bn === 'max' ? max : n + (b.dataset.bn === '+' ? 1 : -1)));
+}
+// P82-02 티백 하나에 드는 꽃잎 수 한 줄 (카드 · 고르는 화면) — 모자라면 몇 장 더
+function bagNeedHTML(type, have) {
+  const { per, short } = E.bagNeed(type, have);
+  return `<div class="cc-need">티백 1개 = 꽃잎 ${per}장${short ? ` · <b class="val-down">${short}장 더 모아요</b>` : ''}</div>`;
 }
 function groupBy(list, keyFn) {
   const m = new Map();
@@ -208,6 +216,7 @@ function renderCab(force) {
   const petalCards = petals.map(p => { const F = FLOWERS[p.type]; return `<div class="shopcard cabcard" style="--pc:${F.petal}">
       <div class="sc-art">${spriteImg(p.type, 'petal', 52, false, F.name)}<span class="sc-count">×${p.ids.length}</span>${p.qMin <= 0.2 ? '<span class="sc-last" title="다음 6시엔 비료가 돼요">곧 시들어요</span>' : ''}</div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(p.q)}</span></div>
+      ${bagNeedHTML(p.type, p.ids.length)}
       <div class="cc-acts"><button type="button" class="btn primary" data-dry="${p.ids.join(',')}">🌾 말리기</button><button type="button" class="btn" data-raw="${p.ids.join(',')}">🏷️ 티백</button></div></div>`; }).join('');
   // 🌾 꽃방 (P12-07): 말리는 중 · 말린 꽃잎
   // 🌾 꽃방 꽃잎별 탭: 전체 · 라벤더 3 · 장미 2 … (말리는 중 + 말린 꽃잎 수)
@@ -236,12 +245,17 @@ function renderCab(force) {
     return `<div class="shopcard cabcard driedcard ${selN ? 'picked' : ''}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">
       <div class="sc-art">${spriteImg(d.type, 'dried', 52, false, F.name)}<span class="chip sc-form">말린 꽃잎</span><span class="sc-count">×${d.ids.length}</span></div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starRange(d)}</span></div>
+      ${bagNeedHTML(d.type, d.ids.length)}
       <div class="cc-acts"><button type="button" class="btn primary" data-bsel="${d.type}" ${canSel ? '' : 'disabled'}>${selN ? '✓ 블렌딩' : '🫖 블렌딩'}</button><button type="button" class="btn" data-makedried="${d.ids.join(',')}">🏷️ 티백</button></div></div>`;
   }).join('');
   // 🫖 블렌딩 (P12-08): 언제든 (10-06)
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)), parts = sel.map(p => p.type);
   const recipe = parts.length >= 2 ? E.blendRecipe(parts, st) : null, avg = sel.length ? sel.reduce((a, p) => a + p.q, 0) / sel.length : 0;
   const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg, recipe }) : 0;
+  // P82-02 고른 재료마다 한 잔에 드는 장 수 · 모자라면 몇 장 더 · 넉넉하면 지금 최대 몇 잔
+  const haveOf = t => st.dried.filter(p => p.type === t).length, blendMaxN = parts.length ? E.blendMax(st, parts) : 0;
+  const lackText = parts.filter(t => E.bagNeed(t, haveOf(t)).short).map(t => `${FLOWERS[t].name} ${E.bagNeed(t, haveOf(t)).short}장`).join(' · ');
+  const needHTML = parts.length ? `<div class="bl-need">🫖 한 잔에 ${parts.map(t => `${FLOWERS[t].name} ${FLOWERS[t].petals}장`).join(' · ')}${lackText ? ` · <b class="val-down">${lackText} 더 모아요</b>` : parts.length >= 2 && recipe ? ` · <b class="val-up">지금 최대 ${blendMaxN}잔</b>` : ''}</div>` : '';
   // 한 줄: 재료 칸 세 개 → 결과 → 블렌딩하기. 레시피는 접어 둠
   const gotN = E.blendKeys(st).filter(k => st.dex.blend[k] != null).length;
   // 레시피: 말린 꽃잎이 다 있는 것은 "지금 만들 수 있어요"로 맨 앞, 누르면 재료 칸에 담김 (10-06)
@@ -257,7 +271,8 @@ function renderCab(force) {
         <span class="bl-arrow" aria-hidden="true">→</span>
         <div class="bl-out">${parts.length >= 2 && !recipe ? `<b class="val-down">정해진 블렌드가 아니에요</b><small class="bl-taste">${E.blendNearText(parts, st)}</small>` : parts.length >= 2 ? `<b>✨ ${E.BLENDS[recipe].name}</b><span><span class="stars">${starStr(avg)}</span></span><small class="bl-taste"><b>맛</b> ${E.teaTaste('blend', recipe, parts)}</small>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
       </div>
-      <button type="button" class="btn primary bl-go" data-blend="1" ${parts.length >= 2 && recipe ? '' : 'disabled'}>블렌딩</button>   <!-- 칸 바로 아래 · 레시피 위 (11-01 사용자 요청 — 넓은 화면에서 오른쪽 끝에 멀리 있던 것) -->
+      ${needHTML}
+      <button type="button" class="btn primary bl-go" data-blend="1" ${parts.length >= 2 && recipe && blendMaxN >= 1 ? '' : 'disabled'}>블렌딩</button>   <!-- 칸 바로 아래 · 레시피 위 (11-01 사용자 요청 — 넓은 화면에서 오른쪽 끝에 멀리 있던 것) -->
       ${bookHTML}
     </div>` : '';
   // 🏷️ 티백 (찻집): 생화 티백 · 티백 · 블렌드 티백 → 🫖 우림
@@ -268,17 +283,17 @@ function renderCab(force) {
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('tea', t.type)}</div>   <!-- P79-02 맛 한 줄 -->
       ${t.hat || t.fresh ? `<div class="cc-meta">${teaTags({ ...t, raw: false })}</div>` : ''}
       <button type="button" class="btn primary" data-brew="${t.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`; }).join('')
-    + bagged.map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
-      <div class="sc-art"><span class="sc-pair">${spriteImg(b.parts[0], 'teabag', 52, false, `${b.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(b.parts[0], 'tea', 30, false, b.name)}</span></span><span class="chip sc-form blend">🫖 블렌드 티백</span></div>
-      <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starStr(b.q)}</span></div>
+    + groupType(bagged, b => b.name).map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
+      <div class="sc-art"><span class="sc-pair">${spriteImg(b.parts[0], 'teabag', 52, false, `${b.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(b.parts[0], 'tea', 30, false, b.name)}</span></span><span class="chip sc-form blend">🫖 블렌드 티백</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
+      <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starRange(b)}</span></div>
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
-      <button type="button" class="btn primary" data-brewblend="${b.id}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`).join('');
+      <button type="button" class="btn primary" data-brewblend="${b.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`).join('');   // P82-01 여러 잔을 한 번에 만들면 같은 블렌드는 한 장 (×개수)
   // 🫖 블렌드 (제다실): 아직 티백이 아닌 블렌드 → 🏷️ 티백
-  const looseCards = loose.map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
-      <div class="sc-art"><span class="blend-art n${b.parts.length}">${b.parts.map(p => spriteImg(p, 'dried', 40, false, FLOWERS[p].name)).join('')}</span><span class="chip sc-form blend">🫖 블렌드</span></div>
-      <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starStr(b.q)}</span></div>
+  const looseCards = groupType(loose, b => b.name).map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
+      <div class="sc-art"><span class="blend-art n${b.parts.length}">${b.parts.map(p => spriteImg(p, 'dried', 40, false, FLOWERS[p].name)).join('')}</span><span class="chip sc-form blend">🫖 블렌드</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
+      <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starRange(b)}</span></div>
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
-      <button type="button" class="btn primary" data-bagblend="${b.id}">🏷️ 티백</button></div>`).join('');
+      <button type="button" class="btn primary" data-bagblend="${b.ids.join(',')}">🏷️ 티백</button></div>`).join('');
   // ☕ 찻잔 (P17-10): 우린 차. 같은 꽃·꼬리표·식음이 같으면 한 장
   const cupKey = c => [c.kind, c.kind === 'blend' ? c.name : c.type, c.kind === 'tea' && E.isFresh(st, c, cal), !!c.hat, !!c.raw, E.cupCold(c, cal), c.honey || '', E.cupSteeping(st, c)].join('|');
   const honeyLeft = Object.values(st.honey || {}).reduce((a, n) => a + n, 0);
@@ -364,7 +379,8 @@ function cafeHTML() {
   const os = (!slow && st.orders && st.orders.list) || [];   // 🐢 느긋하게 보기면 쪽지를 숨김 — 맞는 찻잔이 팔리면 기념품은 그대로 (P28-02)
   const list = [...os.filter(o => !o.done), ...os.filter(o => o.done)], extra = open ? list.slice(sh.seats) : list;   // 남은 주문부터 손님 앞에 · 닫힌 날엔 쪽지를 모두 아래 줄에
   const off = ((st.orders && st.orders.abs) || 0) % GUEST_KEYS.length;   // 달마다 다른 손님
-  const slip = (o, more) => o ? `<span class="cf-slip ${o.done ? 'done' : ''}"><span class="cf-sh">${o.done ? '✓ 들어줬어요' : '💌 주문'}</span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b>${more ? `<span class="cf-more" title="쪽지 ${more}장 더 — 카운터 아래에 있어요">+${more}</span>` : ''}</span>`
+  // P82-03 쪽지는 한 덩이로 흐름: 표시(✓ · 💌) · 차 그림 · 주문 글이 한 줄에서 이어져 높이를 줄임
+  const slip = (o, more) => o ? `<span class="cf-slip ${o.done ? 'done' : ''}"><span class="cf-sh" title="${o.done ? '들어줬어요' : '주문'}">${o.done ? '✓' : o.kind === 'tea' ? '' : '💌'}</span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b>${more ? `<span class="cf-more" title="쪽지 ${more}장 더 — 카운터 아래에 있어요">+${more}</span>` : ''}</span>`
     : '<span class="cf-slip idle"><b>☕ 아무 차나</b></span>';
   const seats = [1, 2, 3].map(n => {
     if (n <= sh.seats) {
@@ -434,9 +450,9 @@ function cabClick(e) {
   }
   if (b.dataset.bunsel) { ui.blendSel = ui.blendSel.filter(id => id !== +b.dataset.bunsel); return renderCab(true); }
   if (b.dataset.blend) return openBlendConfirm();
-  if (b.dataset.bagblend) return openBagBlend(b.dataset.bagblend === 'all' ? st.blends.filter(x => !x.bagged).map(x => x.id) : [+b.dataset.bagblend]);
+  if (b.dataset.bagblend) return openBagBlend(b.dataset.bagblend === 'all' ? st.blends.filter(x => !x.bagged).map(x => x.id) : b.dataset.bagblend.split(',').map(Number));
   if (b.dataset.brew) return b.dataset.brew === 'all' ? openBrewConfirm(st.teas.map(t => t.id), st.blends.filter(x => x.bagged).map(x => x.id)) : openBrewConfirm(b.dataset.brew.split(',').map(Number), []);
-  if (b.dataset.brewblend) return openBrewConfirm([], [+b.dataset.brewblend]);
+  if (b.dataset.brewblend) return openBrewConfirm([], b.dataset.brewblend.split(',').map(Number));
   if (b.dataset.brewhoney) return openBrewConfirm([], [], null, null, [b.dataset.brewhoney]);   // P65-02 🍵 꿀차
   if (b.dataset.sellcup) return openSellConfirm(b.dataset.sellcup === 'all' ? E.readyCups(st).map(c => c.id) : b.dataset.sellcup.split(',').map(Number));
 }
