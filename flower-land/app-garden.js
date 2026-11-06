@@ -33,8 +33,9 @@ const CARE_COLOR = { water: '#3d8fd6', weed: '#4f9a3a', prune: '#d4466e', fert: 
 const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${a})`;
 const NEEDS = [['water', '💧', '목마른 꽃'], ['weed', '🌿', '잡초 난 꽃'], ['prune', '✂️', '가지 칠 수 있는 꽃'], ['fert', '🌱', '비료 줄 수 있는 꽃'], ['harvest', '🧺', '꽃이 핀 꽃']];
 // P28-11 한꺼번에 돌보기 (M2-5): 두 포기부터 (한 포기는 꽃 둘레 단추로). 느긋하게 보기여도 둠 — 숫자도 위 칩과 같은 돌볼 꽃 수라 그대로
-const CARE_ALL = [['water', '💧 모두 물 주기'], ['harvest', '🧺 모두 거두기']];
-const careAllBtns = (need, cls) => CARE_ALL.filter(([k]) => need[k] >= 2).map(([k, nm]) => `<button type="button" class="${cls}" style="--k:${CARE_COLOR[k]}" data-all="${k}">${nm} <b>(${need[k]})</b></button>`).join('');
+const UI_CARE = { water: 'water', weed: 'weed', prune: 'prune', fert: 'fert', harvest: 'basket' };   // P89-03 돌봄 도트 아이콘
+const CARE_ALL = [['water', '모두 물 주기'], ['harvest', '모두 거두기']];
+const careAllBtns = (need, cls) => CARE_ALL.filter(([k]) => need[k] >= 2).map(([k, nm]) => `<button type="button" class="${cls}" style="--k:${CARE_COLOR[k]}" data-all="${k}">${uiImg(UI_CARE[k], 1)} ${nm} <b>(${need[k]})</b></button>`).join('');
 function careAllOn(k) { return after(E.careAll(st, k, ctx), k === 'water' ? 'watered' : 'harvested', k === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // P28-04 🧺 정원 저장고 (M2-7): 돌볼 꽃 칩 줄에 쌓인 양 / 상한 — 누르면 모두 거두기. 🐢 느긋하게 보기면 숫자 없이 (쌓였을 때만)
 const PANTRY_K = '#b07a2a';
@@ -42,7 +43,7 @@ const pantryText = v => v.list.map(x => `${x.ic} ${x.name} ${x.n}`).join(' · ')
 function pantryChip() {
   const v = E.pantryView(st); if (!v || (v.slow && !v.has)) return '';
   const tip = `🧺 정원 저장고${v.slow ? '' : ` ${v.n} / ${v.cap}${v.full ? ' · 가득 찼어요' : ' · 2시간마다 한 칸'}`}${v.has ? ` · ${pantryText(v)} · 눌러서 모두 거두기` : ''}`;
-  return `<button type="button" class="nd pantry-chip ${v.has ? 'on' : ''}" style="--k:${PANTRY_K}" data-pantry="1" title="${tip}" aria-label="${tip}"><span>🧺</span>${v.slow ? '' : `<b>${v.n}/${v.cap}</b>`}</button>`;
+  return `<button type="button" class="nd pantry-chip ${v.has ? 'on' : ''}" style="--k:${PANTRY_K}" data-pantry="1" title="${tip}" aria-label="${tip}"><span>${uiImg('basket')}</span>${v.slow ? '' : `<b>${v.n}/${v.cap}</b>`}</button>`;
 }
 function pantryAllBtn(cls) {
   const v = E.pantryView(st); if (!v || !v.has) return '';
@@ -56,7 +57,7 @@ function renderToolbar(force) {
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${ic}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${uiImg(UI_CARE[k])}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -129,6 +130,7 @@ function revealTile(x, y) {
   const top = cy < s.scrollTop + m ? cy - m : cy > s.scrollTop + h - m ? cy + m - h : s.scrollTop;
   if (left !== s.scrollLeft || top !== s.scrollTop) s.scrollTo({ left, top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
+$('#mapZoom').innerHTML = uiImg('zoom'); $('#shareBtn').innerHTML = uiImg('share');   // P89-03
 $('#mapZoom').addEventListener('click', () => { ui.zoom = ui.zoom === 2 ? 1 : 2; $('#mapZoom').setAttribute('aria-pressed', String(ui.zoom === 2)); resize(); feedback(cell > 16 ? '🔍 지도를 크게 볼게요 · 끌어서 둘러봐요' : '🔍 지도를 작게 볼게요'); });   // R-C4
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const LCOL = Object.fromEntries(LAND_KEYS.map(k => [k, hex(LANDS[k].color)]));
@@ -587,7 +589,7 @@ function renderStatus(force) {
     const act = state === 'need';
     if (act) ui.careNeed.push(t);   // 꽃 둘레 단추로 (10-06)
     if (state === 'lack') ui.careLack.push(t);   // ⑯ 도구가 없으면 흐린 단추 (누르면 사기 창)
-    return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${ic}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
+    return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${uiImg(UI_CARE[t])}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
   };
   ['water', 'weed', 'prune', 'fert', 'harvest'].forEach(t => careTile(t, '', ''));   // 지금 할 수 있는 돌보기 → 꽃 둘레 단추 (10-06)
   const canMove = E.canMoveNow(f), noShovel = canMove && !((st.shovel || 0) > 0);   // P83-03 살아 있는 꽃은 언제나 · 삽 1번
@@ -708,7 +710,7 @@ function renderTileStatus(force) {
 function careOn(f, t) { tapPot(f); return after(E.care(st, t, [[f.x, f.y]], ctx), t === 'water' ? 'watered' : t === 'harvest' ? 'harvested' : null, t === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // 꽃 둘레 돌보기 단추 (10-06): 고른 꽃에 지금 할 수 있는 돌보기만 꽃 위에 부채꼴로. (상태창의 다섯 칸은 뺌)
 const RING_TOOL = { water: 'water', weed: 'hoe', prune: 'shears', fert: 'fert', harvest: 'basket' };
-const RING_IC = { water: '💧', weed: '🌿', prune: '✂️', fert: '🌱', harvest: '🧺' }, RING_NM = { water: '물', weed: '잡초', prune: '가지치기', fert: '비료', harvest: '수확' };
+const RING_NM = { water: '물', weed: '잡초', prune: '가지치기', fert: '비료', harvest: '수확' };
 var ringEl = document.getElementById('careRing');   // var: draw()가 먼저 불려도 안전하게
 function updateRing() {
   if (!ringEl) return;
@@ -740,7 +742,7 @@ function updateRing() {
   ui.ringSig = sig; ringEl.hidden = false;
   ringEl.innerHTML = cares.map((t, i) => {
     const lk = lack.includes(t);
-    return `<button type="button" class="ring-btn ${lk ? 'lack' : ''}" data-ring="${t}" ${lk ? `data-ringbuy="${RING_TOOL[t]}"` : ''} style="--k:${CARE_COLOR[t]};left:${pts[i][0].toFixed(1)}px;top:${pts[i][1].toFixed(1)}px;--d:${i * 40}ms" title="${lk ? `${RING_NM[t]} · ${josa(E.SUPPLIES[RING_TOOL[t]].name, '이/가')} 없어요 · 눌러서 사요` : RING_NM[t]}" aria-label="${RING_NM[t]}${lk ? ' (도구 없어요)' : ''}"><span>${RING_IC[t]}</span>${lk ? '<i class="ring-lack">+</i>' : ''}</button>`;
+    return `<button type="button" class="ring-btn ${lk ? 'lack' : ''}" data-ring="${t}" ${lk ? `data-ringbuy="${RING_TOOL[t]}"` : ''} style="--k:${CARE_COLOR[t]};left:${pts[i][0].toFixed(1)}px;top:${pts[i][1].toFixed(1)}px;--d:${i * 40}ms" title="${lk ? `${RING_NM[t]} · ${josa(E.SUPPLIES[RING_TOOL[t]].name, '이/가')} 없어요 · 눌러서 사요` : RING_NM[t]}" aria-label="${RING_NM[t]}${lk ? ' (도구 없어요)' : ''}"><span>${uiImg(UI_CARE[t])}</span>${lk ? '<i class="ring-lack">+</i>' : ''}</button>`;
   }).join('');
 }
 ringEl.addEventListener('click', e => {
