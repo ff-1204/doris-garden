@@ -70,21 +70,21 @@ check(back.ok && JSON.stringify(back.data.game) === JSON.stringify(E.makeSave(ye
 // P67 전 스냅숏(P66 기록)의 옮긴 결과 · 저장 파일 해시 — 정리를 더해도 한 줄도 같아야 함 · P72-01 (11-04): 보정 55번째 · 다시 피는 꽃으로 해시가 바뀌어 지금 스냅숏 값으로 다시 적음 (cleanSave는 그대로)
 // P67 전 해시 → 그 뒤 새 정원 칸이 바뀔 때마다 다시 적음 (P72 ripeH · R-C2 settings.notify · P79 블렌드 넷으로 도감 101칸 — 기록의 dexTotal, 11-05 · P83 shovel · mine.auto, 11-06) — 정상 저장이 cleanSave 전후 같다는 뜻은 그대로
 // P90 (11-06): 작은 것이 저절로 들어와 시간이 흐른 정원이 달라져 다시 적음
-const BEFORE = `새 정원 create a18d4d577942cbf9
-새 정원 30시간 뒤 fc3cbccc47457855
-새 정원 두 주(정원 두 해) 뒤 a11175ea6b1293af
-옛 저장: 가장 옛 정원 (30시간) 2cd03c390ecc4c06
-옛 저장: 가장 옛 정원 (두 주) 52f93c8062efacd3
-옛 저장: 두 주 정원을 0번째부터 f90a2f1b3f5d4e10
-옛 저장: 두 주 정원을 10번째부터 f90a2f1b3f5d4e10
-옛 저장: 두 주 정원을 20번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 30번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 40번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 48번째부터 a11175ea6b1293af
-옛 저장: 두 주 정원을 58번째부터 a11175ea6b1293af
+const BEFORE = `새 정원 create cc0f2e78f2f6d602
+새 정원 30시간 뒤 2a40d10861178311
+새 정원 두 주(정원 두 해) 뒤 b630342889a5fdad
+옛 저장: 가장 옛 정원 (30시간) 4950afde59a34b0d
+옛 저장: 가장 옛 정원 (두 주) 7c1c515847e0ebaa
+옛 저장: 두 주 정원을 0번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 10번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 20번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 30번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 40번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 48번째부터 b630342889a5fdad
+옛 저장: 두 주 정원을 59번째부터 b630342889a5fdad
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave ae0b51cdf01e0af5
-저장 파일 parseSave ae0b51cdf01e0af5`.split('\n');
+저장 파일 makeSave 6a5463cb1edf9407
+저장 파일 parseSave 6a5463cb1edf9407`.split('\n');
 const now = execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'engine-snapshot.js'), ENGINE], { encoding: 'utf8' }).replace(/\r\n/g, '\n').split('\n').filter(x => /^(새 정원|옛 저장|저장 파일)/.test(x));
 const diff = BEFORE.filter((x, i) => now[i] !== x);
 check(now.length === BEFORE.length && !diff.length, `옮긴 결과 · 저장 파일 해시 ${BEFORE.length}줄이 P67 전과 같음${diff.length ? ` — 다름: ${diff.join(' / ')}` : ''}`);

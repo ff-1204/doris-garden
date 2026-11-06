@@ -97,7 +97,7 @@ const SAVE_NUMS = [
   'yearLog[].year=1', 'yearLog[].season=1', 'yearLog[].dex', 'yearLog[].dexTotal', 'yearLog[].grade', 'yearLog[].harvest', 'yearLog[].income', 'yearLog[].orders', 'yearLog[].score', 'yearLog[].sold',
   'flowers[].id', 'flowers[].x', 'flowers[].y', 'flowers[].q', 'flowers[].startQ', 'flowers[].plantedYear', 'flowers[].propYear', 'flowers[].ripeH', 'flowers[].ripeT',
   'flowers[].ageH', 'flowers[].lifeH', 'flowers[].waterH', 'flowers[].weedH', 'flowers[].pruneH', 'flowers[].fertH', 'flowers[].thirstH', 'flowers[].adaptH', 'flowers[].harvestKey', 'flowers[].bloomKey', 'flowers[].antKey', 'flowers[].bfm',   // R-A4 (11-05 검토): 글자면 += 로 글자가 이어져 NaN이 되던 시간 칸
-  'pending[].id', 'pending[].dueH', 'mine.regenH', 'mine.autoLog.n', 'mine.autoLog.paid', 'mine.autoLog.jewels', 'mine.autoLog.won', 'mine.autoLog.down', 'mine.autoLog.downWon', 'mine.autoLog.bag.*',
+  'pending[].id', 'pending[].dueH', 'mine.regenH', 'mine.autoLog.n', 'mine.autoLog.paid', 'mine.autoLog.jewels', 'mine.autoLog.won', 'mine.autoLog.down', 'mine.autoLog.downWon', 'mine.autoLog.bag.*', 'mine.autoBudget', 'mine.autoSpent',
   'items[].id', 'items[].q', 'items[].got', 'petals[].id', 'petals[].q', 'teas[].id', 'teas[].q', 'cups[].id', 'cups[].q', 'blends[].id', 'blends[].q', 'dried[].id', 'dried[].q', 'drying[].id', 'drying[].q', 'drying[].leftH', 'preserved[].id',
   'decos[].id', 'decos[].n', 'decos[].x', 'decos[].y', 'decos[].at', 'letterBox[].y', 'letterBox[].m', 'letterBox[].at',
 ];
@@ -330,6 +330,13 @@ const MIGRATIONS = [
   ['🌹 프리저브드 장식 (P84, 11-06): 창고 칸 st.preserved를 늘 배열로 · 꽃을 모르는 pres 장식은 지움 (그림을 그릴 수 없어서)', s => {
     s.preserved = s.preserved || [];
     if (s.decos) s.decos = s.decos.filter(d => d.key !== 'pres' || (d.pres && FLOWERS[d.pres.type]));
+  }],
+  ['⛏️ 자동 캐기 돌려주기 · 쓸 돈 (P91, 11-06 사용자 확정): 예전 값으로 쓴 돈 전액을 돌려주고 켜져 있던 것은 끔(예산을 정해 다시 켜게) · 재료 · 보석은 그대로. 저장마다 한 번 — autoPaid를 0으로 비워 다시 돌려주지 않음', s => {
+    const m = s.mine, st0 = s.stats = s.stats || {}, paid = Math.max(0, Math.floor(+st0.autoPaid || 0));
+    if (m) { mineAutoFlush(s); m.auto = false; m.autoStop = null; m.autoLog = null; m.autoBudget = 0; m.autoSpent = 0; }
+    if (paid <= 0) return;
+    s.money = (+s.money || 0) + paid; st0.autoPaid = 0; st0.autoRefund = (st0.autoRefund || 0) + paid;
+    addLog(s, 18, slowView(s) ? '⛏️ 자동 캐기에 쓴 돈을 돌려드렸어요' : `⛏️ 자동 캐기에 쓴 ${paid.toLocaleString('ko-KR')}원을 돌려드렸어요`);
   }],
   ['🧺 저장고 자동 (P90, 11-06): 쌓여 있던 것은 잃지 않게 한 번에 넣어 줌 (거두기가 없어짐)', s => {
     const p = s.pantry; if (!p || !Array.isArray(p.items)) return;

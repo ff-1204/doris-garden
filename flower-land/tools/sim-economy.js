@@ -80,6 +80,7 @@ const KEEP = { water: 8, hoe: 6, basket: 6, shears: 4 };
 function spend(k, fn) { const m = st.money, r = fn(); if (r && r.ok) add(yearNow(), k, st.money - m); return r; }
 // P85-02 새 놀이 유형 (옵션 없으면 기본 출력 그대로)
 // --automine[=N]: ⛏️ 자동 캐기를 켜 두는 정원사 (P83-01) — 돈이 N원(기본 20,000)을 넘으면 다시 켬 · 표 '자동 캐기 낸 돈' · 끝줄에 칸 수 · 받은 돈 · 재료
+//   --autobudget=N: 다시 켤 때 고르는 쓸 돈 (P91-02, 5000 · 10000 · 50000 — 기본 10000)
 // --craft: 🧺 용품이 모자라면 먼저 가방 재료로 만듦 (P83-02) — 표 '용품'이 줄어든 만큼이 재료 값 · --automine이나 --mine과 함께
 // --move=N: 🪏 달마다 꽃 N포기를 옆 칸으로 옮겼다 되돌림 (P83-03, 한 번에 삽 2번) — 삽은 모자라면 삼 (표 '용품')
 // --blendn: 🫖 블렌드를 꽃마다 한 번에 최대 잔으로 (P82-01, 기본은 한 잔씩 되풀이 — 같은 값이어야 함)
@@ -96,7 +97,7 @@ function presSpot() {                              // --presdeco: 꽃 옆 빈칸
   return null;
 }
 function p85Act(cal, yr) {
-  if (AUTOMINE != null) { const m = E.mineOf(st); if (!m.auto && st.money >= AUTOMINE) E.mineAutoSet(st, true, ctx);
+  if (AUTOMINE != null) { const m = E.mineOf(st); if (!m.auto && st.money >= AUTOMINE) E.mineAutoSet(st, true, ctx, flagN('--autobudget', undefined));
     const paid = st.stats.autoPaid || 0; add(yr, '자동 캐기 낸 돈', -(paid - P85.paid0)); P85.paid0 = paid; }
   if (CRAFT) for (const k of E.TOOL_CRAFTS) while ((k === 'fert' ? st.fert < 4 : (st[k] || 0) < (KEEP[k] || 4)) && E.canCraft(st, k)) { E.craft(st, k, ctx); add(yr, '만든 도구 값', E.SUPPLIES[k].price); }
   if (MOVE_N && cal.abs !== P85.moveAbs) { P85.moveAbs = cal.abs; let n = 0;

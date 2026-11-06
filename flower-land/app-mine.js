@@ -29,21 +29,24 @@ function mineToolsHTML() {
         <span class="dk-main"><b>${C.name}</b><small class="dk-buff">${have}${S.unit} 남음 · ${S.per > 1 ? `1개로 ${S.per}번` : '1개로 1번'}</small><small class="muted">${need}</small></span>
         <span class="dk-buy"><button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>⛏️ 재료로</button>${can ? '' : `<button type="button" class="btn small" data-toolbuy="${k}" ${st.money >= S.price ? '' : 'disabled'}>💰 ${won(S.price)}</button>`}</span></div>`; }).join('')}</div>`;
 }
-// P83-01 ⛏️ 자동 캐기 칸 (값 · 근거는 엔진 autoDigWon) — 🐢 느긋하게 보기면 돈 숫자 없이
+// P83-01 ⛏️ 자동 캐기 칸 · P91-02 쓸 돈 — 🐢 느긋하게 보기면 돈 숫자 없이
 function mineAutoHTML() {
   const a = E.mineAutoView(st), slow = E.slowView(st), keep = a.keep ? ` · 곤충 몫 기력 ${a.keep}칸은 남겨요` : '';
-  const line = a.on ? `켜져 있어요 · 기력이 찰 때마다 파요${slow ? '' : ` · 지금 한 칸 ${won(a.price)}${a.n ? ` · 이번 달 ${a.n}칸 ${won(a.paid)}` : ''}`}${keep}`
+  const line = a.on ? `켜져 있어요 · ${slow ? '기력이 찰 때마다 파요 · 정한 돈을 다 쓰면 멈춰요' : `한 칸 ${won(a.price)} · 남은 돈 ${won(a.left)} · 쓴 돈 ${won(a.spent)}`}${keep}`
+    : a.stop === 'budget' ? `정한 돈을 다 써서 멈췄어요${slow ? '' : ` · 쓴 돈 ${won(a.spent)}`} · 다시 켜면 또 정해요`
     : a.stop === 'money' ? '돈이 모자라 멈췄어요 · 돈을 모아 다시 켜요'
-    : `꺼 둔 동안에도 기력이 찰 때마다 파요 · ${slow ? '칸마다 돈을 내요' : `지금 한 칸 ${won(a.price)}`}`;
+    : `꺼 둔 동안에도 기력이 찰 때마다 파요 · ${slow ? '쓸 돈을 정해요' : `한 칸 ${won(a.price)} · 쓸 돈을 정해요`}`;
   return `<div class="mine-auto${a.on ? ' on' : ''}${a.stop ? ' stop' : ''}"><span class="ma-main"><b>⛏️ 자동 캐기</b><small class="${a.stop && !a.on ? 'warn' : 'muted'}">${line}</small></span><button type="button" class="btn small ${a.on ? '' : 'primary'}" data-mauto="${a.on ? 'off' : 'on'}" aria-pressed="${a.on}">${a.on ? '끄기' : '켜기'}</button></div>`;
 }
-function askMineAuto() {
-  const a = E.mineAutoView(st), slow = E.slowView(st), go = () => { closeModal(); const r = E.mineAutoSet(st, true, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); };
-  openModal('⛏️ 자동 캐기를 켤까요?', `<div class="buy-ask"><span class="ba-art"><span class="ba-ic">⛏️</span></span><p><b>기력이 찰 때마다 한 칸씩 파요</b><br><small class="muted">계단을 찾으면 내려가고, 판을 다 파면 새 판으로 가요 · 꺼 둔 동안에도 파요 · 돈이 모자라면 멈춰요 · 경험치와 주간 목표엔 들지 않아요</small></p>
-    ${slow ? '<p class="muted">한 칸 팔 때마다 돈을 내요</p>' : `<div class="rc-pay"><div><span class="muted">지금 한 칸</span><b class="data">${won(a.price)}</b></div><div><span class="muted">가진 돈</span><span class="data">${won(st.money)}</span></div><div><span class="muted">값</span><span class="data">깊을수록 올라요</span></div></div>`}</div>`, [
+function askMineAuto(budget) {
+  const a = E.mineAutoView(st), slow = E.slowView(st), pick = budget || E.AUTO_BUDGET, cells = Math.floor(pick / a.price), go = () => { closeModal(); const r = E.mineAutoSet(st, true, ctx, pick); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); };
+  openModal('⛏️ 자동 캐기를 켤까요?', `<div class="buy-ask"><span class="ba-art"><span class="ba-ic">⛏️</span></span><p><b>쓸 돈을 정해요</b><br><small class="muted">기력이 찰 때마다 한 칸씩 파요 · 꺼 둔 동안에도 파지만 정한 돈보다 더 쓰지 않아요 · 다 쓰면 혼자 꺼져요 · 경험치와 주간 목표엔 들지 않아요</small></p>
+    <div class="auto-budget" role="group" aria-label="쓸 돈">${E.AUTO_BUDGETS.map(b => `<button type="button" class="btn small ${b.won === pick ? 'primary' : ''}" data-abud="${b.won}" aria-pressed="${b.won === pick}">${slow ? b.name : won(b.won)}</button>`).join('')}</div>
+    ${slow ? '<p class="muted">한 칸 팔 때마다 돈을 조금 내요</p>' : `<div class="rc-pay"><div><span class="muted">한 칸</span><b class="data">${won(a.price)}</b></div><div><span class="muted">파는 칸</span><span class="data">${cells}칸까지</span></div><div><span class="muted">가진 돈</span><span class="data">${won(st.money)}</span></div></div>`}</div>`, [
     { label: '취소', act: () => closeModal() },
     { label: '켜기', primary: true, act: go },
   ]);
+  $('#modalRoot').querySelectorAll('[data-abud]').forEach(b => b.onclick = () => askMineAuto(+b.dataset.abud));
 }
 function renderMine(force) {
   const m = E.mineOf(st), b = m.board;

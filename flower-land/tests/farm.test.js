@@ -109,7 +109,7 @@ console.log('[예전 정원 — MIGRATIONS 42번째]');
   const b = E.buyDeco(st, 'autobasket', ctx).deco; E.placeDeco(st, b.id, 5, 5); fl(st, 'lavender', 5, 6);
   st.stats.autoHarvest = 40; st.log.push({ y: 1, m: 6, d: 1, type: 18, text: '자동 수확 바구니가 꽃잎 40장을 거뒀어요' });
   const FN = E.MIGRATIONS.findIndex(m => m[0].includes('awayLast'));
-  check(FN === 41 && FN === E.MIGRATIONS.length - 18, 'MIGRATIONS 42번째 (43번째 P36 · 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48 · 52번째 맨 끝 P52)');
+  check(FN === 41 && FN === E.MIGRATIONS.length - 19, 'MIGRATIONS 42번째 (43번째 P36 · 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48 · 52번째 맨 끝 P52)');
   const old = copy(st); delete old.awayLast; delete old.farm; old.mig = FN;
   const om = E.migrateSave(old);
   check(om.awayLast === null && om.farm.mark.autoHarvest === 40 && om.farm.last === null && om.mig === E.MIGRATIONS.length, '예전 정원: awayLast null · 지금 셈을 표시로');

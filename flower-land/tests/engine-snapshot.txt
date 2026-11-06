@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 631개 (Object.keys 차례)
+공개 이름 634개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -177,10 +177,10 @@
   shareCard function 03d1b143b40007cb
   makeSave function 01f4e3cc0e6f512a
   parseSave function 3a9607fb3b290252
-  SAVE_NUMS object 4865f4a0804271e0
+  SAVE_NUMS object bb37ff2ae79b5101
   cleanSave function a0326e65af8fee8c
   SAVE_FORMAT number 6b86b273ff34fce1
-  MIGRATIONS object 8e5eaed8dc3e078f
+  MIGRATIONS object 6870ed1ad275aeba
   migrateSave function f45e906b90c35da5
   CLOUD_GAP number 6ce318969619d1c3
   cloudDue function d8b021348e446c23
@@ -318,16 +318,19 @@
   mineUp function 664d6890ed572fd7
   toDeepest function 14f426d5648b879f
   freshBoard function 3e90daacc6637fbc
-  autoDigWon function 14a5dc439836926e
+  autoDigWon function 3039d9c6f4ee81bd
+  AUTO_DIG_WON number ad57366865126e55
+  AUTO_BUDGETS object b27686ed6a5f8999
+  AUTO_BUDGET number 39e5b4830d4d9c14
   autoKeepE function 6731f2c2f409ba70
   AUTO_KEEP_E number ef2d127de37b942b
   presDeco function b4e49802aa4d06d8
   presDecoTick function a46783151df07a3f
   PRES_DECO_Q number 07e17407c7918077
   shareAlbum function 70727952bb4f39c7
-  mineAutoSet function 325e92b974db2d07
-  mineAutoView function 8fa9a63b51fcbe41
-  mineAutoFlush function 45133799be0ca8d6
+  mineAutoSet function 20c5841d8d3f917b
+  mineAutoView function 711fdaecda33223c
+  mineAutoFlush function fb5667188542d0b9
   CRAFTS object a73f852c9835cf4a
   CRAFT_KEYS object b7c7b1b85d83f267
   TOOL_CRAFTS object 7e4666674ad80daa
@@ -631,8 +634,8 @@
   bagNeed function 8540ff828f4fbdb5
   blendMax function 549369a9e01bd5b6
   blendPlan function 4a18ad0172cdcfd0
-공개 값 모두 e36f746f3dae7639
-보정 MIGRATIONS 59줄
+공개 값 모두 1a4d65262dcc0586
+보정 MIGRATIONS 60줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
    3. 가게 → 화원 (10-05) · 9d6d295294ab451c
@@ -691,19 +694,20 @@
   56. R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐 · 9db8e59a9a917488
   57. 🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐 · b22f0a0c9967ac46
   58. 🌹 프리저브드 장식 (P84, 11-06): 창고 칸 st.preserved를 늘 배열로 · 꽃을 모르는 pres 장식은 지움 (그림을 그릴 수 없어서) · a9bdde8b0db74d03
-  59. 🧺 저장고 자동 (P90, 11-06): 쌓여 있던 것은 잃지 않게 한 번에 넣어 줌 (거두기가 없어짐) · 7e34260abc5514cf
-새 정원 create a18d4d577942cbf9
-새 정원 30시간 뒤 fc3cbccc47457855
-새 정원 두 주(정원 두 해) 뒤 a11175ea6b1293af
-옛 저장: 가장 옛 정원 (30시간) 2cd03c390ecc4c06
-옛 저장: 가장 옛 정원 (두 주) 52f93c8062efacd3
-옛 저장: 두 주 정원을 0번째부터 f90a2f1b3f5d4e10
-옛 저장: 두 주 정원을 10번째부터 f90a2f1b3f5d4e10
-옛 저장: 두 주 정원을 20번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 30번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 40번째부터 1631c16bbb633680
-옛 저장: 두 주 정원을 48번째부터 a11175ea6b1293af
-옛 저장: 두 주 정원을 58번째부터 a11175ea6b1293af
+  59. ⛏️ 자동 캐기 돌려주기 · 쓸 돈 (P91, 11-06 사용자 확정): 예전 값으로 쓴 돈 전액을 돌려주고 켜져 있던 것은 끔(예산을 정해 다시 켜게) · 재료 · 보석은 그대로. 저장마다 한 번 — autoPaid를 0으로 비워 다시 돌려주지 않음 · d433ff5d7dddd48f
+  60. 🧺 저장고 자동 (P90, 11-06): 쌓여 있던 것은 잃지 않게 한 번에 넣어 줌 (거두기가 없어짐) · 7e34260abc5514cf
+새 정원 create cc0f2e78f2f6d602
+새 정원 30시간 뒤 2a40d10861178311
+새 정원 두 주(정원 두 해) 뒤 b630342889a5fdad
+옛 저장: 가장 옛 정원 (30시간) 4950afde59a34b0d
+옛 저장: 가장 옛 정원 (두 주) 7c1c515847e0ebaa
+옛 저장: 두 주 정원을 0번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 10번째부터 c21025e549bc1876
+옛 저장: 두 주 정원을 20번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 30번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 40번째부터 f4b5dea6f1446938
+옛 저장: 두 주 정원을 48번째부터 b630342889a5fdad
+옛 저장: 두 주 정원을 59번째부터 b630342889a5fdad
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave ae0b51cdf01e0af5
-저장 파일 parseSave ae0b51cdf01e0af5
+저장 파일 makeSave 6a5463cb1edf9407
+저장 파일 parseSave 6a5463cb1edf9407

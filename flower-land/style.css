@@ -876,6 +876,7 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .mine-auto small { font-size: var(--fs-sm); line-height: 1.35; }
 .mine-auto small.warn { color: var(--warn); }
 .mine-auto .btn { flex: 0 0 auto; }
+.auto-budget { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-3); }   /* P91-02 쓸 돈 고르기 */
 .mine-sec { display: grid; gap: var(--sp-4); min-width: 0; }
 .mine-sub { margin: 0; font-size: var(--fs-base); font-weight: 700; }
 .mine-bag { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-xs)), 1fr)); gap: var(--sp-5) var(--sp-4); }
