@@ -9,26 +9,21 @@ const ctx = { live: false, rng: () => 0.5 };
 const logs = s => s.log.filter(l => l.text.includes('자동 캐기'));
 const flower = (s, type, x, y, extra) => { const f = Object.assign({ id: 7000 + s.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'mature', ripeH: 0, bloomed: false, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1, propYear: null, propRest: false, plantedYear: 1 }, extra); s.flowers.push(f); return f; };
 
-console.log('[P83-01 값 = 한 칸 기대 수입]');
-{ const s = garden();
-  check(E.autoDigWon(s, 1) === 320, `1층 한 칸 320원 (보석 125 + 층 돈 108 + 광물 80 → 올림) — ${E.autoDigWon(s, 1)}`);
-  check(E.autoDigWon(s, 10) === 540 && E.autoDigWon(s, 19) === 770, `10층 540원 · 19층 770원 — ${E.autoDigWon(s, 10)} · ${E.autoDigWon(s, 19)}`);
-  check(E.autoDigWon(s, 20) === 680, `가장 깊은 층은 내려갈 일이 없어 680원 — ${E.autoDigWon(s, 20)}`);
-  const lamp = garden(); E.placeDeco(lamp, E.addDeco(lamp, 'amberlamp').id, 0, 0);
-  check(E.autoDigWon(lamp, 10) > E.autoDigWon(s, 10), '🏮 호박 등으로 보석이 늘면 값도 따라 오름'); }
+console.log('[P91-01 값은 한 칸 100원 고정]');
+{ const s = garden(); check([1, 10, 19, 20].every(d => E.autoDigWon(s, d) === 100) && E.AUTO_DIG_WON === 100, '층과 상관없이 100원');
+  const lamp = garden(); E.placeDeco(lamp, E.addDeco(lamp, 'amberlamp').id, 0, 0); check(E.autoDigWon(lamp, 10) === 100, '🏮 호박 등이 있어도 그대로'); }
 
-console.log('[P83-01 켜 두면 공짜 수입이 아님 — 돈으로는 밑짐]');
+console.log('[P91-01 일부러 기대 수입보다 쌈 — 돈으로는 조금 남음 (사용자 결정)]');
 for (const depth of [1, 10, 20]) {
   const s = garden(null, 1e9), m = E.mineOf(s); m.depth = m.deepest = depth; m.board = null; E.mineOf(s); m.energy = 0;
-  E.mineAutoSet(s, true, ctx); const m0 = s.money, far = s.virtual + 200 * H; E.advance(s, far, ctx);
-  const dug = s.stats.autoDug, net = s.money - m0;
-  check(dug >= 11900 && net < 0, `${depth}층부터 ${dug}칸: 돈 ${net.toLocaleString('ko-KR')}원 (보석 · 층 돈을 받아도 줄어듦)`);
-  check(s.stats.autoPaid > (s.stats.jewelWon || 0) + (s.stats.descendWon || 0), '낸 돈 > 받은 보석 · 층 돈'); }
+  E.mineAutoSet(s, true, ctx, 50000); const m0 = s.money, far = s.virtual + 20 * H; E.advance(s, far, ctx);
+  check(s.stats.autoDug === 500 && s.stats.autoPaid === 50000, `${depth}층부터 500칸에 50,000원 — 낸 돈은 정한 돈까지만`);
+  console.log(`    ${depth}층부터: 돈 ${(s.money - m0).toLocaleString('ko-KR')}원 (칸마다 ${Math.round((s.money - m0) / 500)}원)`); }
 
 console.log('[P83-01 기력이 찰 때마다 · 꺼 둔 동안에도]');
 { const s = garden(), m = E.mineOf(s); const e0 = m.energy;
   check(!m.auto && E.mineAutoView(s).on === false, '처음엔 꺼져 있음');
-  const r = E.mineAutoSet(s, true, ctx);
+  const r = E.mineAutoSet(s, true, ctx, 50000);
   check(r.ok && m.auto && m.energy === 0 && s.stats.autoDug === e0, `켜면 있던 기력 ${e0}칸을 바로 씀`);
   const m0 = s.money, paid0 = s.stats.autoPaid, n0 = s.stats.autoDug;
   E.advance(s, s.virtual + 3 * H, ctx);
@@ -41,7 +36,7 @@ console.log('[P83-01 기력이 찰 때마다 · 꺼 둔 동안에도]');
 
 console.log('[P83-01 판을 다 파면 새 판]');
 { const s = garden(), m = E.mineOf(s); m.depth = m.deepest = E.MINE_DEEPEST; m.board = null; E.mineOf(s); const b0 = m.boards; m.energy = 0;
-  E.mineAutoSet(s, true, ctx); E.advance(s, s.virtual + 2 * H, ctx);
+  E.mineAutoSet(s, true, ctx, 50000); E.advance(s, s.virtual + 2 * H, ctx);
   check(m.depth === E.MINE_DEEPEST && m.boards >= b0 + 3, `가장 깊은 층에선 판만 새로 — ${m.boards - b0}판`); }
 { const s = garden(), m = E.mineOf(s); m.board.cells.find(c => c.stairs).dug = true; m.energy = 1;
   E.mineAutoSet(s, true, ctx); check(m.depth === 2, '손으로 찾아 둔 계단이 있으면 그 층을 더 파지 않고 내려감'); }
@@ -49,7 +44,7 @@ console.log('[P83-01 판을 다 파면 새 판]');
 console.log('[P83-01 돈이 모자라면 멈춤 · 까닭]');
 { const s = garden(null, 700), m = E.mineOf(s); m.energy = 0;
   check(E.mineAutoSet(s, true, ctx).ok && m.auto, '한 칸 값이 있으면 켜짐');
-  s.money = 100; const n0 = s.stats.autoDug || 0; E.advance(s, s.virtual + 5 * 60e3, ctx);
+  s.money = 50; const n0 = s.stats.autoDug || 0; E.advance(s, s.virtual + 5 * 60e3, ctx);
   check(!m.auto && m.autoStop === 'money' && E.mineAutoView(s).stop === 'money', '돈이 모자라면 꺼지고 까닭을 남김');
   check((s.stats.autoDug || 0) === n0 && !s.stats.autoPaid && m.energy > 0, `값을 못 내면 파지 않고 돈도 안 나감 · 기력은 참 (${m.energy}칸)`);
   check(logs(s).some(l => l.text.includes('돈이 모자라 자동 캐기를 멈췄어요')), '일지에 까닭');

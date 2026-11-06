@@ -30,7 +30,7 @@ console.log('[P65-01 예전 저장 — 벌통에 쌓인 꿀 · 꿀 선반]');
   const old = JSON.parse(JSON.stringify(st)); old.mig = N; old.honey = { wild: 1 };
   old.decos = [{ id: 7001, key: 'hive', x: 4, y: 4, honey: ['rose', 'rose'] }];
   const m = E.migrateSave(old);
-  check(N === E.MIGRATIONS.length - 5 && m.honey.rose === 2 && m.honey.wild === 1 && m.dex.honey.rose && !('honey' in m.decos[0]), '벌통 꿀 2병 → 창고 · 선반 꿀 1병은 그 자리(같은 칸) · 맨 끝 보정');
+  check(N === E.MIGRATIONS.length - 6 && m.honey.rose === 2 && m.honey.wild === 1 && m.dex.honey.rose && !('honey' in m.decos[0]), '벌통 꿀 2병 → 창고 · 선반 꿀 1병은 그 자리(같은 칸) · 맨 끝 보정');
   check(!E.takeHoney(m, 7001).ok, '옮긴 뒤 벌통엔 거둘 꿀이 없음'); }
 
 console.log('[P65-02 🍵 꿀차]');
