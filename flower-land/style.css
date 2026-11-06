@@ -11,7 +11,7 @@
 /* Layout: 위 막대(날짜·계절 시계·돈) + 탭 8개(정원·화원·제다실·찻집·창고·도감기록·매뉴얼·설정). PC는 왼쪽 탭과 오른쪽 상태창, 휴대폰은 아래 탭과 아래에서 올라오는 상태창 */
 :root {
   /* P86-01 🪵 나무 선반: 낮은 쪽지 종이 + 밝은 나무, 밤은 어두운 나무. 재질 규칙은 파일 맨 끝 "── 나무 선반 (P86)" */
-  --bg: #e7dcc4; --panel0: #f6eedc; --sunk0: #ebe0c8; --ink: #33251a; --muted: #5f4c39; --line0: #c0a67c;
+  --bg: #f6eee0; --panel0: #fffaf0; --sunk0: #f0e7d6; --ink: #33251a; --muted: #5f4c39; --line0: #e3c9a0;
   --accent: #7f5422; --accent-ink: #fff8ea; --good: #2f6b3a; --warn: #8a4c18;
   --wood: #7a5433; --wood-dk: #5e4530; --wood-edge: #3f2a18; --wood-ink: #fdf3df; --wood-muted: #ecdcc0; --frame: #8a6238;
   --spring: #e39ab3; --summer: #64a653; --autumn: #cc8636; --winter: #86abc3; --rest: #a993c9; --seed: #8a6a44;
@@ -23,7 +23,7 @@
   --fs: 1; --u: calc(var(--fs) * 0.0625rem);
   /* P57 디자인 토큰 — 새 규칙은 이 값만 씀 (아래 "디자인 규칙" 주석) */
   --sp-1: 2px; --sp-2: 4px; --sp-3: 6px; --sp-4: 8px; --sp-5: 10px; --sp-6: 12px; --sp-7: 14px; --sp-8: 16px;
-  --r-xs: 0; --r-sm: 0; --r-md: 0; --r-lg: 0; --r-xl: 0; --r-pill: 0; --r-dot: 0;
+  --r-xs: 6px; --r-sm: 12px; --r-md: 12px; --r-lg: 12px; --r-xl: 16px; --r-pill: 10px; --r-dot: 4px;
   --fs-xs: calc(11 * var(--u)); --fs-sm: calc(12 * var(--u)); --fs-md: calc(13 * var(--u)); --fs-base: calc(14 * var(--u)); --fs-lg: calc(16 * var(--u)); --fs-xl: calc(18 * var(--u)); --fs-2xl: calc(20 * var(--u));
   --card-min-xs: 96px; --card-min-s: 120px; --card-min: 180px; --card-min-m: 220px; --card-min-l: 250px; --card-min-xl: 300px;
 }
@@ -1549,7 +1549,6 @@ body { margin: 0; }
   :root[data-big] { --nav-h: 140px; }
   :root[data-big] nav.tabs { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); }
   :root[data-big] nav.tabs:has(button[data-tab="forest"]:not([hidden])) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  :root[data-big] nav.tabs button[aria-selected="true"] { box-shadow: none; background: color-mix(in srgb, var(--accent) 18%, transparent); }   /* 두 줄이면 윗줄 표시가 위 칸과 헷갈려 배경으로 */
 }
 /* P28-03 🧩 땅 무늬 범례: 색 네모 대신 16px 무늬 그림 (정수배) */
 .sw.pat { width: 16px; height: 16px; background-size: 16px 16px; image-rendering: pixelated; border-radius: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
@@ -1580,12 +1579,9 @@ body { margin: 0; }
 
 /* ── 나무 선반 (P86, 11-06 사용자 시안 2): 찻집 카운터의 나무 · 쪽지 종이를 게임 전체 재질로
    토큰  --wood · --wood-dk · --wood-edge 나무 / --wood-ink · --wood-muted 나무 위 글자 / --frame 판 테두리 / --gold · --gold-ink · --gold-edge 주 단추 · 고른 탭(낮 · 밤 같음)
-   모서리 --r-* 는 모두 0. 판은 --pxb: 그림자 네 개로 네 귀가 한 칸씩 비는 도트 테두리(자식을 자르지 않음). 새 판 클래스는 아래 :is 목록에 더함
    색 글자는 바탕과 4.5:1 이상 — 나무 위 글자는 --wood-ink · --wood-muted만 */
 :root { --gold: #d9b26a; --gold-ink: #2c2119; --gold-edge: #a8803c;
-  --pxb: 0 -2px 0 0 var(--frame), 0 2px 0 0 var(--frame), -2px 0 0 0 var(--frame), 2px 0 0 0 var(--frame);
   --plank: repeating-linear-gradient(0deg, color-mix(in srgb, var(--wood) 88%, #000000) 0 3px, var(--wood) 3px 6px); }
-:is(.shopcard, .status, .cafe, .cab-empty, .shop-news, .blendbox, .modal, .counter) { border: 0; box-shadow: var(--pxb); }
 .cabcard.drying { box-shadow: none; outline: 2px dashed var(--frame); outline-offset: 0; }
 .btn { border-color: var(--frame); background: var(--sunk); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--frame) 45%, transparent); }
 .btn:hover:not(:disabled) { border-color: var(--wood-edge); }
@@ -1660,8 +1656,6 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
   .brand .logo-ttl { position: absolute; left: var(--sp-8); top: 50%; margin: -24px 0 0; }
 }
 /* P88-03 공유는 지도 위 🔍 아래 — 틀에 붙어 지도가 끌려도 그 자리. 끌 때 단추 밑 칸이 드러나게 지도 오른쪽에 여유(.pan-x) */
-.share-btn.map-share { position: absolute; right: var(--sp-3); top: calc(var(--sp-3) + 36px + var(--sp-2)); z-index: 3; min-height: 36px; padding: 0 var(--sp-4); background: var(--wood-edge); border-color: var(--wood); color: var(--wood-ink); }
-.mapscroll.pan-x .mapinner { margin: 0 72px 0 0; }
 /* P88-02 돌봄 줄이 지도 아래로 가서, 넓은 화면은 지도 틀 높이를 창에 맞춰 돌봄 줄이 첫 화면에 보이게 (넘는 만큼은 끌어서 봐요) */
 @media (min-width: 601px) { .mapscroll { max-height: max(320px, calc(100dvh - 224px)); } }
 /* P88-06 카드 격자: 칸 높이는 같은 줄끼리 같고(격자가 늘림) 단추 줄은 카드 맨 아래 — 글 길이가 달라도 옆 칸과 같은 높이. 세로로 쌓는 카드는 flex, 첫 단추 줄에 위 여백 auto (이어진 단추는 그 아래로) */
@@ -1669,3 +1663,59 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 :is(.shopcard, .decotile) > * { min-width: 0; }
 .decotile, #p-cab .stack > .cabgrid .teacard { align-items: center; }
 :is(.shopcard, .decotile) > :is(.btn, .cc-acts, .sc-buy, .rv-acts):not(.btn + *, .cc-acts + *, .sc-buy + *) { margin-top: auto; }
+
+/* ── 젤리 도트 (P89, 11-06 사용자 시안 3): 단추와 UI는 둥근 사각형, 도트 그림과 지도 칸은 네모 그대로
+   둥글기 --r-sm 12px 단추 · 칩 · 탭 / --r-xl 16px 카드 · 지도 틀 · 창 / --r-pill 10px 작은 칩 / --r-xs 6px / --r-dot 4px 작은 점
+   단추 말투 면 + 아래 두께(inset 그림자) · 누르면 --press만큼 내려가고 두께가 줄어요 (움직임 줄이기면 안 내려감)
+   돌봄 젤리는 --k를 --jelly-base에 섞어요 — 낮 · 밤은 --jelly-* 값만 바뀜. 판 테두리는 --edge */
+:root { --gold: #f6cf7d; --gold-ink: #3a2a14; --gold-edge: #d9a447; --edge: #e3c9a0; --jelly-base: #ffffff; --jelly-a: 30%; --jelly-b: 60%; --press: 2px; --cream: #fff3cf; --cream-edge: #e8c98a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --edge: #6e5238; --jelly-base: #33261b; --jelly-a: 34%; --jelly-b: 62%; } }
+:root[data-theme="dark"] { --edge: #6e5238; --jelly-base: #33261b; --jelly-a: 34%; --jelly-b: 62%; }
+@media (prefers-reduced-motion: reduce) { :root { --press: 0px; } }
+/* 판: 얇은 테두리 + 아래 두께 */
+:is(.shopcard, .status, .cafe, .cab-empty, .shop-news, .blendbox, .modal, .counter) { border: 2px solid var(--edge); border-radius: var(--r-xl); box-shadow: 0 3px 0 var(--edge); }
+.cabcard.drying { outline: 0; box-shadow: none; border-style: dashed; }
+.wallet { border-color: var(--edge); }
+.brand .logo-ttl { border-radius: var(--r-xs); overflow: hidden; }
+/* 단추 */
+.btn { border: 0; border-radius: var(--r-sm); background: var(--sunk); box-shadow: inset 0 -3px 0 var(--edge); padding-bottom: calc(var(--sp-3) + 2px); }
+.btn:hover:not(:disabled) { filter: brightness(1.04); }
+.btn:active:not(:disabled) { transform: translateY(var(--press)); box-shadow: inset 0 -1px 0 var(--edge); }
+.btn.primary { background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -4px 0 var(--gold-edge); }
+.btn.primary:active:not(:disabled) { box-shadow: inset 0 -1px 0 var(--gold-edge); }
+.btn.care { background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); color: var(--ink); box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); }
+#p-shop .shopcard .btn.primary:not(:disabled) { background: color-mix(in srgb, var(--good) 22%, var(--jelly-base)); color: var(--ink); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--good) 50%, var(--jelly-base)); }
+#p-shop .shopcard .btn.primary:hover:not(:disabled) { background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -4px 0 var(--gold-edge); }
+.stepper { border-radius: var(--r-sm); }
+nav.tabs { gap: var(--sp-2); padding: var(--sp-2); padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom, 0px)); }
+nav.tabs button { border-radius: var(--r-sm); }
+nav.tabs button[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--gold-edge); }
+/* 돌봄 칸 */
+.needs .nd { border-radius: var(--r-sm); gap: var(--sp-2); background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); color: var(--ink); }
+.needs .nd span { display: inline-flex; }
+.needs .nd:not(.on) { background: var(--sunk); box-shadow: inset 0 -2px 0 var(--edge); color: var(--muted); }
+.needs .nd:not(.on) span { filter: saturate(.5); opacity: .7; }
+.needs .nd.on:hover { box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)), 0 0 0 2px color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); }
+.needs .nd.on:active { transform: translateY(var(--press)); box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); }
+.needs .nd.nd-all { box-shadow: inset 0 -4px 0 var(--gold-edge); }
+.needs .nd.nd-all img.px { vertical-align: -3px; }
+.ring-btn { border-radius: var(--r-sm); border-width: 0; background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)), 0 2px 4px rgba(0, 0, 0, .25); }
+.ct .ci img.px, .ring-btn img.px, .needs img.px, .suptile .si img.px { image-rendering: pixelated; }
+.ring-btn img.px { width: 32px; height: 32px; }
+.ct .ci img.px { width: 16px; height: 16px; }
+/* 지도: 틀 · 꽃 줄 · 위 단추 */
+.mapframe { border: 5px solid var(--panel); outline: 2px solid var(--edge); border-radius: var(--r-xl); background: var(--sunk); }
+.yearstrip { position: relative; }
+.yearstrip::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 16px; z-index: 2; pointer-events: none; background: var(--garland) repeat-x 0 0 / 16px 16px; image-rendering: pixelated; }
+.legend2.on-map { top: 28px; }
+.map-tools { position: absolute; right: var(--sp-4); top: 28px; z-index: 3; display: grid; gap: var(--sp-4); }
+.map-zoom, .share-btn.map-share { position: static; display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0 0 var(--sp-1); border: 0; border-radius: var(--r-sm); background: var(--cream); box-shadow: inset 0 -3px 0 var(--cream-edge), 0 2px 0 rgba(0, 0, 0, .18); }
+.map-zoom[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -3px 0 var(--gold-edge), 0 2px 0 rgba(0, 0, 0, .18); }
+.map-zoom:active, .share-btn.map-share:active { transform: translateY(var(--press)); box-shadow: inset 0 -1px 0 var(--cream-edge); }
+.map-zoom img.px, .map-share img.px { display: block; image-rendering: pixelated; }
+.mapscroll.pan-x .mapinner { margin: 0 60px 0 0; }
+.needs .nd.on, .needs .nd.on:not(.nd-all) { background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); }
+.needs .nd.nd-all, .needs .nd.nd-all.on { background: var(--gold); box-shadow: inset 0 -4px 0 var(--gold-edge); }
+.cf-slip.done { opacity: 1; }
+.cf-slip.done b { color: var(--muted); }
+.cf-slip.done .cf-sh { color: var(--good); }
