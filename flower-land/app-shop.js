@@ -20,9 +20,14 @@ function renderYear(force) {
 }
 function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.includes(c.month)); }
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
+// 🧺 정원 용품 칸 — 📦 창고 · P83-03 💐 화원에서 같이 씀 (누르면 openSupply)
+const supTilesHTML = () => Object.entries(E.SUPPLIES).map(([k, S]) => {
+  const n = st[k] || 0, low = n <= (S.per > 1 ? S.per / 2 : 3);   // 얼마 안 남으면 주황
+  return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
+}).join('');
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);
-  const sig = JSON.stringify([st.forest && st.forest.trees, E.forestOpen(st), E.gradeOf(st).grade, cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, (st.preserved || []).length, st.titleOn, st.reservations.map(r => [r.id, r.done])]);
+  const sig = JSON.stringify([st.forest && st.forest.trees, E.forestOpen(st), E.gradeOf(st).grade, cal.idx, realH((cal.slotEnd - st.virtual) / HOUR / (st.speed || 1)), cal.frozen, st.money, (st.decos || []).length, st.gifts, E.letterCount(st), st.fert, st.water, st.shears, st.hoe, st.basket, st.shovel, ui.shopQty, ui.cart, ui.shopFilter, st.items.length, (st.preserved || []).length, st.titleOn, st.reservations.map(r => [r.id, r.done])]);
   if (!force && ui.sigs.shop === sig) { updateCountdowns(); return; }
   ui.sigs.shop = sig;
   const onSale = FLOWER_KEYS.filter(k => !cal.frozen && FLOWERS[k].sow.includes(cal.month));
@@ -120,7 +125,7 @@ function renderShop(force) {
         <span class="dk-main"><b>${F.name} 꽃잎</b><small class="muted">티백 하나(${F.petals}장) 값의 ${Math.round(E.PETAL_BUY_RATE * 100)}% ÷ ${F.petals}장 · 품질 ★${E.stars(E.PETAL_BUY_Q)}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(price)}</span><span class="sc-buy"><span class="stepper"><button type="button" data-qty="-" data-key="petal:${k}" aria-label="줄이기">−</button><span>${n}</span><button type="button" data-qty="+" data-key="petal:${k}" aria-label="늘리기">+</button></span><button type="button" class="btn primary" data-petalbuy="${k}" ${short ? 'disabled' : ''}>${short ? '돈이 모자라요' : `사기${n > 1 ? ` · ${n}장` : ''}`}</button></span></span></div>`; }).join('')}</div>`;
   $('#p-shop').innerHTML = `<div class="stack">
-    ${cal.frozen ? rvView : saleView}${petalSection}${presShopHTML()}${forestSection}${decoSection}${gradeSection}</div>`;   // 10-30: 🐝 곤충 일꾼 · 🔆 정원 장치 줄은 🐝 곤충농장 탭으로, 💐 이웃에게 선물 줄은 뺌 (사용자 요청 — 엔진 · 받은 편지는 그대로)
+    ${cal.frozen ? rvView : saleView}<div class="cab-head"><span class="sb-title">🧺 정원 용품</span><span class="muted">누르면 살 수 있어요</span></div><div class="suptiles">${supTilesHTML()}</div>${petalSection}${presShopHTML()}${forestSection}${decoSection}${gradeSection}</div>`;   // 10-30: 🐝 곤충 일꾼 · 🔆 정원 장치 줄은 🐝 곤충농장 탭으로, 💐 이웃에게 선물 줄은 뺌 (사용자 요청 — 엔진 · 받은 편지는 그대로)
 }
 function updateCountdowns() {
   document.querySelectorAll('[data-next]').forEach(el => { const ns = nextSale(FLOWERS[el.dataset.next]); if (ns) el.textContent = realH(ns.hours / (st.speed || 1)) + ' 뒤'; });
@@ -141,6 +146,7 @@ $('#p-shop').addEventListener('change', e => { if (e.target.id === 'shopFilter')
 $('#p-shop').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
   const k = b.dataset.key;
+  if (b.dataset.sup) return openSupply(b.dataset.sup);   // P83-03
   if (b.dataset.qty) { ui.shopQty[k] = Math.max(1, Math.min(20, (ui.shopQty[k] || 1) + (b.dataset.qty === '+' ? 1 : -1))); return renderShop(true); }
   if (b.dataset.shopf) { ui.shopFilter = b.dataset.shopf === 'on'; return renderShop(true); }
   if (b.dataset.treebuy) { const T = E.TREES[b.dataset.treebuy], k2 = b.dataset.treebuy; return askBuy({ name: `${T.icon} ${T.name} 묘목`, note: '숲의 첫 빈 자리에 바로 심어요', price: T.price, art: treeImg(k2, 0, 3, 1), verb: '심기' }, () => after(E.plantTree(st, k2, null, ctx), null, { label: '🌳 숲', fn: () => setTab('forest') })); }   // P30-03
@@ -199,7 +205,7 @@ function renderStore(force) {
   const cal = E.calendar(st.virtual), yr0 = E.yearOf(st, cal);
   const relYear = y => y <= yr0 ? '올해' : y === yr0 + 1 ? '내년' : `${y - yr0}년 뒤`;   // 10-06: ○년차 대신
   const groups = groupItems();
-  const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx, (st.decos || []).map(d => [d.id, d.x]), st.topDeco, (st.preserved || []).length, st.presol, st.honey, E.hiveMax(st)]);   // P52 ⬆️ 위 칸
+  const sig = JSON.stringify([groups.map(g0 => [g0.type, E.pct(g0.q), Math.round(g0.g * 100), g0.packaged, g0.ids.length, Math.floor(g0.ageH / E.MONTH_H)]), ui.storeSort, st.fert, st.water, st.shears, st.hoe, st.basket, st.shovel, st.pending.map(p => [p.id, Math.ceil(p.dueH)]), st.reservations.length, cal.idx, (st.decos || []).map(d => [d.id, d.x]), st.topDeco, (st.preserved || []).length, st.presol, st.honey, E.hiveMax(st)]);   // P52 ⬆️ 위 칸
   if (!force && ui.sigs.store === sig) return;
   ui.sigs.store = sig;
   const nextSow = F => { const n = E.untilMonth(st.virtual, c => !c.frozen && F.sow.includes(c.month)); return n ? n.hours : 999; };
@@ -244,10 +250,7 @@ function renderStore(force) {
       <span>${cal.frozen ? '🌙 꽃잠에는 품질이 그대로예요' : '12시간에 품질 5%씩 줄어요'}</span>
       ${soonN ? `<span class="warn">⏳ 곧 시들 것 <b>${soonN}개</b></span>` : ''}</div>
     <div class="cab-head"><span class="sb-title">🧺 정원 용품</span><span class="muted">누르면 살 수 있어요</span></div>
-    <div class="suptiles">${Object.entries(E.SUPPLIES).map(([k, S]) => {
-      const n = st[k] || 0, low = n <= (S.per > 1 ? S.per / 2 : 3);   // 얼마 안 남으면 주황
-      return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
-    }).join('')}${st.presol > 0 ? `<button type="button" class="suptile" data-presinfo="1" title="프리저브드를 만드는 용액 · ⛏️ 광산 만들기"><span class="si">🧪</span><b>특수 용액</b><small>${st.presol}병 남음</small></button>` : ''}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
+    <div class="suptiles">${supTilesHTML()}${st.presol > 0 ? `<button type="button" class="suptile" data-presinfo="1" title="프리저브드를 만드는 용액 · ⛏️ 광산 만들기"><span class="si">🧪</span><b>특수 용액</b><small>${st.presol}병 남음</small></button>` : ''}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
     ${honeyStoreHTML()}
     ${presStoreHTML()}
     ${pend || resv ? `<div class="cab-head"><span class="sb-title">🚚 도착할 것</span><span class="muted">때가 되면 창고로 들어와요</span></div><div class="argrid">${pend}${resv}</div>` : ''}

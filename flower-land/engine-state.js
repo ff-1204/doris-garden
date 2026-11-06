@@ -18,7 +18,7 @@ function _create(now, rng, cal) {
     money: 15000,                                                         // P17-06
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [], preserving: [], preserved: [], presol: 0,   // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔 · P53 🌹 꽃방 유리 돔 · 창고 프리저브드 · 🧪 특수 용액
-    fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, jar: 0, mutBoost: null, weedCount: 0, pruneCount: 0,   // jar · mutBoost: P36 🫙 유리 관 · 꽃잠 장식 돌연변이 보정 (mutBoost는 P62부터 안 읽음) // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
+    fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, shovel: 10, jar: 0, mutBoost: null, weedCount: 0, pruneCount: 0,   // jar · mutBoost: P36 🫙 유리 관 · 꽃잠 장식 돌연변이 보정 (mutBoost는 P62부터 안 읽음) // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
     dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {}, memento: {}, letter: {}, mutant: {}, mutjar: {}, pres: {}, presMut: {} }, // P53 🌹 프리저브드 도감 꽃 · 변이 (도감 93칸과 따로) · P36 🧬 돌연변이 도감 · 유리 관에 담은 종 (도감 93칸 · dexCount엔 안 셈) · P08-01-04, P08-02, P08-03
     log: [], records: [], yearLog: [], yearNow: newYearNow(), yearPace: Object.assign(newYearPace(0), { now: Array.from({ length: yearMonth(cal) }, () => [0, 0]) }), yearBest: null, helpYear: null, nextId: 1,   // P28-07-01 해마다 기록 · 올해 쌓는 중 · P28-07-02 달마다 쌓인 값 (시작 전 달은 0)
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false, big: false, pattern: false, notify: false },   // notify: R-C2 🔔 브라우저 알림(화면이 뒤에 있을 때)   // slow: P28-02 느긋하게 보기 · big: P28-01 큰 글씨 · pattern: P28-03 땅 무늬
@@ -64,6 +64,7 @@ function addFert(st, n) { st.fert += n; st._fertNew += n; }
 
 // ---------------------------------------------------------------- 시간 진행
 function advance(st, target, ctx) {
+  const from = st.virtual;
   while (st.virtual < target - 1) {
     const cal = calendar(st.virtual);
     let next = Math.min(target, cal.slotEnd, st.virtual + STEP_H * HOUR);
@@ -72,14 +73,15 @@ function advance(st, target, ctx) {
     if (!cal.frozen && dtH > 0) step(st, dtH, cal, ctx);
     if (dtH > 0) helperTick(st, cal);                                  // P28-10-03 찻집 일손이 카운터를 채움 (팔기 바로 앞)
     if (dtH > 0) autoSell(st, cal, dtH, ctx);                          // P17-11 카운터 찻잔은 꽃잠에도 팔림
-    if (dtH > 0) mineRegen(st, dtH);                                   // P24 광산 기력 (꽃잠에도)
+    if (dtH > 0) mineRegen(st, dtH, ctx);                              // P24 광산 기력 (꽃잠에도) · P83-01 자동 캐기도 여기서
     if (dtH > 0) presTick(st, dtH, ctx);                               // P53 🌹 프리저브드 유리 돔 (꽃잠에도 · 현실 하루)
     if (dtH > 0) dryTick(st, dtH, ctx);                                // P47 꽃방은 꽃잠에도 마름 (11-01 사용자 요청)
     if (!cal.frozen && dtH > 0) pantryTick(st, cal, dtH);              // P28-04 정원 저장고 (꽃잠엔 멈춤)
     st.virtual = next;
     const nc = calendar(st.virtual);
-    if (nc.abs !== st.lastAbs) { st.lastAbs = nc.abs; onSlot(st, nc, ctx); autoDryTick(st); }   // P72-02 달이 바뀔 때 생긴 꽃잎도 바로 (개미 꽃잎은 insectTick 안에서 건조 선반보다 먼저)
+    if (nc.abs !== st.lastAbs) { mineAutoFlush(st, ctx); st.lastAbs = nc.abs; onSlot(st, nc, ctx); autoDryTick(st); }   // P72-02 달이 바뀔 때 생긴 꽃잎도 바로 (개미 꽃잎은 insectTick 안에서 건조 선반보다 먼저) · P83-01 자동 캐기 일지는 달마다 한 줄
   }
+  if (st.virtual - from >= HOUR) mineAutoFlush(st, ctx);                // P83-01 오래 비운 뒤엔 바로 한 줄 ("그동안" 창에 보이게)
   flushPending(st, ctx);
   { const c = calendar(st.virtual); if (c.idx >= FARM_GIFT_IDX) farmGift(st, c, ctx); }   // P49 🧺 농장 정착금: 다 따라잡은 "지금"이 주말(토요일 아침 6시 ~ 월요일 아침 6시)일 때만 — 주말에 들어와야 받음 (비운 주말은 따라잡아도 안 옴)
   { const c = calendar(st.virtual); if (teaShopOpen(c) && (!st.orders || st.orders.abs !== c.abs)) makeOrders(st, c); }   // P23-01 찻집이 열린 채로 시작 · 열어도 그 달 쪽지 (QA 5회차)

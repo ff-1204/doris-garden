@@ -51,19 +51,21 @@ function newBoard(st, depth) {
   m.boards = (m.boards || 0) + 1;
   return { depth, cells };
 }
-const newMine = () => ({ energy: MINE_MAX_E, regenH: 0, depth: 1, deepest: 1, boards: 0, board: null, bag: {} });
+const newMine = () => ({ energy: MINE_MAX_E, regenH: 0, depth: 1, deepest: 1, boards: 0, board: null, bag: {}, auto: false, autoStop: null, autoLog: null });
 function mineOf(st) {
   if (!st.mine) st.mine = newMine();
   if (!st.mine.board) st.mine.board = newBoard(st, st.mine.depth);
   return st.mine;
 }
-function mineRegen(st, dtH) {                     // advance에서 (꽃잠에도)
-  const m = st.mine, max = mineMaxE(st); if (!m || m.energy >= max) { if (m) m.regenH = 0; return; }
+function mineRegen(st, dtH, ctx) {                // advance에서 (꽃잠에도)
+  const m = st.mine, max = mineMaxE(st); if (!m) return;
+  if (m.auto) mineAutoRun(st, ctx);               // P83-01 켜 두면 차는 대로 바로 — 한 걸음(15분) 안에서도 기력이 상한에 막히지 않게 한 칸씩
+  if (m.energy >= max) { m.regenH = 0; return; }
   m.regenH += dtH;
-  while (m.regenH >= MINE_REGEN_H - 1e-9 && m.energy < max) { m.regenH -= MINE_REGEN_H; m.energy++; }
+  while (m.regenH >= MINE_REGEN_H - 1e-9 && m.energy < max) { m.regenH -= MINE_REGEN_H; m.energy++; if (m.auto) mineAutoRun(st, ctx); }
   if (m.energy >= max) m.regenH = 0;
 }
-function dig(st, i, ctx) {
+function dig(st, i, ctx, auto) {                   // auto: P83-01 돈을 내고 판 칸 — 파기 경험치 · 주간 목표 없음 (P17-14)
   const m = mineOf(st), c = m.board.cells[i];
   if (!Number.isInteger(i) || !c) return no('그런 칸이 없어요');
   if (c.dug) return no('이미 판 칸이에요');
@@ -78,15 +80,15 @@ function dig(st, i, ctx) {
   st.dex.mine = st.dex.mine || {};
   let first = false;
   if (MINE_DEX_KEYS.includes(c.k) && !st.dex.mine[c.k]) { st.dex.mine[c.k] = true; first = true; addLog(st, 9, `도감에 등록: ⛏️ ${mineName(c.k)}`, ctx); }
-  st.stats.dug = (st.stats.dug || 0) + 1; weekNote(st, 'dig', null, 1, ctx); addXp(st, 'dig', 1, ctx);   // P28-09 · P54
+  st.stats.dug = (st.stats.dug || 0) + 1; if (!auto) { weekNote(st, 'dig', null, 1, ctx); addXp(st, 'dig', 1, ctx); }   // P28-09 · P54
   const what = jewel ? (slowView(st) ? '💎 보석을 캤어요' : `💎 보석! ${jewel.toLocaleString('ko-KR')}원`) : `${c.k === 'oldseed' ? '🌰 ' : ''}${mineName(c.k)}`;
   return ok(`${what}${c.stairs ? (m.depth >= MINE_DEEPEST ? ' · 가장 깊은 곳이에요' : ' · 아래로 내려가는 계단을 찾았어요') : ''}`, { cell: c, first, jewel, stairs: !!c.stairs && m.depth < MINE_DEEPEST });
 }
-function descend(st, ctx) {
+function descend(st, ctx, auto) {                  // auto: P83-01 자동 캐기 (dig와 같음)
   const m = mineOf(st);
   if (!m.board.cells.some(c => c.dug && c.stairs)) return no('먼저 계단을 찾아요');
   if (m.depth >= MINE_DEEPEST) return no('가장 깊은 층이에요');
-  m.depth++; m.deepest = Math.max(m.deepest, m.depth); m.board = newBoard(st, m.depth); weekNote(st, 'descend', null, 1, ctx); addXp(st, 'descend', 1, ctx);   // P28-09 · P54
+  m.depth++; m.deepest = Math.max(m.deepest, m.depth); m.board = newBoard(st, m.depth); if (!auto) { weekNote(st, 'descend', null, 1, ctx); addXp(st, 'descend', 1, ctx); }   // P28-09 · P54
   const dw = Math.round(DESCEND_WON * titlePerk(st, 'descend'));   // P52 🪜
   st.money += dw; st.stats = st.stats || {}; st.stats.descendWon = (st.stats.descendWon || 0) + dw;   // P50
   return ok(`지하 ${m.depth}층으로 내려왔어요${slowView(st) ? '' : ` · ${dw.toLocaleString('ko-KR')}원`}`, { won: dw });
@@ -110,6 +112,47 @@ function freshBoard(st) {                        // 지금 층을 새 판으로 
   m.board = newBoard(st, m.depth);
   return ok('새 굴을 팠어요');
 }
+// P83-01 ⛏️ 자동 캐기 (11-06 사용자 확정 "켜 두면 계속 파되, 1회당 돈을 내게"): 켜 두면 꺼 둔 동안에도 기력이 찰 때마다 한 칸 · 칸마다 돈을 냄 — 돈이 모자라면 꺼지고 까닭(autoStop)을 남김
+//   계단을 찾으면 내려가고(층 돈은 받음), 판을 다 파면 새 판. 돈으로 산 일이라 파기 · 내려가기 경험치 · 주간 목표는 없음 (P17-14) — 도감 · 가방 · 💎 · 층 돈 · stats.dug는 그대로
+//   값 = 한 칸 기대 수입: 보석(칸마다 jewelP × 그 층 값) + 층 돈(계단은 36칸 중 한 칸이라 평균 18.5칸마다, 가장 깊은 층엔 없음) + 광물 값(AUTO_ORE_WON) → 10원 올림. 칭호 · 호박 등 보너스도 따라 올라 돈으로는 늘 조금 밑짐(재료를 얻는 값)
+//   광물 80원: 흙 30원(비료 150원 ÷ 5) × 48% + 돌 50원 × 37% + 광물 · 화석 250원 × 13 ~ 21% = 1층 60원 ~ 20층 80원 남짓 — 가장 깊은 쪽으로
+//   🐞 🪱 🐛 곤충(insectDig)은 기력으로 공짜로 캐요 — 놓여 있으면 기력 AUTO_KEEP_E칸은 곤충 몫으로 남기고 그 위만 씀 (흙 5 = 비료 1개)
+const AUTO_ORE_WON = 80, AUTO_STAIRS_CELLS = (MINE_W * MINE_H + 1) / 2, AUTO_KEEP_E = 5;
+const autoDigWon = (st, depth) => Math.ceil((jewelP(st) * jewelWon(depth) + (depth < MINE_DEEPEST ? DESCEND_WON * titlePerk(st, 'descend') / AUTO_STAIRS_CELLS : 0) + AUTO_ORE_WON) / 10) * 10;
+const autoKeepE = st => Object.keys(INSECT_SUPPLY).some(k => placedOf(st, k).length) ? AUTO_KEEP_E : 0;
+function mineAutoStep(st, ctx) {                  // 한 칸 → 팠으면 true (돈이 모자라면 끄고 false)
+  const m = mineOf(st), L = m.autoLog || (m.autoLog = { n: 0, paid: 0, jewels: 0, won: 0, down: 0, downWon: 0, bag: {} });
+  if (m.depth < MINE_DEEPEST && m.board.cells.some(c => c.dug && c.stairs)) { const d = descend(st, ctx, true); L.down++; L.downWon += d.won; }   // 손으로 찾아 둔 계단도
+  if (m.board.cells.every(c => c.dug)) m.board = newBoard(st, m.depth);
+  const price = autoDigWon(st, m.depth);
+  if (st.money < price) { m.auto = false; m.autoStop = 'money'; mineAutoFlush(st, ctx); return false; }
+  st.money -= price;
+  const r = dig(st, m.board.cells.findIndex(c => !c.dug), ctx, true);
+  L.n++; L.paid += price; st.stats.autoDug = (st.stats.autoDug || 0) + 1; st.stats.autoPaid = (st.stats.autoPaid || 0) + price;
+  if (r.jewel) { L.jewels++; L.won += r.jewel; } else L.bag[r.cell.k] = (L.bag[r.cell.k] || 0) + 1;
+  return true;
+}
+function mineAutoRun(st, ctx) {                   // 곤충 몫을 뺀 기력을 모두
+  const m = st.mine, keep = autoKeepE(st);
+  while (m.auto && m.energy >= keep + 1) if (!mineAutoStep(st, ctx)) break;
+}
+// 일지는 묶어서 한 줄: 달이 바뀔 때 · 끌 때 · 멈출 때 · 오래 비운 뒤 (느긋하게 보기면 돈 숫자 없이)
+function mineAutoFlush(st, ctx) {
+  const m = st.mine, L = m && m.autoLog, stop = m && m.autoStop === 'money' && !m.auto ? '돈이 모자라 자동 캐기를 멈췄어요' : ''; if (!L || !L.n) { if (L) m.autoLog = null; if (stop && L) addLog(st, 18, `⛏️ ${stop}`, ctx); return; }
+  const slow = slowView(st), w = n => n.toLocaleString('ko-KR');
+  const got = Object.entries(L.bag).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 4);
+  const parts = slow ? [`⛏️ 자동 캐기로 ${L.n}칸을 팠어요`, got.length ? `${got.map(([k]) => mineName(k)).join(' · ')}${L.jewels ? ' · 보석' : ''}` : L.jewels ? '보석' : '']
+    : [`⛏️ 자동 캐기 ${L.n}칸 · ${w(L.paid)}원을 냈어요`, L.jewels ? `💎 ${L.jewels}개 +${w(L.won)}원` : '', L.down ? `🪜 ${L.down}층 +${w(L.downWon)}원` : '', got.map(([k, n]) => `${mineName(k)} ${n}`).join(' · ')];
+  addLog(st, 18, [...parts, stop].filter(Boolean).join(' · '), ctx); m.autoLog = null;
+}
+function mineAutoSet(st, on, ctx) {               // 🖥️ 켜기 · 끄기
+  const m = mineOf(st), price = autoDigWon(st, m.depth);
+  if (!on) { m.auto = false; m.autoStop = null; mineAutoFlush(st, ctx); return ok('자동 캐기를 껐어요'); }
+  if (st.money < price) return no(slowView(st) ? '돈이 모자라요' : `돈이 모자라요 · 지금 한 칸 ${price.toLocaleString('ko-KR')}원이에요`);
+  m.auto = true; m.autoStop = null; mineAutoRun(st, ctx);
+  return ok(m.auto ? '자동 캐기를 켰어요 · 기력이 차면 파요' : '돈이 모자라 자동 캐기를 멈췄어요');
+}
+const mineAutoView = st => { const m = mineOf(st), L = m.autoLog; return { on: !!m.auto, stop: m.autoStop || null, price: autoDigWon(st, m.depth), keep: autoKeepE(st), n: L ? L.n : 0, paid: L ? L.paid : 0 }; };
 // 만들기 (P24-03): 돌 → 장식, 흙 → 비료, 광물 → 찻잔 유약 (P17-15 세트를 돈 대신)
 const CRAFTS = {
   fert: { name: '비료', need: { dirt: 5 }, desc: '흙 5 → 🌱 비료 1' },
@@ -124,6 +167,10 @@ const CRAFTS = {
   presol: { name: '특수 용액', need: { quartz: 3, mica: 2, feldspar: 2 }, item: 'presol', desc: '석영 3 · 운모 2 · 장석 2 → 🧪 특수 용액 1' },   // P53 🌹 프리저브드 한 송이에 한 병 (운모는 3층부터)
   hoe: { name: '호미', need: { stone: 3, feldspar: 1 }, supply: 'hoe', desc: '돌 3 · 장석 1 → ⛏️ 호미 1개(잡초 10번)' },      // 10-31 사용자 요청: 광산에서 호미 · 가위 만들기 (화원 값 400 · 500원 — 돌 · 광석으로 대신)
   shears: { name: '가위', need: { stone: 2, mica: 1 }, supply: 'shears', desc: '돌 2 · 운모 1 → ✂️ 가위 1개(가지치기 5번)' },   // P36-04 변이 꽃을 담는 용품 (사용자 결정 ① 그대로)
+  // P83-02 (11-06 사용자 확정): 키우는 도구 여섯을 모두 재료로 — 재료 값이 화원 값과 비슷하게 (흙 30 · 돌 50 · 장석 · 석영 250원으로 셈: 물병 50 = 돌 1 · 바구니 500 = 돌 5 + 장석 1 · 삽 500 = 돌 5 + 석영 1 · 호미 400 = 돌 3 + 장석 1 그대로)
+  water: { name: '물병', need: { stone: 1 }, supply: 'water', desc: '돌 1 → 💧 물병 1개' },
+  basket: { name: '바구니', need: { stone: 5, feldspar: 1 }, supply: 'basket', desc: '돌 5 · 장석 1 → 🧺 바구니 1개(꽃잎 거두기 10번)' },
+  shovel: { name: '삽', need: { stone: 5, quartz: 1 }, supply: 'shovel', desc: '돌 5 · 석영 1 → 🪏 삽 1개(옮겨심기 10번)' },
   // P44-01 ⛏️ 광산 공방: 정원 장치 다섯도 재료로 (값은 돈으로 사기와 함께 WORKSHOP)
   heatmat: { name: '온상 매트', need: { dirt: 20, stone: 5 }, deco: 'heatmat' },
   growlight: { name: '생장등', need: { quartz: 3, stone: 10 }, deco: 'growlight' },
@@ -133,7 +180,7 @@ const CRAFTS = {
   autodryer: { name: '자동 건조기', need: { stone: 20, dirt: 10, quartz: 3 }, deco: 'autodryer' },   // P72-02 건조 선반 + 돌 5 · 석영 3 (생장등처럼 유리 창)
   teastand: { name: '찻집 도우미', need: { feldspar: 4, mica: 2, stone: 10 }, deco: 'teastand' },
 };
-// P44-01 ⛏️ 광산 공방 (11-01 사용자 확정): 정원에 놓는 12가지 — 재료로 만들기(CRAFTS) 또는 💰 돈으로 사기(값). 비료 · 호미 · 가위 · 찻잔은 공방 밖 "재료 만들기"
+// P44-01 ⛏️ 광산 공방 (11-01 사용자 확정): 정원에 놓는 12가지 — 재료로 만들기(CRAFTS) 또는 💰 돈으로 사기(값). 찻잔은 공방 밖 "재료 만들기" · 키우는 도구는 P83-02 TOOL_CRAFTS(값은 SUPPLIES)
 const WORKSHOP = { stonewall: 500, fossilcase: 25000, amberlamp: 20000, oldpot: 15000, jar: 8000, heatmat: 15000, growlight: 30000, greenhouse: 120000, dryshelf: 18000, autodryer: 30000, teastand: 30000 };   // P73-02 🧱 돌담 500원 · P72-02 ⚙️ 자동 건조기 30,000원 (건조 선반 18,000원 한 단계 위 — 생장등 · 찻집 도우미 값)
 const WORKSHOP_KEYS = Object.keys(WORKSHOP);
 // P44-04 공방 효과 — 정원에 놓았을 때만(창고면 쉼). 둘레 효과는 꽃마다 한 번, 광산 · 씨앗 효과는 여러 개 놓아도 한 번
@@ -168,6 +215,7 @@ function workshopBuy(st, k, ctx) {               // 💰 돈으로 사기
   return ok(`${josa(C.name, '을/를')} 샀어요 · 창고에서 정원에 놓을 수 있어요`, { deco: d });
 }
 const CRAFT_KEYS = Object.keys(CRAFTS);
+const TOOL_CRAFTS = ['water', 'fert', 'hoe', 'shears', 'basket', 'shovel'];   // P83-02 공방 「🧺 키우는 도구」 카드 차례 (= SUPPLIES 키 — 재료가 모자라면 그 카드에서 buySupply)
 const canCraft = (st, k) => { const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null, bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
 function craft(st, k, ctx) {
   const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null;

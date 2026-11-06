@@ -56,7 +56,7 @@ console.log('[🧺 · 🌙 없앰 (P40-04)]');
 { const st = garden(4); st.bonus.pantry = 3; st.bonus.catchup = 2;
   check(E.pantryCap(st) === 4 && E.catchUpH(st) === 21 * 24 && E.farmOf(st).catchup.weeks === 3, '저장고 상한은 등급 기본값만 · 따라잡기는 3주 (저장에 예전 값이 남아도)'); }
 { const P40N = E.MIGRATIONS.findIndex(x => x[0].includes('P40-04'));
-  check(P40N === E.MIGRATIONS.length - 10, `MIGRATIONS ${P40N + 1}번째 (뒤로 P41 · P42 · P43 · P48)`);
+  check(P40N === E.MIGRATIONS.length - 11, `MIGRATIONS ${P40N + 1}번째 (뒤로 P41 · P42 · P43 · P48)`);
   const old = copy(garden(30)); delete old.pollenExtra;
   old.bonus = { barrel: 0, basket: 2, weed: 0, worm: 0, rack: 0, hive: 0, brew: 0, pantry: 3, catchup: 2 }; old.bonusFree = { pantry: 1, basket: 0 };
   E.MIGRATIONS[P40N][1](old);   // 이 보정만 (P41이 뒤에서 모두 0단계로 돌림)
