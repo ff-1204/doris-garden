@@ -37,27 +37,14 @@ const UI_CARE = { water: 'water', weed: 'weed', prune: 'prune', fert: 'fert', ha
 const CARE_ALL = [['water', '모두 물 주기']];   // P89-05 모두 거두기 단추는 뺌 — 바구니 칸을 누르면 같은 일
 const careAllBtns = (need, cls) => CARE_ALL.filter(([k]) => need[k] >= 2).map(([k, nm]) => `<button type="button" class="${cls}" style="--k:${CARE_COLOR[k]}" data-all="${k}">${uiImg(UI_CARE[k], 1)} ${nm} <b>(${need[k]})</b></button>`).join('');
 function careAllOn(k) { return after(E.careAll(st, k, ctx), k === 'water' ? 'watered' : 'harvested', k === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
-// P28-04 🧺 정원 저장고 (M2-7): 돌볼 꽃 칩 줄에 쌓인 양 / 상한 — 누르면 모두 거두기. 🐢 느긋하게 보기면 숫자 없이 (쌓였을 때만)
-const PANTRY_K = '#b07a2a';
-const pantryText = v => v.list.map(x => `${x.ic} ${x.name} ${x.n}`).join(' · ');
-function pantryChip() {
-  const v = E.pantryView(st); if (!v || (v.slow && !v.has)) return '';
-  const tip = `🧺 정원 저장고${v.slow ? '' : ` ${v.n} / ${v.cap}${v.full ? ' · 가득 찼어요' : ' · 2시간마다 한 칸'}`}${v.has ? ` · ${pantryText(v)} · 눌러서 모두 거두기` : ''}`;
-  return `<button type="button" class="nd pantry-chip ${v.has ? 'on' : ''}" style="--k:${PANTRY_K}" data-pantry="1" title="${tip}" aria-label="${tip}"><span>${uiImg('basket')}</span>${v.slow ? '' : `<b>${v.n}/${v.cap}</b>`}</button>`;
-}
-function pantryAllBtn(cls) {
-  const v = E.pantryView(st); if (!v || !v.has) return '';
-  return `<button type="button" class="${cls}" style="--k:${PANTRY_K}" data-pantry="1" title="${pantryText(v)}">🧺 저장고 · 모두 거두기${v.slow ? '' : ` <b>(${v.n})</b>`}</button>`;
-}
-function takePantryOn() { const r = E.takePantry(st, ctx); return after(r, null, r.ok && r.petals ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 function renderToolbar(force) {
   const pl = plantable(), cal = E.calendar(st.virtual), need = careNeed(cal);
-  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy, (v => v && [v.n, v.cap, v.has, v.slow, v.list.length])(E.pantryView(st))]);
+  const sig = JSON.stringify([ui.tool, ui.plantType, ui.moveFrom, ui.decoId, st.fert, pl, cal.frozen, need, E.mineOf(st).energy]);
   if (!force && ui.sigs.toolbar === sig) return;
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · ${k === 'harvest' && need[k] >= 2 ? '눌러서 모두 거두기' : '눌러서 찾기'}"><span>${uiImg(UI_CARE[k])}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · ${k === 'harvest' && need[k] >= 2 ? '눌러서 모두 거두기' : '눌러서 찾기'}"><span>${uiImg(UI_CARE[k])}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all');   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -79,7 +66,6 @@ function renderToolbar(force) {
   renderHint();
 }
 $('#needs').addEventListener('click', e => {
-  if (e.target.closest('[data-pantry]')) return takePantryOn();
   const all = e.target.closest('[data-all]'); if (all) return careAllOn(all.dataset.all);
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];

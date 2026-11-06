@@ -65,12 +65,11 @@ console.log('[💰 기르기 — 모은 돈으로 (P41-01 · 02 · 03)]');
 
 console.log('[🌙 돌아왔을 때 한 창 (R-04)]');
 { const st = garden(6, c => c.month === 6 && !c.frozen);
-  check(JSON.stringify(E.awayHome(st)) === JSON.stringify({ pantry: null, dried: null, drying: null }), '비어 있으면 아무 줄도 없음');
+  check(JSON.stringify(E.awayHome(st)) === JSON.stringify({ dried: null, drying: null }), '비어 있으면 아무 줄도 없음');
   st.dried.push({ id: 1, type: 'rose', q: 0.7 }, { id: 2, type: 'rose', q: 0.7 });
-  st.pantry = { items: [{ k: 'water' }], h: 0 };
   const a = E.awayHome(st);
   check(a.dried === '🍂 꽃방에 다 마른 꽃잎 2장이 기다려요' && a.drying === null, `다 마른 꽃잎 줄 ("${a.dried}")`);
-  check(!a.pantry || a.pantry.has, '🧺 입구 선반은 pantryView 그대로 (열린 정원만)');
+  check(!('pantry' in a), '🧺 입구 선반 줄은 없어짐 (P90 — 받은 것은 곤충 줄과 같은 "그동안 받은 것" 한 줄)');
   st.dried = []; st.drying.push({ id: 3, type: 'rose', q: 0.7, leftH: 5 });
   check(E.awayHome(st).drying === '🌾 꽃방에서 꽃잎 1장이 마르고 있어요', '다 마른 게 없으면 마르는 중 한 줄');
   st.settings.slow = true;

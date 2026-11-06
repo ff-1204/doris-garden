@@ -58,7 +58,7 @@ console.log('[저장 · 새 철]');
   const sim = (...a) => execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7', ...a], { encoding: 'utf8' }).split('\n');
   const y4 = out => { const h = out[0].split('\t'), r = out.find(l => l.startsWith('4\t')).split('\t'), v = k => +r[h.indexOf(k)] || 0; return [v('연말 돈'), v('찻집: 티백 차') + v('찻집: 블렌드') + v('찻집: 레시피 블렌드')]; };
   const base = y4(sim()), all = y4(sim('--bonus=barrel,basket,weed,worm,rack,hive,brew'));
-  check(base[0] === 3365510 && base[1] === 1574230, `P77-C 꽃잎 수: 3,365,510원 · 찻집 1,574,230원 (P72-01 4,977,660원 · 찻집 2,183,330원 · 시뮬 기본 4 7: 65,420원 · 찻집 319,920원 (P54 새 기준 · P49 117,420원 · 319,990원 · P47 87,330원 · 319,680원 · P41 43,920원 · 282,940원 — ${base.join(' · ')})`);
+  check(base[0] === 3782050 && base[1] === 1779390, `P90 저절로 들어옴: 3,782,050원 · 찻집 1,779,390원 (P77-C 3,365,510원 · 1,574,230원) (P72-01 4,977,660원 · 찻집 2,183,330원 · 시뮬 기본 4 7: 65,420원 · 찻집 319,920원 (P54 새 기준 · P49 117,420원 · 319,990원 · P47 87,330원 · 319,680원 · P41 43,920원 · 282,940원 — ${base.join(' · ')})`);
   check(all[0] === base[0] && all[1] === base[1], '기본 정원사는 곤충 칸이 끝단계여도 같음 (곤충이 없으면 둘레도 일하지 않음)'); }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

@@ -84,7 +84,7 @@ function renderFarm(force) {
     <div class="decoshop fm-grid">${f.workers.map(w => farmCard(w, slow)).join('')}</div>
     ${farmOtherHTML(v, slow)}
     ${farmAwayHTML(f.catchup, slow)}
-    <p class="note muted fm-foot">곤충은 놓은 자리 둘레의 꽃을 돌봐요 · 정원에서 곤충을 누르면 둘레가 보여요 · 손을 덜어 줘요 · 🐝 꿀벌 꿀은 🍵 꿀차로 팔 수 있어요 · 🧺 저장고 · 🔆 장치(건조 선반 · 찻집 도우미)는 ⛏️ 광산에 있어요</p></div>`;
+    <p class="note muted fm-foot">곤충은 놓은 자리 둘레의 꽃을 돌봐요 · 정원에서 곤충을 누르면 둘레가 보여요 · 손을 덜어 줘요 · 🐝 꿀벌 꿀은 🍵 꿀차로 팔 수 있어요 · 🔆 장치(건조 선반 · 찻집 도우미)는 ⛏️ 광산에 있어요</p></div>`;
 }
 $('#p-farm').addEventListener('click', e => {
   const b = e.target.closest('[data-fbuy]'); if (b && !b.disabled) return askDeco(b.dataset.fbuy);   // 사기 전 확인 (askBuy, app-shop)

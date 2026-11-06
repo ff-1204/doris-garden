@@ -45,12 +45,6 @@ function askMineAuto() {
     { label: '켜기', primary: true, act: go },
   ]);
 }
-function minePantryHTML(v, slow) {   // 10-31 사용자: 🧺 정원 저장고를 곤충농장에서 ⛏️ 광산 "입구 선반"으로 (규칙 그대로)
-  if (!v) return '<p class="note muted">첫 안내를 마치면 저장고가 열려요</p>';
-  const has = v.has ? `<p class="note">${slow ? v.list.map(x => `${x.ic} ${x.name}`).join(' · ') : pantryText(v)}</p>` : `<p class="note muted">${slow ? '조금씩 쌓여요' : `광산 입구 선반에 2시간마다 하나씩 올라와요${v.full ? '' : ` · 다음 것까지 ${Math.ceil(v.next)}시간`}`}</p>`;
-  return `<div class="cab-head"><span class="sb-title">🧺 입구 선반 · 정원 저장고</span>${slow ? '' : `<span class="dh-count data">${v.n} / ${v.cap}${v.full ? ' · 가득' : ''}</span>`}</div>
-    <div class="card fm-pantry mine-pantry">${has}${pantryAllBtn('btn small care') || ''}</div>`;
-}
 function renderMine(force) {
   const m = E.mineOf(st), b = m.board;
   const wait = realH((E.MINE_REGEN_H - m.regenH) / (st.speed || 1));
@@ -70,7 +64,7 @@ function renderMine(force) {
     return { can, html: `<div class="mcraft ${can ? 'can' : ''}"><span>${art}</span><span class="mcr-main"><b>${C.name}</b><span class="mcr-bar" role="img" aria-label="재료 ${pct}%"><i style="width:${pct}%"></i></span><small>${Object.entries(C.need).map(([n, q]) => `${E.mineName(n)} ${m.bag[n] || 0}/${q}${!(m.bag[n] >= q) && mineFrom(n) > 1 ? ` (${mineFrom(n)}층부터)` : ''}`).join(' · ')}</small></span>${have ? '<span class="muted">✓ 있어요</span>' : `<button type="button" class="btn small ${can ? 'primary' : ''}" data-craft="${k}" ${can ? '' : 'disabled'}>만들기</button>`}</div>` }; });
   const order = rows => [...rows.filter(r => r.can), ...rows.filter(r => !r.can)];   // 만들 수 있는 것 위로
   const crafts = `<div class="mine-crafts">${order(craftRows).map(r => r.html).join('')}</div>`;   // P83-02 비료 · 호미 · 가위는 공방 「🧺 키우는 도구」로
-  const sig = JSON.stringify([m, nextE, maxE, E.slowView(st), E.gradeOf(st).grade, E.pantryView(st), st.money, (st.decos || []).map(d => d.key + (d.x == null ? 0 : 1)).join(), st.money, E.shopOf(st).cups, st.jar, st.presol, E.TOOL_CRAFTS.map(k => st[k])]);
+  const sig = JSON.stringify([m, nextE, maxE, E.slowView(st), E.gradeOf(st).grade, st.money, (st.decos || []).map(d => d.key + (d.x == null ? 0 : 1)).join(), st.money, E.shopOf(st).cups, st.jar, st.presol, E.TOOL_CRAFTS.map(k => st[k])]);
   if (!force && ui.sigs.mine === sig) return;
   ui.sigs.mine = sig;
   const downBtn = stairsFound && m.depth < E.MINE_DEEPEST;
@@ -90,8 +84,7 @@ function renderMine(force) {
     <section class="mine-sec"><h3 class="mine-sub">🎒 가방</h3>${bag}</section>
     </div>
     <p class="note">기력은 1분마다 한 칸씩, 꺼 둔 동안에도 차요 · 💎 보석은 파면 바로 돈이 되고, 나머지는 팔지 않고 만들기 · 공방 · 도감에 써요</p></div>
-    <div class="mine-ws">${mineToolsHTML()}${mineWorkshopHTML()}</div>
-    <div class="mine-extra"><div class="stack">${minePantryHTML(E.pantryView(st), E.slowView(st))}</div></div>`;   // 10-31 🧺 선반 (P44 🔆 공방은 위 ⛏️ 광산 공방 카드로)
+    <div class="mine-ws">${mineToolsHTML()}${mineWorkshopHTML()}</div>`;
 }
 // 10-31 QA: 광산은 눌릴 때마다 통째로 다시 그려 키보드 포커스가 BODY로 떨어짐 → 같은 자리(판 칸은 그 칸부터 다음 안 판 칸)로 되돌림
 function mineRefocus(sel, kind) {
@@ -115,7 +108,6 @@ $('#p-mine').addEventListener('click', e => {
   const au = e.target.closest('[data-mauto]'); if (au) { if (au.dataset.mauto === 'on') return askMineAuto(); const r = E.mineAutoSet(st, false, ctx); feedback(r.msg); save(); return renderAll(true); }   // P83-01
   const tb = e.target.closest('[data-toolbuy]'); if (tb && !tb.disabled) { const k = tb.dataset.toolbuy, S = E.SUPPLIES[k];   // P83-02 재료가 모자라면 그 카드에서 (화원 값)
     return askBuy({ name: S.name, note: S.desc, price: S.price, art: `<span class="ba-ic">${S.icon}</span>` }, () => { after(E.buySupply(st, k, 1)); renderAll(true); }); }
-  if (e.target.closest('[data-pantry]')) return takePantryOn();   // 🧺 입구 선반 (10-31)
   const wb = e.target.closest('[data-wsbuy]'); if (wb && !wb.disabled) { const k = wb.dataset.wsbuy, C = E.CRAFTS[k];   // P44-01 💰 돈으로 사기 (화원과 같은 확인 창)
     return askBuy({ name: C.name, note: wsNote(k), price: E.WORKSHOP[k], art: k === 'jar' ? decoImg('mutjar', 3) : decoImg(C.deco, 3) }, () => { const r = E.workshopBuy(st, k, ctx); after(r, null, r.deco ? { label: '🪴 놓기', fn: () => { ui.tool = 'deco'; ui.decoId = r.deco.id; setTab('garden', true); } } : undefined); renderAll(true); }); }
   const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const k = c.dataset.craft, r = E.craft(st, k, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); return mineRefocus(`[data-craft="${k}"]`); }

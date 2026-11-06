@@ -20,7 +20,7 @@ const r = E.parseSave(JSON.stringify(E.makeSave(st, 12345)));
 const back = r.ok && E.migrateSave(r.data.game);
 check(back && E.bigView(back) && E.patternView(back), '파일로 저장해 열어도 켜진 그대로');
 const BN = E.MIGRATIONS.findIndex(m => m[0].includes('settings.big'));
-check(BN === 40 && E.MIGRATIONS[BN + 1][0].includes('awayLast') && E.MIGRATIONS.length === 58, 'MIGRATIONS 41번째 · 42번째는 P32 awayLast · farm (43번째 P36 · 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48 · 52번째 맨 끝 P52)');
+check(BN === 40 && E.MIGRATIONS[BN + 1][0].includes('awayLast') && E.MIGRATIONS.length === 59, 'MIGRATIONS 41번째 · 42번째는 P32 awayLast · farm (43번째 P36 · 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48 · 52번째 맨 끝 P52)');
 const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN;
 const om = E.migrateSave(old);
 check(om.settings.big === false && om.settings.pattern === false, '예전 정원은 보정으로 둘 다 꺼짐');
@@ -67,6 +67,6 @@ check(minD >= 24, `가장 비슷한 두 무늬도 도트 ${minD}칸 이상 다�
 console.log('[시뮬 기본은 그대로]');
 { const out = require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7'], { encoding: 'utf8' });
   const y4 = out.split('\n')[4].split('\t');
-  check(y4[0] === '4' && y4[16] === '3365510', `P77-C 꽃잎 수: sim-economy 4 7 연말 3,365,510원 그대로 (${y4[16]}) — (P72-01 꽃이 6시간마다 다시 핌 4,977,660원 · P54 65,420원 — 모든 활동 경험치로 등급 장식을 일찍 삼 (P49 117,420원 · P47 87,330원 · P41 43,920원 · 예전 P34 80,720원 · 그 전 22,310원)`); }
+  check(y4[0] === '4' && y4[16] === '3782050', `P90 저절로 들어옴: sim-economy 4 7 연말 3,782,050원 (예전 --pantry와 같음 · 안 거두던 기본 3,365,510원) (${y4[16]}) — (P72-01 꽃이 6시간마다 다시 핌 4,977,660원 · P54 65,420원 — 모든 활동 경험치로 등급 장식을 일찍 삼 (P49 117,420원 · P47 87,330원 · P41 43,920원 · 예전 P34 80,720원 · 그 전 22,310원)`); }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

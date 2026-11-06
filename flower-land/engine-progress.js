@@ -143,7 +143,7 @@ const GRADE_BY = [['harvest', '🧺', '거두기', 'garden'], ['sell', '💰', '
   ['plant', '🪴', '심기', 'garden'], ['move', '🔁', '옮겨심기', 'garden'], ['prop', '🌼', '번식', 'garden'],
   ['dry', '🍂', '말리기', 'tea'], ['teabag', '🍵', '티백', 'tea'], ['blend', '🫖', '블렌드', 'tea'],
   ['dig', '⛏️', '파기', 'mine'], ['descend', '🪜', '내려가기', 'mine'], ['craft', '🔨', '만들기', 'mine'],
-  ['bug', '🐜', '곤충이 거둔 꽃잎', 'bug'], ['honey', '🍯', '꿀', 'bug'], ['pantry', '📦', '저장고', 'bug'], ['bugCare', '🐞', '곤충 돌보기', 'bug'],
+  ['bug', '🐜', '곤충이 거둔 꽃잎', 'bug'], ['honey', '🍯', '꿀', 'bug'], ['pantry', '📦', '받은 것', 'bug'], ['bugCare', '🐞', '곤충 돌보기', 'bug'],
   ['jar', '🫙', '유리 관', 'collect'], ['pres', '🌹', '프리저브드', 'collect'], ['presSell', '💐', '프리저브드 팔기', 'collect']];
 const GRADE_GROUPS = [['care', '💧', '돌보기'], ['garden', '🌸', '꽃밭'], ['tea', '🍵', '찻집'], ['mine', '⛏️', '광산'], ['bug', '🐝', '곤충'], ['collect', '📖', '수집'], ['goal', '🏅', '목표']];   // P54
 const gradeXpAt = g => { let x = 0; for (let i = 1; i < g; i++) x += gradeCost(i); return x; };   // g등급이 되는 누적 경험치

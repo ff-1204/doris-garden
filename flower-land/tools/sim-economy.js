@@ -9,7 +9,7 @@
 //   --buy=save: 열린 단계가 있으면 살 때까지 찻집 가꾸기 · 선물 · 장식을 미루고 모으는 정원사 · --speed=값2:등급2:값3:등급3 · --ring=값1:값2[:up1:up2]로 값 후보를 이 시뮬 안에서만 바꿔 잼
 // --bonus: 기르기(P28-05-02 · P37 · P39 · P40 · P41) 9칸을 처음부터 끝단계로 둔 정원사 (돈을 내지 않음 — 경제를 흔드는지 보는 가장 센 경우, 돈을 내고 사는 건 --buy). --auto와 함께 써야 곤충이 일함 · 🌱 자라는 · 🌾 말리는 속도는 기본 정원사에도 일함
 //   --bonus=rack,basket처럼 몇 칸만 끝단계로 · --bonus brew=2(또는 --bonus=brew=2,hive=1)처럼 단계를 정할 수도 · --bonus all = 모두 끝단계 (P37)
-// --pantry: 🧺 정원 저장고(P28-04)를 들를 때마다(2시간) 모두 거두는 정원사 — 기본 정원사는 거두지 않음(저장고가 상한까지 차고 멈춤). 표의 '저장고'는 받은 물병 · 비료 · 흙을 화원 값으로 셈, '저장고 꽃잎'은 받은 떨어진 꽃잎 수
+// 🧺 작은 것은 P90부터 저절로 들어와요 (예전 --pantry 정원사와 같은 양)
 // --season: 🌸 새 철(P28-08) — 해 수만큼 돌고 그 해 꽃잠(쉼달 기록 뒤)에 새 철을 시작해 다시 해 수만큼. 표의 해는 2철부터 "2철 1"처럼 (꽃 13종 조건은 꽃 도감만 채운 것으로 봄 — 아래 새 철 줄)
 // --path 꽃길|찻길|흙길 (또는 flower|tea|earth): 🛤️ 철의 길(P30-04-01) — 1철부터 그 길을 걷는 정원으로 봄(실제로는 2철부터 고름) · --season이면 2철도 그 길. 돈 · 수확은 길 없이와 같아야 함 (P17-14)
 // --layer4 (또는 --forest): 🌳 4층(작은 숲)이 처음부터 열린 정원(P30-02) — 2 · 3층이 열리는 대로 4층도. P39부터 숲 바람은 없고 4층이 열리면 🐞 무당벌레를 선물로 받음 (--auto면 놓음)
@@ -29,7 +29,7 @@ const PATH_I = process.argv.indexOf('--path'), PATH_ARG = PATH_I > 0 ? process.a
 const BONUS_I = process.argv.indexOf('--bonus'), BONUS_NEXT = BONUS_I > 0 && process.argv[BONUS_I + 1] && !process.argv[BONUS_I + 1].startsWith('--') && !/^\d+$/.test(process.argv[BONUS_I + 1]) ? BONUS_I + 1 : -1;   // P37 --bonus brew=2 (뒤 값은 해 수 · 씨앗이 아님)
 const PATH = PATH_ARG == null ? null : (E.PATHS[PATH_ARG] ? PATH_ARG : E.PATH_KEYS.find(k => E.PATHS[k].name === PATH_ARG) || null);
 if (PATH_ARG != null && !PATH) { console.error(`모르는 길: ${PATH_ARG} (꽃길 · 찻길 · 흙길)`); process.exit(1); }
-const args = process.argv.slice(2).filter((a, i) => !a.startsWith('--') && !(PATH_I > 0 && i + 2 === PATH_I + 1) && i + 2 !== BONUS_NEXT), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), WORKERS = process.argv.includes('--workers'), AUTO = WORKERS || process.argv.includes('--auto'), PANTRY = process.argv.includes('--pantry'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a.startsWith('--bonus=')) || '').replace(/^--bonus=/, '') || (BONUS_NEXT > 0 ? process.argv[BONUS_NEXT] : BONUS_I > 0 ? 'all' : '');
+const args = process.argv.slice(2).filter((a, i) => !a.startsWith('--') && !(PATH_I > 0 && i + 2 === PATH_I + 1) && i + 2 !== BONUS_NEXT), NO_SPEND = process.argv.includes('--no-spend'), NO_GRADE_DECO = process.argv.includes('--no-grade-deco'), WORKERS = process.argv.includes('--workers'), AUTO = WORKERS || process.argv.includes('--auto'), SEASON = process.argv.includes('--season'), BONUS = (process.argv.find(a => a.startsWith('--bonus=')) || '').replace(/^--bonus=/, '') || (BONUS_NEXT > 0 ? process.argv[BONUS_NEXT] : BONUS_I > 0 ? 'all' : '');
 const YEARS = +(args[0] || 4), SEED = +(args[1] || 7);
 let s = SEED; const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
 const H = E.HOUR;
@@ -127,8 +127,6 @@ function act() {
       if (MINE) { while (E.canCraft(st, 'presol') && st.presol < 1) E.craft(st, 'presol', ctx); } else st.presol = Math.max(st.presol, 1);
       E.preserve(st, f.id, ctx); }
   }
-  // 🧺 정원 저장고 (P28-04, --pantry): 용품을 사기 전에 먼저 거둠
-  if (PANTRY && st.pantry.items.length) { const r = E.takePantry(st, ctx); for (const x of r.list) if (x.k === 'petal') add(yr, '저장고 꽃잎', x.n); else add(yr, '저장고', x.n * x.won); }
   // 용품
   for (const [k, n] of Object.entries(KEEP)) while ((st[k] || 0) < n && st.money >= E.SUPPLIES[k].price + 500) spend('용품', () => E.buySupply(st, k, 1));
   // 💰 기르기 (P41-06, --buy): 등급이 닿고 값 + 20,000원이 남으면 🌾 → 🌱 → 곤충 둘레 순으로 한 단계씩 — 열린 단계가 있으면 살 때까지 찻집 가꾸기 · 선물 · 장식을 미루고 모음 (saving)
@@ -255,7 +253,7 @@ while (st.virtual < end) {
   }
 }
 // 표
-const keys = ['하루 용돈', '농장 정착금', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['찻집: 꿀차', '카운터 판매'] : []), ...(PANTRY ? ['저장고', '저장고 꽃잎'] : []), ...(MINE ? ['💎 보석', '🪜 층 돈'] : []), ...(PRES ? ['🌹 프리저브드'] : []), '막힘 방지', '꽃 사기', ...(PETALLOOP != null ? ['꽃잎 사기'] : []), ...(AUTOMINE != null ? ['자동 캐기 낸 돈'] : []), ...(CRAFT ? ['만든 도구 값'] : []), ...(MOVE_N ? ['삽'] : []), '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), ...(BUY ? ['기르기'] : []), '선물', ...(MINE ? ['보석 수'] : []), ...(PRES ? ['프리저브드 수'] : []), '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
+const keys = ['하루 용돈', '농장 정착금', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['찻집: 꿀차', '카운터 판매'] : []), ...(MINE ? ['💎 보석', '🪜 층 돈'] : []), ...(PRES ? ['🌹 프리저브드'] : []), '막힘 방지', '꽃 사기', ...(PETALLOOP != null ? ['꽃잎 사기'] : []), ...(AUTOMINE != null ? ['자동 캐기 낸 돈'] : []), ...(CRAFT ? ['만든 도구 값'] : []), ...(MOVE_N ? ['삽'] : []), '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), ...(BUY ? ['기르기'] : []), '선물', ...(MINE ? ['보석 수'] : []), ...(PRES ? ['프리저브드 수'] : []), '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];

@@ -200,7 +200,7 @@ console.log('[저장 · 예전 정원]');
   const got = back.ok ? E.migrateSave(back.data.game) : null;
   check(!!got && got.flowers.some(f => f.mut) && got.jar === 1 && got.dex.mutant.rose === 1 && got.decos.some(d => d.mut && d.mut.stage === 2), '저장 파일로 저장 · 열기');
   const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
-  check(MN === E.MIGRATIONS.length - 16, `MIGRATIONS ${MN + 1}번째 P36 (뒤로 P37 · P38 · P39 · P40 · P41 · P42 · P43 · 맨 끝 P48)`);
+  check(MN === E.MIGRATIONS.length - 17, `MIGRATIONS ${MN + 1}번째 P36 (뒤로 P37 · P38 · P39 · P40 · P41 · P42 · P43 · 맨 끝 P48)`);
   const old = JSON.parse(JSON.stringify(s)); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
   old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 40 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
   const om = E.migrateSave(old);
@@ -216,6 +216,6 @@ console.log('[시뮬 — 돈 · 수확]');
 { const { execFileSync } = require('child_process'), path = require('path');
   const out = execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'sim-economy.js'), '4', '7'], { encoding: 'utf8' });
   const money = +(/끝: 돈 (\d+)/.exec(out) || [])[1];
-  check(money === 3365510, `P77-C 꽃잎 수: 시뮬 4 7 연말 3,365,510원 그대로 (${money}원) (P72-01 4,977,660원 · P54 65,420원 · P49 117,420원 · P47 87,330원 · P41 43,920원)`); }
+  check(money === 3782050, `P90 저절로 들어옴: 시뮬 4 7 연말 3,782,050원 (예전 3,365,510원) (${money}원) (P72-01 4,977,660원 · P54 65,420원 · P49 117,420원 · P47 87,330원 · P41 43,920원)`); }
 
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

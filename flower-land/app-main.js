@@ -103,7 +103,7 @@ function showAway() {
   const rest = a.lines.filter(l => !E.isAutoLine(l.text)), pick = rest.slice(-8).map(li).join('');   // P41 R-04 곤충이 한 일은 위 🏡 묶음으로
   const home = awayHomeHTML(a.lines.filter(l => E.isAutoLine(l.text)).map(li).join(''));
   const chips = [a.money ? `💰 ${a.money > 0 ? '+' : ''}${won(a.money)}` : '', a.thirsty ? `💧 목마른 꽃 ${a.thirsty}포기` : '🌿 목마른 꽃이 없어요', `⛏️ 기력 ${a.gained > 0 ? `+${a.gained} · ` : ''}${a.energy >= E.MINE_MAX_E ? '가득' : `${a.energy} / ${E.MINE_MAX_E}`}`].filter(Boolean);
-  const acts = careAllBtns({ water: careNeed(E.calendar(st.virtual)).water }, 'btn small care');   // P28-11 모두 물 주기만 — P76-02 (11-04 사용자): 🧺 모두 거두기 · 🧺 저장고 모두 거두기는 이 창에서 뺌 (정원 탭 칩 줄에는 그대로)
+  const acts = careAllBtns({ water: careNeed(E.calendar(st.virtual)).water }, 'btn small care');   // P28-11 모두 물 주기만 — P76-02 (11-04 사용자): 🧺 모두 거두기는 이 창에서 뺌 (정원 탭 칩 줄에는 그대로)
   openModal(`🌙 ${a.again ? '지난번 ' : ''}자리를 비운 동안 · ${hh}`, `<div class="away-pop"><div class="away-chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
     ${home}${acts ? `<div class="away-acts">${acts}</div>` : ''}
     ${pick ? `<ul class="away-log">${pick}</ul>${rest.length > 8 ? `<p class="muted">그 밖에 ${rest.length - 8}줄은 📜 정원 일지에 있어요</p>` : ''}` : home ? '' : '<p class="muted">조용히 시간이 흘렀어요</p>'}${awayLongHTML(a.long)}</div>`,
@@ -116,7 +116,7 @@ function showAway() {
     after(r, 'watered');
   };
 }
-// P41 R-04 🏡 그동안 정원에서 (10-31): 곤충이 한 일 · 🧺 입구 선반에 쌓인 것 · 꽃방에서 다 마른 꽃잎을 한 묶음으로 (선반 · 꽃잎은 지금 모습 — E.awayHome)
+// P41 R-04 🏡 그동안 정원에서 (10-31): 곤충이 한 일 · 그동안 받은 것 · 꽃방에서 다 마른 꽃잎을 한 묶음으로 (선반 · 꽃잎은 지금 모습 — E.awayHome)
 // R-C3 (11-05 검토): 처음부터 탭 10개가 다 보이던 것 → 제다실은 꽃잎을 거두면, 찻집은 티백이 생기면, 곤충농장 · 광산은 정원 등급 2부터(곤충을 데려왔거나 판 적이 있으면 그대로). 한 번 열리면 닫히지 않는 조건들이라 되돌아가지 않음 · 새로 열릴 때 한 줄
 const TAB_OPEN = {
   tearoom: s => Object.keys(s.dex.petal || {}).length > 0 || s.petals.length > 0 || s.drying.length > 0 || s.dried.length > 0,
@@ -135,11 +135,10 @@ function tabsSync() {
   ui.tabsSeen = true;
 }
 function awayHomeHTML(bugs) {
-  const h = E.awayHome(st), p = h.pantry;
-  const shelf = p ? `<li><span aria-hidden="true">🧺</span>입구 선반에 ${esc(p.slow ? p.list.map(x => `${x.ic} ${x.name}`).join(' · ') : pantryText(p))}</li>` : '';
+  const h = E.awayHome(st);
   const petal = h.dried || h.drying ? `<li><span aria-hidden="true">${h.dried ? '🍂' : '🌾'}</span>${esc((h.dried || h.drying).replace(/^\S+ /, ''))}</li>` : '';
-  if (!bugs && !shelf && !petal) return '';
-  return `<div class="away-home"><b>🏡 그동안 정원에서</b><ul class="away-log">${bugs}${shelf}${petal}</ul></div>`;
+  if (!bugs && !petal) return '';
+  return `<div class="away-home"><b>🏡 그동안 정원에서</b><ul class="away-log">${bugs}${petal}</ul></div>`;
 }
 // P30-07 🍃 그동안: 1해(1주) 넘게 비웠으면 창 아래 세 줄 — 지나간 해 수 · 놓친 올해만 것 · 다음 층까지 (문구는 E.awayLinesText, 느긋하게 보기면 숫자 없이)
 function awayLongHTML(t) {
