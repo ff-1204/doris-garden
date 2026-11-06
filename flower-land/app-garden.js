@@ -931,20 +931,34 @@ async function albumCanvases() {                  // 🐢 느긋하게 보기면
   out.push(await albumVisit(total, total, info));
   return out;
 }
-async function openShareStory() {
-  await shareFonts();
-  const c = shareStoryCanvas(), info = E.shareCard(st), url = c.toDataURL('image/png');
-  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-  const file = blob && typeof File === 'function' ? new File([blob], info.file, { type: 'image/png' }) : null;
-  let can = false; try { can = !IN_APP && !!file && !!navigator.canShare && navigator.canShare({ files: [file] }); } catch (e) { can = false; }
-  const saveImg = () => { const a = document.createElement('a'); a.href = url; a.download = info.file; document.body.appendChild(a); a.click(); a.remove(); feedback('📷 사진을 저장했어요'); };
-  const shareImg = async () => {
-    try { await navigator.share({ files: [file], title: info.title }); }
-    catch (e) { if (e && e.name !== 'AbortError') feedback('공유하지 못했어요 · 사진 저장으로 받아 주세요', true); }
-  };
-  openModal('↗ 공유', `<div class="share-pv"><img class="share-img" id="shareImg" src="${url}" width="${SHARE_W}" height="${SHARE_H}" alt="정원 스토리 그림"></div>`
-    + (can ? '' : '<p class="note share-note">사진을 저장한 뒤 인스타에서 올려요</p>'),
-    can ? [{ label: '사진 저장', act: saveImg }, { label: '인스타에 공유', primary: true, act: shareImg }] : [{ label: '사진 저장', primary: true, act: saveImg }]);
+// P87-02 공유 창: 게시물 네 장(기본) · 스토리 한 장(P55 그대로). 여러 파일을 못 넘기는 기기는 보고 있는 장을 하나씩
+const canvasFile = (c, name) => new Promise(r => c.toBlob(b => r(b && typeof File === 'function' ? new File([b], name, { type: 'image/png' }) : null), 'image/png'));
+const shareCanFiles = files => { try { return !IN_APP && files.every(Boolean) && !!navigator.canShare && navigator.canShare({ files }); } catch (e) { return false; } };
+const shareSets = {};                             // 창이 열린 동안 장을 바꿔도 다시 그리지 않음
+async function shareSet(mode) {
+  if (shareSets[mode]) return shareSets[mode];
+  const info = E.shareCard(st), list = mode === 'story' ? (await shareFonts(info.title + info.when + JSON.stringify(info)), [shareStoryCanvas()]) : await albumCanvases();
+  const name = i => list.length > 1 ? info.file.replace('.png', `-${i + 1}.png`) : info.file;
+  const pics = await Promise.all(list.map(async (c, i) => ({ url: c.toDataURL('image/png'), name: name(i), file: await canvasFile(c, name(i)), w: c.width, h: c.height })));
+  return (shareSets[mode] = pics);
 }
-$('#shareBtn').addEventListener('click', () => { openShareStory().catch(() => feedback('그림을 만들지 못했어요', true)); });
+function savePic(p) { const a = document.createElement('a'); a.href = p.url; a.download = p.name; document.body.appendChild(a); a.click(); a.remove(); }
+async function openShare(mode) {
+  const pics = await shareSet(mode), info = E.shareCard(st), many = pics.length > 1, files = pics.map(p => p.file), all = shareCanFiles(files), one = shareCanFiles(files.slice(0, 1));
+  const root = $('#modalRoot'), now = () => { const r = root.querySelector('#shareRow'); return pics[r ? Math.min(pics.length - 1, Math.round(r.scrollLeft / Math.max(1, r.firstElementChild.offsetWidth))) : 0]; };
+  const send = async list => { try { await navigator.share({ files: list, title: info.title }); } catch (e) { if (e && e.name !== 'AbortError') feedback('공유하지 못했어요 · 사진 저장으로 받아 주세요', true); } };
+  const saveAll = () => { pics.forEach((p, i) => setTimeout(() => savePic(p), i * 400)); feedback(`📷 사진 ${pics.length}장을 저장했어요`); };
+  const saveNow = () => { savePic(now()); feedback('📷 사진을 저장했어요'); };
+  const copy = async () => { try { await navigator.clipboard.writeText(info.link); feedback('주소를 복사했어요 · 글이나 프로필에 붙여 넣어요'); } catch (e) { feedback(`주소: ${info.link}`); } };
+  const btns = [{ label: '주소 복사', act: copy }];
+  if (all) btns.push({ label: '사진 저장', act: many ? saveAll : saveNow }, { label: many ? `${pics.length}장 공유` : '인스타에 공유', primary: true, act: () => send(files) });
+  else if (one) btns.push({ label: '이 장 저장', act: saveNow }, { label: '이 장 공유', primary: true, act: () => send([now().file]) });
+  else btns.push({ label: many ? '이 장 저장' : '사진 저장', primary: true, act: saveNow });
+  const note = all ? (many ? '인스타를 고르면 게시물로 올라가요 · 게시물엔 링크가 안 들어가요' : '') : one && many ? '이 기기는 한 장씩 보내요 · 옆으로 넘겨 골라요' : many ? '한 장씩 저장한 뒤 인스타에서 올려요 · 옆으로 넘겨 골라요' : '사진을 저장한 뒤 인스타에서 올려요';
+  openModal('↗ 공유', `<div class="share-modes" role="group" aria-label="공유 그림"><button type="button" class="btn small ${mode === 'album' ? 'primary' : ''}" data-sm="album" aria-pressed="${mode === 'album'}">게시물</button><button type="button" class="btn small ${mode === 'story' ? 'primary' : ''}" data-sm="story" aria-pressed="${mode === 'story'}">스토리 한 장</button></div>
+    <div class="share-row" id="shareRow" tabindex="0">${pics.map((p, i) => `<span class="share-pv"><img class="share-img" src="${p.url}" width="${p.w}" height="${p.h}" alt="${many ? `정원 그림 ${i + 1}장` : '정원 스토리 그림'}"></span>`).join('')}</div>`
+    + (note ? `<p class="note share-note">${note}</p>` : ''), btns);
+  root.querySelectorAll('[data-sm]').forEach(b => b.onclick = () => { if (b.dataset.sm !== mode) openShare(b.dataset.sm).catch(() => feedback('그림을 만들지 못했어요', true)); });
+}
+$('#shareBtn').addEventListener('click', () => { for (const k of Object.keys(shareSets)) delete shareSets[k]; openShare('album').catch(() => feedback('그림을 만들지 못했어요', true)); });
 // P55 끝

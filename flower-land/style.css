@@ -221,8 +221,10 @@ canvas#map { display: block; max-width: none; touch-action: pan-y; cursor: cross
 .needs .nd.on b { color: var(--k); }
 .share-btn { display: inline-flex; align-items: center; gap: var(--sp-1); border: 1px solid var(--line); background: var(--sunk); border-radius: var(--r-pill); padding: 1px var(--sp-5); font-size: var(--fs-md); color: var(--ink); white-space: nowrap; }   /* P55 ↗ 인스타 스토리 공유 */
 .share-btn:hover { box-shadow: inset 0 0 0 1px var(--accent); }
-.share-pv { display: grid; place-items: center; }
-.share-img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(58vh, 520px); aspect-ratio: 9 / 16; border: 1px solid var(--line); image-rendering: auto; }   /* 1080px 그림을 작게 줄여 보여 주니 부드럽게 (pixelated면 글씨가 깨짐) — 지도 도트는 그림 안에서 이미 정수배 */
+.share-modes { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }   /* P87-02 게시물 · 스토리 한 장 */
+.share-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }   /* 간격 0 — 몇 번째 장인지 scrollLeft로 셈 */
+.share-pv { flex: 0 0 100%; min-width: 0; display: grid; place-items: center; scroll-snap-align: center; }
+.share-img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(58vh, 520px); border: 1px solid var(--line); image-rendering: auto; }   /* 1080px 그림을 작게 줄여 보여 주니 부드럽게 (pixelated면 글씨가 깨짐) — 지도 도트는 그림 안에서 이미 정수배 */
 .share-note { text-align: center; margin: var(--sp-5) 0 0; }
 .btn.care { background: var(--k); border-color: var(--k); color: #fff; font-weight: 600; }
 .btn.care:hover { filter: brightness(1.08); }
