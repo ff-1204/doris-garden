@@ -291,6 +291,8 @@ function monthWord(cal) {          // 그달 꽃들의 한 마디를 게임 하�
 function renderTop() {
   const cal = E.calendar(st.virtual);
   const info = yearInfo(cal), ti = $('#topInfo'); if (ti.textContent !== info) ti.textContent = info;
+  const tm = $('#topMoney'), mt = E.slowView(st) || ['shop', 'farm'].includes(ui.tab) ? '' : `💰 ${won(st.money)}`;   // P86-02 돈은 늘 위 막대에 (화원 · 곤충농장은 화면 안에 이미 있음 · 🐢 느긋하게 보기면 숨김)
+  if (tm.dataset.t !== mt) { tm.dataset.t = mt; tm.textContent = mt; tm.hidden = !mt; }
   const bb = $('#brandBtn'), bt = $('#brandTitle'), tk = st.titleOn || '';   // P19-05-05 대표 칭호 — 로고 자리에 그림만 (10-30: 위 막대 단추 대신 · 작은 글씨 Dori's Garden은 그대로, 이름은 title에)
   const td = E.topDecoOf(st), tdk = td ? E.decoKey(td) : '', sk0 = tdk ? `d:${tdk}` : tk;   // P52 ⬆️ 위 칸 장식이 있으면 칭호 그림 대신 그 장식 (로고를 누르면 그대로 정원으로)
   if (bt.dataset.k !== sk0) { bt.dataset.k = sk0; bt.hidden = !sk0; bt.classList.toggle('top-deco', !!tdk); bt.innerHTML = tdk ? decoImg(tdk, E.decoInfo(tdk) && E.decoInfo(tdk).title ? 1 : 2) : tk ? titleImg(tk, 22, false) : ''; bb.classList.toggle('has-ttl', !!sk0); bb.title = [tdk ? E.decoInfo(tdk).name : '', tk ? E.TITLES[tk].name : '', '정원으로'].filter(Boolean).join(' · '); }

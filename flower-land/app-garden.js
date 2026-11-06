@@ -105,16 +105,29 @@ const canvas = $('#map');
 let g = canvas.getContext('2d');   // let: P55 공유 그림이 잠깐 다른 캔버스로 바꿔 그림 (shareMap)
 let cell = 20, dpr = 1, hover = null, drag = null;
 const shade = Array.from({ length: W * H }, (_, i) => (Math.sin(i * 12.9898) * 43758.5453 % 1) * 0.07);
-function resize() {                              // R-C4 (11-05 검토): 휴대폰(375px)에선 한 칸 11px라 🔍 2배 확대(ui.zoom) — 지도 틀 안에서 밀어 옮김(tileAt은 getBoundingClientRect라 그대로)
-  const base = canvas.parentElement.clientWidth; if (!base) return;
-  const z = ui.zoom || 1, w = base * z;
-  dpr = window.devicePixelRatio || 1; cell = w / W;
-  canvas.style.width = z > 1 ? w + 'px' : ''; canvas.style.height = cell * H + 'px';
-  canvas.width = Math.round(w * dpr); canvas.height = Math.round(cell * H * dpr);
-  canvas.parentElement.classList.toggle('zoomed', z > 1);
+const mapScroll = $('#mapScroll');
+function resize() {                              // P86-02 칸은 도트 정수배(16 · 32 · 48px) — 틀 폭에 가장 가까운 배수, 틀보다 크면 #mapScroll 안에서 끌어서 봐요 (tileAt은 getBoundingClientRect라 그대로)
+  const base = mapScroll.clientWidth; if (!base) return;
+  const fit = Math.max(1, Math.round(base / (W * 16))), k = ui.zoom === 2 ? (fit === 1 ? 2 : fit - 1) : fit;   // 🔍 휴대폰은 한 단계 크게, 넓은 화면은 한 단계 작게
+  dpr = window.devicePixelRatio || 1; cell = 16 * k;
+  const w = W * cell, first = canvas.dataset.k == null, same = canvas.dataset.k === String(k) && canvas.width === Math.round(w * dpr);
+  canvas.dataset.k = k;
+  if (!same) {
+    canvas.style.width = w + 'px'; canvas.style.height = cell * H + 'px';
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(cell * H * dpr);
+  }
+  mapScroll.classList.toggle('pannable', w > base);
+  if (first || !same) { mapScroll.scrollLeft = (w - base) / 2; draw(); }   // 처음 · 크기를 바꾸면 지도 가운데부터 (캔버스가 비지 않게 바로 그림)
 }
-new ResizeObserver(resize).observe(canvas.parentElement);
-$('#mapZoom').addEventListener('click', () => { ui.zoom = ui.zoom === 2 ? 1 : 2; $('#mapZoom').setAttribute('aria-pressed', String(ui.zoom === 2)); resize(); feedback(ui.zoom === 2 ? '🔍 지도를 2배로 키웠어요 · 밀어서 옮겨요' : '지도를 원래 크기로'); });   // R-C4
+new ResizeObserver(resize).observe(mapScroll);
+// 고른 꽃이 틀 가장자리면 둘레 단추가 보이게 안쪽으로 밀어 줌 (둘레 단추 반지름만큼)
+function revealTile(x, y) {
+  const m = 64, cx = (x + 0.5) * cell, cy = (y + 0.5) * cell, s = mapScroll, w = s.clientWidth, h = s.clientHeight;
+  const left = cx < s.scrollLeft + m ? cx - m : cx > s.scrollLeft + w - m ? cx + m - w : s.scrollLeft;
+  const top = cy < s.scrollTop + m ? cy - m : cy > s.scrollTop + h - m ? cy + m - h : s.scrollTop;
+  if (left !== s.scrollLeft || top !== s.scrollTop) s.scrollTo({ left, top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+$('#mapZoom').addEventListener('click', () => { ui.zoom = ui.zoom === 2 ? 1 : 2; $('#mapZoom').setAttribute('aria-pressed', String(ui.zoom === 2)); resize(); feedback(cell > 16 ? '🔍 지도를 크게 볼게요 · 끌어서 둘러봐요' : '🔍 지도를 작게 볼게요'); });   // R-C4
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const LCOL = Object.fromEntries(LAND_KEYS.map(k => [k, hex(LANDS[k].color)]));
 // P28-03 🧩 땅 무늬 보기 (M4-2 10-30): decos.js LAND_PATTERNS를 땅마다 16×16 한 장으로 — 지도엔 무늬만 겹치고, 범례 · 창의 땅 네모는 땅색 + 무늬.
@@ -160,7 +173,7 @@ function renderYearSky(cal) {
   if (el.dataset.sig === sig) return;
   el.dataset.sig = sig; el.hidden = !A;
   if (!A) { el.innerHTML = ''; return; }
-  el.style.top = canvas.offsetTop + 'px'; el.style.height = canvas.offsetHeight + 'px'; el.style.background = A.tint || '';
+  el.style.top = mapScroll.offsetTop + 'px'; el.style.height = mapScroll.clientHeight + 'px'; el.style.background = A.tint || '';
   el.innerHTML = A.tile ? `<i class="ys-tile ys-${A.tile}" style="background-image:url(${yartURL(k)});background-size:${48 * (A.sparse || 1)}px;--p:${48 * (A.sparse || 1)}px"></i>` : `<img class="px ys-big ys-${A.big}" src="${yartURL(k)}" width="${16 * big}" height="${16 * big}" alt="">`;
 }
 function drawFlower(f, cal) {
@@ -168,9 +181,12 @@ function drawFlower(f, cal) {
   const alt = mut ? mutPetal(f.type, mut) : yearSkyMemo && yearSkyMemo.bloom === f.type && window.YEARLY_ART.bloom[f.type];   // P30-05-02 올해의 꽃빛: 그 꽃의 꽃잎 색만 바꿈
   const F = alt ? Object.assign({}, F0, { petal: alt.petal, center: alt.center }) : F0, cx = (f.x + 0.5) * cell, cy = (f.y + 0.5) * cell, R = cell * 0.46;
   g.save(); g.translate(cx, cy);
-  // 심은 칸 받침: 옅은 흙빛 동그라미 — 땅 색 위에서도 꽃이 잘 보이게 (10-06)
-  g.fillStyle = 'rgba(255,248,236,.42)'; g.strokeStyle = 'rgba(90,70,50,.22)'; g.lineWidth = Math.max(1, cell * 0.04);
-  g.beginPath(); g.ellipse(0, R * 0.12, R * 0.98, R * 0.9, 0, 0, 7); g.fill(); g.stroke();
+  // 심은 칸 받침: 옅은 흙빛 동그라미 — 땅 색 위에서도 꽃이 잘 보이게 (10-06). P86-02 도트로 그리는 핀 꽃은 받침 없이
+  const px = f.stage === 'bloom' && !alt && flowerBitmap(f.type);
+  if (!px) {
+    g.fillStyle = 'rgba(255,248,236,.42)'; g.strokeStyle = 'rgba(90,70,50,.22)'; g.lineWidth = Math.max(1, cell * 0.04);
+    g.beginPath(); g.ellipse(0, R * 0.12, R * 0.98, R * 0.9, 0, 0, 7); g.fill(); g.stroke();
+  }
   switch (f.stage) {
     case 'germ': ell(0, 0, R * 0.22, R * 0.15, 0, '#5b4632'); break;
     case 'sprout': ell(-R * 0.2, 0, R * 0.25, R * 0.12, -0.5, '#3f8a3a'); ell(R * 0.2, 0, R * 0.25, R * 0.12, 0.5, '#3f8a3a'); break;
@@ -189,6 +205,7 @@ function drawFlower(f, cal) {
     }
     case 'bloom': {
       const open = 1;   // P72-01 거두면 다 자람으로 돌아가 "거둔 핀 꽃"(예전엔 오므려 그림)은 없음
+      if (px) { g.drawImage(px, -cell / 2, -cell / 2, cell, cell); break; }   // P86-02 핀 꽃은 도감과 같은 16px 도트를 칸 그대로 (변이 · 올해의 꽃빛은 색이 달라 그리기로)
       ell(R * 0.08, R * 0.12, R * 0.95, R * 0.85, 0, 'rgba(0,0,0,.16)');
       if (mut >= 3) {                                // P36-03 3단계: 짙은 그림자 + 테두리 1px (흔들림은 없음 — 움직임 줄이기와 상관없이 가만히)
         ell(R * 0.16, R * 0.22, R * 1.02, R * 0.92, 0, 'rgba(30,8,36,.32)');
@@ -250,9 +267,9 @@ function draw(clean) {   // clean: P55 공유 그림 — 지도 · 꽃 · 장식
   const wallAt = new Set((st.decos || []).filter(d => d.key === 'stonewall' && d.x != null).map(d => `${d.x},${d.y}`));   // P77-A 🪵 나무 울타리 이음: 위 · 아래 이웃만 있으면 세로(_v), 가로 · 세로 둘 다면 _x, 그 밖엔 가로
   const wallVariant = d => { if (d.key !== 'stonewall') return ''; const h = wallAt.has(`${d.x - 1},${d.y}`) || wallAt.has(`${d.x + 1},${d.y}`), v = wallAt.has(`${d.x},${d.y - 1}`) || wallAt.has(`${d.x},${d.y + 1}`); return h && v ? '_x' : v ? '_v' : ''; };
   for (const d of st.decos || []) if (d.x != null) {
-    const im = decoBitmap(E.decoKey(d), wallVariant(d)); if (im) { if (clean) g.drawImage(im, d.x * cell, d.y * cell, cell, cell); else g.drawImage(im, d.x * cell + cell * 0.04, d.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); }   // 공유 그림은 칸 = 16px 정수배라 칸 가득
+    const im = decoBitmap(E.decoKey(d), wallVariant(d)); if (im) g.drawImage(im, d.x * cell, d.y * cell, cell, cell);   // P86-02 칸 = 16px 정수배라 칸 가득
   }
-  for (const v of E.visitorsOf(st, cal)) { const im = visitorBitmap(v.key); if (im) { if (clean) g.drawImage(im, v.x * cell, v.y * cell, cell, cell); else g.drawImage(im, v.x * cell + cell * 0.04, v.y * cell + cell * 0.04, cell * 0.92, cell * 0.92); } }   // P30-06-02 🐾 특별 손님 (장식과 같은 길 · 빈 칸에만 앉음)
+  for (const v of E.visitorsOf(st, cal)) { const im = visitorBitmap(v.key); if (im) g.drawImage(im, v.x * cell, v.y * cell, cell, cell); }   // P30-06-02 🐾 특별 손님 (장식과 같은 길 · 빈 칸에만 앉음)
   if (clean) return;
   // P27 장치 효과 범위: 놓거나 옮기는 중엔 가리킨 칸 둘레, 놓인 장치를 누르면 잠깐 그 둘레 (QA 12회차 제안)
   const gearAt = (key, x, y) => { const G = { r: decoReach(key) }; if (G.r == null) return; g.save(); g.fillStyle = 'rgba(255, 216, 74, .18)'; g.strokeStyle = 'rgba(255, 216, 74, .9)'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
@@ -344,13 +361,14 @@ canvas.addEventListener('pointerdown', e => {
   tipEl.hidden = true; hideVisitorBubble();
   const t = tileAt(e); if (!t) return;
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 일부 환경에서는 지원하지 않음 */ }
-  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY, top: canvas.getBoundingClientRect().top, early: performance.now() - (ui.mapShiftAt || 0) < 600 };   // 지도가 막 움직였으면 (QA 16회차 메모)
+  drag = { start: t, cur: t, path: new Map([[t.join(','), t]]), moved: false, x: e.clientX, y: e.clientY, sx: mapScroll.scrollLeft, sy: mapScroll.scrollTop, top: canvas.getBoundingClientRect().top, early: performance.now() - (ui.mapShiftAt || 0) < 600 };   // 지도가 막 움직였으면 (QA 16회차 메모)
 });
 canvas.addEventListener('pointermove', e => {
   const t = tileAt(e); hover = t;
   if (drag) {
     tipEl.hidden = true;
-    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) drag.moved = true;   // 밀어 본 것이면 누름이 아님 (확대 · QA 7회차)
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) drag.moved = true;   // 10px 넘게 끌면 누름이 아님 (확대 · QA 7회차 · P86-02)
+    if (drag.moved && e.pointerType !== 'touch') { mapScroll.scrollLeft = drag.sx - (e.clientX - drag.x); mapScroll.scrollTop = drag.sy - (e.clientY - drag.y); }   // P86-02 마우스로 끌기 (터치는 브라우저가 밀어 줌)
     return;                                       // 드래그로 여러 칸 고르기는 지금은 꺼 둠
   }
   if (e.pointerType === 'mouse' && t) {
@@ -498,7 +516,7 @@ function insectNote(f) {
   const ic = k => E.FARM.find(w => w.key === k).icon;
   return ` · <span class="sx-bugs" title="${ks.map(k => `${ic(k)} ${INSECT_DO[k]}`).join(' · ')}">${ks.map(ic).join('')} 곤충이 돌봐요</span>`;
 }
-function select(id) { ui.selected = id; ui.selTile = null; ui.selDeco = null; ui.sheetOpen = true; renderStatus(true); }
+function select(id) { ui.selected = id; ui.selTile = null; ui.selDeco = null; ui.sheetOpen = true; renderStatus(true); const f = st.flowers.find(x => x.id === id); if (f) revealTile(f.x, f.y); }
 function plantAt(type, x, y) {
   if (E.flowerAt(st, x, y)) return feedback('이 자리엔 꽃이 있어요 · 빈 칸을 골라 주세요', true);
   const best = st.items.filter(i => i.type === type && E.germOf(i) > 0).sort((a, b) => b.q - a.q)[0];
@@ -539,7 +557,7 @@ function renderStatus(force) {
     el.className = 'status idle';
     el.innerHTML = `
     <div class="sx-head">
-      <div class="sx-art" style="background:color-mix(in srgb, ${FLOWERS[qf].petal} 16%, var(--sunk))">${spriteImg(qf, 'flower', 56, false, '')}</div>
+      <div class="sx-art" style="background:color-mix(in srgb, ${FLOWERS[qf].petal} 16%, var(--sunk))">${spriteImg(qf, 'flower', 48, false, '')}</div>
       <div class="sx-title"><p class="sx-quote">${mw ? mw.w : GARDEN_WORDS[qi]}</p>${mw ? `<div class="sx-lang">${monthName(cal0.month)}의 꽃 · <b>${FLOWERS[mw.k].name}</b> · ${FLOWER_WORDS[mw.k].own ? '정원의 꽃말' : '꽃말'} 「${FLOWER_WORDS[mw.k].lang}」</div>` : ''}</div>
     </div>`;
     return;
@@ -599,7 +617,7 @@ function renderStatus(force) {
   const bl = E.bloomLeftH(st, f), bloomLine = bl != null ? `<div class="muted sx-bloom" style="font-size:var(--fs-sm)">🌸 ${realH(bl / (st.speed || 1))} 뒤 핌${cal.frozen ? ' · 🌙 꽃잠엔 쉬어요' : ''}</div>` : f.stage === 'bloom' && !mut ? `<div class="muted sx-bloom" style="font-size:var(--fs-sm)">🧺 거두면 ${realH(E.RIPE_H / (st.speed || 1))} 뒤 다시 펴요</div>` : '';   // P72-01
   el.innerHTML = `
     <div class="sx-head">
-      <div class="sx-art" style="background:color-mix(in srgb, ${mut ? mutPetal(f.type, mut).petal : F.petal} 16%, var(--sunk))">${spriteImg(f.type, mut ? 'mut' + mut : 'flower', 56, false, M ? M.name : F.name)}</div>
+      <div class="sx-art" style="background:color-mix(in srgb, ${mut ? mutPetal(f.type, mut).petal : F.petal} 16%, var(--sunk))">${spriteImg(f.type, mut ? 'mut' + mut : 'flower', 48, false, M ? M.name : F.name)}</div>
       <div class="sx-title"><h3>${M ? `🧬 ${esc(M.name)}` : F.name}</h3>${M ? `<div class="sx-mut"><b>변이 · ${mut}단계</b> · ${F.name}<br><i>${esc(M.lore)}</i></div>` : ''}<div><span class="stars">${starStr(f.q)}</span> <span class="muted" style="font-size:var(--fs-sm)">${qualityWord(f.q, f.stage === 'bloom')}</span></div>
         <div class="muted" style="font-size:var(--fs-sm)">${LIFE[F.life]} · ${FORM[F.form].name} · ${f.origin === '이웃' ? '이웃이 준 화분' : `심은 지 ${ageText(f.lifeH != null ? f.lifeH : f.ageH)}`}${insectNote(f)}${E.growRate(st, f) > 1 && f.stage !== 'bloom' && f.ageH < F.mature * E.MONTH_H && !E.calendar(st.virtual).frozen ? ` · 🔆 ${f.stage === 'dormant' ? `쉬는 동안에도 ${E.growRate(st, f)}배로 자라요` : `${E.growRate(st, f)}배로 자라는 중`}` : E.bloomLeads(st, f) && f.stage !== 'bloom' && !E.calendar(st.virtual).frozen ? ` · 🌱 ${E.bonusVal(st, 'grow')}배 빨리 피는 중` : ''}</div></div>
       <button type="button" class="iconbtn sx-close" data-act="closeSheet" aria-label="상태창 닫기">✕</button>
@@ -652,7 +670,7 @@ function renderTileStatus(force) {
   const list = keys.slice().sort((a, b) => (homeLand(FLOWERS[b]) === land) - (homeLand(FLOWERS[a]) === land)).map(k => {   // 이 땅과 맞는 꽃이 먼저
     const F = FLOWERS[k], fits = homeLand(F) === land, L = LANDS[homeLand(F)];
     return `<button type="button" class="pcard ${fits ? 'fits' : ''}" data-plantat="${k}" style="--pc:${F.petal}" title="누르면 이 칸에 심어요">
-      <span class="pc-art">${spriteImg(k, 'flower', 40, false, F.name)}<span class="pc-count">×${pl[k]}</span></span>
+      <span class="pc-art">${spriteImg(k, 'flower', 32, false, F.name)}<span class="pc-count">×${pl[k]}</span></span>
       <span class="pc-name"><b>${F.name}</b> <span class="muted">${FORM[F.form].name}</span></span>
       <span class="stars">${starStr(best(k))}</span>
       <span class="pc-land"><span class="sw" style="background:${L.color}"></span>${josa(L.name, '을/를')} 만들어요</span>

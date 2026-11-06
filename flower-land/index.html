@@ -33,7 +33,7 @@
 <div class="app">
   <header class="topbar">
     <button type="button" class="brand" id="brandBtn" title="정원으로" aria-label="도리의 정원 · 정원으로 가기"><svg class="logo-px" viewBox="0 0 11 10" width="24" height="22" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="#a6dc86"/><rect x="2" y="0" width="1" height="1" fill="#a6dc86"/><rect x="8" y="0" width="1" height="1" fill="#a6dc86"/><rect x="9" y="0" width="1" height="1" fill="#a6dc86"/><rect x="0" y="1" width="1" height="1" fill="#a6dc86"/><rect x="1" y="1" width="1" height="1" fill="#6db35a"/><rect x="2" y="1" width="1" height="1" fill="#6db35a"/><rect x="3" y="1" width="1" height="1" fill="#6db35a"/><rect x="7" y="1" width="1" height="1" fill="#6db35a"/><rect x="8" y="1" width="1" height="1" fill="#6db35a"/><rect x="9" y="1" width="1" height="1" fill="#6db35a"/><rect x="10" y="1" width="1" height="1" fill="#a6dc86"/><rect x="0" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="2" width="1" height="1" fill="#6db35a"/><rect x="2" y="2" width="1" height="1" fill="#6db35a"/><rect x="3" y="2" width="1" height="1" fill="#6db35a"/><rect x="4" y="2" width="1" height="1" fill="#6db35a"/><rect x="6" y="2" width="1" height="1" fill="#6db35a"/><rect x="7" y="2" width="1" height="1" fill="#6db35a"/><rect x="8" y="2" width="1" height="1" fill="#6db35a"/><rect x="9" y="2" width="1" height="1" fill="#6db35a"/><rect x="10" y="2" width="1" height="1" fill="#6db35a"/><rect x="1" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="3" width="1" height="1" fill="#6db35a"/><rect x="3" y="3" width="1" height="1" fill="#6db35a"/><rect x="4" y="3" width="1" height="1" fill="#6db35a"/><rect x="5" y="3" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="3" width="1" height="1" fill="#6db35a"/><rect x="7" y="3" width="1" height="1" fill="#6db35a"/><rect x="8" y="3" width="1" height="1" fill="#6db35a"/><rect x="9" y="3" width="1" height="1" fill="#6db35a"/><rect x="2" y="4" width="1" height="1" fill="#6db35a"/><rect x="3" y="4" width="1" height="1" fill="#6db35a"/><rect x="4" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="4" width="1" height="1" fill="#4f8f3e"/><rect x="6" y="4" width="1" height="1" fill="#6db35a"/><rect x="7" y="4" width="1" height="1" fill="#6db35a"/><rect x="8" y="4" width="1" height="1" fill="#6db35a"/><rect x="5" y="5" width="1" height="1" fill="#4f8f3e"/><rect x="5" y="6" width="1" height="1" fill="#4f8f3e"/><rect x="2" y="7" width="1" height="1" fill="#a5743f"/><rect x="3" y="7" width="1" height="1" fill="#a5743f"/><rect x="4" y="7" width="1" height="1" fill="#a5743f"/><rect x="5" y="7" width="1" height="1" fill="#a5743f"/><rect x="6" y="7" width="1" height="1" fill="#a5743f"/><rect x="7" y="7" width="1" height="1" fill="#a5743f"/><rect x="8" y="7" width="1" height="1" fill="#a5743f"/><rect x="1" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="8" width="1" height="1" fill="#a5743f"/><rect x="3" y="8" width="1" height="1" fill="#a5743f"/><rect x="4" y="8" width="1" height="1" fill="#a5743f"/><rect x="5" y="8" width="1" height="1" fill="#a5743f"/><rect x="6" y="8" width="1" height="1" fill="#a5743f"/><rect x="7" y="8" width="1" height="1" fill="#a5743f"/><rect x="8" y="8" width="1" height="1" fill="#a5743f"/><rect x="9" y="8" width="1" height="1" fill="#a5743f"/><rect x="2" y="9" width="1" height="1" fill="#7a5230"/><rect x="3" y="9" width="1" height="1" fill="#7a5230"/><rect x="4" y="9" width="1" height="1" fill="#7a5230"/><rect x="5" y="9" width="1" height="1" fill="#7a5230"/><rect x="6" y="9" width="1" height="1" fill="#7a5230"/><rect x="7" y="9" width="1" height="1" fill="#7a5230"/><rect x="8" y="9" width="1" height="1" fill="#7a5230"/></svg><span class="logo-ttl" id="brandTitle" hidden></span><span class="bt"><b>도리의 정원</b><small>Dori's Garden</small></span></button>
-    <div class="topinfo"><span id="topInfo"></span><span class="topseason" id="topSeason" hidden></span></div>
+    <div class="topinfo"><span id="topInfo"></span><span class="topseason" id="topSeason" hidden></span><span class="wallet top-wallet" id="topMoney" aria-label="가진 돈" hidden></span></div>
   </header>
 
   <div class="body">
@@ -53,14 +53,17 @@
             <div class="mapwrap">
               <div class="mapframe">
                 <div class="yearstrip" id="yearBox" role="img" aria-label="올해의 흐름"></div>
-                <canvas id="map" aria-label="정원 지도"></canvas>
+                <!-- P86-02 지도 칸은 16px 정수배 — 틀보다 크면 이 칸 안에서 끌어서 봐요. 지도와 함께 움직이는 것(둘레 단추 · 말풍선)만 안에 -->
+                <div class="mapscroll" id="mapScroll" tabindex="0" aria-label="정원 지도 둘러보기"><div class="mapinner">
+                  <canvas id="map" aria-label="정원 지도"></canvas>
+                  <div class="care-ring" id="careRing" hidden></div>
+                  <div class="v-bubble" id="visitorBubble" role="status" hidden></div>
+                </div></div>
                 <div class="ysky" id="yearSky" aria-hidden="true" hidden></div>
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
-                <button type="button" class="map-zoom" id="mapZoom" aria-pressed="false" title="지도 2배 확대 · 밀어서 옮겨요">🔍</button>
-                <div class="care-ring" id="careRing" hidden></div>
-                <div class="v-bubble" id="visitorBubble" role="status" hidden></div>
+                <button type="button" class="map-zoom" id="mapZoom" aria-pressed="false" title="지도 크기 바꾸기">🔍</button>
               </div>
               <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size: var(--fs-md)">꽃들이 자고 있어요 · 옮겨심기 · 번식 · 돌보기와 핀 채 잠든 꽃 거두기는 돼요. 블렌드를 만들거나 새해 꽃을 예약해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기 · 거두기는 돼요</span></div></div>
             </div>
