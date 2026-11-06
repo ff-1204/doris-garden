@@ -31,6 +31,23 @@ console.log('[저장 · 경제 그대로]');
 { const s = fresh(), before = JSON.stringify(s); E.shareCard(s);
   check(JSON.stringify(s) === before, 'shareCard는 정원을 바꾸지 않음 (보상 없음 · st 필드 그대로)'); }
 
+console.log('[P87 게시물 네 장]');
+{ const s = fresh(), a = E.shareAlbum(s);
+  check(E.shareCard(s).link === 'https://ff-1204.github.io/doris-garden/', '「주소 복사」 주소');
+  check(a.flowerTitle === '정원의 꽃' && a.flowers.length === 0 && a.more === 0, '새 정원: 꽃이 없으면 빈 목록 (화면이 기다리는 글을 씀)');
+  check(a.rows.length >= 1 && a.rows.some(r => r[0] === '정원 등급') && a.rows.every(r => r[1]) && a.young === true, `새 정원 기록은 값이 있는 줄만: ${a.rows.map(r => r[0]).join(' · ')}`); }
+{ const s = fresh(), put = (type, n) => { for (let i = 0; i < n; i++) s.flowers.push({ id: 9000 + s.flowers.length, type, x: s.flowers.length % 30, y: 1, withered: false }); };
+  E.FLOWER_KEYS.forEach((k, i) => { put(k, i + 1); }); s.flowers[0].withered = true;
+  s.yearSeen = { bloom: Object.fromEntries(E.FLOWER_KEYS.map(k => [k, true])), blend: {}, honey: {} }; s.yearNow.sold = 1234; s.yearNow.harvest = 56; s.stats.orders = 7;
+  const a = E.shareAlbum(s), rec = Object.fromEntries(a.rows);
+  check(a.flowerTitle === '올해 핀 꽃' && a.flowers.length === 9 && a.more === E.FLOWER_KEYS.length - 9, `꽃은 9가지까지 · 그 밖에 ${a.more}종`);
+  check(a.flowers[0].count === `${E.FLOWER_KEYS.length}포기` && a.flowers[0].k === E.FLOWER_KEYS[E.FLOWER_KEYS.length - 1], '많은 꽃부터 · 시든 꽃은 세지 않음');
+  check(rec['올해 판 찻잔'] === '1,234잔' && rec['올해 거둔 꽃잎'] === '56장' && rec['들어준 주문'] === '7장' && a.young === false, '기록 줄');
+  check(!a.rows.some(r => /원$/.test(r[1]) && !r[1].includes('정원')), '돈 숫자는 없음');
+  const before = JSON.stringify(s); E.shareAlbum(s); check(JSON.stringify(s) === before, 'shareAlbum은 정원을 바꾸지 않음');
+  s.settings.slow = true; const b = E.shareAlbum(s);
+  check(b.rows === null && b.flowers.every(f => f.count === null) && b.flowers.length === 9, '🐢 느긋하게 보기: 기록 장 없음 · 포기 수 없음'); }
+
 console.log('[외부로 보내지 않음]');
 { const src = fs.readFileSync(path.join(__dirname, '..', 'app-garden.js'), 'utf8'), a = src.indexOf('P55 ↗'), b = src.indexOf('P55 끝');
   const part = a > 0 && b > a ? src.slice(a, b) : '';

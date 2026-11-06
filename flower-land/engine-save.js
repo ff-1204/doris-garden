@@ -22,13 +22,24 @@ function gardenBorn(st) {
 // 불러오기 전에 보여 줄 요약 (JSON에서 막 읽은 정원에도 씀). born: 시작한 때 · flowers: 지금 정원에 있는 꽃 (P20-06-06)
 // P55 ↗ 인스타 스토리 공유 (11-02): 스토리 그림(1080×1920)에 넣을 글자. 그림은 화면(app-garden.js shareStory)이 기기 안에서만 그리고 아무 데도 보내지 않음.
 // 보상 없음 · 저장 형식 그대로. 🐢 느긋하게 보기면 숫자 줄(꽃 포기 수)은 null
-const SHARE_URL = 'ff-1204.github.io/doris-garden';
+const SHARE_URL = 'ff-1204.github.io/doris-garden', SHARE_LINK = `https://${SHARE_URL}/`;   // P87-02 「주소 복사」
 function shareCard(st) {
   const cal = calendar(st.virtual), y = Math.max(1, yearOf(st, cal)), T = st.titleOn && TITLES[st.titleOn];
   const n = (st.flowers || []).filter(f => !f.withered).length;
   return { title: '도리의 정원', when: `${y}년째 · ${monthName(cal.month)}`, flowers: slowView(st) ? null : `꽃 ${n}포기`, grade: gradeOf(st).name,
     year: `${y}년째`, month: monthName(cal.month), count: slowView(st) ? null : `${n}포기`,   // P55-05 그림 아래 라벨-값 칸 (해 · 달 / 꽃 / 등급 / 칭호)
-    titleName: T ? T.name : null, url: SHARE_URL, file: `doris-garden-${y}-${cal.month}.png` };
+    titleName: T ? T.name : null, url: SHARE_URL, link: SHARE_LINK, file: `doris-garden-${y}-${cal.month}.png` };
+}
+// P87 ↗ 게시물 네 장 (11-06 사용자 시안 2): 둘째 장 꽃 · 셋째 장 기록 글자. 🐢 느긋하게 보기면 숫자를 쓰지 않아 꽃 포기 수가 빠지고 기록 장은 없음(rows null) — 돈 숫자는 어느 쪽에도 없음. 새 정원은 값이 있는 줄만
+const SHARE_FLOWERS_MAX = 9;
+function shareAlbum(st) {
+  const slow = slowView(st), live = (st.flowers || []).filter(f => !f.withered), count = k => live.filter(f => f.type === k).length;
+  const seen = Object.keys((st.yearSeen && st.yearSeen.bloom) || {}).filter(k => FLOWERS[k]);
+  const keys = seen.length ? seen : FLOWER_KEYS.filter(count), y = st.yearNow || {};
+  const all = keys.map(k => ({ k, name: FLOWERS[k].name, n: count(k) })).sort((a, b) => b.n - a.n || FLOWER_KEYS.indexOf(a.k) - FLOWER_KEYS.indexOf(b.k));
+  const flowers = all.slice(0, SHARE_FLOWERS_MAX).map(f => ({ k: f.k, name: f.name, count: slow ? null : `${f.n}포기` })), won = n => n.toLocaleString('ko-KR');
+  const rows = [[seen.length ? '올해 핀 꽃' : '심은 꽃', `${keys.length}종`], ['정원 등급', gradeOf(st).name], ['올해 판 찻잔', y.sold ? `${won(y.sold)}잔` : null], ['올해 거둔 꽃잎', y.harvest ? `${won(y.harvest)}장` : null], ['들어준 주문', S(st, 'orders') ? `${won(S(st, 'orders'))}장` : null]].filter(r => r[1] && r[1] !== '0종');
+  return { flowerTitle: seen.length ? '올해 핀 꽃' : '정원의 꽃', flowers, more: Math.max(0, all.length - SHARE_FLOWERS_MAX), rows: slow ? null : rows, young: rows.length < 3 };
 }
 function saveSummary(st) {
   const cal = calendar(st.virtual);
