@@ -352,7 +352,7 @@ console.log('[🌹 프리저브드 플라워 (P53)]');
   const m2 = E.migrateSave(o2);
   check(m2.presol === 3 && m2.preserving[0].leftH === 5 && m2.preserved[0].type === 'lotus' && m2.dex.pres.rose, '이미 있는 용액 · 돔 · 창고 · 도감은 그대로');
   const n = E.create(MON, () => 0.5);
-  check(n.presol === 0 && n.preserving.length === 0 && n.preserved.length === 0 && n.dex.pres && n.dex.presMut && E.SEASON_KEEP.includes('presol') && !E.SEASON_KEEP.includes('preserved'), '새 정원 기본값 · 새 철엔 용액만 이어짐 (도감은 dex로)'); }
+  check(n.presol === 0 && n.preserving.length === 0 && n.preserved.length === 0 && n.dex.pres && n.dex.presMut && E.SEASON_KEEP.includes('presol') && E.SEASON_KEEP.includes('preserved'), '새 정원 기본값 · 새 철엔 용액만 이어짐 (도감은 dex로)'); }
 
 console.log('[🍯 벌통 꿀 → 창고 (P65-01)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P65-01'));

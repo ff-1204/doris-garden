@@ -146,7 +146,7 @@ function rackTick(st, ctx) {
 function autoDryTick(st) {
   if (!st.petals.length || !placedOf(st, 'autodryer').length) return 0;
   const list = st.petals.splice(0);
-  for (const p of list) st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H });
+  for (const p of list) st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H, ...boughtOf(p) });
   bump(st, 'autoDry', list.length); placedOf(st, 'autodryer')[0].n = (placedOf(st, 'autodryer')[0].n || 0) + list.length;
   return list.length;
 }
@@ -158,18 +158,18 @@ function dryTick(st, dtH, ctx) {
     if (d.leftH <= 0) {
       st.drying.splice(i, 1);
       if (d.auto) { rackBag(st, d, ctx); continue; }                            // P28-10-02 자동 건조대가 넌 꽃잎은 다 마르면 바로 티백
-      st.dried.push({ id: d.id, type: d.type, q: d.q });
+      st.dried.push({ id: d.id, type: d.type, q: d.q, ...boughtOf(d) });
       st._driedNew = (st._driedNew || 0) + 1;
     }
   }
 }
 function rackBag(st, d, ctx) {                     // 손으로 말린 꽃잎을 티백으로 만든 것(makeTeaDried)과 같은 티백 · P77-C 선반 꽃잎은 말린 꽃잎 칸(auto 표시)에 모였다가 petals장이 되면 티백 하나
-  st.dried.push({ id: d.id, type: d.type, q: d.q, auto: true });
+  st.dried.push({ id: d.id, type: d.type, q: d.q, auto: true, ...boughtOf(d) });
   const N = FLOWERS[d.type].petals, mine = st.dried.filter(p => p.auto && p.type === d.type);
   if (mine.length < N) return;
   const take = mine.sort((a, b) => b.q - a.q).slice(0, N), q = take.reduce((a, p) => a + p.q, 0) / N;
   for (const p of take) st.dried.splice(st.dried.indexOf(p), 1);
-  st.teas.push({ id: nid(st), type: d.type, q, seasonKey: -1, hat: isHat(q), auto: true });
+  st.teas.push({ id: nid(st), type: d.type, q, seasonKey: -1, hat: isHat(q), auto: true, ...boughtOf({ bought: take.some(p => p.bought) }) });
   regTeabag(st, d.type, ctx);
   if (!st.yearBest || q > st.yearBest.q) st.yearBest = { type: d.type, q };
   st._rackBagNew = (st._rackBagNew || 0) + 1; bump(st, 'autoBags');

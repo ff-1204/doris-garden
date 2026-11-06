@@ -78,8 +78,38 @@ const ykey = (n, y) => n > 1 ? n * 100 + y : y, ylabel = k => k >= 100 ? `${Math
 const yearNow = () => ykey(E.seasonN(st), E.yearOf(st, E.calendar(st.virtual)));
 const KEEP = { water: 8, hoe: 6, basket: 6, shears: 4 };
 function spend(k, fn) { const m = st.money, r = fn(); if (r && r.ok) add(yearNow(), k, st.money - m); return r; }
+// P85-02 새 놀이 유형 (옵션 없으면 기본 출력 그대로)
+// --automine[=N]: ⛏️ 자동 캐기를 켜 두는 정원사 (P83-01) — 돈이 N원(기본 20,000)을 넘으면 다시 켬 · 표 '자동 캐기 낸 돈' · 끝줄에 칸 수 · 받은 돈 · 재료
+// --craft: 🧺 용품이 모자라면 먼저 가방 재료로 만듦 (P83-02) — 표 '용품'이 줄어든 만큼이 재료 값 · --automine이나 --mine과 함께
+// --move=N: 🪏 달마다 꽃 N포기를 옆 칸으로 옮겼다 되돌림 (P83-03, 한 번에 삽 2번) — 삽은 모자라면 삼 (표 '용품')
+// --blendn: 🫖 블렌드를 꽃마다 한 번에 최대 잔으로 (P82-01, 기본은 한 잔씩 되풀이 — 같은 값이어야 함)
+// --presdeco: 🌹 --preserved와 함께 — 완성된 것을 팔지 않고 꽃 옆 빈칸에 놓음 (P84) · 끝줄에 놓은 수 · 시뮬 안 꽃 품질 평균
+// --presseason: 🌹 --preserved --season과 함께 — 꽃잠 전 마지막 해엔 안 팔고 모아 새 철에 팖 (P85-01 철 넘김 돈)
+// --petalloop[=N]: 💐 꽃잎을 사서 말려 레시피 블렌드(=tea면 티백)로 파는 되풀이 — 달마다 N원(기본 20,000)어치 · 표 '꽃잎 사기' · '꽃잎 찻값' (P74 · P85 돈 고리 재기)
+const ARGV = process.argv, flagN = (f, d) => { const a = ARGV.find(x => x === f || x.startsWith(f + '=')); return a ? (a.includes('=') ? +a.split('=')[1] : d) : null; };
+const AUTOMINE = flagN('--automine', 20000), CRAFT = ARGV.includes('--craft'), MOVE_N = flagN('--move', 1), BLENDN = ARGV.includes('--blendn'), PRESDECO = ARGV.includes('--presdeco'), PRESSEASON = ARGV.includes('--presseason');
+const LOOP_TEA = ARGV.includes('--petalloop=tea'), PETALLOOP = LOOP_TEA ? 20000 : flagN('--petalloop', 20000);
+const P85 = { cells0: 0, paid0: 0, moved: 0, loopAbs: -1, moveAbs: -1, placed: 0 };
+function presSpot() {                              // --presdeco: 꽃 옆 빈칸 (꽃 심는 자리는 비워 둠)
+  for (const f of st.flowers) for (const [dx, dy] of [[1, 0], [0, 1], [1, 1]]) { const x = f.x + dx, y = f.y + dy;
+    if (x < E.W && y < E.H && !E.flowerAt(st, x, y) && !E.decoAt(st, x, y) && !spots.some(([a, b]) => a === x && b === y)) return [x, y]; }
+  return null;
+}
+function p85Act(cal, yr) {
+  if (AUTOMINE != null) { const m = E.mineOf(st); if (!m.auto && st.money >= AUTOMINE) E.mineAutoSet(st, true, ctx);
+    const paid = st.stats.autoPaid || 0; add(yr, '자동 캐기 낸 돈', -(paid - P85.paid0)); P85.paid0 = paid; }
+  if (CRAFT) for (const k of E.TOOL_CRAFTS) while ((k === 'fert' ? st.fert < 4 : (st[k] || 0) < (KEEP[k] || 4)) && E.canCraft(st, k)) { E.craft(st, k, ctx); add(yr, '만든 도구 값', E.SUPPLIES[k].price); }
+  if (MOVE_N && cal.abs !== P85.moveAbs) { P85.moveAbs = cal.abs; let n = 0;
+    for (const f of st.flowers) { if (n >= MOVE_N) break; if (f.withered || E.flowerAt(st, f.x + 1, f.y) || E.decoAt(st, f.x + 1, f.y) || f.x + 1 >= E.W) continue;
+      while ((st.shovel || 0) < 2 && st.money >= E.SUPPLIES.shovel.price) spend('삽', () => E.buySupply(st, 'shovel', 1));
+      const x0 = f.x; if (E.move(st, f.id, x0 + 1, f.y, ctx).ok && E.move(st, f.id, x0, f.y, ctx).ok) { n++; P85.moved += 2; } } }
+  if (PETALLOOP != null && cal.abs !== P85.loopAbs && !cal.frozen) { P85.loopAbs = cal.abs;   // 달 첫머리에 사서 넒 — 다음 달에 찻집 길로 팖
+    const k = LOOP_TEA ? ['rose'] : E.BLENDS.rosejasmine.parts, unit = k.reduce((a, p) => a + E.FLOWERS[p].petals * E.petalPrice(p), 0), n = Math.min(Math.floor(PETALLOOP / unit), Math.floor(st.money / unit));
+    for (let i = 0; i < n; i++) for (const p of k) { spend('꽃잎 사기', () => E.buyPetal(st, p, E.FLOWERS[p].petals)); } }
+}
 function act() {
   const cal = E.calendar(st.virtual), yr = yearNow();
+  if (AUTOMINE != null || CRAFT || MOVE_N || PETALLOOP != null) p85Act(cal, yr);
   // ⛏️ 광산 (P43, --mine): 기력을 다 써서 파기 — 계단을 파면 바로 아래층, 다 판 판은 새 굴 (만들기는 하지 않음)
   if (MINE && (!MINE_DAY || mineDay !== Math.floor(st.virtual / (24 * H)))) { const m = E.mineOf(st); mineDay = Math.floor(st.virtual / (24 * H));
     while (m.energy >= 1) {
@@ -90,7 +120,9 @@ function act() {
     } }
   // 🌹 프리저브드 (P53, --preserved): 완성된 것은 바로 팔고, 100% 꽃은 바로 꺾어 유리 돔에 (용액은 공짜 — --mine이면 가방으로 만든 것만)
   if (PRES) {
-    if (st.preserved.length) { const r = E.sellPreserved(st, st.preserved.map(p => p.id), ctx); add(yr, '🌹 프리저브드', r.sum); add(yr, '프리저브드 수', st.stats.presSold - (presSold0 || 0)); presSold0 = st.stats.presSold; }
+    if (PRESDECO) for (const p of st.preserved.slice()) { const c = presSpot(); if (c && E.placeDeco(st, p.id, c[0], c[1]).ok) P85.placed++; }
+    const presHold = PRESSEASON && seasonAt == null && E.seasonRows(st).length >= YEARS - 1;   // 마지막 해엔 모아 둠
+    if (st.preserved.length && !presHold) { const r = E.sellPreserved(st, st.preserved.map(p => p.id), ctx); add(yr, '🌹 프리저브드', r.sum); add(yr, '프리저브드 수', st.stats.presSold - (presSold0 || 0)); presSold0 = st.stats.presSold; }
     for (const f of st.flowers.slice()) { if (!E.presFull(st, f) || f.stage !== 'bloom' || f.withered) continue;
       if (MINE) { while (E.canCraft(st, 'presol') && st.presol < 1) E.craft(st, 'presol', ctx); } else st.presol = Math.max(st.presol, 1);
       E.preserve(st, f.id, ctx); }
@@ -153,6 +185,7 @@ function act() {
   // 찻집이 열리면: 레시피 블렌드 → 블렌드 티백 → 남은 말린 꽃잎 티백 → 우려서 바로 판매
   if (E.teaShopOpen(cal) && (!HOLD || (HOLD === 'sleep' ? cal.frozen : E.teaPriceKind(cal)))) {   // P34 --hold: 겨울 · 꽃잠에만 (=sleep: 꽃잠에만)
     let made = true;
+    if (BLENDN) for (const k of E.BLEND_KEYS) { const parts = E.BLENDS[k].parts, n = E.blendMax(st, parts); if (n > 0 && !E.BLENDS[k].hidden) { const ids = parts.map(p => st.dried.filter(d => d.type === p).sort((a, b) => b.q - a.q)[0].id); E.blend(st, ids, ctx, n); } }
     while (made) {
       made = false;
       for (const k of E.BLEND_KEYS) {
@@ -222,7 +255,7 @@ while (st.virtual < end) {
   }
 }
 // 표
-const keys = ['하루 용돈', '농장 정착금', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['찻집: 꿀차', '카운터 판매'] : []), ...(PANTRY ? ['저장고', '저장고 꽃잎'] : []), ...(MINE ? ['💎 보석', '🪜 층 돈'] : []), ...(PRES ? ['🌹 프리저브드'] : []), '막힘 방지', '꽃 사기', '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), ...(BUY ? ['기르기'] : []), '선물', ...(MINE ? ['보석 수'] : []), ...(PRES ? ['프리저브드 수'] : []), '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
+const keys = ['하루 용돈', '농장 정착금', '찻집: 티백 차', '찻집: 블렌드', '찻집: 레시피 블렌드', ...(AUTO ? ['찻집: 꿀차', '카운터 판매'] : []), ...(PANTRY ? ['저장고', '저장고 꽃잎'] : []), ...(MINE ? ['💎 보석', '🪜 층 돈'] : []), ...(PRES ? ['🌹 프리저브드'] : []), '막힘 방지', '꽃 사기', ...(PETALLOOP != null ? ['꽃잎 사기'] : []), ...(AUTOMINE != null ? ['자동 캐기 낸 돈'] : []), ...(CRAFT ? ['만든 도구 값'] : []), ...(MOVE_N ? ['삽'] : []), '용품', '찻집 가꾸기', '장식', '등급 장식', ...(AUTO ? ['자동 장치'] : []), ...(BUY ? ['기르기'] : []), '선물', ...(MINE ? ['보석 수'] : []), ...(PRES ? ['프리저브드 수'] : []), '잔 수', ...(AUTO ? ['카운터 잔'] : []), '제철 잔', '식은 잔', '연말 돈', '심은 꽃', '점수'];
 console.log(['해', ...keys].join('\t'));
 for (const yr of Object.keys(ledger).sort((a, b) => a - b)) {
   const L = ledger[yr];
@@ -247,6 +280,9 @@ console.log(`끝: 돈 ${st.money} · 정원 ${st.flowers.filter(f => !f.withered
 if (WS) console.log(`공방 효과: ${['stepstone', 'basin', 'stonelamp'].map(k => `${E.DECOS[k].name} ${E.placedOf(st, k).length}`).join(' · ')} · 둘레 안 꽃 ${st.flowers.filter(f => !f.withered && ['stepstone', 'basin', 'stonelamp'].some(k => E.decoNear(st, k, f))).length}/${st.flowers.filter(f => !f.withered).length} · 씨앗 처음 품질 ${E.pct(E.seedQ(st))}%`);   // P44
 if (MINE) console.log(`광산: 판 칸 ${st.stats.dug || 0} · 💎 보석 ${st.stats.jewels || 0}개 ${(st.stats.jewelWon || 0).toLocaleString('ko-KR')}원 · 가장 깊이 ${st.mine.deepest}층`);   // P43
 if (PRES) console.log(`프리저브드: 만듦 ${st.stats.presMade || 0} · 팖 ${st.stats.presSold || 0} · 도감 ${E.presCount(st)}/13 · 변이 ${E.presMutCount(st)}/13`);   // P53
+if (AUTOMINE != null) console.log(`자동 캐기: ${st.stats.autoDug || 0}칸 · 낸 돈 ${st.stats.autoPaid || 0}원 · 💎 ${st.stats.jewelWon || 0}원 · 🪜 ${st.stats.descendWon || 0}원 · 가장 깊이 ${st.mine.deepest}층 · 가방 ${JSON.stringify(st.mine.bag)}`);   // P85-02
+if (MOVE_N) console.log(`옮기기: ${P85.moved}번`);
+if (PRESDECO) console.log(`프리저브드 장식: 놓음 ${P85.placed} · 지금 ${E.placedOf(st, 'pres').length} · 꽃 품질 평균 ${Math.round(st.flowers.reduce((a, f) => a + f.q, 0) / Math.max(1, st.flowers.length) * 1000) / 10}%`);
 if (BUY) console.log(`기르기 산 것: ${bought.join(" · ") || "없음"}`);   // P41 --buy
 // 📈 해마다 기록 (P28-07-01): 정원에 남은 줄 그대로. 쉼달 기록과 기록 사이를 한 해로 세서, 꽃잠에 판 것은 위 표(월요일 3월부터)와 다른 해에 들어갈 수 있음
 console.log('\n해마다 기록 (yearLogOf)');

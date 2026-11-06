@@ -109,7 +109,7 @@ console.log('[저장 왕복]');
 console.log('[새 철]');
 { const n = fresh(MON, 'p53-n'); n.presol = 4; n.preserved.push({ id: 1, type: 'rose', mut: false }); n.preserving.push({ id: 2, type: 'rose', mut: false, leftH: 3 }); n.dex.pres.rose = true; n.titles.t_pres13 = 0;
   const keep = {}; for (const k of E.SEASON_KEEP) if (k in n) keep[k] = n[k];
-  check(keep.presol === 4 && keep.dex.pres.rose && keep.titles.t_pres13 === 0 && !('preserved' in keep) && !('preserving' in keep), '용액 · 도감 · 칭호는 이어지고 창고 · 유리 돔은 비워짐 (팔 물건 — 찻잔 · 티백과 같음)'); }
+  check(keep.presol === 4 && keep.dex.pres.rose && keep.titles.t_pres13 === 0 && 'preserved' in keep && !('preserving' in keep), '용액 · 도감 · 칭호 · 창고 프리저브드(P85-01)는 이어지고 유리 돔은 비워짐 (팔 물건 — 찻잔 · 티백과 같음)'); }
 
 console.log('[Math.random 안 씀]');
 { const src = require('./engine-src.js').source(process.argv[2]),   // P66 엔진 조각을 이은 글자
