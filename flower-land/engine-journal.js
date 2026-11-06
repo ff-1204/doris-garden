@@ -222,6 +222,7 @@ const topDecoOf = st => { const id = st && st.topDeco; return id == null ? null 
 function setTopDeco(st, id) {
   const d = (st.decos || []).find(z => z.id === id);
   if (!d) return no('달 장식이 없어요');
+  if (d.key === 'pres') return no('프리저브드는 대표 장식으로 달 수 없어요');   // P84-01 창고 · 정원 사이만 오감
   if (st.topDeco === id && d.x == null) return no('이미 대표 장식이에요');
   const name = decoInfo(decoKey(d)).name, was = d.x != null, hn = (d.honey || []).length;
   if (was) { if (hn) takeHoney(st, d.id); d.x = null; d.y = null; }   // 정원에서 빠짐 — 정원 효과(둘레 · 이달의 장식 · 공방)는 쉼 · 벌통 꿀은 storeDeco처럼 함께 거둠

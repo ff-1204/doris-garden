@@ -87,7 +87,7 @@ const SAVE_NUMS = [
   'flowers[].ageH', 'flowers[].lifeH', 'flowers[].waterH', 'flowers[].weedH', 'flowers[].pruneH', 'flowers[].fertH', 'flowers[].thirstH', 'flowers[].adaptH', 'flowers[].harvestKey', 'flowers[].bloomKey', 'flowers[].antKey', 'flowers[].bfm',   // R-A4 (11-05 검토): 글자면 += 로 글자가 이어져 NaN이 되던 시간 칸
   'pending[].id', 'pending[].dueH', 'mine.regenH', 'mine.autoLog.n', 'mine.autoLog.paid', 'mine.autoLog.jewels', 'mine.autoLog.won', 'mine.autoLog.down', 'mine.autoLog.downWon', 'mine.autoLog.bag.*',
   'items[].id', 'items[].q', 'items[].got', 'petals[].id', 'petals[].q', 'teas[].id', 'teas[].q', 'cups[].id', 'cups[].q', 'blends[].id', 'blends[].q', 'dried[].id', 'dried[].q', 'drying[].id', 'drying[].q', 'drying[].leftH', 'preserved[].id',
-  'decos[].id', 'decos[].n', 'decos[].x', 'decos[].y', 'letterBox[].y', 'letterBox[].m', 'letterBox[].at',
+  'decos[].id', 'decos[].n', 'decos[].x', 'decos[].y', 'decos[].at', 'letterBox[].y', 'letterBox[].m', 'letterBox[].at',
 ];
 const noTag = s => s.replace(/[<>]/g, '');
 function cleanText(v) {
@@ -314,6 +314,10 @@ const MIGRATIONS = [
   ['🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐', s => {
     if (s.shovel == null) s.shovel = SUPPLIES.shovel.per;
     if (s.mine) { if (s.mine.auto == null) s.mine.auto = false; if (s.mine.autoStop === undefined) s.mine.autoStop = null; if (s.mine.autoLog === undefined) s.mine.autoLog = null; }
+  }],
+  ['🌹 프리저브드 장식 (P84, 11-06): 창고 칸 st.preserved를 늘 배열로 · 꽃을 모르는 pres 장식은 지움 (그림을 그릴 수 없어서)', s => {
+    s.preserved = s.preserved || [];
+    if (s.decos) s.decos = s.decos.filter(d => d.key !== 'pres' || (d.pres && FLOWERS[d.pres.type]));
   }],
 ];
 const P41_LETTER = 'p41-money', POLLEN_WON = 5000;   // P41-05 📮 안내 편지 이름표 · 꽃가루 1알 = 5,000원

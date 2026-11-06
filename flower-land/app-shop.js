@@ -269,6 +269,8 @@ $('#p-store').addEventListener('click', e => {
   if (e.target.closest('[data-presinfo]')) return feedback('🧪 품질 · 기운이 100%인 다 핀 꽃을 눌러 「🌹 프리저브드」로 써요');   // P53
   if (e.target.closest('[data-jarinfo]')) return feedback('🫙 정원의 🧬 변이 꽃을 눌러 「유리 관에 담기」로 써요');   // P36-04
   const c = e.target.closest('[data-compost]'); if (c) return openCompost(c.dataset.compost.split(',').map(Number));
+  const pp = e.target.closest('[data-presplace]'); if (pp) { ui.tool = 'deco'; ui.decoId = +pp.dataset.presplace; return setTab('garden', true); }   // P84-01 🌹
+  const ps = e.target.closest('[data-pressell]'); if (ps) return askSellPres([+ps.dataset.pressell]);
   const dp = e.target.closest('[data-decoplace]'); if (dp) { ui.tool = 'deco'; ui.decoId = +dp.dataset.decoplace; return setTab('garden', true); }
   const dt = e.target.closest('[data-decotop]'); if (dt) return after(E.setTopDeco(st, +dt.dataset.decotop));   // P52 ⬆️
   if (e.target.closest('[data-decodown]')) return after(E.clearTopDeco(st));
@@ -351,7 +353,7 @@ function presGroups() {
 const presCard = (g, btn) => `<div class="decotile"><span class="dk-art">${presImg(g.type, g.mut, 2)}</span><b>${esc(E.presName(g.type, g.mut))}</b><small>×${g.ids.length} · 한 개 ${won(E.presValue(st, g.type, g.mut))}</small>${btn(g)}</div>`;
 function presStoreHTML() {                        // 📦 창고: 쌓인 것 · 팔러 가기
   const gs = presGroups(); if (!gs.length) return '';
-  return `<div class="cab-head"><span class="sb-title">🌹 프리저브드 <span class="sh-n">${st.preserved.length}</span></span><span class="muted">시들지 않아요 · 💐 화원에서 팔아요</span><span class="right"><button type="button" class="btn small primary" data-go="shop">💐 팔러 가기</button></span></div><div class="decotiles">${gs.map(g => presCard(g, () => '')).join('')}</div>`;
+  return `<div class="cab-head"><span class="sb-title">🌹 프리저브드 <span class="sh-n">${st.preserved.length}</span></span><span class="muted">시들지 않아요 · 정원에 놓거나 팔아요</span></div><div class="decotiles">${gs.map(g => presCard(g, x => `<span class="pres-acts"><button type="button" class="btn small primary" data-presplace="${x.ids[0]}">🪴 놓기</button><button type="button" class="btn small" data-pressell="${x.ids[0]}">💰 팔기</button></span>`)).join('')}</div>`;   // P84-03 놓기 · 팔기 (한 개씩 — 모두 팔기는 💐 화원)
 }
 function presShopHTML() {                         // 💐 화원: 창고의 프리저브드를 사 감
   const gs = presGroups(); if (!gs.length) return '';

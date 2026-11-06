@@ -232,6 +232,7 @@ function decoURL(key, variant) {                 // variant: P77-A 🪵 나무 �
   const bug = E.INSECTS[key] && window.INSECT_ART[key];   // 11-01 사용자 "정원에 곤충들이 놓이면 좋겠어": 곤충은 장치(빗물 통 · 바구니 …) 대신 곤충 그림으로 — 곤충농장 카드와 같은 그림
   if (bug) { const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'); bug.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && bug.pal[ch]) { x.fillStyle = bug.pal[ch]; x.fillRect(i, j, 1, 1); } })); return (decoCache[art] = c.toDataURL()); }
   if (info.title) return (decoCache[art] = titleURL(info.title, false, 0));
+  if (info.pres) return (decoCache[art] = presURL(info.pres.type, info.pres.mut));   // P84-01 🌹 유리 돔 그림 (22×22, 변이 꽃빛 그대로)
   const S = window.DECO_SPRITES[info.jar ? 'mutjar' : art], c = document.createElement('canvas'); c.width = c.height = 16;
   const x = c.getContext('2d'), mp = info.mut && mutPetal(info.mut.k, info.mut.stage), pal = mp ? Object.assign({}, S.pal, { f: mp.petal, F: mp.center }) : S.pal;   // P36-04 🫙 속 꽃은 그 변이 꽃빛 · 단계
   S.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.' && pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
@@ -256,7 +257,7 @@ function presURL(key, mut) {
 }
 const presImg = (key, mut, scale) => { const px = 22 * (scale || 2), nm = `프리저브드 ${mut && E.MUTANTS[key] ? E.MUTANTS[key].name : FLOWERS[key].name}`; return `<img class="px" src="${presURL(key, !!mut)}" width="${px}" height="${px}" alt="${esc(nm)}">`; };
 // 화면에 띄우는 크기는 원본의 정수배로 (장식 16 · 칭호 문장 22, P16-14)
-const decoImg = (key, scale) => { const info = E.decoInfo(key), px = (info && info.title ? 22 : 16) * (scale || 3); return `<img class="px" src="${decoURL(key)}" width="${px}" height="${px}" alt="${esc(info ? info.name : '')}">`; };
+const decoImg = (key, scale) => { const info = E.decoInfo(key), px = (info && (info.title || info.pres) ? 22 : 16) * (scale || 3); return `<img class="px" src="${decoURL(key)}" width="${px}" height="${px}" alt="${esc(info ? info.name : '')}">`; };
 // P18 꿀병 그림: 꿀 빛깔은 그 꽃의 꽃잎 색을 꿀색과 섞음 (들꽃꿀은 호박색)
 const honeyCache = {};
 function honeyURL(k) {

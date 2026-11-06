@@ -13,7 +13,7 @@ const HINT = {
   prop: '다 자란 꽃을 눌러 번식해요 · 꽃마다 되는 달이 있고(꽃잠엔 언제든), 한 해에 한 번이에요',
   move: '옮길 꽃을 누르고 빈 칸을 눌러요 · 언제나 되고 삽 1번을 써요',   // P83-03
 };
-const decoById = id => (st.decos || []).find(d => d.id === id);
+const decoById = id => (st.decos || []).find(d => d.id === id) || E.presDeco(st, id);   // P84-01 창고의 🌹 프리저브드를 놓는 중일 때도 같은 길로
 function plantable() {
   const cal = E.calendar(st.virtual), by = {};
   if (cal.frozen) return by;
@@ -482,7 +482,7 @@ function renderDecoStatus(force) {
     </div>
     <div class="sx-deco">${bug ? `<p class="muted">${esc(E.insectLine(st, d.key))}</p>` : info.desc ? `<p class="muted">${esc(info.desc)}</p>` : ''}${decoBuffHTML(E.decoKey(d))}${decoExtra(d)}</div>
     ${reach != null ? '<div class="sx-note">💛 지도의 노란 칸이 둘레예요</div>' : ''}
-    <div class="sx-acts"><button type="button" class="btn" data-act="decoStore">📦 창고에</button><button type="button" class="btn" data-act="decoTop">🎀 대표로 달기</button><button type="button" class="btn primary" data-act="decoMove">↔ 옮기기</button></div>`;
+    <div class="sx-acts"><button type="button" class="btn" data-act="decoStore">📦 창고에</button>${d.key === 'pres' ? '' : '<button type="button" class="btn" data-act="decoTop">🎀 대표로 달기</button>'}<button type="button" class="btn primary" data-act="decoMove">↔ 옮기기</button></div>`;
 }
 // P35 · P36 장식 카드 한 줄 (화원 · 창고 · 정원 장식 창이 같이 씀): 놓아야 효과 · 느긋하게 보기면 숫자 없이 (엔진 decoBuffLine)
 // P75-01 📍 놓아야 효과 · ✨ 사면 바로 — 효과가 있는 카드에만 작은 표시 하나
