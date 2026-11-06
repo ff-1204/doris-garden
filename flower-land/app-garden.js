@@ -797,21 +797,21 @@ function shareMapCanvas(px) {                     // 지도만 따로: draw(true
   try { draw(true); } finally { [g, cell, dpr, hover] = keep; }
   return c;
 }
-function shareFonts() {                           // 앱 글꼴이 아직 안 왔으면 잠깐 기다림 (못 오면 그냥 기본 글꼴로)
+function shareFonts(text) {                       // 앱 글꼴이 아직 안 왔으면 잠깐 기다림 (못 오면 그냥 기본 글꼴로) · P87-01 글꼴은 글자 묶음별로 내려와서 그림에 쓸 글자를 모두 넘겨야 다른 글꼴이 안 섞임
   if (!document.fonts || !document.fonts.load) return Promise.resolve();
-  const want = ['400 120px Jua', '700 52px "Gowun Batang"', '600 48px "IBM Plex Sans KR"', '500 30px "IBM Plex Mono"'].map(f => document.fonts.load(f, '도리의 정원 0123').catch(() => null));
-  return Promise.race([Promise.all(want), new Promise(r => setTimeout(r, 1500))]);
+  const want = ['400 120px Jua', '700 52px "Gowun Batang"', '600 48px "IBM Plex Sans KR"', '500 30px "IBM Plex Mono"'].map(f => document.fonts.load(f, text || '도리의 정원 0123').catch(() => null));
+  return Promise.race([Promise.all(want), new Promise(r => setTimeout(r, 3000))]);
 }
 function shareText(x, text, px, y, font, color, maxW, align) {   // 왼쪽(기본) · 오른쪽 맞춤 · 넓으면 글자를 줄임
   let size = +font.match(/(\d+)px/)[1];
   x.font = font; while (x.measureText(text).width > maxW && size > 16) { size -= 2; x.font = font.replace(/\d+px/, size + 'px'); }
   x.fillStyle = color; x.textAlign = align || 'left'; x.textBaseline = 'alphabetic'; x.fillText(text, px, y);
 }
-function shareQr(x, left, top) {                  // 모듈마다 정수 px 네모 (QR 둘레 24px는 비워 둠 — 그리는 쪽이 지킴)
-  x.fillStyle = SHARE_INK;
+function shareQr(x, left, top, px, ink) {          // 모듈마다 정수 px 네모 (QR 둘레 24px는 비워 둠 — 그리는 쪽이 지킴)
+  const m = px || SHARE_QR_PX; x.fillStyle = ink || SHARE_INK;
   SHARE_QR.forEach((r, j) => {
     const bits = parseInt(r, 36).toString(2).padStart(SHARE_QR_N, '0');
-    for (let i = 0; i < SHARE_QR_N; i++) if (bits[i] === '1') x.fillRect(left + i * SHARE_QR_PX, top + j * SHARE_QR_PX, SHARE_QR_PX, SHARE_QR_PX);
+    for (let i = 0; i < SHARE_QR_N; i++) if (bits[i] === '1') x.fillRect(left + i * m, top + j * m, m, m);
   });
 }
 function shareStoryCanvas() {
@@ -863,20 +863,102 @@ function shareStoryCanvas() {
   shareQr(x, qx, qy);
   return c;
 }
-async function openShareStory() {
-  await shareFonts();
-  const c = shareStoryCanvas(), info = E.shareCard(st), url = c.toDataURL('image/png');
-  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-  const file = blob && typeof File === 'function' ? new File([blob], info.file, { type: 'image/png' }) : null;
-  let can = false; try { can = !IN_APP && !!file && !!navigator.canShare && navigator.canShare({ files: [file] }); } catch (e) { can = false; }
-  const saveImg = () => { const a = document.createElement('a'); a.href = url; a.download = info.file; document.body.appendChild(a); a.click(); a.remove(); feedback('📷 사진을 저장했어요'); };
-  const shareImg = async () => {
-    try { await navigator.share({ files: [file], title: info.title }); }
-    catch (e) { if (e && e.name !== 'AbortError') feedback('공유하지 못했어요 · 사진 저장으로 받아 주세요', true); }
-  };
-  openModal('↗ 공유', `<div class="share-pv"><img class="share-img" id="shareImg" src="${url}" width="${SHARE_W}" height="${SHARE_H}" alt="정원 스토리 그림"></div>`
-    + (can ? '' : '<p class="note share-note">사진을 저장한 뒤 인스타에서 올려요</p>'),
-    can ? [{ label: '사진 저장', act: saveImg }, { label: '인스타에 공유', primary: true, act: shareImg }] : [{ label: '사진 저장', primary: true, act: saveImg }]);
+// P87 ↗ 게시물 네 장 (11-06 사용자 시안 2 「나무 액자 넘겨 보기」): 1080×1440(3:4) — 전경 → 꽃 → 기록 → 놀러 와요. 기기 안에서만 그리고 공유 시트 · 내려받기만 씀
+// 꽃은 도트 그림 정수배(지도의 둥근 도형이 아니라 spriteURL) · 장식 16px · 문장 · 프리저브드 22px도 칸 안 정수배. 재질은 P86 나무 선반
+const ALBUM_W = 1080, ALBUM_H = 1440, ALBUM_S = 6, AL = { edge: '#3f2a18', wood: '#6e4a2c', grain: '#7a5433', paper: '#f3e6c8', tile: '#fbf6e9', rule: '#d9c8a8', ink: '#4a3a28', sub: '#7a6a52', night: '#2c2119' };
+const albumFont = { jua: n => `400 ${n}px Jua, "Gowun Batang", serif`, bat: n => `700 ${n}px "Gowun Batang", serif`, sans: n => `600 ${n}px "IBM Plex Sans KR", sans-serif`, mono: n => `500 ${n}px "IBM Plex Mono", monospace` };
+const albumImg = src => new Promise((r, j) => { const i = new Image(); i.onload = () => r(i); i.onerror = j; i.src = src; });
+const albumCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; return [c, x]; };
+function albumStep(x, X, Y, w, h, s, col) { x.fillStyle = col; x.fillRect(X + s, Y, w - 2 * s, h); x.fillRect(X, Y + s, w, h - 2 * s); }   // 계단 모서리 판
+function albumPlank(x, X, Y, w, h, s) { albumStep(x, X, Y, w, h, s, AL.edge); albumStep(x, X + s, Y + s, w - 2 * s, h - 2 * s, s, AL.wood); x.fillStyle = AL.grain; for (let y = Y + 2 * s; y < Y + h - 2 * s; y += 4 * s) x.fillRect(X + 2 * s, y, w - 4 * s, Math.min(2 * s, Y + h - 2 * s - y)); }
+const albumFlowerArt = (f, mut) => spriteURL(f, mut ? `mut${mut}` : 'flower');
+async function albumScene(px, cols, rows) {       // 꽃이 가장 많이 든 cols × rows 구역을 도트 그대로 → 캔버스
+  let c0 = 0, r0 = 0, best = -1; const live = st.flowers.filter(f => !f.withered);
+  for (let r = 0; r + rows <= H; r++) for (let c = 0; c + cols <= W; c++) { const n = live.filter(f => f.x >= c && f.x < c + cols && f.y >= r && f.y < r + rows).length; if (n > best) { best = n; c0 = c; r0 = r; } }
+  const [cv, x] = albumCanvas(cols * px, rows * px), inside = o => o.x >= c0 && o.x < c0 + cols && o.y >= r0 && o.y < r0 + rows;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { x.fillStyle = tileColor((r0 + j) * W + c0 + i); x.fillRect(i * px, j * px, px, px); }
+  for (const f of live) { if (!inside(f)) continue; const big = f.stage === 'bloom' || f.stage === 'mature', s = big ? px : px / 2, off = (px - s) / 2;   // 어린 꽃은 반 크기 (정수배 그대로)
+    x.drawImage(await albumImg(albumFlowerArt(f.type, E.mutShown(f) ? E.mutStage(f) : 0)), (f.x - c0) * px + off, (f.y - r0) * px + off, s, s); }
+  for (const d of st.decos || []) { if (d.x == null || !inside(d)) continue; const k = E.decoKey(d), info = E.decoInfo(k), base = info && (info.title || info.pres) ? 22 : 16, s = base * Math.floor(px / base), off = (px - s) / 2;
+    x.drawImage(await albumImg(decoURL(k)), (d.x - c0) * px + off, (d.y - r0) * px + off, s, s); }
+  return cv;
 }
-$('#shareBtn').addEventListener('click', () => { openShareStory().catch(() => feedback('그림을 만들지 못했어요', true)); });
+function albumPage(n, total, title) {             // 나무 액자 + 종이 + 머리 줄
+  const [c, x] = albumCanvas(ALBUM_W, ALBUM_H), s = ALBUM_S;
+  x.fillStyle = AL.night; x.fillRect(0, 0, ALBUM_W, ALBUM_H); albumPlank(x, 30, 30, 1020, 1380, s); albumStep(x, 66, 66, 948, 1308, s, AL.edge); albumStep(x, 72, 72, 936, 1296, s, AL.paper);
+  shareText(x, title, 114, 186, albumFont.jua(76), AL.ink, 740); shareText(x, `${n}/${total}`, 966, 182, albumFont.mono(30), AL.sub, 120, 'right');
+  x.fillStyle = AL.edge; x.fillRect(114, 216, 852, 6);
+  return [c, x];
+}
+async function albumFront(n, total, info) {
+  const [c, x] = albumPage(n, total, info.title), map = await albumScene(32, 26, 20);   // 도트 × 2 · 832×640
+  albumPlank(x, 96, 252, 888, 696, ALBUM_S); x.drawImage(map, 124, 280);
+  if (!st.flowers.some(f => !f.withered)) { albumStep(x, 264, 540, 552, 120, ALBUM_S, AL.edge); albumStep(x, 270, 546, 540, 108, ALBUM_S, AL.paper); shareText(x, '첫 꽃을 기다리는 땅이에요', 540, 616, albumFont.bat(38), AL.ink, 500, 'center'); }   // 빈 정원
+  shareText(x, info.when, 114, 1030, albumFont.bat(48), AL.ink, 852);
+  [info.flowers, info.grade, info.titleName].filter(Boolean).forEach((t, i) => shareText(x, t, 114, 1096 + i * 60, albumFont.sans(38), AL.sub, 852));
+  shareText(x, '옆으로 넘겨 보세요', 966, 1320, albumFont.bat(34), AL.ink, 500, 'right');
+  return c;
+}
+async function albumFlowers(n, total, a) {
+  const [c, x] = albumPage(n, total, a.flowerTitle), TW = 276, TH = 340, list = a.flowers, rows = Math.max(1, Math.ceil(list.length / 3)), top = 256 + Math.max(0, Math.floor((3 - rows) * 356 / 2));
+  if (!list.length) { shareText(x, '첫 꽃을 기다리고 있어요', 540, 700, albumFont.bat(52), AL.ink, 820, 'center'); shareText(x, '꽃이 피면 여기에 모여요', 540, 776, albumFont.sans(36), AL.sub, 820, 'center'); return c; }
+  for (let i = 0; i < list.length; i++) { const row = Math.floor(i / 3), inRow = Math.min(3, list.length - row * 3), X = 540 - (inRow * 288 - 12) / 2 + (i % 3) * 288, Y = top + row * 356, f = list[i];
+    albumStep(x, X, Y, TW, TH, ALBUM_S, AL.tile); x.drawImage(await albumImg(albumFlowerArt(f.k, 0)), X + 42, Y + 24, 192, 192);   // 도트 × 12
+    shareText(x, f.name, X + TW / 2, Y + 268, albumFont.jua(44), AL.ink, 240, 'center'); if (f.count) shareText(x, f.count, X + TW / 2, Y + 316, albumFont.sans(28), AL.sub, 240, 'center'); }
+  if (a.more) shareText(x, `그 밖에 ${a.more}종`, 966, 1340, albumFont.sans(30), AL.sub, 400, 'right');
+  return c;
+}
+function albumRecord(n, total, a) {
+  const [c, x] = albumPage(n, total, '정원 기록'), gap = 190, top = a.young ? 240 + Math.floor((1100 - a.rows.length * gap - 110) / 2) : 300;   // 새 정원은 가운데로
+  a.rows.forEach(([k, v], i) => { const Y = top + i * gap; shareText(x, k, 114, Y + 50, albumFont.sans(40), AL.sub, 400); shareText(x, v, 966, Y + 56, albumFont.jua(70), AL.ink, 520, 'right'); x.fillStyle = AL.rule; x.fillRect(114, Y + 108, 852, 6); });
+  if (a.young) shareText(x, '이제 막 시작한 정원이에요', 540, top + a.rows.length * gap + 70, albumFont.bat(46), AL.ink, 820, 'center');
+  return c;
+}
+async function albumVisit(n, total, info) {
+  const [c, x] = albumPage(n, total, '정원에 놀러 와요'), map = await albumScene(64, 13, 6), qx = 114, qy = 960, m = 8, q = SHARE_QR_N * m;
+  albumPlank(x, 96, 252, 888, 440, ALBUM_S); x.drawImage(map, 124, 280);
+  shareText(x, '도트로 꽃을 키우고', 114, 800, albumFont.bat(50), AL.ink, 852); shareText(x, '차를 우려 파는 느린 정원이에요', 114, 868, albumFont.bat(50), AL.ink, 852);
+  x.fillStyle = AL.tile; x.fillRect(qx - 32, qy - 32, q + 64, q + 64); shareQr(x, qx, qy, m, AL.night);   // 둘레 4모듈 비움
+  shareText(x, '주소로 들어와요', 420, qy + 76, albumFont.sans(38), AL.ink, 540); shareText(x, info.url, 420, qy + 130, albumFont.mono(30), AL.sub, 546);
+  return c;
+}
+const ALBUM_TEXT = '첫 꽃을 기다리는 땅이에요 도리의 정원 옆으로 넘겨 보세요 첫 꽃을 기다리고 있어요 꽃이 피면 여기에 모여요 그 밖에 종 정원 기록 이제 막 시작한 정원이에요 정원에 놀러 와요 도트로 꽃을 키우고 차를 우려 파는 느린 정원이에요 주소로 들어와요 0123456789,/·.-';
+async function albumCanvases() {                  // 🐢 느긋하게 보기면 기록 장을 빼서 석 장
+  const info = E.shareCard(st), a = E.shareAlbum(st), total = a.rows ? 4 : 3;
+  await shareFonts(ALBUM_TEXT + JSON.stringify([info, a]));
+  const out = [await albumFront(1, total, info), await albumFlowers(2, total, a)];
+  if (a.rows) out.push(albumRecord(3, total, a));
+  out.push(await albumVisit(total, total, info));
+  return out;
+}
+// P87-02 공유 창: 게시물 네 장(기본) · 스토리 한 장(P55 그대로). 여러 파일을 못 넘기는 기기는 보고 있는 장을 하나씩
+const canvasFile = (c, name) => new Promise(r => c.toBlob(b => r(b && typeof File === 'function' ? new File([b], name, { type: 'image/png' }) : null), 'image/png'));
+const shareCanFiles = files => { try { return !IN_APP && files.every(Boolean) && !!navigator.canShare && navigator.canShare({ files }); } catch (e) { return false; } };
+const shareSets = {};                             // 창이 열린 동안 장을 바꿔도 다시 그리지 않음
+async function shareSet(mode) {
+  if (shareSets[mode]) return shareSets[mode];
+  const info = E.shareCard(st), list = mode === 'story' ? (await shareFonts(info.title + info.when + JSON.stringify(info)), [shareStoryCanvas()]) : await albumCanvases();
+  const name = i => list.length > 1 ? info.file.replace('.png', `-${i + 1}.png`) : info.file;
+  const pics = await Promise.all(list.map(async (c, i) => ({ url: c.toDataURL('image/png'), name: name(i), file: await canvasFile(c, name(i)), w: c.width, h: c.height })));
+  return (shareSets[mode] = pics);
+}
+function savePic(p) { const a = document.createElement('a'); a.href = p.url; a.download = p.name; document.body.appendChild(a); a.click(); a.remove(); }
+async function openShare(mode) {
+  const pics = await shareSet(mode), info = E.shareCard(st), many = pics.length > 1, files = pics.map(p => p.file), all = shareCanFiles(files), one = shareCanFiles(files.slice(0, 1));
+  const root = $('#modalRoot'), now = () => { const r = root.querySelector('#shareRow'); return pics[r ? Math.min(pics.length - 1, Math.round(r.scrollLeft / Math.max(1, r.firstElementChild.offsetWidth))) : 0]; };
+  const send = async list => { try { await navigator.share({ files: list, title: info.title }); } catch (e) { if (e && e.name !== 'AbortError') feedback('공유하지 못했어요 · 사진 저장으로 받아 주세요', true); } };
+  const saveAll = () => { pics.forEach((p, i) => setTimeout(() => savePic(p), i * 400)); feedback(`📷 사진 ${pics.length}장을 저장했어요`); };
+  const saveNow = () => { savePic(now()); feedback('📷 사진을 저장했어요'); };
+  const copy = async () => { try { await navigator.clipboard.writeText(info.link); feedback('주소를 복사했어요 · 글이나 프로필에 붙여 넣어요'); } catch (e) { feedback(`주소: ${info.link}`); } };
+  const btns = [{ label: '주소 복사', act: copy }];
+  if (all) btns.push({ label: '사진 저장', act: many ? saveAll : saveNow }, { label: many ? `${pics.length}장 공유` : '인스타에 공유', primary: true, act: () => send(files) });
+  else if (one) btns.push({ label: '이 장 저장', act: saveNow }, { label: '이 장 공유', primary: true, act: () => send([now().file]) });
+  else btns.push({ label: many ? '이 장 저장' : '사진 저장', primary: true, act: saveNow });
+  const note = all ? (many ? '인스타를 고르면 게시물로 올라가요 · 게시물엔 링크가 안 들어가요' : '') : one && many ? '이 기기는 한 장씩 보내요 · 옆으로 넘겨 골라요' : many ? '한 장씩 저장한 뒤 인스타에서 올려요 · 옆으로 넘겨 골라요' : '사진을 저장한 뒤 인스타에서 올려요';
+  openModal('↗ 공유', `<div class="share-modes" role="group" aria-label="공유 그림"><button type="button" class="btn small ${mode === 'album' ? 'primary' : ''}" data-sm="album" aria-pressed="${mode === 'album'}">게시물</button><button type="button" class="btn small ${mode === 'story' ? 'primary' : ''}" data-sm="story" aria-pressed="${mode === 'story'}">스토리 한 장</button></div>
+    <div class="share-row" id="shareRow" tabindex="0">${pics.map((p, i) => `<span class="share-pv"><img class="share-img" src="${p.url}" width="${p.w}" height="${p.h}" alt="${many ? `정원 그림 ${i + 1}장` : '정원 스토리 그림'}"></span>`).join('')}</div>`
+    + (note ? `<p class="note share-note">${note}</p>` : ''), btns);
+  root.querySelectorAll('[data-sm]').forEach(b => b.onclick = () => { if (b.dataset.sm !== mode) openShare(b.dataset.sm).catch(() => feedback('그림을 만들지 못했어요', true)); });
+}
+$('#shareBtn').addEventListener('click', () => { for (const k of Object.keys(shareSets)) delete shareSets[k]; openShare('album').catch(() => feedback('그림을 만들지 못했어요', true)); });
 // P55 끝
