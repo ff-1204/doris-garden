@@ -24,4 +24,9 @@ check(/\.share-btn\.map-share \{ position: absolute;[^}]*z-index: 3/.test(css), 
 check(/\.mapscroll\.pan-x \.mapinner \{ margin: 0 72px 0 0/.test(css), '끌면 단추 밑 칸이 드러남');
 check(!/shareBtn/.test(garden.slice(garden.indexOf('function draw(clean)'), garden.indexOf('function tileAt'))), '공유 그림(draw)엔 단추가 없음');
 
+console.log('[카드 단추 줄 (P88-06)]');
+check(/:is\(\.shopcard, \.decotile\) \{ display: flex; flex-direction: column; \}/.test(css), '세로로 쌓는 카드는 flex');
+check(/:is\(\.shopcard, \.decotile\) > :is\(\.btn, \.cc-acts, \.sc-buy, \.rv-acts\):not\(\.btn \+ \*, \.cc-acts \+ \*, \.sc-buy \+ \*\) \{ margin-top: auto/.test(css), '첫 단추 줄이 맨 아래로 (이어진 단추는 그 아래)');
+check(!/\.shopgrid \{[^}]*align-items/.test(css), '격자가 줄마다 카드 높이를 맞춤');
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');

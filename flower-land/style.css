@@ -1625,7 +1625,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .ring-btn { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
 /* 찻집: 티백은 선반 위 도트 그림 */
 #p-cab .stack > .cabgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-6) 0; }
-#p-cab .stack > .cabgrid .teacard { background: none; box-shadow: none; padding: 0 var(--sp-3) var(--sp-3); text-align: center; justify-items: center; }
+#p-cab .stack > .cabgrid .teacard { border: 0; background: none; box-shadow: none; padding: 0 var(--sp-3) var(--sp-3); text-align: center; justify-items: center; }
 #p-cab .stack > .cabgrid .teacard .sc-art { width: calc(100% + 2 * var(--sp-3)); margin-inline: calc(-1 * var(--sp-3)); height: 76px; place-items: end center; background: none; border-radius: 0; border-bottom: 8px solid var(--wood); box-shadow: 0 3px 0 var(--wood-edge); }
 #p-cab .stack > .cabgrid .teacard .sc-to, #p-cab .stack > .cabgrid .teacard .sc-bloom { display: none; }
 #p-cab .stack > .cabgrid .teacard .sc-form { top: 0; left: var(--sp-2); }
@@ -1664,3 +1664,8 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .mapscroll.pan-x .mapinner { margin: 0 72px 0 0; }
 /* P88-02 돌봄 줄이 지도 아래로 가서, 넓은 화면은 지도 틀 높이를 창에 맞춰 돌봄 줄이 첫 화면에 보이게 (넘는 만큼은 끌어서 봐요) */
 @media (min-width: 601px) { .mapscroll { max-height: max(320px, calc(100dvh - 224px)); } }
+/* P88-06 카드 격자: 칸 높이는 같은 줄끼리 같고(격자가 늘림) 단추 줄은 카드 맨 아래 — 글 길이가 달라도 옆 칸과 같은 높이. 세로로 쌓는 카드는 flex, 첫 단추 줄에 위 여백 auto (이어진 단추는 그 아래로) */
+:is(.shopcard, .decotile) { display: flex; flex-direction: column; }
+:is(.shopcard, .decotile) > * { min-width: 0; }
+.decotile, #p-cab .stack > .cabgrid .teacard { align-items: center; }
+:is(.shopcard, .decotile) > :is(.btn, .cc-acts, .sc-buy, .rv-acts):not(.btn + *, .cc-acts + *, .sc-buy + *) { margin-top: auto; }
