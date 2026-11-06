@@ -61,7 +61,7 @@ function buyPetal(st, type, n) {
   if (st.money < cost) return no('돈이 모자라요');
   const cal = calendar(st.virtual);
   st.money -= cost;
-  for (let i = 0; i < n; i++) st.petals.push({ id: nid(st), type, q: PETAL_BUY_Q, seasonKey: seasonKey(st, cal) });
+  for (let i = 0; i < n; i++) st.petals.push({ id: nid(st), type, q: PETAL_BUY_Q, seasonKey: seasonKey(st, cal), bought: true });   // P85-03
   const hung = autoDryTick(st);
   return ok(`${F.name} 꽃잎 ${n}장을 샀어요 · ${hung ? '⚙️ 자동 건조기가 꽃방에 널었어요' : '제다실로 보냈어요'}`, { count: n, cost });
 }
@@ -284,7 +284,7 @@ function bagPetals(st, pool, list, make) {
     for (let i = 0; i + N <= ps.length; i += N) {
       const take = ps.slice(i, i + N), q = take.reduce((a, p) => a + p.q, 0) / N;
       for (const p of take) pool.splice(pool.indexOf(p), 1);
-      make(type, q, take[0]); bags++; used += N;
+      make(type, q, take[0], boughtOf({ bought: take.some(p => p.bought) })); bags++; used += N;
     }
   }
   return { bags, used, short };
@@ -293,8 +293,8 @@ const bagShortMsg = r => `티백 하나에 꽃잎이 꽃마다 정해진 수만�
 function makeTea(st, ids, ctx) {                 // P12-03 · P77-C petals장마다 하나
   const list = st.petals.filter(p => ids.includes(p.id));
   if (!list.length) return no('꽃잎이 없어요 · 핀 꽃에서 거둬 와요');
-  const r = bagPetals(st, st.petals, list, (type, q, p0) => {
-    st.teas.push({ id: nid(st), type, q, seasonKey: p0.seasonKey, hat: isHat(q) });
+  const r = bagPetals(st, st.petals, list, (type, q, p0, by) => {
+    st.teas.push({ id: nid(st), type, q, seasonKey: p0.seasonKey, hat: isHat(q), ...by });
     regTeabag(st, type, ctx);
     if (!st.yearBest || q > st.yearBest.q) st.yearBest = { type, q };
   });
@@ -306,8 +306,8 @@ function makeTea(st, ids, ctx) {                 // P12-03 · P77-C petals장마
 function makeRaw(st, ids, ctx) {
   const list = st.petals.filter(p => ids.includes(p.id));
   if (!list.length) return no('꽃잎이 없어요 · 핀 꽃에서 거둬 와요');
-  const r = bagPetals(st, st.petals, list, (type, q, p0) => {
-    st.teas.push({ id: nid(st), type, q, seasonKey: p0.seasonKey, hat: isHat(q), raw: true });
+  const r = bagPetals(st, st.petals, list, (type, q, p0, by) => {
+    st.teas.push({ id: nid(st), type, q, seasonKey: p0.seasonKey, hat: isHat(q), raw: true, ...by });
     regTeabag(st, type, ctx);
     if (!st.yearBest || q > st.yearBest.q) st.yearBest = { type, q };
   });
@@ -319,7 +319,7 @@ function makeRaw(st, ids, ctx) {
 function dryPetals(st, ids, ctx) {
   const list = st.petals.filter(p => ids.includes(p.id));
   if (!list.length) return no('널 꽃잎이 없어요 · 핀 꽃에서 거둬 와요');
-  for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H }); }
+  for (const p of list) { st.petals.splice(st.petals.indexOf(p), 1); st.drying.push({ id: p.id, type: p.type, q: p.q, leftH: DRY_H, ...boughtOf(p) }); }
   bump(st, 'dried', list.length); weekNote(st, 'dry', null, list.length, ctx); addXp(st, 'dry', list.length, ctx);   // P28-09 · P54
   return ok(`꽃잎 ${list.length}장을 꽃방에 널었어요. ${dryText(dryRate(st))} 뒤에 다 말라요${calendar(st.virtual).frozen ? ' (꽃잠엔 멈춰요)' : ''}`);
 }
@@ -327,8 +327,8 @@ function dryPetals(st, ids, ctx) {
 function makeTeaDried(st, ids, ctx) {
   const list = st.dried.filter(p => ids.includes(p.id));
   if (!list.length) return no('말린 꽃잎이 없어요 · 꽃방에 널어 말려요');
-  const r = bagPetals(st, st.dried, list, (type, q) => {
-    st.teas.push({ id: nid(st), type, q, seasonKey: -1, hat: isHat(q) });
+  const r = bagPetals(st, st.dried, list, (type, q, p0, by) => {
+    st.teas.push({ id: nid(st), type, q, seasonKey: -1, hat: isHat(q), ...by });
     regTeabag(st, type, ctx);
     if (!st.yearBest || q > st.yearBest.q) st.yearBest = { type, q };
   });
@@ -344,7 +344,7 @@ function blendPlan(st, parts, n) {   // 꽃마다 좋은 꽃잎부터 petals장�
   const sorted = parts.map(t => st.dried.filter(p => p.type === t).sort((a, b) => b.q - a.q));
   return Array.from({ length: n }, (_, i) => {
     const list = parts.flatMap((t, j) => sorted[j].slice(i * FLOWERS[t].petals, (i + 1) * FLOWERS[t].petals));
-    return { list, q: list.reduce((a, p) => a + p.q, 0) / list.length, hat: list.every(p => isHat(p.q)) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
+    return { list, q: list.reduce((a, p) => a + p.q, 0) / list.length, hat: list.every(p => isHat(p.q)), by: boughtOf({ bought: list.some(p => p.bought) }) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
   });
 }
 // P12-08 블렌딩: 언제든 (변경 10-06, 예전엔 꽃잠에만), 서로 다른 말린 꽃잎 2~3장으로 블렌딩 차를 n잔 (P82-01, 기본 1잔)
@@ -360,7 +360,7 @@ function blend(st, ids, ctx, n = 1) {
   seeYear(st, 'blend', recipe || parts.slice().sort().join('+'));
   const blends = blendPlan(st, parts, n).map(c => {
     for (const p of c.list) st.dried.splice(st.dried.indexOf(p), 1);
-    const b = { id: nid(st), parts, q: c.q, recipe, name, hat: c.hat };
+    const b = { id: nid(st), parts, q: c.q, recipe, name, hat: c.hat, ...c.by };
     st.blends.push(b);
     return b;
   });
@@ -436,7 +436,7 @@ const teaPriceMul = (cal, st) => { const k = teaPriceKind(cal); return !k ? 1 : 
 const teaPriceText = (st, cal) => { const k = teaPriceKind(cal); if (!k) return ''; return `${k === 'sleep' ? '🌙 꽃잠 값' : '❄️ 겨울 값'} · ${slowView(st) ? '조금 비싸요' : `×${TEA_PRICE_MUL[k]}`}`; };
 function cupValue(st, c, cal) {
   const v = c.kind === 'blend' ? blendValue(c) : c.kind === 'honey' ? honeyTeaValue(c.type) : teaItemValue(st, c, cal);   // P65-02 🍵 꿀차
-  const m = teaPriceMul(cal, st) * (c.honey ? titlePerk(st, 'honey') : 1);   // P52 🍯
+  const m = (c.bought ? 1 : teaPriceMul(cal, st)) * (c.honey ? titlePerk(st, 'honey') : 1);   // P85-03 산 꽃잎 차엔 겨울 · 꽃잠 찻값 없음 ·   // P52 🍯
   return Math.round(v * (cupCold(c, cal) ? COLD_RATE : 1) * m / 10) * 10;
 }
 // P17-11 자동 판매: 찻집이 열려 있으면 카운터의 찻잔이 1시간(게임 시간 = 배속 1에서 현실 1시간)마다 한 잔씩, 먼저 우린 것부터 팔림

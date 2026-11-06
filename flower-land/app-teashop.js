@@ -251,7 +251,7 @@ function renderCab(force) {
   // 🫖 블렌딩 (P12-08): 언제든 (10-06)
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)), parts = sel.map(p => p.type);
   const recipe = parts.length >= 2 ? E.blendRecipe(parts, st) : null, avg = sel.length ? sel.reduce((a, p) => a + p.q, 0) / sel.length : 0;
-  const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg, recipe }) : 0;
+  const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg, recipe, ...(E.blendMax(st, parts) > 0 ? E.blendPlan(st, parts, 1)[0].by : {}) }) : 0;   // P85-03 산 꽃잎이 들면 배율 없음
   // P82-02 고른 재료마다 한 잔에 드는 장 수 · 모자라면 몇 장 더 · 넉넉하면 지금 최대 몇 잔
   const haveOf = t => st.dried.filter(p => p.type === t).length, blendMaxN = parts.length ? E.blendMax(st, parts) : 0;
   const lackText = parts.filter(t => E.bagNeed(t, haveOf(t)).short).map(t => `${FLOWERS[t].name} ${E.bagNeed(t, haveOf(t)).short}장`).join(' · ');

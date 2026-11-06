@@ -119,7 +119,7 @@ function renderShop(force) {
         <span class="dk-main"><b>${T.icon} ${T.name} 묘목</b><small>${T.desc}</small></span>
         <span class="dk-buy"><span class="sc-price">${won(T.price)}</span>${!fo.empty ? '<span class="muted">자리가 다 찼어요</span>' : `<button type="button" class="btn primary" data-treebuy="${k}" ${short ? 'disabled' : ''}>${short ? '돈이 모자라요' : '심기'}</button>`}</span></div>`; }).join('')}</div>`;
   // P72-03 🌸 꽃잎: 꽃마다 찻값의 60% · 품질 ★1 10% (P74-01) · 제다실로 (돈으로 사기라 경험치 · 도감은 없음) — 개수는 씨앗 카드와 같은 스테퍼(ui.shopQty 'petal:꽃') → 💰 살까요? 창
-  const petalSection = `<div class="cab-head"><span class="sb-title">🌸 꽃잎</span><span class="muted">품질 ${E.pct(E.PETAL_BUY_Q)}% · 제다실로 와요${E.placedOf(st, 'autodryer').length ? ' · ⚙️ 바로 꽃방에' : ''} · 경험치 · 도감은 없어요</span></div>
+  const petalSection = `<div class="cab-head"><span class="sb-title">🌸 꽃잎</span><span class="muted">품질 ${E.pct(E.PETAL_BUY_Q)}% · 제다실로 와요${E.placedOf(st, 'autodryer').length ? ' · ⚙️ 바로 꽃방에' : ''} · 경험치 · 도감은 없어요 · 레시피 · 겨울 · 꽃잠 값은 안 붙어요</span></div>
     <div class="decoshop">${E.FLOWER_KEYS.map(k => { const F = FLOWERS[k], price = E.petalPrice(k), n = ui.shopQty['petal:' + k] || 1, short = st.money < price * n;
       return `<div class="decocard"><span class="dk-art">${spriteImg(k, 'petal', 32, false, F.name)}</span>
         <span class="dk-main"><b>${F.name} 꽃잎</b><small class="muted">티백 하나(${F.petals}장) 값의 ${Math.round(E.PETAL_BUY_RATE * 100)}% ÷ ${F.petals}장 · 품질 ★${E.stars(E.PETAL_BUY_Q)}</small></span>

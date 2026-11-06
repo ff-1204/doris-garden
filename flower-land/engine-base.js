@@ -314,6 +314,8 @@ function flowerEconomy(by) {
 
 // ---------------------------------------------------------------- 꽃방과 블렌딩 (P12-07, P12-08, P08-02)
 const DRY_H = MONTH_H;                           // P12-07-02: 꽃방에 널면 흐르는 시간 1달 뒤 다 마름
+// P85-03 돈 고리 막기: 💐 산 꽃잎(P72-03)은 p.bought 표시가 말린 꽃잎 · 티백 · 블렌드 · 찻잔까지 따라가요 — 그렇게 만든 차는 레시피 배율 · 겨울 · 꽃잠 찻값이 없어 산 값만큼만 돌아와요 (buyPetal 값 · 품질은 P74-01 사용자 확정이라 그대로)
+const boughtOf = p => p.bought ? { bought: true } : {};   // 표시가 없는 꽃잎은 저장 모양이 예전 그대로
 const BLEND_RATE = 1.2, RECIPE_RATE = 1.5;        // P12-08-04: 따로 만든 차 값의 합 × 1.2 / 레시피에 있는 이름 있는 블렌드는 × 1.5 (10-06)
 // P12-08-06: 도감에 모이는 이름 있는 블렌드 9가지 (10-06: 6 → 9) (재료가 정확히 같아야 함)
 const BLENDS = {   // P12-08-06 (10-06 검토: 실제로 파는 짝으로 바꿈 · 9가지)
@@ -359,5 +361,5 @@ function blendNear(parts, st) {
   return blendKeys(st).filter(k => has(k)).sort((a, b) => has(b) - has(a) || BLENDS[a].parts.length - BLENDS[b].parts.length).slice(0, 2);
 }
 const blendNearText = (parts, st) => { const n = blendNear(parts, st); return n.length ? `가까운 블렌드: ${n.map(k => `${BLENDS[k].name}(${BLENDS[k].parts.map(p => FLOWERS[p].name).join(' + ')})`).join(' · ')}` : '📖 레시피에서 짝을 골라요'; };
-const blendValue = (b, st) => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS[k], b.q, false), 0) * (('recipe' in b ? b.recipe : blendRecipe(b.parts, st)) ? RECIPE_RATE : BLEND_RATE) / 10) * 10;
+const blendValue = (b, st) => Math.round(b.parts.reduce((a, k) => a + teaValue(FLOWERS[k], b.q, false), 0) * (b.bought ? 1 : ('recipe' in b ? b.recipe : blendRecipe(b.parts, st)) ? RECIPE_RATE : BLEND_RATE) / 10) * 10;   // P85-03 산 꽃잎이 든 블렌드는 배율 없음
 
