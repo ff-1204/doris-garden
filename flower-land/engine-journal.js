@@ -222,6 +222,7 @@ const topDecoOf = st => { const id = st && st.topDeco; return id == null ? null 
 function setTopDeco(st, id) {
   const d = (st.decos || []).find(z => z.id === id);
   if (!d) return no('달 장식이 없어요');
+  if (d.key === 'pres') return no('프리저브드는 대표 장식으로 달 수 없어요');   // P84-01 창고 · 정원 사이만 오감
   if (st.topDeco === id && d.x == null) return no('이미 대표 장식이에요');
   const name = decoInfo(decoKey(d)).name, was = d.x != null, hn = (d.honey || []).length;
   if (was) { if (hn) takeHoney(st, d.id); d.x = null; d.y = null; }   // 정원에서 빠짐 — 정원 효과(둘레 · 이달의 장식 · 공방)는 쉼 · 벌통 꿀은 storeDeco처럼 함께 거둠
@@ -462,7 +463,7 @@ function yearScore(st) {
   const counts = landCounts(st), lands = LAND_KEYS.filter(k => k !== 'barren' && counts[k] > 0).length;
   const alive = Math.min(80, st.flowers.filter(f => !f.withered).length);
   const prev = st.records[0], ys = st.yearSeen || {};
-  const decos = Math.min(20, (st.decos || []).filter(d => d.x != null).length);
+  const decos = Math.min(20, (st.decos || []).filter(d => d.x != null && d.key !== 'pres').length);   // P84-02 🌹 프리저브드는 놓았다 팔 수 있어 점수에 안 듦
   const orders = S(st, 'orders') - ((prev && prev.orders) || 0);
   const gifts = Math.min(6, S(st, 'gifts') - ((prev && prev.giftsTotal) || 0));   // 기록 사이(꽃잠 + 새해)에 최대 6번 (QA 10회차)   // 꽃잠에 보낸 것도 다음 기록에 (QA 9회차)
   const parts = { lands: lands * 10, flowers: alive, bloom: n0(ys.bloom) * 4, blend: n0(ys.blend) * 3, honey: n0(ys.honey) * 2, decos: decos * 3, orders: orders * 5, gifts: gifts * 10 };   // gifts: P26-03

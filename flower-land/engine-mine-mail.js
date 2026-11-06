@@ -184,7 +184,7 @@ const CRAFTS = {
 const WORKSHOP = { stonewall: 500, fossilcase: 25000, amberlamp: 20000, oldpot: 15000, jar: 8000, heatmat: 15000, growlight: 30000, greenhouse: 120000, dryshelf: 18000, autodryer: 30000, teastand: 30000 };   // P73-02 🧱 돌담 500원 · P72-02 ⚙️ 자동 건조기 30,000원 (건조 선반 18,000원 한 단계 위 — 생장등 · 찻집 도우미 값)
 const WORKSHOP_KEYS = Object.keys(WORKSHOP);
 // P44-04 공방 효과 — 정원에 놓았을 때만(창고면 쉼). 둘레 효과는 꽃마다 한 번, 광산 · 씨앗 효과는 여러 개 놓아도 한 번
-const DECO_REACH = { stepstone: 1, basin: 1, stonelamp: 2 };
+const DECO_REACH = { stepstone: 1, basin: 1, stonelamp: 2, pres: 1 };   // P84-02 🌹 놓은 프리저브드
 const BASIN_H = MONTH_H / 2, LAMP_Q = 0.01, FOSSIL_E = 3, AMBER_P = 0.01, OLDPOT_Q = 0.05;
 const decoNear = (st, key, f) => placedOf(st, key).some(d => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= DECO_REACH[key]);
 const waterSet = (st, f) => 2 * MONTH_H * titlePerk(st, 'water') + (decoNear(st, 'basin', f) ? BASIN_H : 0);

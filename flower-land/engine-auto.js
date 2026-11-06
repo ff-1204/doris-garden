@@ -350,6 +350,11 @@ function pantryView(st) {
 function storeDeco(st, id) {
   const d = (st.decos || []).find(z => z.id === id);
   if (!d) return no('거둘 장식이 없어요');
+  if (d.key === 'pres') {                         // P84-01 🌹 창고 프리저브드로 돌아감 — 그대로 팔 수 있어요
+    const name = decoInfo(decoKey(d)).name; st.decos.splice(st.decos.indexOf(d), 1);
+    (st.preserved = st.preserved || []).push({ id: d.id, type: d.pres.type, mut: !!d.pres.mut });
+    return ok(`${josa(name, '을/를')} 창고에 넣었어요 · 다시 놓거나 팔 수 있어요`);
+  }
   const hn = (d.honey || []).length;
   if (hn) takeHoney(st, d.id);                   // 벌통에 모인 꿀은 함께 거둠 (QA 2회차)
   d.x = null; d.y = null;

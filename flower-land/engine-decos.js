@@ -42,6 +42,7 @@ const DECOS = {
   autodryer: { name: '자동 건조기', month: 3, months: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 14], price: 30000, need: 6, one: true, func: true, auto: true, desc: '제다실에 꽃잎이 들어오면 바로 꽃방에 널어요 · 장수 제한 없이 · 티백은 직접 만들어요' },   // P72-02 ⚙️ autoDryTick · 건조 선반보다 한 단계 위 · 하나면 충분
   teastand: { name: '찻집 도우미', month: 3, months: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 14], price: 30000, need: 6, one: true, func: true, auto: true, desc: '찻집이 열리면 카운터에 손님 자리보다 2잔 더 우려 둬요' },   // P39-09-02 🫖 예전 helperKeep 그대로 · +2잔 · 하나
   mutjar: { name: '유리 관', month: 0, months: [], jar: true, desc: '변이 꽃을 담은 유리 관' },   // P36-04 🫙 장식마다 mut: { k, stage } — 이름 · 그림은 decoKey(d) 'mutjar:종:단계'. 팔지 않음 · 꾸밈 도감 칸 밖
+  pres: { name: '프리저브드', month: 0, months: [], jar: true, desc: '시들지 않는 유리 돔 속 꽃' },   // P84-01 🌹 정원에 놓인 것만 st.decos에 — 장식마다 pres: { type, mut } · 이름 · 그림은 decoKey(d) 'pres:꽃:0|1'. 창고에 있을 땐 st.preserved
   cloudstone: { name: '구름 돌', month: 0, months: [], extra: true, desc: '구름 정원사에게 온 뭉게구름 모양 돌' },   // P20-16 덤 장식 (10-27): 팔지 않음 · 꾸밈 도감 칸과 따로 셈
   // P28-05-01 🌱 등급 장식 (10-27): 정원 등급이 그만큼 오르면 화원에 늘 나옴 (달과 상관없이). 땅 · 꽃 · 값에는 영향 없음 (보너스는 M3 P28-05-02)
   // 화원은 🌱 등급 장식 줄(이달의 장식 DECO_KEYS와 따로), 꾸밈 도감 칸에는 넣음 (M1-4, 10-28)
@@ -60,6 +61,8 @@ const decoInfo = key => {
   if (DECOS[key] && Object.prototype.hasOwnProperty.call(DECOS, key)) return DECOS[key];
   const jm = typeof key === 'string' && /^mutjar:([a-z]+):([123])$/.exec(key);   // P36-04 🫙 유리 관 속 변이 꽃
   if (jm && MUTANTS[jm[1]]) return { name: `유리 관 속 ${MUTANTS[jm[1]].name} · ${jm[2]}단계`, jar: true, mut: { k: jm[1], stage: +jm[2] }, price: null, desc: MUTANTS[jm[1]].lore };
+  const pm = typeof key === 'string' && /^pres:([a-z]+):([01])$/.exec(key);   // P84-01 🌹 놓인 프리저브드
+  if (pm && FLOWERS[pm[1]]) return { name: `프리저브드 ${presName(pm[1], pm[2] === '1')}`, pres: { type: pm[1], mut: pm[2] === '1' }, price: null, desc: DECOS.pres.desc };
   const tk = typeof key === 'string' && key.startsWith('t:') ? key.slice(2) : null;
   return tk && TITLES[tk] ? { name: `${TITLES[tk].name} 문장`, title: tk, price: null, extra: !!TITLES[tk].extra, desc: '칭호를 얻은 기념 문장' } : null;
 };
@@ -90,6 +93,7 @@ function monthDecoLift(st, it, cal) {
 const DECO_BUFF = Object.fromEntries(MONTH_DECO_KEYS.map(k => { const m = monthName(DECOS[k].month); return [k, { text: `🌸 ${m} 꽃을 심으면 품질 ${pct(MONTH_DECO_Q)}%부터`, plain: `🌸 ${m} 꽃을 반겨요` }]; }));
 DECO_BUFF.moonlamp = DECO_BUFF.pavilion = { text: '🧬 정원에 놓아 두면 처음 피는 꽃의 돌연변이가 더 자주', plain: '🧬 정원에 놓아 두면 처음 피는 꽃의 돌연변이가 더 자주' };   // P62-02 — 꽃이 처음 필 때 정원에 놓여 있으면 (예전 P36-01: 꽃잠 동안 놓였으면 그 해)
 DECO_BUFF.mutjar = { text: '🧬 이 꽃의 돌연변이가 더 자주', plain: '🧬 이 꽃의 돌연변이가 더 자주' };
+DECO_BUFF.pres = { text: '🌹 둘레 1칸 꽃은 🌙 꽃잠 12시간마다 품질 +0.5%', plain: '🌹 둘레 꽃은 🌙 꽃잠에 아주 조금씩 좋아져요' };   // P84-02 (PRES_DECO_Q)
 // P44-04 ⛏️ 광산 공방 효과 (놓아야 · 느긋하게 보기면 숫자 없이) — 이달의 장식(P35) 줄이 있는 셋은 두 줄을 이어 씀
 const WORKSHOP_BUFF = {
   stepstone: { text: '👣 둘레 1칸 꽃은 땅이 안 맞아도 품질이 떨어지지 않아요', plain: '👣 둘레 꽃은 땅이 안 맞아도 품질이 떨어지지 않아요' },
@@ -129,7 +133,7 @@ const MUTANT_KEYS = FLOWER_KEYS.filter(k => MUTANTS[k]);
 const MUT_TITLE_KEYS = Object.keys(TITLES).filter(k => TITLES[k].mut);
 const mutStage = f => { const p = pct(f.q); return p >= 70 ? 1 : p >= 40 ? 2 : 3; };
 const mutShown = f => !!f && !!f.mut && !f.withered && f.bloomKey != null && f.bloomKey !== -1;   // 한 번 핀 변이 꽃 (씨앗으로 이어진 변이는 처음 필 때 드러남)
-const decoKey = d => d && d.key === 'mutjar' && d.mut && MUTANTS[d.mut.k] ? `mutjar:${d.mut.k}:${d.mut.stage}` : d && d.key;   // 장식 이름 · 그림 키 (🫙는 종 · 단계까지)
+const decoKey = d => d && d.key === 'mutjar' && d.mut && MUTANTS[d.mut.k] ? `mutjar:${d.mut.k}:${d.mut.stage}` : d && d.key === 'pres' && d.pres ? `pres:${d.pres.type}:${d.pres.mut ? 1 : 0}` : d && d.key;   // 장식 이름 · 그림 키 (🫙는 종 · 단계까지 · 🌹는 꽃 · 변이까지)
 const mutJarsOf = (st, k) => (st.decos || []).filter(d => d.key === 'mutjar' && d.x != null && d.mut && d.mut.k === k);
 function mutChance(st, type, cal) {           // cal은 예전 호출 모양 그대로 받기만 함 (P62-02부터 해 · 주를 안 봄)
   const b = MUT_SLEEP_KEYS.filter(k => placedOf(st, k).length).length;   // P62-02 지금 정원에 놓인 🏮 · 🏯 (종류마다 한 번)
@@ -248,6 +252,18 @@ function sellPreserved(st, ids, ctx) {            // 💐 화원에서 팔기
   addLog(st, 13, `🌹 프리저브드 ${list.length}개를 화원에 ${sum.toLocaleString('ko-KR')}원에 팔았어요`, ctx);
   return ok(`🌹 프리저브드 ${list.length}개를 ${sum.toLocaleString('ko-KR')}원에 팔았어요`, { sum });
 }
+// P84 🌹 프리저브드 장식 (11-06 사용자 "프리저브드 장식으로 만들거나 팔거나" · 놓으면 작은 효과): 창고(st.preserved) ↔ 정원(st.decos, key 'pres') 사이를 오감 — 놓인 동안엔 st.preserved에 없어 못 팖
+//   효과: 🏮 석등(둘레 2칸 · +1%)보다 작게 둘레 1칸 · 꽃잠 달 끝마다 품질 +0.5%. 여러 개가 겹쳐도 한 꽃에 한 번(상한) · 그 달에 놓거나 옮긴 것은 다음 달 끝부터(d.at) — 놓기 · 거두기를 되풀이해 거저 얻지 못하게
+//   놓기 · 거두기엔 경험치가 없고, 한 해 평가의 장식 점수에도 안 듦 · 🎀 대표 장식으로 달지 않음 · 새 철엔 창고로 돌아옴 (startSeason)
+const PRES_DECO_Q = 0.005;
+const presAsDeco = p => ({ id: p.id, key: 'pres', pres: { type: p.type, mut: !!p.mut }, x: null, y: null });
+const presDeco = (st, id) => { const p = (st.preserved || []).find(z => z.id === id); return p ? presAsDeco(p) : null; };   // 창고의 프리저브드를 놓는 동안 화면이 쓰는 모습 (st.decos엔 안 넣음)
+function presDecoTick(st, ended) {                // onSlot: 꽃잠 달이 끝날 때 (lampTick과 같은 때)
+  const ds = placedOf(st, 'pres').filter(d => d.at == null || d.at < ended.abs); if (!ds.length) return 0;
+  let n = 0;
+  for (const f of st.flowers) if (!f.withered && f.q < 1 && ds.some(d => Math.max(Math.abs(f.x - d.x), Math.abs(f.y - d.y)) <= DECO_REACH.pres)) { f.q = Math.min(1, f.q + PRES_DECO_Q); n++; }
+  return n;
+}
 // P75-01 카드 표시 (11-04 사용자 확정): 정원에 놓여 있어야 효과가 나는 장식 → 'place' (📍 놓아야 효과) · 보기만 바뀌는 장식 → null. 사면 바로 켜지는 것(🌼 넓히기 · 속도)은 화면이 'buy'(✨ 사면 바로)로
 const decoActive = key => { const k = String(key).split(':')[0], D = DECOS[k]; return D && (D.func || DECO_BUFF[k] || k === 'stonewall' || k === 'mutjar') ? 'place' : null; };
 const decoBuffLine = (st, key) => { const B = DECO_BUFF[String(key).split(':')[0]]; return B ? (slowView(st) ? B.plain : B.text) : ''; };
@@ -272,13 +288,16 @@ function buyDeco(st, key, ctx) {
   return ok(`${josa(it.name, '을/를')} 샀어요 · 창고에서 정원에 놓을 수 있어요`, { deco: d });
 }
 function placeDeco(st, id, x, y) {
-  const d = (st.decos || []).find(z => z.id === id);
+  const fromStore = !(st.decos || []).some(z => z.id === id) && presDeco(st, id);   // P84-01 🌹 창고의 프리저브드
+  const d = fromStore || (st.decos || []).find(z => z.id === id);
   if (!d) return no('놓을 장식이 없어요');
   if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('꽃이 있는 칸이에요 · 빈 칸에 놓아 주세요');
   const o = decoAt(st, x, y);
   if (o && o !== d) return no('이 자리에는 이미 장식이 있어요');
   const moved = d.x != null && (d.x !== x || d.y !== y), down = st.topDeco === id;
+  if (fromStore) { st.preserved.splice(st.preserved.findIndex(z => z.id === id), 1); (st.decos = st.decos || []).push(d); }
+  if (d.key === 'pres' && (fromStore || moved)) d.at = calendar(st.virtual).abs;   // P84-02 이 달 끝엔 아직 효과 없음
   d.x = x; d.y = y;
   if (down) st.topDeco = null;                     // P52 ⬆️ 위 칸에 단 장식을 정원에 놓으면 위 칸에서 내려옴
   return ok(`${josa(decoInfo(decoKey(d)).name, '을/를')} ${moved ? '옮겼어요' : '놓았어요'}${down ? ' · 대표 장식에서 내렸어요' : ''}`);
@@ -295,7 +314,7 @@ function decoGroupOf(key) {
   if (D.func) return 'gear';
   if (D.grade) return 'grade';
   if (D.craft) return 'craft';
-  return D.title || D.extra || D.jar ? 'keep' : 'month';
+  return D.title || D.extra || D.jar || D.pres ? 'keep' : 'month';
 }
 const decoMax = key => { const D = decoInfo(key); return D && D.one ? 1 : null; };
 // 창고 장식 칸 묶음: [{ key, name, items: [{ key, all, store, out }] }] — store = 창고에 있는 것(🎀 위 칸 빼고) · out = 정원에 놓은 것

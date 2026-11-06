@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 630개 (Object.keys 차례)
+공개 이름 633개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -169,7 +169,7 @@
   sellPreserved function 5c6f2f8b4d169c88
   titlePerkText function 0313bfac1a77c6ea
   topDecoOf function a9fc98fcee5671e8
-  setTopDeco function 9a9a7e9347a70d74
+  setTopDeco function 7e3d5f701202a026
   clearTopDeco function e7208f7bac26d90a
   newGardenId function 4485d12d06a4c5bc
   saveSummary function ce95d80e3fdc59fc
@@ -177,10 +177,10 @@
   shareCard function dcb9ea69d02ad9be
   makeSave function 01f4e3cc0e6f512a
   parseSave function 3a9607fb3b290252
-  SAVE_NUMS object 488586d892736c27
+  SAVE_NUMS object 4865f4a0804271e0
   cleanSave function a0326e65af8fee8c
   SAVE_FORMAT number 6b86b273ff34fce1
-  MIGRATIONS object 087d48e1f18655b4
+  MIGRATIONS object 42b541526f388f88
   migrateSave function f45e906b90c35da5
   CLOUD_GAP number 6ce318969619d1c3
   cloudDue function d8b021348e446c23
@@ -196,7 +196,7 @@
   giveCloudReward function 3930df2ae1c11d6a
   inAppBrowser function 38b67bf3f9fade5e
   outsideUrl function ec7fc43f1844fe3c
-  DECOS object ffd5504a58878db7
+  DECOS object 2c5f8e18e0af3023
   DECO_KEYS object 30e5350fb5cc0d64
   EXTRA_DECO_KEYS object a64d9e02680ac4e3
   MUT_BASE number 312b95ee5a344d2f
@@ -210,7 +210,7 @@
   MUT_TITLE_KEYS object 6b2408fd83426a02
   mutStage function db0ea2b9fe0a6286
   mutShown function 542e152265a7d2f7
-  decoKey function 169aa0bf40815621
+  decoKey function f63794e1534aedb7
   mutJarsOf function 3b134c75bec165a8
   mutChance function 47fe8cf80cbd1e92
   mutRoll function a0e6370943c98214
@@ -227,10 +227,10 @@
   monthDecoOf function a59b539d8ea28006
   monthDecoBoost function 05b894edc4631671
   monthDecoLift function 3ccddcf1dd3abc29
-  DECO_BUFF object 011caa974ae03147
+  DECO_BUFF object 0181c83fd0d8818a
   decoActive function 06bc3642b40a472d
   decoBuffLine function b0ef171ced3763e5
-  decoInfo function 0c44623de4c9893b
+  decoInfo function ab2fa5df4917edc7
   decoTotal function c19b261b66ac1956
   decoCount function a76c23dd7f62ed10
   decoExtras function b7ba19644c9cd5ed
@@ -238,11 +238,11 @@
   decoAt function a48a8852e5013503
   addDeco function 302375b6a6ed06db
   buyDeco function 567b60a1423d931e
-  placeDeco function dd083df2f70b3238
-  storeDeco function bf05537d6b0114b6
+  placeDeco function 4907b40b2c4714a1
+  storeDeco function f091cddd230d8f3f
   decoMonths function ebff334ee1bc6723
   DECO_GROUPS object baf99c80caf7ce09
-  decoGroupOf function 35872fd191664d20
+  decoGroupOf function d1d60f634ec48fba
   decoMax function c84e77d6b8a07ec9
   decoGroups function 0f0c75a5925a3de4
   decoPlaceable function 8f01b86c5f6dfc06
@@ -289,7 +289,7 @@
   WORKSHOP object 3c05063a5a852b20
   WORKSHOP_KEYS object 59050334d5b05501
   WORKSHOP_BUFF object e80eada4e386d999
-  DECO_REACH object 912d18b45769a88b
+  DECO_REACH object 29e01e6e49f6b014
   BASIN_H number e7f6c011776e8db7
   LAMP_Q number 312b95ee5a344d2f
   FOSSIL_E number 4e07408562bedb8b
@@ -321,6 +321,9 @@
   autoDigWon function 14a5dc439836926e
   autoKeepE function 6731f2c2f409ba70
   AUTO_KEEP_E number ef2d127de37b942b
+  presDeco function b4e49802aa4d06d8
+  presDecoTick function a46783151df07a3f
+  PRES_DECO_Q number 07e17407c7918077
   mineAutoSet function 325e92b974db2d07
   mineAutoView function 8fa9a63b51fcbe41
   mineAutoFlush function 45133799be0ca8d6
@@ -361,7 +364,7 @@
   makeOrders function d26f9623479f207b
   fillOrder function f580f4739e408d8a
   countCup function 8f697330b843375b
-  yearScore function 804666ae59bc7d1e
+  yearScore function ef12e08ec590a7cd
   yearLogOf function ee9950c23d7e0184
   newYearNow function e160256ded7742e4
   yearMonth function 459c2c4968d09e52
@@ -545,7 +548,7 @@
   seasonHint function 5d3b445f7579c102
   seasonBadge function cf5dd0c887758a04
   seasonBreaks function c6dbf32b0ddc58d9
-  seasonStart function eb4c088e42e06753
+  seasonStart function ff3e361dad7f4cd8
   LAYERS object b006fb385234da14
   LAYER_MAX_OPEN number 4b227777d4dd1fc6
   newLayers function 5bc16795cef785d9
@@ -630,8 +633,8 @@
   bagNeed function 8540ff828f4fbdb5
   blendMax function 549369a9e01bd5b6
   blendPlan function c46f261c5352dceb
-공개 값 모두 3de2cb4df0595703
-보정 MIGRATIONS 57줄
+공개 값 모두 e2fc52a0695dc83c
+보정 MIGRATIONS 58줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
    3. 가게 → 화원 (10-05) · 9d6d295294ab451c
@@ -689,18 +692,19 @@
   55. 🌸 다시 피는 꽃 ripeH · ripeT (P72-01, 11-04): 핀 꽃은 핀 채로(이번 달에 이미 거둔 꽃은 다 자람으로 · 시계 0), 다 자란 꽃은 시계 0부터 · 앞선 달력 leadH · leadEnd는 지움 · f1a0d0d657fc5a20
   56. R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐 · 9db8e59a9a917488
   57. 🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐 · b22f0a0c9967ac46
-새 정원 create bb7bb535e8a00776
-새 정원 30시간 뒤 90f0c867364448df
-새 정원 두 주(정원 두 해) 뒤 32d35168980ccd6b
-옛 저장: 가장 옛 정원 (30시간) fb0275730e975418
-옛 저장: 가장 옛 정원 (두 주) 247c83e8d3e8d9ab
-옛 저장: 두 주 정원을 0번째부터 517e6a2d45640cb2
-옛 저장: 두 주 정원을 10번째부터 517e6a2d45640cb2
-옛 저장: 두 주 정원을 20번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 30번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 40번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 48번째부터 32d35168980ccd6b
-옛 저장: 두 주 정원을 56번째부터 32d35168980ccd6b
+  58. 🌹 프리저브드 장식 (P84, 11-06): 창고 칸 st.preserved를 늘 배열로 · 꽃을 모르는 pres 장식은 지움 (그림을 그릴 수 없어서) · a9bdde8b0db74d03
+새 정원 create c9a58b9a9fa64f92
+새 정원 30시간 뒤 b9069af5eaebf1e2
+새 정원 두 주(정원 두 해) 뒤 11850634e72cf1a6
+옛 저장: 가장 옛 정원 (30시간) 5b24c5a447d5af36
+옛 저장: 가장 옛 정원 (두 주) f986e8f8425c4f85
+옛 저장: 두 주 정원을 0번째부터 cf9e9cd3d8f43627
+옛 저장: 두 주 정원을 10번째부터 cf9e9cd3d8f43627
+옛 저장: 두 주 정원을 20번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 30번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 40번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 48번째부터 11850634e72cf1a6
+옛 저장: 두 주 정원을 57번째부터 11850634e72cf1a6
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave 43a4b3fea4d5c9d1
-저장 파일 parseSave 43a4b3fea4d5c9d1
+저장 파일 makeSave cf9b29eb2a1c78c1
+저장 파일 parseSave cf9b29eb2a1c78c1
