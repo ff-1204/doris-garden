@@ -1614,9 +1614,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .needs .nd.on b, :root:not([data-theme="light"]) .needs .nd.on b, :root[data-theme="dark"] .needs .nd.on b { color: var(--ink); }
 .needs .nd.nd-all { flex: 3 1 150px; padding: 0 var(--sp-5); background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -3px 0 var(--gold-edge); }
 .needs .nd.nd-all b, :root:not([data-theme="light"]) .needs .nd.nd-all b, :root[data-theme="dark"] .needs .nd.nd-all b { color: var(--gold-ink); }
-.hintbar { position: relative; }
-.needs .nd-say { padding-right: 72px; min-height: 32px; display: flex; align-items: center; }
-.share-btn { position: absolute; right: 0; top: 0; min-height: 32px; border-color: var(--frame); }
+.needs .nd-say { min-height: 32px; display: flex; align-items: center; }
 .mapframe { border: 6px solid var(--wood); outline: 2px solid var(--wood-edge); outline-offset: 0; box-shadow: none; background: var(--wood-edge); }
 .mapscroll { overflow: auto; max-width: 100%; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--wood-muted) var(--wood-edge); }
 .mapscroll:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
@@ -1627,7 +1625,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .ring-btn { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
 /* 찻집: 티백은 선반 위 도트 그림 */
 #p-cab .stack > .cabgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-6) 0; }
-#p-cab .stack > .cabgrid .teacard { background: none; box-shadow: none; padding: 0 var(--sp-3) var(--sp-3); text-align: center; justify-items: center; }
+#p-cab .stack > .cabgrid .teacard { border: 0; background: none; box-shadow: none; padding: 0 var(--sp-3) var(--sp-3); text-align: center; justify-items: center; }
 #p-cab .stack > .cabgrid .teacard .sc-art { width: calc(100% + 2 * var(--sp-3)); margin-inline: calc(-1 * var(--sp-3)); height: 76px; place-items: end center; background: none; border-radius: 0; border-bottom: 8px solid var(--wood); box-shadow: 0 3px 0 var(--wood-edge); }
 #p-cab .stack > .cabgrid .teacard .sc-to, #p-cab .stack > .cabgrid .teacard .sc-bloom { display: none; }
 #p-cab .stack > .cabgrid .teacard .sc-form { top: 0; left: var(--sp-2); }
@@ -1652,3 +1650,22 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .fs-step b { color: var(--ink); }
 .q-row.done .q-st { color: var(--val-down); }
 .wkpx b.rest { color: color-mix(in srgb, var(--rest) 50%, var(--ink)); }
+/* P88-01 대표 칭호는 작은 나무 액자 위에: 22px 그림 ×2 = 44px + 테두리 — 위 막대 높이 안. 휴대폰은 막대 두 줄 높이를 왼쪽에서 씀 */
+.brand .logo-ttl { width: 48px; height: 48px; display: grid; place-items: center; margin-block: -8px -10px; border: 2px solid var(--wood-edge); background: #f6eedc; box-shadow: 0 0 0 1px var(--gold-edge); }
+.brand .logo-ttl[hidden] { display: none; }
+.brand .logo-ttl img, .brand .logo-ttl.top-deco img[width="22"] { width: 44px; height: 44px; margin: 0; }
+.brand .logo-ttl.top-deco img { width: 32px; height: 32px; margin: 0; }
+@media (max-width: 640px) {
+  .topbar:has(.brand.has-ttl) { padding-left: calc(var(--sp-8) + 48px + var(--sp-5)); }
+  .brand .logo-ttl { position: absolute; left: var(--sp-8); top: 50%; margin: -24px 0 0; }
+}
+/* P88-03 공유는 지도 위 🔍 아래 — 틀에 붙어 지도가 끌려도 그 자리. 끌 때 단추 밑 칸이 드러나게 지도 오른쪽에 여유(.pan-x) */
+.share-btn.map-share { position: absolute; right: var(--sp-3); top: calc(var(--sp-3) + 36px + var(--sp-2)); z-index: 3; min-height: 36px; padding: 0 var(--sp-4); background: var(--wood-edge); border-color: var(--wood); color: var(--wood-ink); }
+.mapscroll.pan-x .mapinner { margin: 0 72px 0 0; }
+/* P88-02 돌봄 줄이 지도 아래로 가서, 넓은 화면은 지도 틀 높이를 창에 맞춰 돌봄 줄이 첫 화면에 보이게 (넘는 만큼은 끌어서 봐요) */
+@media (min-width: 601px) { .mapscroll { max-height: max(320px, calc(100dvh - 224px)); } }
+/* P88-06 카드 격자: 칸 높이는 같은 줄끼리 같고(격자가 늘림) 단추 줄은 카드 맨 아래 — 글 길이가 달라도 옆 칸과 같은 높이. 세로로 쌓는 카드는 flex, 첫 단추 줄에 위 여백 auto (이어진 단추는 그 아래로) */
+:is(.shopcard, .decotile) { display: flex; flex-direction: column; }
+:is(.shopcard, .decotile) > * { min-width: 0; }
+.decotile, #p-cab .stack > .cabgrid .teacard { align-items: center; }
+:is(.shopcard, .decotile) > :is(.btn, .cc-acts, .sc-buy, .rv-acts):not(.btn + *, .cc-acts + *, .sc-buy + *) { margin-top: auto; }

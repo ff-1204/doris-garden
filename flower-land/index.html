@@ -45,11 +45,6 @@
           <div class="stack" style="min-width:0">
             <div id="guideBox" class="today"></div>
             <div class="tray" id="tray" hidden></div>
-            <div class="hintbar">
-              <span class="msg" id="hint"></span>
-              <span class="needs" id="needs" aria-label="돌볼 꽃"></span>
-              <button type="button" class="share-btn" id="shareBtn" title="정원 그림을 인스타로">↗ 공유</button>
-            </div>
             <div class="mapwrap">
               <div class="mapframe">
                 <div class="yearstrip" id="yearBox" role="img" aria-label="올해의 흐름"></div>
@@ -64,8 +59,14 @@
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
                 <button type="button" class="map-zoom" id="mapZoom" aria-pressed="false" title="지도 크기 바꾸기">🔍</button>
+                <button type="button" class="share-btn map-share" id="shareBtn" title="정원 그림을 인스타로">↗ 공유</button>
               </div>
               <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size: var(--fs-md)">꽃들이 자고 있어요 · 옮겨심기 · 번식 · 돌보기와 핀 채 잠든 꽃 거두기는 돼요. 블렌드를 만들거나 새해 꽃을 예약해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기 · 거두기는 돼요</span></div></div>
+            </div>
+            <!-- P88-02 안내 줄 · 돌봄 칩은 지도 아래 -->
+            <div class="hintbar">
+              <span class="msg" id="hint"></span>
+              <span class="needs" id="needs" aria-label="돌볼 꽃"></span>
             </div>
           </div>
           <div class="sidecol">

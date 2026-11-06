@@ -116,10 +116,12 @@ function resize() {                              // P86-02 칸은 도트 정수�
     canvas.style.width = w + 'px'; canvas.style.height = cell * H + 'px';
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(cell * H * dpr);
   }
-  mapScroll.classList.toggle('pannable', w > base);
+  mapScroll.classList.toggle('pan-x', w > base); mapScroll.classList.toggle('pannable', w > base || cell * H > mapScroll.clientHeight);
   if (first || !same) { mapScroll.scrollLeft = (w - base) / 2; draw(); }   // 처음 · 크기를 바꾸면 지도 가운데부터 (캔버스가 비지 않게 바로 그림)
+  else if (ui.mapPos) { mapScroll.scrollLeft = ui.mapPos[0]; mapScroll.scrollTop = ui.mapPos[1]; }   // 다른 탭에 다녀오면 보던 자리로 (숨겨지면 0이 됨)
 }
 new ResizeObserver(resize).observe(mapScroll);
+mapScroll.addEventListener('scroll', () => { if (mapScroll.clientWidth) ui.mapPos = [mapScroll.scrollLeft, mapScroll.scrollTop]; });
 // 고른 꽃이 틀 가장자리면 둘레 단추가 보이게 안쪽으로 밀어 줌 (둘레 단추 반지름만큼)
 function revealTile(x, y) {
   const m = 64, cx = (x + 0.5) * cell, cy = (y + 0.5) * cell, s = mapScroll, w = s.clientWidth, h = s.clientHeight;
@@ -339,9 +341,9 @@ const tipEl = $('#tip');
 // 위 막대 · 안내 줄이 나타나거나 사라지면 지도가 위아래로 밀림 → 그 직후 누름은 무시 (QA 16회차 메모: 연달아 누르면 다른 칸이 눌림)
 // 지도 위 칸들의 크기가 바뀔 때 지도가 실제로 움직였을 때만 (QA 17회차: 다시 그리기만 해도 막던 것 고침)
 { let lastTop = null; const ro = new ResizeObserver(() => { const top = canvas.getBoundingClientRect().top + window.scrollY; if (lastTop != null && Math.abs(top - lastTop) > 4 && performance.now() > (ui.noShiftUntil || 0)) ui.mapShiftAt = performance.now(); lastTop = top; });
-  for (const id of ['#guideBox', '#today', '#tray', '.hintbar']) ro.observe($(id)); }
+  for (const id of ['#guideBox', '#today', '#tray']) ro.observe($(id)); }   // P88-02 안내 줄(.hintbar)은 지도 아래라 지도를 밀지 않음
 // 위 막대 · 안내 줄이 실제로 나타나거나 사라질 때만 (같은 값으로 다시 넣는 것은 빼고 — QA 17회차)
-for (const id of ['#tray', '#hint']) new MutationObserver(ms => { if (ms.some(m => (m.oldValue !== null) !== m.target.hidden) && performance.now() > (ui.noShiftUntil || 0)) ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
+for (const id of ['#tray']) new MutationObserver(ms => { if (ms.some(m => (m.oldValue !== null) !== m.target.hidden) && performance.now() > (ui.noShiftUntil || 0)) ui.mapShiftAt = performance.now(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
 function tipHTML([x, y]) {
   const f = E.flowerAt(st, x, y), tl = st.tiles[y * W + x], land = LANDS[E.landOf(tl)].name, dc = E.decoAt(st, x, y), vs = !f && !dc && E.visitorAt(st, x, y);
   if (vs) return `<b>${vs.icon} ${esc(vs.name)}</b><br><span class="muted">${land} · 눌러서 말 걸기</span>`;   // P30-06-02
