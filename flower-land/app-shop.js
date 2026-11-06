@@ -173,7 +173,7 @@ function openReserveConfirm() {                                                 
   const body = `<div class="rc">
     <div class="rc-list">${sum.map(s => {
       const di = MONTHS.indexOf(s.deliverMonth);
-      return `<div class="rc-item" style="--pc:${s.F.petal}"><span class="rc-art">${spriteImg(s.F.key, 'flower', 40, false, s.F.name)}</span>
+      return `<div class="rc-item" style="--pc:${s.F.petal}"><span class="rc-art">${spriteImg(s.F.key, 'flower', 32, false, s.F.name)}</span>
         <span class="rc-main"><b>${s.F.name} ${FORM[s.F.form].name} <span class="data">×${s.qty}</span></b>
           <small>${monthIc(s.window[0])} ${monthsText(s.window)} 심기</small>
           <small>📦 내년 ${monthName(s.deliverMonth)} 1일 (${WEEKDAY[Math.floor(di / 2)]}) 아침 6시에 와요</small></span>
@@ -239,7 +239,7 @@ function renderStore(force) {
   const rows = nowCards || laterCards;
   // 도착할 것: 번식 중(뿌리 내리는 중)과 예약 배송을 작은 카드로
   const arrive = (k, n, tag, tagCls, when, sub) => { const F = FLOWERS[k]; return `<div class="arcard" style="--pc:${F.petal}">
-      <span class="ar-art">${spriteImg(k, 'flower', 36, false, F.name)}<span class="ar-n">×${n}</span></span>
+      <span class="ar-art">${spriteImg(k, 'flower', 32, false, F.name)}<span class="ar-n">×${n}</span></span>
       <span class="ar-main"><b>${F.name} <span class="muted">${FORM[F.form].name}</span></b><span class="ar-tag ${tagCls}">${tag}</span></span>
       <span class="ar-when"><b>${when}</b><small>${sub}</small></span></div>`; };
   const pend = st.pending.map(p => arrive(p.type, p.qs.length, `🌱 ${p.method}`, 'grow', `${flowH(Math.max(0, p.dueH))} 뒤`, '뿌리 내리는 중')).join('');
@@ -298,7 +298,7 @@ function openCompost(ids, n) {
   if (!list.length) return;
   const it = list[0], F = FLOWERS[it.type]; n = Math.max(1, Math.min(list.length, n || list.length));
   const body = `<div class="rc">
-    <div class="rc-item tc-item" style="--pc:${F.petal}"><span class="rc-art tc-pair">${spriteImg(it.type, 'form', 34, false, F.name)}<span class="sc-to">›</span><span class="cp-fert">🌱</span></span>
+    <div class="rc-item tc-item" style="--pc:${F.petal}"><span class="rc-art tc-pair">${spriteImg(it.type, 'form', 32, false, F.name)}<span class="sc-to">›</span><span class="cp-fert">🌱</span></span>
       <span class="rc-main"><b>${F.name} ${FORM[F.form].name} → 비료</b><small>품질 ${E.pct(it.q)}% · ${list.length}개 중</small></span>
       <span class="stepper"><button type="button" data-cq="-" ${n <= 1 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-cq="+" ${n >= list.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>
     <div class="rc-pay"><div><span class="muted">가진 비료</span><span class="data">${st.fert || 0}개</span></div><div><span class="muted">만든 뒤</span><b class="data">${(st.fert || 0) + n}개</b></div></div>
