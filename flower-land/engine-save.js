@@ -47,7 +47,7 @@ function freshGarden(st) {
     && (st.decos || []).every(d => { const i = decoInfo(d.key); return !!(i && (i.title || i.extra)); })        // 칭호 문장 · 덤 장식만 (산 장식 없음)
     && Object.values(st.stats || {}).every(v => !v)                                                               // 판매 · 찻잔 · 주문 · 선물 · 광산
     && EMPTY_DEX.every(k => !st.dex || !st.dex[k] || Object.keys(st.dex[k]).every(x => k === 'letter' && x === 'welcome'))
-    && st.water === 10 && st.shears === 5 && st.hoe === 10 && st.basket === 10 && !st.fert
+    && st.water === 10 && st.shears === 5 && st.hoe === 10 && st.basket === 10 && (st.shovel == null || st.shovel === 10) && !st.fert
     && sh.seats === 1 && (sh.cups || []).length <= 1 && (sh.signs || []).length <= 1;
 }
 // "어느 정원을 쓸까요?"(다른 정원) 전에: 한쪽이 거의 새 정원이면 묻지 않음. 이 기기가 새 정원이면(둘 다 새것이어도) 드라이브 것, 드라이브만 새것이면 이 기기 것, 아니면 null(묻기)
@@ -77,7 +77,7 @@ function parseSave(text) {
 // 엔진이 만드는 저장엔 < > 글자 · 글자 숫자가 없어서 정상 저장은 한 글자도 안 바뀌어요(tests/snapshot.test.js 옮긴 결과 해시 그대로). 저장 형식 그대로라 MIGRATIONS 줄이 아님
 // 숫자 칸: 'a.b' 칸 · 'a[]' 배열 칸마다 · 'a.*' 표의 값마다. 글자일 때만 고치고 null · 없는 칸 · 다른 꼴은 그대로(보정 · 화면이 맡음), 기본값은 0 (=1은 1)
 const SAVE_NUMS = [
-  'money', 'fert', 'water', 'shears', 'hoe', 'basket', 'jar', 'presol', 'speed=1', 'bestScore', 'pruneCount', 'weedCount', 'pollenExtra', 'nextId', 'virtual', 'lastAbs', 'lastReal', 'mailSeenAt',
+  'money', 'fert', 'water', 'shears', 'hoe', 'basket', 'shovel', 'jar', 'presol', 'speed=1', 'bestScore', 'pruneCount', 'weedCount', 'pollenExtra', 'nextId', 'virtual', 'lastAbs', 'lastReal', 'mailSeenAt',
   'honey.*', 'mine.bag.*', 'mine.depth', 'mine.deepest', 'mine.energy', 'mine.boards', 'stats.*', 'titles.*', 'journal.done.*', 'dex.blend.*', 'dex.tea.*', 'dex.mutant.*', 'mailGot.*',
   'grade.xp', 'grade.frac', 'grade.dex', 'grade.by.*', 'yearNow.*', 'bonus.*', 'bonusOwn.*', 'shop.seats=1', 'season.n=1', 'gifts.year', 'pantry.n', 'pantry.got', 'weekly.week', 'weekly.full', 'weekly.doneAll', 'yearBest.q', 'orders.abs', 'visitors.times.*', 'layers.at.*', 'farm.mark.*',
   'log[].d=1', 'log[].m', 'log[].y=1', 'log[].at', 'log[].type',
@@ -85,7 +85,7 @@ const SAVE_NUMS = [
   'yearLog[].year=1', 'yearLog[].season=1', 'yearLog[].dex', 'yearLog[].dexTotal', 'yearLog[].grade', 'yearLog[].harvest', 'yearLog[].income', 'yearLog[].orders', 'yearLog[].score', 'yearLog[].sold',
   'flowers[].id', 'flowers[].x', 'flowers[].y', 'flowers[].q', 'flowers[].startQ', 'flowers[].plantedYear', 'flowers[].propYear', 'flowers[].ripeH', 'flowers[].ripeT',
   'flowers[].ageH', 'flowers[].lifeH', 'flowers[].waterH', 'flowers[].weedH', 'flowers[].pruneH', 'flowers[].fertH', 'flowers[].thirstH', 'flowers[].adaptH', 'flowers[].harvestKey', 'flowers[].bloomKey', 'flowers[].antKey', 'flowers[].bfm',   // R-A4 (11-05 검토): 글자면 += 로 글자가 이어져 NaN이 되던 시간 칸
-  'pending[].id', 'pending[].dueH', 'mine.regenH',
+  'pending[].id', 'pending[].dueH', 'mine.regenH', 'mine.autoLog.n', 'mine.autoLog.paid', 'mine.autoLog.jewels', 'mine.autoLog.won', 'mine.autoLog.down', 'mine.autoLog.downWon', 'mine.autoLog.bag.*',
   'items[].id', 'items[].q', 'items[].got', 'petals[].id', 'petals[].q', 'teas[].id', 'teas[].q', 'cups[].id', 'cups[].q', 'blends[].id', 'blends[].q', 'dried[].id', 'dried[].q', 'drying[].id', 'drying[].q', 'drying[].leftH', 'preserved[].id',
   'decos[].id', 'decos[].n', 'decos[].x', 'decos[].y', 'letterBox[].y', 'letterBox[].m', 'letterBox[].at',
 ];
@@ -311,6 +311,10 @@ const MIGRATIONS = [
     }
   }],
   ['R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐', s => { if (s.settings && s.settings.notify == null) s.settings.notify = false; }],
+  ['🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐', s => {
+    if (s.shovel == null) s.shovel = SUPPLIES.shovel.per;
+    if (s.mine) { if (s.mine.auto == null) s.mine.auto = false; if (s.mine.autoStop === undefined) s.mine.autoStop = null; if (s.mine.autoLog === undefined) s.mine.autoLog = null; }
+  }],
 ];
 const P41_LETTER = 'p41-money', POLLEN_WON = 5000;   // P41-05 📮 안내 편지 이름표 · 꽃가루 1알 = 5,000원
 const P39_LETTER = 'p39-insects';                 // P39-11-04 📮 안내 편지 이름표 (mail.json 편지와 겹치지 않게)

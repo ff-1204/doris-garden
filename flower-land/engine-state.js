@@ -18,7 +18,7 @@ function _create(now, rng, cal) {
     money: 15000,                                                         // P17-06
     tiles, flowers: [], items: [], petals: [], teas: [], pending: [], reservations: [],
     drying: [], dried: [], blends: [], cups: [], preserving: [], preserved: [], presol: 0,   // P12-07 꽃방, P12-08 블렌딩, P17-10 찻잔 · P53 🌹 꽃방 유리 돔 · 창고 프리저브드 · 🧪 특수 용액
-    fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, jar: 0, mutBoost: null, weedCount: 0, pruneCount: 0,   // jar · mutBoost: P36 🫙 유리 관 · 꽃잠 장식 돌연변이 보정 (mutBoost는 P62부터 안 읽음) // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
+    fert: 0, water: 10, shears: 5, hoe: 10, basket: 10, shovel: 10, jar: 0, mutBoost: null, weedCount: 0, pruneCount: 0,   // jar · mutBoost: P36 🫙 유리 관 · 꽃잠 장식 돌연변이 보정 (mutBoost는 P62부터 안 읽음) // 처음에 물병 10개, 가위 1개(5번), 호미·바구니 1개(10번)
     dex: { form: {}, flower: {}, petal: {}, teabag: {}, bagBlend: {}, tea: {}, land: { barren: true }, blend: {}, deco: {}, honey: {}, mine: {}, memento: {}, letter: {}, mutant: {}, mutjar: {}, pres: {}, presMut: {} }, // P53 🌹 프리저브드 도감 꽃 · 변이 (도감 93칸과 따로) · P36 🧬 돌연변이 도감 · 유리 관에 담은 종 (도감 93칸 · dexCount엔 안 셈) · P08-01-04, P08-02, P08-03
     log: [], records: [], yearLog: [], yearNow: newYearNow(), yearPace: Object.assign(newYearPace(0), { now: Array.from({ length: yearMonth(cal) }, () => [0, 0]) }), yearBest: null, helpYear: null, nextId: 1,   // P28-07-01 해마다 기록 · 올해 쌓는 중 · P28-07-02 달마다 쌓인 값 (시작 전 달은 0)
     settings: { toast: { 3: true, 8: true, 9: true }, sleep: { on: true, from: 23, to: 7 }, marks: { water: true, weed: true, prune: true, fert: true }, slow: false, big: false, pattern: false, notify: false },   // notify: R-C2 🔔 브라우저 알림(화면이 뒤에 있을 때)   // slow: P28-02 느긋하게 보기 · big: P28-01 큰 글씨 · pattern: P28-03 땅 무늬

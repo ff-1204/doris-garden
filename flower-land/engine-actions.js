@@ -28,13 +28,14 @@ function buy(st, type, n) {                      // P06-01-01
   return ok(`${F.name} ${FORM[F.form].name} ${n}${FORM[F.form].unit}를 샀어요`);
 }
 
-// 화원 소모품: 비료 1개 = 1번, 물병 1개 = 물 주기 1번, 호미 1개 = 잡초 뽑기 10번, 가위 1개 = 가지치기 5번, 바구니 1개 = 수확 10번. 꽃잠에도 팔아요
+// 화원 소모품: 비료 1개 = 1번, 물병 1개 = 물 주기 1번, 호미 1개 = 잡초 뽑기 10번, 가위 1개 = 가지치기 5번, 바구니 1개 = 수확 10번, 삽 1개 = 옮겨심기 10번(P83-03). 꽃잠에도 팔아요
 const SUPPLIES = {
   fert: { name: '비료', icon: '🌱', price: 150, per: 1, unit: '개', desc: '한 포기에 주면 12시간 동안 품질이 올라요' },
   water: { name: '물병', icon: '💧', price: 50, per: 1, unit: '개', desc: '물병 1개로 한 포기에 물을 줘요 · 하루 동안 괜찮아요' },
   hoe: { name: '호미', icon: '⛏️', price: 400, per: 10, unit: '번', desc: '호미 1개로 잡초를 10번 뽑을 수 있어요' },
   basket: { name: '바구니', icon: '🧺', price: 500, per: 10, unit: '번', desc: '바구니 1개로 꽃잎을 10번 거둘 수 있어요' },
   shears: { name: '가위', icon: '✂️', price: 500, per: 5, unit: '번', desc: '가위 1개로 가지치기를 5번 할 수 있어요' },
+  shovel: { name: '삽', icon: '🪏', price: 500, per: 10, unit: '번', desc: '삽 1개로 꽃을 10번 옮겨 심을 수 있어요' },   // P83-03 (호미 400 · 바구니 500원과 비슷하게)
 };
 function buySupply(st, kind, n) {
   const S = Object.prototype.hasOwnProperty.call(SUPPLIES, kind) ? SUPPLIES[kind] : null; n = n == null ? 1 : n;
@@ -254,17 +255,18 @@ function propagate(st, flowerId, rng, ctx) {     // P06-02-05
   return ok(`${josa(F.prop, '으로/로')} ${formName} ${n}개를 얻었어요`);
 }
 
+const NO_SHOVEL = '삽이 없어요 · ⛏️ 광산 공방에서 만들거나 💐 화원에서 사요';   // P83-03 꽃 상태창도 이 까닭
 function move(st, flowerId, x, y, ctx) {         // P13-03
   const cal = calendar(st.virtual), f = st.flowers.find(z => z.id === flowerId);
   if (!f || f.withered) return no('옮길 꽃이 없어요');
   const F = FLOWERS[f.type];
-  if (!canMoveNow(f, cal)) return no('심는 달 · 쉬는 달 · 꽃잠에 옮길 수 있어요');   // 꽃잠엔 모든 꽃 (P04-01-09)
+  if ((st.shovel || 0) < 1) return no(NO_SHOVEL);   // P83-03 언제나 옮기되 삽 1번 (꽃잠에도)
   if (!inGarden(x, y)) return no('정원 밖이에요');
   if (flowerAt(st, x, y)) return no('그 자리엔 꽃이 있어요 · 빈 칸을 골라 주세요');
   if (decoAt(st, x, y)) return no('그 자리엔 장식이 있어요 · 빈 칸을 골라 주세요');
-  f.x = x; f.y = y; f.adaptH = 24 * titlePerk(st, 'adapt');   // P52 🪴
+  st.shovel--; f.x = x; f.y = y; f.adaptH = 24 * titlePerk(st, 'adapt');   // P52 🪴
   if (f.movedXp !== cal.abs) { f.movedXp = cal.abs; addXp(st, 'move', 1, ctx); }   // P54 꽃마다 정원 달에 한 번 (이리저리 옮겨 경험치만 벌지 않게)
-  return ok(`${josa(F.name, '을/를')} 옮겨 심었어요 · ${cal.frozen ? '정원이 깨어나면 ' : ''}${timeText(24)} 동안 새 자리에 적응해요`);
+  return ok(`${josa(F.name, '을/를')} 옮겨 심었어요 · ${cal.frozen ? '정원이 깨어나면 ' : ''}${timeText(24)} 동안 새 자리에 적응해요 · 삽 ${st.shovel}번 남았어요`);
 }
 
 // P08-04: 제다실에서 만든 것은 티백 (찻집으로 보내는 형태). 티백은 처음 만들 때, 차는 찻집에서 처음 우려 팔 때 도감에

@@ -66,7 +66,7 @@ const propYearOf = (st, cal) => yearOf(st, cal) + (cal.frozen ? 1 : 0);
 const harvestSlot = cal => cal.frozen ? cal.week * 14 + 12 : cal.abs;
 // 번식할 만큼 다 자랐는지: 휴면 달엔 덜 자란 꽃도 'dormant'라 나이로 봄 (QA 19회차 — 꽃잠엔 달 조건이 없어 드러남)
 const propGrown = f => f.stage === 'mature' || f.stage === 'bloom' || (f.stage === 'dormant' && f.ageH >= FLOWERS[f.type].mature * MONTH_H);
-const canMoveNow = (f, cal) => !!f && !f.withered && (cal.frozen || FLOWERS[f.type].sow.includes(cal.month) || f.stage === 'dormant');
+const canMoveNow = f => !!f && !f.withered;   // P83-03 살아 있는 꽃은 언제나 (예전: 심는 달 · 쉬는 달 · 꽃잠) — 대신 옮길 때마다 🪏 삽 1번 (move)
 // P34 찻집은 매달 열림 (10-30 사용자 요청 — 예전 P17-09: 겨울 12월 ~ 꽃잠만, idx 9~13). 값 · 속도는 그대로
 // 함수는 남겨 둠: 부르는 곳(우림 · 판매 · 주문 쪽지 · 나비 일꾼 · 첫 손님)이 그대로 돌고, 다시 닫는 달이 생기면 여기만 고침
 const teaShopOpen = cal => !!cal;

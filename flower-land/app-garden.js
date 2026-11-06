@@ -11,7 +11,7 @@ const HINT = {
   fert: '꽃에 비료를 뿌려요 · 12시간 동안 품질이 오르고, 그만큼 꽃의 땅도 넓어져요',
   harvest: '노란 점이 뜬 핀 꽃에서 꽃잎을 거두면 제다실로 가요 · 꽃마다 1장부터 꽃잎 수까지 · 거두면 6시간 뒤 다시 펴요',
   prop: '다 자란 꽃을 눌러 번식해요 · 꽃마다 되는 달이 있고(꽃잠엔 언제든), 한 해에 한 번이에요',
-  move: '옮길 꽃을 누르고 빈 칸을 눌러요 · 심는 달 · 휴면기 · 꽃잠에 돼요',
+  move: '옮길 꽃을 누르고 빈 칸을 눌러요 · 언제나 되고 삽 1번을 써요',   // P83-03
 };
 const decoById = id => (st.decos || []).find(d => d.id === id);
 function plantable() {
@@ -570,7 +570,7 @@ function renderStatus(force) {
     return `<button type="button" class="ct ${state}" style="--k:${CARE_COLOR[t]}" ${act ? `data-care="${t}"` : 'disabled'} title="${label} · ${sub}"><span class="ci">${ic}${state === 'done' ? '<i>✓</i>' : ''}</span><span class="cl">${label}</span><span class="cs">${sub}</span></button>`;
   };
   ['water', 'weed', 'prune', 'fert', 'harvest'].forEach(t => careTile(t, '', ''));   // 지금 할 수 있는 돌보기 → 꽃 둘레 단추 (10-06)
-  const canMove = E.canMoveNow(f, cal);   // 꽃잠엔 모든 꽃 (P04-01-09)
+  const canMove = E.canMoveNow(f), noShovel = canMove && !((st.shovel || 0) > 0);   // P83-03 살아 있는 꽃은 언제나 · 삽 1번
   // 옮겨 심기와 번식: 할 수 있으면 버튼, 아니면 이유
   const propReason = (() => {
     if (f.withered) return '시든 꽃이에요';
@@ -580,11 +580,13 @@ function renderStatus(force) {
     if (!cal.frozen && !F.propMonths.includes(cal.month)) return `${monthsText(F.propMonths)}에 할 수 있어요`;
     return '';
   })();
-  const moveReason = canMove ? '' : f.withered ? '시든 꽃이에요' : '심는 달 · 휴면기 · 꽃잠에 할 수 있어요';
+  const moveReason = !canMove ? '시든 꽃이에요' : noShovel ? E.NO_SHOVEL : '';
   const actBtn = (act, label, reason) => `<div class="sx-act"><button type="button" class="btn ${reason ? '' : 'primary'}" data-act="${act}" ${reason ? 'disabled' : ''}>${label}</button>${reason ? `<span class="muted">${reason}</span>` : ''}</div>`;
   const mut = E.mutShown(f) ? E.mutStage(f) : 0, M = mut && E.MUTANTS[f.type];   // P36-02 🧬 변이 꽃: 꽃잎은 못 따고 유리 관에 담아 장식으로 (호미 · 뽑기 없음)
-  const actions = `<div class="sx-acts">${actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : '↔ 옮겨심기', moveReason)}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}${mut ? actBtn('jar', '🫙 유리 관에 담기', st.jar > 0 ? '' : '유리 관이 없어요 · ⛏️ 광산에서 만들어요') : ''}${!f.withered ? actBtn('pres', '🌹 프리저브드', E.presReason(st, f)) : ''}</div>`;   // P53 단추는 늘 두고, 조건이 안 되면 까닭(다 핀 꽃 · 100% · 용액)을 보임
-  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), Math.round((f.ripeH || 0) * 4), f.propYear, cal.idx, mut, st.jar, st.presol, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
+  const moveBtn = noShovel ? `<div class="sx-act"><span class="sx-two"><button type="button" class="btn" data-act="shovelBuy">💰 사기</button><button type="button" class="btn" data-act="shovelMake">⛏️ 만들기</button></span><span class="muted">${moveReason}</span></div>`   // P83-03 까닭 + 바로 사기 · 만들기
+    : actBtn('move', ui.tool === 'move' && ui.moveFrom === f.id ? '↔ 옮길 빈 칸을 누르세요' : `↔ 옮겨심기${canMove ? ` · 삽 ${st.shovel}번` : ''}`, moveReason);
+  const actions = `<div class="sx-acts">${moveBtn}${actBtn('prop', `🌾 ${F.prop}${propReason ? '' : ` · ${E.propCount(f.q)}개`}`, propReason)}${mut ? actBtn('jar', '🫙 유리 관에 담기', st.jar > 0 ? '' : '유리 관이 없어요 · ⛏️ 광산에서 만들어요') : ''}${!f.withered ? actBtn('pres', '🌹 프리저브드', E.presReason(st, f)) : ''}</div>`;   // P53 단추는 늘 두고, 조건이 안 되면 까닭(다 핀 꽃 · 100% · 용액)을 보임
+  const sig = JSON.stringify([can, have('water'), have('weed'), have('prune'), have('fert'), have('harvest'), st.fert, st.water, st.shears, st.hoe, st.basket, st.shovel, ui.tool, ui.moveFrom, propReason, moveReason, f.id, f.stage, E.pct(f.q), Math.round(v), E.pct(next), Math.round(f.waterH * 2), Math.round(f.weedH * 2), Math.round(f.pruneH * 2), Math.round(f.fertH * 2), Math.round(f.adaptH * 2), Math.round((f.ripeH || 0) * 4), f.propYear, cal.idx, mut, st.jar, st.presol, ui.detailsOpen, ui.sheetOpen, land, blk.length, Math.round(tl.t), Math.round(tl.m)]);
   if (!force && ui.sigs.status === sig) return;
   ui.sigs.status = sig;
   el.className = 'status' + (ui.sheetOpen ? ' sheet' : ' idle-mobile');
@@ -627,7 +629,7 @@ function renderStatus(force) {
       <dl class="kv">
         ${mut ? '<dt>수확</dt><dd>🧬 변이 꽃은 꽃잎을 딸 수 없어요 · 품질이 낮을수록 낯설어져요</dd>' : f.stage === 'bloom' ? `<dt>수확</dt><dd>지금 수확할 수 있어요 · 꽃잎 1~${F.petals}장 · 거두면 ${realH(E.RIPE_H)} 뒤 다시 펴요</dd>` : E.bloomLeftH(st, f) != null ? `<dt>수확</dt><dd>${realH(E.bloomLeftH(st, f))} 뒤 펴요</dd>` : ''}
         <dt>번식</dt><dd>${F.prop === '채종' ? '채종 · 시들 때 자동' : F.prop}</dd>
-        <dt>옮겨심기</dt><dd>${canMove ? '지금 할 수 있어요' : '심는 달 · 휴면기 · 꽃잠에'}</dd>
+        <dt>옮겨심기</dt><dd>${canMove ? '언제나 · 삽 1번' : '시든 꽃은 못 옮겨요'}</dd>
       </dl>
       <h3 style="margin:var(--sp-5) 0 var(--sp-2);font-size:var(--fs-base)">출신</h3>
       <dl class="kv">
@@ -744,6 +746,8 @@ $('#status').addEventListener('click', e => {
     else { ui.tool = 'move'; ui.moveFrom = f.id; }
     renderToolbar(true); renderStatus(true);
   }
+  if (b.dataset.act === 'shovelBuy') return openSupply('shovel');   // P83-03 삽이 없을 때
+  if (b.dataset.act === 'shovelMake') { ui.sheetOpen = false; return setTab('mine'); }
   if (b.dataset.act === 'prop' && f) after(E.propagate(st, f.id, ctx.rng, ctx));
   if (b.dataset.act === 'pres' && f) { const nm = E.presName(f.type, E.mutShown(f)); return askPreserve(f, nm); }   // P53 🌹
   if (b.dataset.act === 'jar' && f) { const r = E.jarCapture(st, f.id, ctx); if (r.ok) { ui.selected = null; ui.sheetOpen = false; } after(r, null, r.ok ? { label: '📦 창고', fn: () => setTab('store') } : null); }   // P36-04 🫙
