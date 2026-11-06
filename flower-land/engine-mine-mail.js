@@ -115,9 +115,10 @@ function freshBoard(st) {                        // 지금 층을 새 판으로 
 // P83-01 ⛏️ 자동 캐기 (11-06 사용자 확정 "켜 두면 계속 파되, 1회당 돈을 내게"): 켜 두면 꺼 둔 동안에도 기력이 찰 때마다 한 칸 · 칸마다 돈을 냄 — 돈이 모자라면 꺼지고 까닭(autoStop)을 남김
 //   계단을 찾으면 내려가고(층 돈은 받음), 판을 다 파면 새 판. 돈으로 산 일이라 파기 · 내려가기 경험치 · 주간 목표는 없음 (P17-14) — 도감 · 가방 · 💎 · 층 돈 · stats.dug는 그대로
 //   P91-01 (11-06 사용자 확정): 값은 층과 상관없이 한 칸 100원 고정 — 예전 값(한 칸 기대 수입, 1층 320 ~ 19층 770원)은 시간당 2 ~ 4만 원을 써서 돈이 바닥나야 멈췄음. 일부러 기대 수입보다 싸게 정한 값이라 P83 · P85의 "공짜 수입이 아님" 기준은 사용자 결정으로 바뀜
+//   P92 (11-06 사용자 확정): 100원은 켜 둘수록 크게 남아 돈 공장이 되어 한 칸 500원으로 올림 — 그래도 기대 수입보다 조금 쌈
 //   P91-02 (11-06 사용자 확정): 켤 때 쓸 돈(m.autoBudget 남은 돈 · m.autoSpent 쓴 돈)을 고름 — 다 쓰면 꺼지고 까닭(autoStop 'budget')을 남김. 칸마다 보므로 꺼 둔 시간이 길어도 · 배속이어도 정한 돈을 넘지 않음
 //   🐞 🪱 🐛 곤충(insectDig)은 기력으로 공짜로 캐요 — 놓여 있으면 기력 AUTO_KEEP_E칸은 곤충 몫으로 남기고 그 위만 씀 (흙 5 = 비료 1개)
-const AUTO_DIG_WON = 100, AUTO_KEEP_E = 5;
+const AUTO_DIG_WON = 500, AUTO_KEEP_E = 5;   // P92 (11-06 사용자 확정) 100 → 500원
 const AUTO_BUDGETS = [{ won: 5000, name: '조금' }, { won: 10000, name: '보통' }, { won: 50000, name: '넉넉히' }], AUTO_BUDGET = 10000;   // 🐢 느긋하게 보기는 이름만
 const autoDigWon = () => AUTO_DIG_WON;
 const autoKeepE = st => Object.keys(INSECT_SUPPLY).some(k => placedOf(st, k).length) ? AUTO_KEEP_E : 0;

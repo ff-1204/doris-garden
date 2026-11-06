@@ -9,16 +9,16 @@ const ctx = { live: false, rng: () => 0.5 };
 const logs = s => s.log.filter(l => l.text.includes('자동 캐기'));
 const flower = (s, type, x, y, extra) => { const f = Object.assign({ id: 7000 + s.flowers.length, type, x, y, q: 0.7, startQ: 0.7, stage: 'mature', ripeH: 0, bloomed: false, withered: false, ageH: 1000, lifeH: 1000, waterH: 99, weedH: 99, pruneH: 0, fertH: 0, thirstH: 0, adaptH: 0, harvestKey: -1, bloomKey: -1, propYear: null, propRest: false, plantedYear: 1 }, extra); s.flowers.push(f); return f; };
 
-console.log('[P91-01 값은 한 칸 100원 고정]');
-{ const s = garden(); check([1, 10, 19, 20].every(d => E.autoDigWon(s, d) === 100) && E.AUTO_DIG_WON === 100, '층과 상관없이 100원');
-  const lamp = garden(); E.placeDeco(lamp, E.addDeco(lamp, 'amberlamp').id, 0, 0); check(E.autoDigWon(lamp, 10) === 100, '🏮 호박 등이 있어도 그대로'); }
+console.log('[P92 값은 한 칸 500원 고정]');
+{ const s = garden(); check([1, 10, 19, 20].every(d => E.autoDigWon(s, d) === 500) && E.AUTO_DIG_WON === 500, '층과 상관없이 500원');
+  const lamp = garden(); E.placeDeco(lamp, E.addDeco(lamp, 'amberlamp').id, 0, 0); check(E.autoDigWon(lamp, 10) === 500, '🏮 호박 등이 있어도 그대로'); }
 
 console.log('[P91-01 일부러 기대 수입보다 쌈 — 돈으로는 조금 남음 (사용자 결정)]');
 for (const depth of [1, 10, 20]) {
   const s = garden(null, 1e9), m = E.mineOf(s); m.depth = m.deepest = depth; m.board = null; E.mineOf(s); m.energy = 0;
   E.mineAutoSet(s, true, ctx, 50000); const m0 = s.money, far = s.virtual + 20 * H; E.advance(s, far, ctx);
-  check(s.stats.autoDug === 500 && s.stats.autoPaid === 50000, `${depth}층부터 500칸에 50,000원 — 낸 돈은 정한 돈까지만`);
-  console.log(`    ${depth}층부터: 돈 ${(s.money - m0).toLocaleString('ko-KR')}원 (칸마다 ${Math.round((s.money - m0) / 500)}원)`); }
+  check(s.stats.autoDug === 100 && s.stats.autoPaid === 50000, `${depth}층부터 100칸에 50,000원 — 낸 돈은 정한 돈까지만`);
+  console.log(`    ${depth}층부터: 돈 ${(s.money - m0).toLocaleString('ko-KR')}원 (칸마다 ${Math.round((s.money - m0) / 100)}원)`); }
 
 console.log('[P83-01 기력이 찰 때마다 · 꺼 둔 동안에도]');
 { const s = garden(), m = E.mineOf(s); const e0 = m.energy;
@@ -26,8 +26,8 @@ console.log('[P83-01 기력이 찰 때마다 · 꺼 둔 동안에도]');
   const r = E.mineAutoSet(s, true, ctx, 50000);
   check(r.ok && m.auto && m.energy === 0 && s.stats.autoDug === e0, `켜면 있던 기력 ${e0}칸을 바로 씀`);
   const m0 = s.money, paid0 = s.stats.autoPaid, n0 = s.stats.autoDug;
-  E.advance(s, s.virtual + 3 * H, ctx);
-  check(s.stats.autoDug - n0 >= 179 && s.stats.autoDug - n0 <= 181, `꺼 둔 3시간 = 약 180칸 (걸음마다 15칸에 막히지 않음) — ${s.stats.autoDug - n0}`);
+  E.advance(s, s.virtual + H, ctx);
+  check(s.stats.autoDug - n0 >= 59 && s.stats.autoDug - n0 <= 61, `꺼 둔 1시간 = 약 60칸 (걸음마다 15칸에 막히지 않음) — ${s.stats.autoDug - n0}`);
   check(s.stats.autoPaid > paid0 && s.money !== m0, '칸마다 돈을 냄');
   check(m.deepest > 1 && m.depth === m.deepest, `계단을 찾으면 내려감 — ${m.depth}층`);
   check(E.mineAutoSet(s, false, ctx).ok && !m.auto, '끄면 멈춤');
@@ -37,7 +37,7 @@ console.log('[P83-01 기력이 찰 때마다 · 꺼 둔 동안에도]');
 console.log('[P83-01 판을 다 파면 새 판]');
 { const s = garden(), m = E.mineOf(s); m.depth = m.deepest = E.MINE_DEEPEST; m.board = null; E.mineOf(s); const b0 = m.boards; m.energy = 0;
   E.mineAutoSet(s, true, ctx, 50000); E.advance(s, s.virtual + 2 * H, ctx);
-  check(m.depth === E.MINE_DEEPEST && m.boards >= b0 + 3, `가장 깊은 층에선 판만 새로 — ${m.boards - b0}판`); }
+  check(m.depth === E.MINE_DEEPEST && m.boards >= b0 + 2, `가장 깊은 층에선 판만 새로 — ${m.boards - b0}판`); }
 { const s = garden(), m = E.mineOf(s); m.board.cells.find(c => c.stairs).dug = true; m.energy = 1;
   E.mineAutoSet(s, true, ctx); check(m.depth === 2, '손으로 찾아 둔 계단이 있으면 그 층을 더 파지 않고 내려감'); }
 
@@ -53,7 +53,7 @@ console.log('[P83-01 돈이 모자라면 멈춤 · 까닭]');
   s.money = 1e6; check(E.mineAutoSet(s, true, ctx).ok && m.autoStop === null, '다시 켜면 까닭이 지워짐'); }
 
 console.log('[P83-01 일지는 묶어서 한 줄]');
-{ const s = garden(), m = E.mineOf(s); E.mineAutoSet(s, true, ctx);
+{ const s = garden(), m = E.mineOf(s); E.mineAutoSet(s, true, ctx, 50000);
   for (let i = 0; i < 40; i++) E.advance(s, s.virtual + 60e3, ctx);   // 켜 둔 채 1분씩 40번
   const n = logs(s).length, L = m.autoLog;
   check(n <= 1 && L && L.n >= 30, `1분씩 지나는 동안엔 줄이 늘지 않고 모음 (${L && L.n}칸 · ${n}줄)`);

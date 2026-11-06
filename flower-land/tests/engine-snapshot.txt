@@ -319,7 +319,7 @@
   toDeepest function 14f426d5648b879f
   freshBoard function 3e90daacc6637fbc
   autoDigWon function 3039d9c6f4ee81bd
-  AUTO_DIG_WON number ad57366865126e55
+  AUTO_DIG_WON number 0604cd3138feed20
   AUTO_BUDGETS object b27686ed6a5f8999
   AUTO_BUDGET number 39e5b4830d4d9c14
   autoKeepE function 6731f2c2f409ba70
@@ -634,7 +634,7 @@
   bagNeed function 8540ff828f4fbdb5
   blendMax function 549369a9e01bd5b6
   blendPlan function 4a18ad0172cdcfd0
-공개 값 모두 1a4d65262dcc0586
+공개 값 모두 065f20a3b4dac30e
 보정 MIGRATIONS 60줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
