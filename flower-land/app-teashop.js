@@ -379,7 +379,8 @@ function cafeHTML() {
   const os = (!slow && st.orders && st.orders.list) || [];   // 🐢 느긋하게 보기면 쪽지를 숨김 — 맞는 찻잔이 팔리면 기념품은 그대로 (P28-02)
   const list = [...os.filter(o => !o.done), ...os.filter(o => o.done)], extra = open ? list.slice(sh.seats) : list;   // 남은 주문부터 손님 앞에 · 닫힌 날엔 쪽지를 모두 아래 줄에
   const off = ((st.orders && st.orders.abs) || 0) % GUEST_KEYS.length;   // 달마다 다른 손님
-  const slip = (o, more) => o ? `<span class="cf-slip ${o.done ? 'done' : ''}"><span class="cf-sh">${o.done ? '✓ 들어줬어요' : '💌 주문'}</span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b>${more ? `<span class="cf-more" title="쪽지 ${more}장 더 — 카운터 아래에 있어요">+${more}</span>` : ''}</span>`
+  // P82-03 쪽지는 한 덩이로 흐름: 표시(✓ · 💌) · 차 그림 · 주문 글이 한 줄에서 이어져 높이를 줄임
+  const slip = (o, more) => o ? `<span class="cf-slip ${o.done ? 'done' : ''}"><span class="cf-sh" title="${o.done ? '들어줬어요' : '주문'}">${o.done ? '✓' : o.kind === 'tea' ? '' : '💌'}</span>${o.kind === 'tea' ? spriteImg(o.type, 'tea', 32, false, '') : ''}<b>${E.orderText(o)}</b>${more ? `<span class="cf-more" title="쪽지 ${more}장 더 — 카운터 아래에 있어요">+${more}</span>` : ''}</span>`
     : '<span class="cf-slip idle"><b>☕ 아무 차나</b></span>';
   const seats = [1, 2, 3].map(n => {
     if (n <= sh.seats) {

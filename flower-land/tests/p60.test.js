@@ -27,8 +27,8 @@ check(/!open\) return[^\n]*🔒 쉬는 중/.test(cafe), '찻집이 닫혀 있으
 check(/data-seat="\$\{n\}"/.test(cafe) && /＋/.test(cafe), '다음 자리는 점선 칸 "＋ 값" (askSeat)');
 check(!/기념품을 두고 가요/.test(cafe) && !/cf-cap/.test(cafe) && !/1시간에 \$\{sh\.seats\}잔/.test(cafe) && /🌙 꽃잠 주문엔 작은 기념품/.test(man), '카페 아래 안내 두 줄은 없음 (P60 덧붙임) · 기념품 규칙은 매뉴얼에');
 check(/cafe-scene"><div class="cf-seats">\$\{seats\}<\/div>\$\{more\}<\/div>/.test(cafe) && /extra\.length \?/.test(cafe), '넘친 쪽지 줄은 넘칠 때만');
-check(/\.cafe-scene \{ container-type: inline-size/.test(css) && /@container \(min-width: 960px\) \{ \.cf-seats \{ --gs: 12/.test(css) && /\.cf-guest > img\.px:first-child \{ width: calc\(16px \* var\(--gs\)\)/.test(css), '손님을 크게 — 카페 폭에 맞춘 정수배(--gs 4 ~ 12)');
-check(/\.cf-slip \{[^}]*width: min\([^}]*16px \* var\(--gs\)/.test(css) && /\.cf-slip b \{[^}]*font-size: var\(--sf\)/.test(css), '쪽지 폭은 손님 폭쯤 · 글씨도 크게');
+check(/\.cafe-scene \{ container-type: inline-size/.test(css) && /@container \(min-width: 960px\) \{ \.cf-seats \{ --gs: 6/.test(css) && /\.cf-guest > img\.px:first-child \{ width: calc\(16px \* var\(--gs\)\)/.test(css), '손님은 카페 폭에 맞춘 정수배(--gs 2 ~ 6, P82-03에서 반으로)');
+check(/\.cf-slip \{[^}]*width: min\([^}]*16px \* var\(--gs\)/.test(css) && /\.cf-slip b \{[^}]*font-size: var\(--sf\)/.test(css), '쪽지 폭은 손님 폭 + 여유 · 글씨는 --sf');
 check(!/\.cf-seat\.(off|add) \.cf-desk/.test(css) && !/\.cf-win|\.cf-shelf|\.cf-cap/.test(css), '자리마다 다르던 탁자 대신 하나로 이어진 긴 카운터 · 창문 · 선반 · 안내 줄 CSS 정리');
 check(!/function ordersHTML/.test(tea) && !/\$\{ordersHTML\(\)\}/.test(tea), '아래쪽 💌 손님 주문 블록(ordersHTML)은 지움');
 
