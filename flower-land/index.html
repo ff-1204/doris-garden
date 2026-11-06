@@ -58,8 +58,11 @@
                 <div class="emptyhint" id="emptyMap" hidden></div>
                 <div class="snack" id="snack" role="status" hidden></div>
                 <div class="legend2 on-map" id="legend2"></div>
-                <button type="button" class="map-zoom" id="mapZoom" aria-pressed="false" title="지도 크기 바꾸기">🔍</button>
-                <button type="button" class="share-btn map-share" id="shareBtn" title="정원 그림을 인스타로">↗ 공유</button>
+                <!-- P89-01 지도 위 단추: 세로로 나란히, 겹치지 않게 · 그림은 app-garden.js가 넣음 -->
+                <div class="map-tools">
+                  <button type="button" class="map-zoom" id="mapZoom" aria-pressed="false" title="지도 크기 바꾸기" aria-label="지도 크기 바꾸기">🔍</button>
+                  <button type="button" class="share-btn map-share" id="shareBtn" title="정원 그림을 인스타로" aria-label="공유">↗ 공유</button>
+                </div>
               </div>
               <div class="emptyhint" id="restBanner" hidden><div class="box"><button type="button" class="iconbtn restclose" data-rest="close" aria-label="닫기">✕</button><b>🌙 꽃잠이에요</b><span class="muted rest-long" style="font-size: var(--fs-md)">꽃들이 자고 있어요 · 옮겨심기 · 번식 · 돌보기와 핀 채 잠든 꽃 거두기는 돼요. 블렌드를 만들거나 새해 꽃을 예약해 보세요.</span><span class="muted rest-short">옮겨심기 · 번식 · 돌보기 · 거두기는 돼요</span></div></div>
             </div>

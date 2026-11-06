@@ -46,7 +46,7 @@ function renderManual(force) {
         ${ico('🌱')}<span class="nm">비료<small>비료</small></span>${bar(1, '#8a6a44', '12시간 품질 ↑')}
         ${ico('🧺')}<span class="nm">거두기<small>바구니</small></span>${bar(1, '#f2c230', '필 때마다 · 6시간 뒤 다시')}
       </div><figcaption>도구가 없으면 흐린 단추를 눌러 바로 사요</figcaption></div>`,
-      list(['두 포기 넘게 돌볼 게 있으면 지도 아래 칩 줄의 💧 <b>모두 물 주기</b> · 🧺 <b>모두 거두기</b>로 한 번에', '🧺 정원 저장고(⛏️ 광산 입구 선반)엔 2시간마다 물병 · 비료 · 흙 같은 것이 하나씩 쌓여요 — 놓쳐도 괜찮아요', '돌보지 않은 꽃은 기운 · 품질이 조금씩 떨어질 뿐 시들지 않아요'])),
+      list(['두 포기 넘게 돌볼 게 있으면 지도 아래 칩 줄의 💧 <b>모두 물 주기</b>로 한 번에 · 핀 꽃은 🧺 <b>바구니 칸</b>을 누르면 한 번에 거둬요', '🧺 정원 저장고(⛏️ 광산 입구 선반)엔 2시간마다 물병 · 비료 · 흙 같은 것이 하나씩 쌓여요 — 놓쳐도 괜찮아요', '돌보지 않은 꽃은 기운 · 품질이 조금씩 떨어질 뿐 시들지 않아요'])),
     sec('shop', '화원과 창고', '심는 달에만 팔아요',
       fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 32, false, ''), '씨앗')}${item(spriteImg('lavender', 'form', 32, false, ''), '묘목')}${item(spriteImg('gamguk', 'form', 32, false, ''), '모종')}${item(spriteImg('lotus', 'form', 32, false, ''), '연근')}${item(spriteImg('dongbaek', 'form', 32, false, ''), '나무')}</div>`,
         '산 것은 📦 <b>창고</b>로 와요 · 창고에서도 품질이 조금씩 떨어지니 너무 오래 두지 마세요'),

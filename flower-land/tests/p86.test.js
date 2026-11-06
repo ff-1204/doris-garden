@@ -11,15 +11,15 @@ const val = (block, k) => (block.match(new RegExp(`--${k}: (#[0-9a-f]{6})`)) || 
 
 console.log('[재질 토큰 (P86-01)]');
 const day = css.slice(css.indexOf(':root {'), css.indexOf('--spring')), night = css.match(/:root\[data-theme="dark"\] \{ --bg[^}]*\}/)[0];
-check(/--r-xs: 0; --r-sm: 0; --r-md: 0; --r-lg: 0; --r-xl: 0; --r-pill: 0; --r-dot: 0;/.test(css), '모서리 토큰은 모두 0');
+check(/--r-sm: 12px;/.test(css) && /--r-xl: 16px;/.test(css), '모서리 토큰 (P89에서 단추 12px · 카드 16px로)');
 check(!/border-radius: 50%/.test(css), '동그란 모서리 없음');
-check(/--pxb:/.test(css) && /:is\(\.shopcard, \.status, \.cafe[^{]*\{[^}]*box-shadow: var\(--pxb\)/.test(css), '판은 네 귀가 빈 도트 테두리');
+check(!/--pxb/.test(css) && /:is\(\.shopcard, \.status, \.cafe[^{]*\{[^}]*border: 2px solid var\(--edge\)/.test(css), '판은 얇은 테두리 + 아래 두께 (P89에서 계단 테두리 뺌)');
 for (const [nm, b] of [['낮', day], ['밤', night]]) {
   check(ratio(val(b, 'ink'), val(b, 'panel0')) >= 4.5 && ratio(val(b, 'muted'), val(b, 'panel0')) >= 4.5, `${nm}: 글자 · 흐린 글자 / 판 4.5:1 이상`);
   check(ratio(val(b, 'ink'), val(b, 'bg')) >= 4.5 && ratio(val(b, 'muted'), val(b, 'bg')) >= 4.5, `${nm}: 글자 · 흐린 글자 / 바탕 4.5:1 이상`);
   check(ratio(val(b, 'wood-ink'), val(b, 'wood')) >= 4.5 && ratio(val(b, 'wood-muted'), val(b, 'wood')) >= 4.5, `${nm}: 나무 위 글자 4.5:1 이상`);
 }
-check(ratio('#2c2119', '#d9b26a') >= 4.5, '주 단추 금빛 글자 4.5:1 이상');
+check(ratio('#3a2a14', '#f6cf7d') >= 4.5, '주 단추 금빛 글자 4.5:1 이상');
 
 console.log('[공통 세 가지 (P86-02)]');
 check(/\.needs \.nd \{[^}]*min-height: 44px/.test(css) && /\.ring-btn \{ width: 44px; height: 44px/.test(css), '돌봄 단추 · 둘레 단추 44px');

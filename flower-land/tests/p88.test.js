@@ -20,8 +20,8 @@ check(/지도 아래 칩 줄/.test(man), '매뉴얼 문구도 지도 아래');
 console.log('[공유 (P88-03)]');
 const frame = html.slice(html.indexOf('class="mapframe"'), html.indexOf('id="restBanner"'));
 check(/id="mapZoom"[\s\S]*id="shareBtn"/.test(frame) && !/id="shareBtn"/.test(html.slice(html.indexOf('id="mapScroll"'), html.indexOf('class="ysky"'))), '공유는 지도 틀 위 · 끄는 칸 밖');
-check(/\.share-btn\.map-share \{ position: absolute;[^}]*z-index: 3/.test(css), '지도 위에 겹침');
-check(/\.mapscroll\.pan-x \.mapinner \{ margin: 0 72px 0 0/.test(css), '끌면 단추 밑 칸이 드러남');
+check(/\.map-tools \{ position: absolute;[^}]*z-index: 3/.test(css), '지도 위에 겹침');
+check(/\.mapscroll\.pan-x \.mapinner \{ margin: 0 60px 0 0/.test(css), '끌면 단추 밑 칸이 드러남');
 check(!/shareBtn/.test(garden.slice(garden.indexOf('function draw(clean)'), garden.indexOf('function tileAt'))), '공유 그림(draw)엔 단추가 없음');
 
 console.log('[카드 단추 줄 (P88-06)]');

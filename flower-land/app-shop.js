@@ -21,9 +21,10 @@ function renderYear(force) {
 function nextSale(F) { return E.untilMonth(st.virtual, c => !c.frozen && F.sow.includes(c.month)); }
 const wallet = () => `<span class="wallet" aria-label="가진 돈">💰 ${won(st.money)}</span>`;
 // 🧺 정원 용품 칸 — 📦 창고 · P83-03 💐 화원에서 같이 씀 (누르면 openSupply)
+const UI_SUP = { fert: 'fert', water: 'water', basket: 'basket', shears: 'prune', shovel: 'shovel' };   // P89-03
 const supTilesHTML = () => Object.entries(E.SUPPLIES).map(([k, S]) => {
   const n = st[k] || 0, low = n <= (S.per > 1 ? S.per / 2 : 3);   // 얼마 안 남으면 주황
-  return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
+  return `<button type="button" class="suptile ${n ? (low ? 'low' : '') : 'empty'}" data-sup="${k}" title="${S.desc}"><span class="si">${UI_SUP[k] ? uiImg(UI_SUP[k]) : S.icon}</span><b>${S.name}</b><small>${n ? `${n}${S.unit} 남음` : '다 썼어요'}</small><span class="sp" aria-hidden="true">+</span></button>`;
 }).join('');
 function renderShop(force) {
   const cal = E.calendar(st.virtual), yr = E.yearOf(st, cal);

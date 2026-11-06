@@ -286,6 +286,16 @@ function flowerBitmap(key) {                       // P86-02 지도에 그릴 �
   if (!im) { im = new Image(); im.src = spriteURL(key, 'flower'); flowerBitmaps[key] = im; }
   return im.complete && im.naturalWidth ? im : null;
 }
+// P89-03 단추 아이콘 (sprites.js UI_ICONS, 16px 정수배)
+const uiCache = {};
+function uiURL(k) {
+  if (uiCache[k]) return uiCache[k];
+  const A = window.UI_ICONS[k], c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
+  A.grid.forEach((row, j) => [...row].forEach((ch, i) => { if (A.pal[ch]) { x.fillStyle = A.pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return (uiCache[k] = c.toDataURL());
+}
+const uiImg = (k, scale) => `<img class="px" src="${uiURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="">`;
+document.documentElement.style.setProperty('--garland', `url(${uiURL('garland')})`);   // 지도 둘레 꽃 줄 (CSS 무늬 — 공유 그림엔 안 나옴)
 function decoBitmap(key, variant) {                // 지도에 그릴 그림 (불러오기가 끝난 뒤부터) · variant: P77-A 울타리 이음
   const art = decoArt(key) + (variant || ''); let im = decoBitmaps[art];   // 끝까지 올린 장치는 따로 (P28-05-02-04)
   if (!im) { im = new Image(); im.src = decoURL(key, variant); decoBitmaps[art] = im; }
