@@ -34,7 +34,7 @@ const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.s
 const NEEDS = [['water', '💧', '목마른 꽃'], ['weed', '🌿', '잡초 난 꽃'], ['prune', '✂️', '가지 칠 수 있는 꽃'], ['fert', '🌱', '비료 줄 수 있는 꽃'], ['harvest', '🧺', '꽃이 핀 꽃']];
 // P28-11 한꺼번에 돌보기 (M2-5): 두 포기부터 (한 포기는 꽃 둘레 단추로). 느긋하게 보기여도 둠 — 숫자도 위 칩과 같은 돌볼 꽃 수라 그대로
 const UI_CARE = { water: 'water', weed: 'weed', prune: 'prune', fert: 'fert', harvest: 'basket' };   // P89-03 돌봄 도트 아이콘
-const CARE_ALL = [['water', '모두 물 주기'], ['harvest', '모두 거두기']];
+const CARE_ALL = [['water', '모두 물 주기']];   // P89-05 모두 거두기 단추는 뺌 — 바구니 칸을 누르면 같은 일
 const careAllBtns = (need, cls) => CARE_ALL.filter(([k]) => need[k] >= 2).map(([k, nm]) => `<button type="button" class="${cls}" style="--k:${CARE_COLOR[k]}" data-all="${k}">${uiImg(UI_CARE[k], 1)} ${nm} <b>(${need[k]})</b></button>`).join('');
 function careAllOn(k) { return after(E.careAll(st, k, ctx), k === 'water' ? 'watered' : 'harvested', k === 'harvest' ? { label: '🌿 제다실', fn: () => setTab('tearoom') } : null); }
 // P28-04 🧺 정원 저장고 (M2-7): 돌볼 꽃 칩 줄에 쌓인 양 / 상한 — 누르면 모두 거두기. 🐢 느긋하게 보기면 숫자 없이 (쌓였을 때만)
@@ -57,7 +57,7 @@ function renderToolbar(force) {
   ui.sigs.toolbar = sig;
   if (ui.tool === 'plant' && ui.plantType && !pl[ui.plantType]) ui.plantType = null;   // 다 심으면 다시 "선택 안 함"
   const needSum = NEEDS.reduce((a, [k]) => a + need[k], 0);   // 칩 앞에 한마디: 돌볼 게 있으면 "누르면 반짝", 없으면 쉬어도 된다고
-  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · 눌러서 찾기"><span>${uiImg(UI_CARE[k])}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
+  $('#needs').innerHTML = `<span class="nd-say">${cal.frozen && !needSum ? '🌙 꽃들이 자는 중' : needSum ? '돌볼 꽃 · 누르면 반짝여요' : soonLine(cal)}</span>` + NEEDS.map(([k, ic, nm]) => `<button type="button" class="nd ${need[k] ? 'on' : ''}" style="--k:${CARE_COLOR[k]}" data-flash="${k}" title="${nm} ${need[k]}포기 · ${k === 'harvest' && need[k] >= 2 ? '눌러서 모두 거두기' : '눌러서 찾기'}"><span>${uiImg(UI_CARE[k])}</span><b>${need[k]}</b></button>`).join('') + careAllBtns(need, 'nd on nd-all') + pantryChip();   // ⛏️ 광산 입구는 10-30 탭으로 옮김 · 🔍 돋보기(모바일 확대, QA 6회차)는 10-30 사용자 요청으로 뺌
   const tray = $('#tray');
   if (ui.tool === 'plant') {
     const keys = Object.keys(pl);
@@ -83,7 +83,9 @@ $('#needs').addEventListener('click', e => {
   const all = e.target.closest('[data-all]'); if (all) return careAllOn(all.dataset.all);
   const b = e.target.closest('[data-flash]'); if (!b) return;
   const t = b.dataset.flash, nm = NEEDS.find(n => n[0] === t)[2];
-  if (!careNeed(E.calendar(st.virtual))[t]) return feedback(`지금은 ${nm}이 없어요`);
+  const n = careNeed(E.calendar(st.virtual))[t];
+  if (!n) return feedback(`지금은 ${nm}이 없어요`);
+  if (t === 'harvest' && n >= 2) return careAllOn('harvest');   // P89-05 바구니 칸: 두 포기부터 한 번에 거둠 (한 포기는 반짝여서 둘레 단추로)
   ui.flash = { t, until: performance.now() + 2400 };
 });
 // 안내 문구는 심기·옮겨 심기 중일 때만 (평소 설명은 상태창과 첫걸음 안내에 있음)

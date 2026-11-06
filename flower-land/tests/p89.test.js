@@ -34,4 +34,10 @@ check(/uiImg\(UI_CARE\[k\]\)/.test(garden) && /uiImg\(UI_CARE\[t\]\)/.test(garde
 check(/\.yearstrip::after \{[^}]*pointer-events: none/.test(css), '꽃 줄은 끌기 · 누르기를 막지 않음');
 check(!/garland/.test(garden), '꽃 줄은 CSS — 공유 그림(draw)엔 안 나옴');
 
+console.log('[모두 거두기 단추 빼기 (P89-05)]');
+const man = read('app-manual.js');
+check(/const CARE_ALL = \[\['water', '모두 물 주기'\]\];/.test(garden), '돌봄 줄 끝 모두 거두기 단추 없음');
+check(/if \(t === 'harvest' && n >= 2\) return careAllOn\('harvest'\)/.test(garden), '바구니 칸이 두 포기부터 한 번에 거둠');
+check(/눌러서 모두 거두기/.test(garden) && /<b>바구니 칸<\/b>을 누르면/.test(man), '칸 설명 · 매뉴얼 문구');
+
 console.log(fails ? `결과: ${fails}개 실패` : '결과: 모두 통과');
