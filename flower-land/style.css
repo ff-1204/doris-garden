@@ -705,6 +705,9 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .cc-meta b { color: var(--ink); white-space: nowrap; }
 .cc-taste { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }   /* P79-02 맛 한 줄 */
 .cc-taste b { color: var(--ink); font-weight: 600; margin-right: var(--sp-1); }
+.cc-need, .bl-need { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }   /* P82-02 티백 1개에 드는 꽃잎 수 */
+.bl-need { font-size: var(--fs-sm); }
+.bc-qty { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-3) var(--sp-4); margin-top: var(--sp-4); }   /* P82-01 몇 잔 만들까요 */
 .bl-out .bl-taste, .bl-rec .bl-taste { color: var(--muted); word-break: keep-all; }
 .cc-price { display: flex; align-items: baseline; gap: var(--sp-3); }
 .cc-price b { font-size: var(--fs-xl); }
