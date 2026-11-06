@@ -69,21 +69,21 @@ const back = E.parseSave(JSON.stringify(E.makeSave(year, MON)));
 check(back.ok && JSON.stringify(back.data.game) === JSON.stringify(E.makeSave(year, MON).game), '저장 파일을 읽어도 정원 글자 그대로');
 // P67 전 스냅숏(P66 기록)의 옮긴 결과 · 저장 파일 해시 — 정리를 더해도 한 줄도 같아야 함 · P72-01 (11-04): 보정 55번째 · 다시 피는 꽃으로 해시가 바뀌어 지금 스냅숏 값으로 다시 적음 (cleanSave는 그대로)
 // P67 전 해시 → 그 뒤 새 정원 칸이 바뀔 때마다 다시 적음 (P72 ripeH · R-C2 settings.notify · P79 블렌드 넷으로 도감 101칸 — 기록의 dexTotal, 11-05 · P83 shovel · mine.auto, 11-06) — 정상 저장이 cleanSave 전후 같다는 뜻은 그대로
-const BEFORE = `새 정원 create bb7bb535e8a00776
-새 정원 30시간 뒤 90f0c867364448df
-새 정원 두 주(정원 두 해) 뒤 32d35168980ccd6b
-옛 저장: 가장 옛 정원 (30시간) fb0275730e975418
-옛 저장: 가장 옛 정원 (두 주) 247c83e8d3e8d9ab
-옛 저장: 두 주 정원을 0번째부터 517e6a2d45640cb2
-옛 저장: 두 주 정원을 10번째부터 517e6a2d45640cb2
-옛 저장: 두 주 정원을 20번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 30번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 40번째부터 fa81495310e034d5
-옛 저장: 두 주 정원을 48번째부터 32d35168980ccd6b
-옛 저장: 두 주 정원을 56번째부터 32d35168980ccd6b
+const BEFORE = `새 정원 create c9a58b9a9fa64f92
+새 정원 30시간 뒤 b9069af5eaebf1e2
+새 정원 두 주(정원 두 해) 뒤 11850634e72cf1a6
+옛 저장: 가장 옛 정원 (30시간) 5b24c5a447d5af36
+옛 저장: 가장 옛 정원 (두 주) f986e8f8425c4f85
+옛 저장: 두 주 정원을 0번째부터 cf9e9cd3d8f43627
+옛 저장: 두 주 정원을 10번째부터 cf9e9cd3d8f43627
+옛 저장: 두 주 정원을 20번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 30번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 40번째부터 d3cc79cc9db4fec1
+옛 저장: 두 주 정원을 48번째부터 11850634e72cf1a6
+옛 저장: 두 주 정원을 57번째부터 11850634e72cf1a6
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave 43a4b3fea4d5c9d1
-저장 파일 parseSave 43a4b3fea4d5c9d1`.split('\n');
+저장 파일 makeSave cf9b29eb2a1c78c1
+저장 파일 parseSave cf9b29eb2a1c78c1`.split('\n');
 const now = execFileSync(process.execPath, [path.join(__dirname, '..', 'tools', 'engine-snapshot.js'), ENGINE], { encoding: 'utf8' }).replace(/\r\n/g, '\n').split('\n').filter(x => /^(새 정원|옛 저장|저장 파일)/.test(x));
 const diff = BEFORE.filter((x, i) => now[i] !== x);
 check(now.length === BEFORE.length && !diff.length, `옮긴 결과 · 저장 파일 해시 ${BEFORE.length}줄이 P67 전과 같음${diff.length ? ` — 다름: ${diff.join(' / ')}` : ''}`);

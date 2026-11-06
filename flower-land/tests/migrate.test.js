@@ -46,7 +46,7 @@ check(wm.weekly === null && wm.mig === E.MIGRATIONS.length, '🗓️ 주간 목�
 check(m.pantry && m.pantry.items.length === 0 && m.pantry.h === 0 && m.pantry.n === 0, '🧺 정원 저장고 칸 · 예전 정원은 빈 저장고 (P28-04)');
 const pn = copy(st); delete pn.pantry; pn.mig = E.MIGRATIONS.findIndex(m => m[0].includes("pantry")); const pm = E.migrateSave(pn);
 check(pm.pantry && pm.pantry.items.length === 0 && pm.mig === E.MIGRATIONS.length, '🧺 정원 저장고 보정 (P28-04)');
-const pk = copy(st); pk.pantry = { h: 1.5, n: 7, items: [{ k: 'water' }], got: 3 }; pk.mig = E.MIGRATIONS.length - 5;
+const pk = copy(st); pk.pantry = { h: 1.5, n: 7, items: [{ k: 'water' }], got: 3 }; pk.mig = E.MIGRATIONS.length - 6;
 check(JSON.stringify(E.migrateSave(pk).pantry) === JSON.stringify({ h: 1.5, n: 7, items: [{ k: 'water' }], got: 3 }), '🧺 쌓인 저장고는 보정이 건드리지 않음');
 wm.onboarded = true; E.advance(wm, wm.virtual + H, ctx);
 check(wm.weekly && wm.weekly.goals.length === 3, '🗓️ 연 뒤 한 시간: 이번 주 목표 3개가 생김');
@@ -210,7 +210,7 @@ console.log('[✉️ 편지함 mailSeenAt (P31-01)]');
 console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 · P28-03)]');
 { const BN = E.MIGRATIONS.findIndex(x => x[0].includes('settings.big'));
   const FN = E.MIGRATIONS.findIndex(x => x[0].includes('awayLast'));
-  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 16, '41번째 보정 · 바로 뒤 42번째 P32 awayLast · farm (51번째 P48 · 맨 끝 52번째 P52)');
+  check(BN === 40 && FN === BN + 1 && FN === E.MIGRATIONS.length - 17, '41번째 보정 · 바로 뒤 42번째 P32 awayLast · farm (51번째 P48 · 맨 끝 52번째 P52)');
   check(m.settings.big === false && m.settings.pattern === false, '가장 옛 정원: 둘 다 꺼짐');
   const old = copy(st); delete old.settings.big; delete old.settings.pattern; old.mig = BN; const om = E.migrateSave(old);
   check(om.settings.big === false && om.settings.pattern === false && om.mig === E.MIGRATIONS.length, '바로 앞 판 정원도 둘 다 꺼짐');
@@ -219,7 +219,7 @@ console.log('[🔠🧩 큰 글씨 · 땅 무늬 settings.big · pattern (P28-01 
 
 console.log('[🧬 돌연변이 mut · dex.mutant · dex.mutjar · jar · mutBoost (P36)]');
 { const MN = E.MIGRATIONS.findIndex(x => x[0].includes('P36'));
-  check(MN === 42 && MN === E.MIGRATIONS.length - 15, '43번째 보정 (바로 뒤 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
+  check(MN === 42 && MN === E.MIGRATIONS.length - 16, '43번째 보정 (바로 뒤 44번째 P37 · 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
   check(m.jar === 0 && m.mutBoost === null && JSON.stringify(m.dex.mutant) === '{}' && JSON.stringify(m.dex.mutjar) === '{}', '가장 옛 정원: 유리 관 0 · 빈 돌연변이 도감');
   const old = copy(st); old.mig = MN; delete old.jar; delete old.mutBoost; delete old.dex.mutant; delete old.dex.mutjar;
   old.flowers = [{ id: 1, type: 'rose', x: 1, y: 1, q: 1, bloomKey: 12 }, { id: 2, type: 'rose', x: 2, y: 1, q: 1, bloomKey: -1 }];
@@ -231,21 +231,21 @@ console.log('[🧬 돌연변이 mut · dex.mutant · dex.mutjar · jar · mutBoo
 
 console.log('[🌼 꽃가루 · 일꾼 기르기 bonus.brew · hive · weed (P37)]');
 { const PN = E.MIGRATIONS.findIndex(x => x[0].includes('P37'));
-  check(PN === 43 && PN === E.MIGRATIONS.length - 14, '44번째 보정 (바로 뒤 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
+  check(PN === 43 && PN === E.MIGRATIONS.length - 15, '44번째 보정 (바로 뒤 45번째 P38 · 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
   const old = copy(st); old.bonus = { basket: 2, rack: 1, pantry: 3, catchup: 1 }; delete old.bonusFree;
   const om = steps(old, PN, PN + 1);   // 이 보정만
   check(om.bonus.basket === 2 && om.bonus.rack === 1 && om.bonus.pantry === 3 && om.bonus.catchup === 1 && om.bonus.brew === 0 && om.bonus.hive === 0 && om.bonus.weed === 0, '이 보정만: 예전 네 칸 그대로 · 새 세 칸 0'); }
 
 console.log('[🐜 작게 시작하는 일꾼 bonus 단계 옮김 · bonusFree (P38)]');
 { const XN = E.MIGRATIONS.findIndex(x => x[0].includes('P38'));
-  check(XN === 44 && XN === E.MIGRATIONS.length - 13, '45번째 보정 (바로 뒤 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
+  check(XN === 44 && XN === E.MIGRATIONS.length - 14, '45번째 보정 (바로 뒤 46번째 P39 · 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
   const old = copy(st); old.bonus = { basket: 3, rack: 2, brew: 1, hive: 2, weed: 1, pantry: 0, catchup: 2 }; delete old.bonusFree;
   const om = steps(old, XN, XN + 1);   // 이 보정만 (P38 때 비용표 — 지금 BONUS는 P39라 단계 이름표만 봄)
   check(om.bonusFree && typeof om.bonusFree === 'object' && om.bonus.catchup === 2 && om.bonus.pantry === 0, '이 보정만: 덜어 준 셈 bonusFree가 생기고 선반 · 늦잠은 그대로');
   const nw = E.create(MON, () => 0.5); check(JSON.stringify(nw.bonusFree) === '{}', '새 정원은 bonusFree 빈 칸'); }
 
 console.log('[🐝 곤충은 모두 꽃을 돕는다 (P39-11)]');
-{ check(P39N === 45 && P39N === E.MIGRATIONS.length - 12, '46번째 보정 (바로 뒤 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
+{ check(P39N === 45 && P39N === E.MIGRATIONS.length - 13, '46번째 보정 (바로 뒤 47번째 P40 · 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
   const p38 = copy(st); p38.mig = P39N; delete p38.mailGot; p38.grade.xp = E.gradeXpAt(30);
   p38.bonus = Object.assign(E.newBonus(), { basket: 8, rack: 7, brew: 1, hive: 3, weed: 3, pantry: 2, catchup: 1 }); p38.bonusFree = { basket: 8, rack: 8, hive: 1, weed: 3 };   // P38 끝단계 일꾼 (P38 비용표로 쓴 꽃가루 — 덜어 준 몫 빼고)
   p38.decos.push({ id: 9101, key: 'dryrack', x: 0, y: 0 }, { id: 9102, key: 'dryrack', x: 1, y: 0 }, { id: 9103, key: 'dryrack', x: null, y: null }, { id: 9104, key: 'teahelper', x: 2, y: 0 }, { id: 9105, key: 'autobasket', x: 5, y: 5, n: 40 });
@@ -272,7 +272,7 @@ console.log('[🐝 곤충은 모두 꽃을 돕는다 (P39-11)]');
 
 console.log('[🌼 그 밖에 세 칸 bonus.grow · dry · pollen · pollenExtra (P40-04) — 자세한 건 p40.test.js]');
 { const P40N = E.MIGRATIONS.findIndex(x => x[0].includes('P40-04'));
-  check(P40N === 46 && P40N === E.MIGRATIONS.length - 11, '47번째 보정 (바로 뒤 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
+  check(P40N === 46 && P40N === E.MIGRATIONS.length - 12, '47번째 보정 (바로 뒤 48번째 P41 · 49번째 P42 · 50번째 P43 · 51번째 P48)');
   const old = copy(st); old.mig = P40N; delete old.pollenExtra; old.grade.xp = E.gradeXpAt(20);
   old.bonus = Object.assign({}, old.bonus, { pantry: 2, catchup: 1 }); delete old.bonus.grow; delete old.bonus.dry; delete old.bonus.pollen;
   const m0 = old.money, om = E.migrateSave(old);
@@ -282,7 +282,7 @@ console.log('[🌼 그 밖에 세 칸 bonus.grow · dry · pollen · pollenExtra
 
 console.log('[💰 꽃가루를 없애고 돈 + 등급으로 bonusOwn (P41-05) — 자세한 건 p41.test.js]');
 { const P41N = E.MIGRATIONS.findIndex(x => x[0].includes('P41-05'));
-  check(P41N === 47 && P41N === E.MIGRATIONS.length - 10, '48번째 보정 (바로 뒤 49번째 P42 · 50번째 P43 · 51번째 P48)');
+  check(P41N === 47 && P41N === E.MIGRATIONS.length - 11, '48번째 보정 (바로 뒤 49번째 P42 · 50번째 P43 · 51번째 P48)');
   const old = copy(st); old.mig = P41N; delete old.bonusOwn; delete old.mailGot; old.grade.xp = E.gradeXpAt(41); old.pollenExtra = 0;
   old.bonus = Object.assign(E.newBonus(), { grow: 9, dry: 9, pollen: 0, barrel: 2, basket: 2, weed: 2 });
   const m0 = old.money, om = E.migrateSave(old);
@@ -297,14 +297,14 @@ console.log('[💰 꽃가루를 없애고 돈 + 등급으로 bonusOwn (P41-05) �
 
 console.log('[🌱🌾 두 속도 8단계 speedSteps (P42) — 자세한 건 p42.test.js]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P42'));
-  check(N === 48 && N === E.MIGRATIONS.length - 9, '49번째 보정 (뒤에 50번째 P43 · 51번째 P48)');
+  check(N === 48 && N === E.MIGRATIONS.length - 10, '49번째 보정 (뒤에 50번째 P43 · 51번째 P48)');
   const old = copy(st); old.mig = N; delete old.speedSteps; old.bonus = Object.assign(E.newBonus(), { grow: 1, dry: 2 }); old.bonusOwn = { dry: 2 }; const m0 = old.money; const om = E.migrateSave(old);
   check(om.bonus.grow === 2 && om.bonus.dry === 4 && om.bonusOwn.dry === 4 && om.money === m0 && om.speedSteps === E.SPEED_V && om.mig === E.MIGRATIONS.length, '×2 → 2단계 · ×3 → 4단계 (쓰는 · 산 단계 모두) · 돈 그대로');
   check(E.create(MON, () => 0.5).speedSteps === E.SPEED_V, '새 정원은 옮긴 것으로 시작'); }
 
 console.log('[⛏️ 광산 기력 15 · 새 판 (P43 — 판 크기는 지금 MINE_W × MINE_H)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P43'));
-  check(N === 49 && N === E.MIGRATIONS.length - 8, '50번째 보정 (바로 뒤 51번째 P48)');
+  check(N === 49 && N === E.MIGRATIONS.length - 9, '50번째 보정 (바로 뒤 51번째 P48)');
   const old = copy(st); old.mig = N; old.gardenId = 'mig-p43';
   old.mine = { energy: 12, regenH: 0.2, depth: 6, deepest: 9, boards: 30, bag: { stone: 40, amethyst: 2 }, board: { depth: 6, cells: Array.from({ length: 48 }, (_, i) => ({ k: i % 2 ? 'stone' : 'dirt', dug: i < 10, stairs: i === 47 })) } };
   const om = E.migrateSave(old), m = om.mine;
@@ -318,7 +318,7 @@ console.log('[⛏️ 광산 기력 15 · 새 판 (P43 — 판 크기는 지금 M
 
 console.log('[⛏️ 광산 6×6 (P48)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P48'));
-  check(N === 50 && N === E.MIGRATIONS.length - 7, '51번째 보정 (바로 뒤 52번째 P52)');
+  check(N === 50 && N === E.MIGRATIONS.length - 8, '51번째 보정 (바로 뒤 52번째 P52)');
   const old = copy(st); old.mig = N; old.gardenId = 'mig-p48';
   old.mine = { energy: 9, regenH: 0.01, depth: 4, deepest: 7, boards: 12, bag: { stone: 5 }, board: { depth: 4, cells: Array.from({ length: 25 }, (_, i) => ({ k: 'dirt', dug: i < 8, stairs: i === 24 })) } };
   const om = E.migrateSave(old), m = om.mine;
@@ -331,7 +331,7 @@ console.log('[⛏️ 광산 6×6 (P48)]');
 
 console.log('[⬆️ 위 칸 장식 topDeco (P52)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P52'));
-  check(N === 51 && N === E.MIGRATIONS.length - 6, '52번째 보정 (바로 뒤 53번째 P53)');
+  check(N === 51 && N === E.MIGRATIONS.length - 7, '52번째 보정 (바로 뒤 53번째 P53)');
   const old = copy(st); old.mig = N; delete old.topDeco;
   const om = E.migrateSave(old);
   check(om.topDeco === null && om.mig === E.MIGRATIONS.length, '예전 정원은 빈 위 칸(null)');
@@ -343,7 +343,7 @@ console.log('[⬆️ 위 칸 장식 topDeco (P52)]');
 
 console.log('[🌹 프리저브드 플라워 (P53)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P53'));
-  check(N === 52 && N === E.MIGRATIONS.length - 5, '53번째 보정 (바로 뒤 54번째 P65)');
+  check(N === 52 && N === E.MIGRATIONS.length - 6, '53번째 보정 (바로 뒤 54번째 P65)');
   const old = copy(st); old.mig = N; delete old.presol; delete old.preserving; delete old.preserved; delete old.dex.pres; delete old.dex.presMut;
   const om = E.migrateSave(old);
   check(om.presol === 0 && Array.isArray(om.preserving) && !om.preserving.length && Array.isArray(om.preserved) && !om.preserved.length && om.mig === E.MIGRATIONS.length, '예전 정원은 용액 0 · 빈 유리 돔 · 빈 창고');
@@ -356,7 +356,7 @@ console.log('[🌹 프리저브드 플라워 (P53)]');
 
 console.log('[🍯 벌통 꿀 → 창고 (P65-01)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P65-01'));
-  check(N === 53 && N === E.MIGRATIONS.length - 4, '54번째 보정 (맨 끝)');
+  check(N === 53 && N === E.MIGRATIONS.length - 5, '54번째 보정 (맨 끝)');
   const old = copy(st); old.mig = N; old.honey = { rose: 2 }; old.dex.honey = { rose: true };
   old.decos = [{ id: 950, key: 'hive', x: 3, y: 3, honey: ['lavender', 'lavender', 'wild'] }, { id: 951, key: 'bench', x: null, y: null }];
   const om = E.migrateSave(old);
@@ -367,7 +367,7 @@ console.log('[🍯 벌통 꿀 → 창고 (P65-01)]');
 
 console.log('[🪏 삽 · ⛏️ 자동 캐기 (P83)]');
 { const N = E.MIGRATIONS.findIndex(x => x[0].includes('P83'));
-  check(N === 56 && N === E.MIGRATIONS.length - 1, '57번째 보정 (맨 끝)');
+  check(N === 56 && N === E.MIGRATIONS.length - 2, '57번째 보정 (바로 뒤 58번째 P84)');
   const old = copy(st); old.mig = N; delete old.shovel; if (old.mine) { delete old.mine.auto; delete old.mine.autoStop; delete old.mine.autoLog; }
   const om = E.migrateSave(old);
   check(om.shovel === 10 && om.mig === E.MIGRATIONS.length, '예전 정원은 삽 1개(10번)');
@@ -377,6 +377,16 @@ console.log('[🪏 삽 · ⛏️ 자동 캐기 (P83)]');
   check(m2.shovel === 3 && m2.mine.auto === true && m2.mine.autoLog.n === 2, '이미 있는 삽 · 자동 캐기는 그대로');
   const cl = E.cleanSave(Object.assign(copy(st), { shovel: '7', mine: { autoLog: { n: '4', bag: { stone: '2' } } } }));
   check(cl.shovel === 7 && cl.mine.autoLog.n === 4 && cl.mine.autoLog.bag.stone === 2, '삽 · 자동 캐기 일지 숫자 칸도 cleanSave가 정리'); }
+
+console.log('[🌹 프리저브드 장식 (P84)]');
+{ const N = E.MIGRATIONS.findIndex(x => x[0].includes('P84'));
+  check(N === 57 && N === E.MIGRATIONS.length - 1, '58번째 보정 (맨 끝)');
+  const old = copy(st); old.mig = N; delete old.preserved; old.decos = [{ id: 960, key: 'pres', pres: { type: 'rose', mut: false }, x: 3, y: 3, at: 5 }, { id: 961, key: 'pres', x: 4, y: 3 }, { id: 962, key: 'pres', pres: { type: 'nope' }, x: 5, y: 3 }, { id: 963, key: 'bench', x: 6, y: 3 }];
+  const om = E.migrateSave(old);
+  check(Array.isArray(om.preserved) && om.mig === E.MIGRATIONS.length, '창고 칸은 늘 배열');
+  check(om.decos.map(d => d.id).join() === '960,963', '꽃을 모르는 프리저브드 장식만 지움');
+  const cl = E.cleanSave(Object.assign(copy(st), { decos: [{ id: 960, key: 'pres', pres: { type: 'rose' }, x: 3, y: 3, at: '12' }] }));
+  check(cl.decos[0].at === 12, 'd.at 숫자 칸도 cleanSave가 정리'); }
 
 console.log('[여러 번 열어도 같음]');
 const again = copy(m), before = JSON.stringify(again);

@@ -74,6 +74,7 @@ function seasonStart(st, ctx) {
     if (d.honey) d.honey = [];                                                // 벌통에 모인 꿀도 비움
     if (!(DECOS[d.key] && DECOS[d.key].auto)) { d.x = null; d.y = null; }     // 🧺 자동 장치만 제자리, 나머지 장식은 창고 🪴로
   }
+  st.decos = (st.decos || []).filter(d => { if (d.key !== 'pres') return true; st.preserved.push({ id: d.id, type: d.pres.type, mut: !!d.pres.mut }); return false; });   // P84-03 놓인 🌹 프리저브드는 창고 칸으로 돌아옴 (다른 장식처럼 잃지 않음)
   if (st.visitors) { st.visitors.now = []; st.visitors.call = null; }        // P30-06-01 앉아 있던 손님은 떠남 (장식이 창고로 감) — 온 횟수 · 기념품은 이어짐
   st.yearPace.xp0 = (st.grade && st.grade.xp) || 0;                         // P28-07-02 새 철 0년차부터 견줌 (경험치는 이어짐)
   addLog(st, 7, `🌸 ${n + 1}철을 시작했어요${path ? ` · ${PATHS[path].icon} ${PATHS[path].name}로 걸어요` : ''} · 다음 월요일 3월이 새 철 1년차예요`, ctx);
