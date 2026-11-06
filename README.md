@@ -141,3 +141,5 @@ node flower-land/tools/build-site.js # 배포본 모으기 (_site/)
 ```
 
 폴더 · 테스트 · 디자인 규칙 · 배포 · 운영자 편지 보내는 법은 [docs/개발.md](docs/개발.md), 기획과 결정 기록은 [체크리스트.md](체크리스트.md)에 있어요. 위 라이선스대로 소스는 열람용이에요.
+
+이 게임은 [claude-haejo](https://github.com/ff-1204/claude-haejo) 스킬로 기획하고 만들었어요.
