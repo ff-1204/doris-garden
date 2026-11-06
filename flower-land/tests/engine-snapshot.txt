@@ -1,5 +1,5 @@
 # 엔진 스냅숏 (tools/engine-snapshot.js) — 나누기 · 옮기기 전후 같아야 해요
-공개 이름 619개 (Object.keys 차례)
+공개 이름 627개 (Object.keys 차례)
   DAILY_GIFT number 0604cd3138feed20
   HOUR number c48664a448d8a63d
   W number 624b60c58c9d8bfb
@@ -89,7 +89,7 @@
   reservedCount function f789919997b56fbe
   cartSummary function cc148ac92da4b565
   create function ed58047dca40a1f9
-  advance function 4ba385b967e5cd88
+  advance function 2f3f45be5045bddc
   addLog function 25ea2d8cb4b0ceca
   slowView function 7c80808c1c44146d
   bigView function bb5a8d41f02fc777
@@ -101,7 +101,7 @@
   TOOLS object 20662319dbf626a7
   canCare function bf32bdb6c2926ff2
   harvestSlot function 6b32ec2b062d183d
-  canMoveNow function 04e1386b28b5df8c
+  canMoveNow function d6732a3949ee6af7
   propGrown function 84b3cefa7c4916e3
   propYearOf function 93ec618e00c90965
   care function 3828773d28aa7d64
@@ -110,7 +110,7 @@
   CARE_SUPPLY object 6efcec53da094c43
   buy function 4c592b6919d0888e
   buySupply function a551cbeb1aee1910
-  SUPPLIES object 9d10a8caebb563f4
+  SUPPLIES object b65865d61fc16e13
   PETAL_BUY_RATE number b4af4e0d40391d3a
   PETAL_BUY_Q number 14be4b45f18e0d8c
   petalPrice function c6639d4253735639
@@ -118,7 +118,7 @@
   reserve function ad815560d62024d1
   plant function f0d9faf75f52bbf2
   propagate function 1fecaea324b0b3fa
-  move function 54b49a7915137e34
+  move function 0057663450ad0a88
   makeTea function 3cd033790177ec77
   sellTea function 0cb159f80acfb15c
   guideKeys function b3feb38d8c773072
@@ -177,17 +177,17 @@
   shareCard function dcb9ea69d02ad9be
   makeSave function 01f4e3cc0e6f512a
   parseSave function 3a9607fb3b290252
-  SAVE_NUMS object a4b789bcb6998521
+  SAVE_NUMS object 488586d892736c27
   cleanSave function a0326e65af8fee8c
   SAVE_FORMAT number 6b86b273ff34fce1
-  MIGRATIONS object 8d20883cf9e8fdbb
+  MIGRATIONS object 087d48e1f18655b4
   migrateSave function f45e906b90c35da5
   CLOUD_GAP number 6ce318969619d1c3
   cloudDue function d8b021348e446c23
   cloudAutoOk function 9f788d7170164ef3
   cloudTokenUse function 10090ccfada3ba73
   cloudDecide function 204dc83e0f086705
-  freshGarden function 9dcdb73d41e3cb18
+  freshGarden function 8e5d2513b3c70296
   freshPick function b738d83e4d8664e2
   gardenBorn function e5d7b8c3ee0a69f3
   firstVisitOf function b1a40201aa236f4a
@@ -312,14 +312,22 @@
   MINE_DEX_KEYS object 778c859e1842058c
   mineName function ef2ab7d1aab52a01
   mineOf function 0001d3a8d0300392
-  mineRegen function d24089c755c2bee8
-  dig function ec8c202e820c822b
-  descend function b8bd69c9c93ac42d
+  mineRegen function 49f6c76127f79429
+  dig function 8fddb0c7facbafde
+  descend function f5ac551621c5e76b
   mineUp function 664d6890ed572fd7
   toDeepest function 14f426d5648b879f
   freshBoard function 3e90daacc6637fbc
-  CRAFTS object 0fa4ce50e99fe18a
-  CRAFT_KEYS object 54b41c009e264629
+  autoDigWon function 14a5dc439836926e
+  autoKeepE function 6731f2c2f409ba70
+  AUTO_KEEP_E number ef2d127de37b942b
+  mineAutoSet function 325e92b974db2d07
+  mineAutoView function 8fa9a63b51fcbe41
+  mineAutoFlush function 45133799be0ca8d6
+  CRAFTS object a73f852c9835cf4a
+  CRAFT_KEYS object b7c7b1b85d83f267
+  TOOL_CRAFTS object 7e4666674ad80daa
+  NO_SHOVEL string 517b42146a15d0ef
   canCraft function a8b4ef5fc16930e2
   craft function f71999756ef454ef
   mineCount function 5d2007b6b75eea42
@@ -619,8 +627,8 @@
   makeTeaDried function 41ffa2f25c19ea7e
   blend function 72780a70d52170ad
   sellBlends function b56d2383cacc1a3f
-공개 값 모두 abb326f809ece169
-보정 MIGRATIONS 56줄
+공개 값 모두 4b74a3967f5d6183
+보정 MIGRATIONS 57줄
    1. 물병 · 가위 · 호미 · 바구니 (10-05) · bc8eb0ff9da09ab1
    2. 꽃방 · 블렌딩 · 찻잔 (P12-07 · 08, P17-10) · 905a21761740e507
    3. 가게 → 화원 (10-05) · 9d6d295294ab451c
@@ -677,18 +685,19 @@
   54. 🍯 꿀은 바로 창고로 (P65-01, 11-03): 예전 벌통에 쌓인 꿀(d.honey)을 창고 꿀 칸(st.honey — 예전 찻집 꿀 선반 그대로)으로 · 꿀 도감도 · 개미 표시 antKey는 없으면 그대로 · 65c1ae8c6830be55
   55. 🌸 다시 피는 꽃 ripeH · ripeT (P72-01, 11-04): 핀 꽃은 핀 채로(이번 달에 이미 거둔 꽃은 다 자람으로 · 시계 0), 다 자란 꽃은 시계 0부터 · 앞선 달력 leadH · leadEnd는 지움 · f1a0d0d657fc5a20
   56. R-C2 🔔 브라우저 알림 설정 칸 (11-05): 기본 꺼짐 · 9db8e59a9a917488
-새 정원 create 2318a575eb29c6e5
-새 정원 30시간 뒤 07bfcb7ddd09bc5b
-새 정원 두 주(정원 두 해) 뒤 8780d43334852bc8
-옛 저장: 가장 옛 정원 (30시간) ff43f0f1ce844d1f
-옛 저장: 가장 옛 정원 (두 주) 30038d418cb9d84f
-옛 저장: 두 주 정원을 0번째부터 629363dc784c2e00
-옛 저장: 두 주 정원을 10번째부터 629363dc784c2e00
-옛 저장: 두 주 정원을 20번째부터 8dfe9eae26d80ffa
-옛 저장: 두 주 정원을 30번째부터 8dfe9eae26d80ffa
-옛 저장: 두 주 정원을 40번째부터 8dfe9eae26d80ffa
-옛 저장: 두 주 정원을 48번째부터 8780d43334852bc8
-옛 저장: 두 주 정원을 55번째부터 8780d43334852bc8
+  57. 🪏 삽 · ⛏️ 자동 캐기 (P83, 11-06): 옮겨심기에 삽이 들게 되어 예전 정원도 새 정원처럼 삽 1개(10번)로 · 자동 캐기는 꺼짐 · b22f0a0c9967ac46
+새 정원 create bb7bb535e8a00776
+새 정원 30시간 뒤 90f0c867364448df
+새 정원 두 주(정원 두 해) 뒤 32d35168980ccd6b
+옛 저장: 가장 옛 정원 (30시간) fb0275730e975418
+옛 저장: 가장 옛 정원 (두 주) 247c83e8d3e8d9ab
+옛 저장: 두 주 정원을 0번째부터 517e6a2d45640cb2
+옛 저장: 두 주 정원을 10번째부터 517e6a2d45640cb2
+옛 저장: 두 주 정원을 20번째부터 fa81495310e034d5
+옛 저장: 두 주 정원을 30번째부터 fa81495310e034d5
+옛 저장: 두 주 정원을 40번째부터 fa81495310e034d5
+옛 저장: 두 주 정원을 48번째부터 32d35168980ccd6b
+옛 저장: 두 주 정원을 56번째부터 32d35168980ccd6b
 옛 저장: 쓸 수 없는 정원 null · null
-저장 파일 makeSave 85a59f4c11e44427
-저장 파일 parseSave 85a59f4c11e44427
+저장 파일 makeSave 43a4b3fea4d5c9d1
+저장 파일 parseSave 43a4b3fea4d5c9d1

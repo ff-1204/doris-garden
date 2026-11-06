@@ -866,6 +866,13 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .mc .mc-st img.px { width: 16px; height: 16px; }
 .mine-acts { display: flex; gap: var(--sp-3); flex-wrap: wrap; justify-content: center; }
 .mine-acts:empty { display: none; }
+/* P83-01 ⛏️ 자동 캐기 칸 */
+.mine-auto { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-4); padding: var(--sp-3) var(--sp-5); background: var(--sunk); border: 1px dashed var(--line); }
+.mine-auto.on { border-style: solid; border-color: var(--accent); }
+.mine-auto .ma-main { display: grid; gap: var(--sp-1); flex: 1 1 200px; min-width: 0; }
+.mine-auto small { font-size: var(--fs-sm); line-height: 1.35; }
+.mine-auto small.warn { color: var(--warn); }
+.mine-auto .btn { flex: 0 0 auto; }
 .mine-sec { display: grid; gap: var(--sp-4); min-width: 0; }
 .mine-sub { margin: 0; font-size: var(--fs-base); font-weight: 700; }
 .mine-bag { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-xs)), 1fr)); gap: var(--sp-5) var(--sp-4); }

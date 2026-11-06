@@ -64,6 +64,7 @@ function addFert(st, n) { st.fert += n; st._fertNew += n; }
 
 // ---------------------------------------------------------------- 시간 진행
 function advance(st, target, ctx) {
+  const from = st.virtual;
   while (st.virtual < target - 1) {
     const cal = calendar(st.virtual);
     let next = Math.min(target, cal.slotEnd, st.virtual + STEP_H * HOUR);
@@ -72,14 +73,15 @@ function advance(st, target, ctx) {
     if (!cal.frozen && dtH > 0) step(st, dtH, cal, ctx);
     if (dtH > 0) helperTick(st, cal);                                  // P28-10-03 찻집 일손이 카운터를 채움 (팔기 바로 앞)
     if (dtH > 0) autoSell(st, cal, dtH, ctx);                          // P17-11 카운터 찻잔은 꽃잠에도 팔림
-    if (dtH > 0) mineRegen(st, dtH);                                   // P24 광산 기력 (꽃잠에도)
+    if (dtH > 0) mineRegen(st, dtH, ctx);                              // P24 광산 기력 (꽃잠에도) · P83-01 자동 캐기도 여기서
     if (dtH > 0) presTick(st, dtH, ctx);                               // P53 🌹 프리저브드 유리 돔 (꽃잠에도 · 현실 하루)
     if (dtH > 0) dryTick(st, dtH, ctx);                                // P47 꽃방은 꽃잠에도 마름 (11-01 사용자 요청)
     if (!cal.frozen && dtH > 0) pantryTick(st, cal, dtH);              // P28-04 정원 저장고 (꽃잠엔 멈춤)
     st.virtual = next;
     const nc = calendar(st.virtual);
-    if (nc.abs !== st.lastAbs) { st.lastAbs = nc.abs; onSlot(st, nc, ctx); autoDryTick(st); }   // P72-02 달이 바뀔 때 생긴 꽃잎도 바로 (개미 꽃잎은 insectTick 안에서 건조 선반보다 먼저)
+    if (nc.abs !== st.lastAbs) { mineAutoFlush(st, ctx); st.lastAbs = nc.abs; onSlot(st, nc, ctx); autoDryTick(st); }   // P72-02 달이 바뀔 때 생긴 꽃잎도 바로 (개미 꽃잎은 insectTick 안에서 건조 선반보다 먼저) · P83-01 자동 캐기 일지는 달마다 한 줄
   }
+  if (st.virtual - from >= HOUR) mineAutoFlush(st, ctx);                // P83-01 오래 비운 뒤엔 바로 한 줄 ("그동안" 창에 보이게)
   flushPending(st, ctx);
   { const c = calendar(st.virtual); if (c.idx >= FARM_GIFT_IDX) farmGift(st, c, ctx); }   // P49 🧺 농장 정착금: 다 따라잡은 "지금"이 주말(토요일 아침 6시 ~ 월요일 아침 6시)일 때만 — 주말에 들어와야 받음 (비운 주말은 따라잡아도 안 옴)
   { const c = calendar(st.virtual); if (teaShopOpen(c) && (!st.orders || st.orders.abs !== c.abs)) makeOrders(st, c); }   // P23-01 찻집이 열린 채로 시작 · 열어도 그 달 쪽지 (QA 5회차)

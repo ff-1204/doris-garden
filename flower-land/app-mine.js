@@ -83,6 +83,7 @@ function renderMine(force) {
     <div class="mine-grid" style="--mw:${E.MINE_W}">${b.cells.map(cell).join('')}</div>
     ${allDug ? `<p class="mine-done">이 판은 다 팠어요 · ${downBtn ? '아래층으로 가거나 ' : ''}새 굴을 파요</p>` : ''}
     <div class="mine-acts">${downBtn ? '<button type="button" class="btn primary small" data-mact="down">🪜 아래층으로</button>' : ''}${m.depth > 1 ? '<button type="button" class="btn small" data-mact="up">⬆️ 1층으로</button>' : ''}${m.depth < m.deepest ? `<button type="button" class="btn small" data-mact="deep" ${m.energy < 3 ? 'disabled' : ''}>🪜 지하 ${m.deepest}층으로 · 기력 3</button>` : ''}${allDug ? `<button type="button" class="btn small ${downBtn ? '' : 'primary'}" data-mact="fresh">🔄 새 굴</button>` : ''}</div>
+    ${mineAutoHTML()}
     </div>
     <div class="mine-side">
     <section class="mine-sec"><h3 class="mine-sub">🔨 재료 만들기</h3>${crafts}</section>
@@ -111,10 +112,10 @@ $('#p-mine').addEventListener('click', e => {
     if (a !== 'up') return go();
     return openModal('⬆️ 1층으로', `<p>지하 ${m.depth}층의 판을 두고 1층으로 올라가요</p><p class="muted">다시 내려올 땐 "🪜 지하 ${m.deepest}층으로"(기력 3)로 바로 갈 수 있어요</p>`, [{ label: '취소', act: () => closeModal() }, { label: '올라가기', primary: true, act: go }]);
   }
-  if (e.target.closest('[data-pantry]')) return takePantryOn();   // 🧺 입구 선반 (10-31)
   const au = e.target.closest('[data-mauto]'); if (au) { if (au.dataset.mauto === 'on') return askMineAuto(); const r = E.mineAutoSet(st, false, ctx); feedback(r.msg); save(); return renderAll(true); }   // P83-01
   const tb = e.target.closest('[data-toolbuy]'); if (tb && !tb.disabled) { const k = tb.dataset.toolbuy, S = E.SUPPLIES[k];   // P83-02 재료가 모자라면 그 카드에서 (화원 값)
     return askBuy({ name: S.name, note: S.desc, price: S.price, art: `<span class="ba-ic">${S.icon}</span>` }, () => { after(E.buySupply(st, k, 1)); renderAll(true); }); }
+  if (e.target.closest('[data-pantry]')) return takePantryOn();   // 🧺 입구 선반 (10-31)
   const wb = e.target.closest('[data-wsbuy]'); if (wb && !wb.disabled) { const k = wb.dataset.wsbuy, C = E.CRAFTS[k];   // P44-01 💰 돈으로 사기 (화원과 같은 확인 창)
     return askBuy({ name: C.name, note: wsNote(k), price: E.WORKSHOP[k], art: k === 'jar' ? decoImg('mutjar', 3) : decoImg(C.deco, 3) }, () => { const r = E.workshopBuy(st, k, ctx); after(r, null, r.deco ? { label: '🪴 놓기', fn: () => { ui.tool = 'deco'; ui.decoId = r.deco.id; setTab('garden', true); } } : undefined); renderAll(true); }); }
   const c = e.target.closest('[data-craft]'); if (c && !c.disabled) { const k = c.dataset.craft, r = E.craft(st, k, ctx); feedback(r.msg, !r.ok); if (r.ok) save(); renderAll(true); return mineRefocus(`[data-craft="${k}"]`); }

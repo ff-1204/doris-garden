@@ -87,7 +87,7 @@ check(!cal.frozen && cal.month === 3 && E.yearOf(st, cal) === yr + 1, '월요일
 check(E.FLOWERS.lavender.propMonths.includes(3), '3월은 라벤더 꺾꽂이 달');
 r = E.propagate(st, lav.id, rng, ctx);
 check(!r.ok && r.msg === '이 꽃은 꽃잠에 새해 몫 번식을 했어요' && lav.propRest, '꽃잠에 번식한 꽃은 3월에 또 못 함 · 꽃잠에 했다고 알려 줌 (QA 19회차)');
-check(!E.canMoveNow({ type: 'rose', stage: 'mature' }, { frozen: false, month: 7 }), '평일 옮겨심기는 달 조건 그대로 (7월 장미는 못 옮김)');
+check(E.canMoveNow({ type: 'rose', stage: 'mature' }), 'P83-03 평일에도 살아 있는 꽃은 옮길 수 있음 (7월 장미도 — 예전엔 못 옮김)');
 E.advance(st, MON2 + 11 * H, ctx);
 check(st.pending.length === 2 && !st.items.some(i => i.origin === '번식'), '흐르는 시간 1달이 안 됐으면 아직 안 옴');
 E.advance(st, MON2 + 12 * H + 60e3, ctx);
