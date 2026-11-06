@@ -280,6 +280,12 @@ function mineURL(k) {
   return (mineCache[k] = c.toDataURL());
 }
 const mineImg = (k, scale) => `<img class="px" src="${mineURL(k)}" width="${16 * (scale || 2)}" height="${16 * (scale || 2)}" alt="${esc(E.mineName(k))}">`;
+const flowerBitmaps = {};
+function flowerBitmap(key) {                       // P86-02 지도에 그릴 핀 꽃 16px 도트 (불러오기가 끝난 뒤부터)
+  let im = flowerBitmaps[key];
+  if (!im) { im = new Image(); im.src = spriteURL(key, 'flower'); flowerBitmaps[key] = im; }
+  return im.complete && im.naturalWidth ? im : null;
+}
 function decoBitmap(key, variant) {                // 지도에 그릴 그림 (불러오기가 끝난 뒤부터) · variant: P77-A 울타리 이음
   const art = decoArt(key) + (variant || ''); let im = decoBitmaps[art];   // 끝까지 올린 장치는 따로 (P28-05-02-04)
   if (!im) { im = new Image(); im.src = decoURL(key, variant); decoBitmaps[art] = im; }

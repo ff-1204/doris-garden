@@ -19,7 +19,7 @@ function openTeaConfirm(ids, mode, counts) {
   const what = '티백';
   const body = `<div class="rc">
     <div class="rc-list">${groups.map(g => { const F = FLOWERS[g.type], fr = fresh(g), k = key(g), n = counts[k], hat = E.isHat(g.q); return `<div class="rc-item tc-item ${n ? '' : 'off'}" style="--pc:${SPR.tea[g.type] || F.petal}">
-      <span class="rc-art tc-pair">${spriteImg(g.type, dried ? 'dried' : 'petal', 26, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'teabag', 34, false, `${F.name} ${what}`)}</span>
+      <span class="rc-art tc-pair">${spriteImg(g.type, dried ? 'dried' : 'petal', 32, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'teabag', 32, false, `${F.name} ${what}`)}</span>
       <span class="rc-main"><b>${F.name} ${raw ? '생화 티백' : '티백'}${hat ? ' <span class="chip hat-chip">🍃 햇차</span>' : ''}${fr ? ' <span class="chip fresh-chip">✨ 제철</span>' : ''}</b>
         <small><span class="stars">${starStr(g.q)}</span> · ${dried ? '말린 ' : ''}${F.name} 꽃잎 ${g.ids.length}장 중 · 티백 1개 = 꽃잎 ${per(g)}장${maxOf(g) ? '' : ` · <b class="val-down">${per(g) - g.ids.length}장 더 모아요</b>`}</small></span>
       <span class="stepper"><button type="button" data-tq="${k}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-tq="${k}|+" ${n >= maxOf(g) ? 'disabled' : ''} aria-label="늘리기">+</button></span>
@@ -46,7 +46,7 @@ function openDryConfirm(ids, counts) {
   const pick = groups.flatMap(g => src.filter(p => g.ids.includes(p.id)).sort((x, y) => y.q - x.q).slice(0, counts[g.type]).map(p => p.id));
   const body = `<div class="rc">
     <div class="rc-list">${groups.map(g => { const F = FLOWERS[g.type], n = counts[g.type]; return `<div class="rc-item tc-item ${n ? '' : 'off'}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">
-      <span class="rc-art tc-pair">${spriteImg(g.type, 'petal', 30, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'dried', 30, false, '')}</span>
+      <span class="rc-art tc-pair">${spriteImg(g.type, 'petal', 32, false, '')}<span class="sc-to">›</span>${spriteImg(g.type, 'dried', 32, false, '')}</span>
       <span class="rc-main"><b>${F.name}</b><small><span class="stars">${starStr(g.q)}</span> · 꽃잎 ${g.ids.length}장 중</small></span>
       <span class="stepper"><button type="button" data-dq="${g.type}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-dq="${g.type}|+" ${n >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>`; }).join('')}</div>
     <div class="rc-notes"><span>🌾 널면 품질이 그대로 멈추고, ${dryWhenText()} 뒤 다 말라요${cal.frozen ? ' (꽃잠 동안은 마르지 않아요)' : ''}</span><span>🫖 말린 꽃잎은 언제든 블렌딩할 수 있어요 · 다시 꽃잎으로 되돌릴 수는 없어요</span>${pick.length < src.length ? `<span>남는 꽃잎 ${src.length - pick.length}장은 그대로 있어요 · 좋은 꽃잎부터 널어요</span>` : ''}</div></div>`;
@@ -76,7 +76,7 @@ function openSellConfirm(cupIds, counts) {   // 판매는 ☕ 찻잔에서만 (P
   const step = g => `<span class="stepper"><button type="button" data-sq2="${esc(g.k)}|-" ${counts[g.k] <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${counts[g.k]}</span><button type="button" data-sq2="${esc(g.k)}|+" ${counts[g.k] >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span>`;
   const body = `<div class="rc">
     <div class="rc-list sell-list">${groups.map(g => { const c = g, vs = cups.filter(x => g.ids.includes(x.id)).map(val), sum = best(g).reduce((a, x) => a + val(x), 0);
-      return `<div class="rc-item sell-item ${counts[g.k] ? '' : 'off'}"><span class="rc-art">${c.kind === 'honey' ? honeyImg(c.type, 2) : spriteImg(c.kind === 'blend' ? c.parts[0] : c.type, 'tea', 40, false, '')}</span>
+      return `<div class="rc-item sell-item ${counts[g.k] ? '' : 'off'}"><span class="rc-art">${c.kind === 'honey' ? honeyImg(c.type, 2) : spriteImg(c.kind === 'blend' ? c.parts[0] : c.type, 'tea', 32, false, '')}</span>
         <span class="rc-main"><b>${c.kind === 'honey' ? `🍵 ${E.honeyTeaName(c.type)}` : `${c.honey ? '🍯 꿀 ' : ''}${c.kind === 'blend' ? `${c.recipe ? '✨ ' : ''}${esc(c.name)}` : FLOWERS[c.type].tea}${c.kind === 'blend' ? ' <span class="chip fresh-chip blend-chip">🫖 블렌드</span>' : teaTags(g, true)}`}${g.cold ? ' <span class="chip cold-chip">🧊 식은 차 −50%</span>' : ''}</b><small>${c.kind === 'honey' ? '🍯 꿀 한 병' : `<span class="stars">${starStr(g.q)}</span>`} · 한 잔 ${wonRange(Math.min(...vs), Math.max(...vs))} · ${g.ids.length}잔 중</small></span>
         <span class="sell-r">${step(g)}<span class="data">${won(sum)}</span></span></div>`; }).join('')}</div>
     <div class="rc-total"><div class="rc-sum"><b>받을 돈</b><b class="data good">+${won(total)}</b></div></div>
@@ -99,7 +99,7 @@ function openBagBlend(ids, counts) {
   const key = x => x.name, groups = groupType(list, key);
   counts = counts || Object.fromEntries(groups.map(g => [key(g), g.ids.length]));
   const pick = groups.flatMap(g => list.filter(x => g.ids.includes(x.id)).sort((a, b) => b.q - a.q).slice(0, counts[key(g)]).map(x => x.id));
-  const body = `<div class="rc"><div class="rc-list">${groups.map(g => { const n = counts[key(g)]; return `<div class="rc-item tc-item ${n ? '' : 'off'}"><span class="rc-art tc-pair">${spriteImg(g.parts[0], 'tea', 28, false, '')}<span class="sc-to">›</span>${spriteImg(g.parts[0], 'teabag', 32, false, '')}</span>
+  const body = `<div class="rc"><div class="rc-list">${groups.map(g => { const n = counts[key(g)]; return `<div class="rc-item tc-item ${n ? '' : 'off'}"><span class="rc-art tc-pair">${spriteImg(g.parts[0], 'tea', 32, false, '')}<span class="sc-to">›</span>${spriteImg(g.parts[0], 'teabag', 32, false, '')}</span>
       <span class="rc-main"><b>${g.recipe ? '✨ ' : ''}${esc(g.name)} 티백</b><small><span class="stars">${starStr(g.q)}</span> · ${g.parts.map(p => FLOWERS[p].name).join(' + ')} · ${g.ids.length}개 중</small></span>
       <span class="stepper"><button type="button" data-gq="${esc(key(g))}|-" ${n <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-gq="${esc(key(g))}|+" ${n >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>`; }).join('')}</div>
     <div class="rc-notes"><span>🏷️ 블렌드 티백은 찻집으로 가서 🫖 우려 팔아요 · 이름 있는 블렌드는 티백 도감에도 남아요</span></div></div>`;
@@ -133,7 +133,7 @@ function openBrewConfirm(teaIds, blendIds, counts, cup, honeyKs) {   // honeyKs:
       if (isH) return `<div class="rc-item tc-item ${c ? '' : 'off'}"><span class="rc-art tc-pair">${honeyImg(g.type, 2)}<span class="sc-to">›</span>${honeyImg(g.type, 2)}</span>
         <span class="rc-main"><b>🍵 ${E.honeyTeaName(g.type)}</b><small>창고 ${E.honeyName(g.type)} ${g.ids.length}병 중 · 한 잔 ${won(E.honeyTeaValue(g.type))}</small></span>
         <span class="stepper"><button type="button" data-bq="${esc(g.k)}|-" ${c <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${c}</span><button type="button" data-bq="${esc(g.k)}|+" ${c >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>`;
-      return `<div class="rc-item tc-item ${c ? '' : 'off'}"><span class="rc-art tc-pair">${spriteImg(isB ? g.parts[0] : g.type, 'teabag', 28, false, '')}<span class="sc-to">›</span>${spriteImg(isB ? g.parts[0] : g.type, 'tea', 32, false, '')}</span>
+      return `<div class="rc-item tc-item ${c ? '' : 'off'}"><span class="rc-art tc-pair">${spriteImg(isB ? g.parts[0] : g.type, 'teabag', 32, false, '')}<span class="sc-to">›</span>${spriteImg(isB ? g.parts[0] : g.type, 'tea', 32, false, '')}</span>
         <span class="rc-main"><b>${isB ? `${g.recipe ? '✨ ' : ''}${esc(g.name)} <span class="chip fresh-chip blend-chip">🫖 블렌드</span>` : `${F.tea}${teaTags(g)}`}</b><small><span class="stars">${starStr(g.q)}</span> · ${isB ? '블렌드 티백' : g.raw ? '생화 티백' : '티백'} ${g.ids.length}개 중</small></span>
         <span class="stepper"><button type="button" data-bq="${esc(g.k)}|-" ${c <= 0 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${c}</span><button type="button" data-bq="${esc(g.k)}|+" ${c >= g.ids.length ? 'disabled' : ''} aria-label="늘리기">+</button></span></div>`; }).join('')}</div>
     <div class="rc-notes"><span>🫖 3분 우리면 찻잔에서 팔 수 있어요 · ☕ 찻잔은 보기만 바뀌어요 (⛏️ 광산에서 구울 수도 있어요)</span><span>🧊 다음 아침 · 저녁 6시엔 식어서 <b class="val-down">값이 반</b>이 돼요 · 팔 만큼만 우려요</span></div></div>`;
@@ -168,9 +168,9 @@ function openBlendConfirm(n = 1) {
   const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
   const body = `<div class="rc">
     <div class="bc-hero" style="--pc:${SPR.tea[parts[0]] || FLOWERS[parts[0]].petal}">
-      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 36, false, '')}<small>${FLOWERS[p.type].name} ${FLOWERS[p.type].petals * n}장</small><small class="muted">${st.dried.filter(x => x.type === p.type).length}장 중</small></span>`).join('<b class="bc-plus">+</b>')}</div>
+      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 32, false, '')}<small>${FLOWERS[p.type].name} ${FLOWERS[p.type].petals * n}장</small><small class="muted">${st.dried.filter(x => x.type === p.type).length}장 중</small></span>`).join('<b class="bc-plus">+</b>')}</div>
       <span class="bc-arrow">↓</span>
-      <div class="bc-out">${spriteImg(parts[0], 'tea', 56, false, name)}<div><b>${recipe ? '✨ ' : ''}${name}</b><span class="stars">${starStr(q)}</span></div></div></div>
+      <div class="bc-out">${spriteImg(parts[0], 'tea', 48, false, name)}<div><b>${recipe ? '✨ ' : ''}${name}</b><span class="stars">${starStr(q)}</span></div></div></div>
     <div class="bc-qty"><b>몇 잔 만들까요?</b><span class="stepper"><button type="button" data-bn="-" ${n <= 1 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-bn="+" ${n >= max ? 'disabled' : ''} aria-label="늘리기">+</button></span><button type="button" class="btn small" data-bn="max" ${n >= max ? 'disabled' : ''}>최대 ${max}잔</button></div>
     <div class="rc-notes">${recipe && st.dex.blend[recipe] == null ? '<span>📖 처음 만드는 블렌드예요 · 도감에 남아요</span>' : !recipe ? `<span>📖 이름 있는 블렌드는 레시피 ${E.blendKeys(st).length}가지예요 · 이건 재료 이름으로 불러요</span>` : ''}<span>🫖 말린 꽃잎 ${used}장이 들어가요(한 잔에 꽃마다 티백 하나 몫) · 좋은 꽃잎부터 써요 · 따로 차로 만들 때보다 <b class="val-up">값이 ${recipe ? '1.5배 · 📖 레시피' : '1.2배'}</b></span></div></div>`;
   openModal('🫖 블렌딩', body, [
@@ -214,7 +214,7 @@ function renderCab(force) {
   const teaTotal = st.teas.reduce((a, t) => a + E.teaItemValue(st, t, cal), 0) + st.blends.reduce((a, b) => a + E.blendValue(b), 0);
   // 꽃잎: 차로 만들거나 꽃방에 널기
   const petalCards = petals.map(p => { const F = FLOWERS[p.type]; return `<div class="shopcard cabcard" style="--pc:${F.petal}">
-      <div class="sc-art">${spriteImg(p.type, 'petal', 52, false, F.name)}<span class="sc-count">×${p.ids.length}</span>${p.qMin <= 0.2 ? '<span class="sc-last" title="다음 6시엔 비료가 돼요">곧 시들어요</span>' : ''}</div>
+      <div class="sc-art">${spriteImg(p.type, 'petal', 48, false, F.name)}<span class="sc-count">×${p.ids.length}</span>${p.qMin <= 0.2 ? '<span class="sc-last" title="다음 6시엔 비료가 돼요">곧 시들어요</span>' : ''}</div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(p.q)}</span></div>
       ${bagNeedHTML(p.type, p.ids.length)}
       <div class="cc-acts"><button type="button" class="btn primary" data-dry="${p.ids.join(',')}">🌾 말리기</button><button type="button" class="btn" data-raw="${p.ids.join(',')}">🏷️ 티백</button></div></div>`; }).join('');
@@ -224,11 +224,11 @@ function renderCab(force) {
   if (!dryTypes.includes(ui.dryTab)) ui.dryTab = 'all';
   const dryN = k => st.drying.filter(d => d.type === k).length;
   const dryShow = k => ui.dryTab === 'all' || ui.dryTab === k;
-  const dryTabs = dryTypes.length > 1 ? `<div class="dexchips dry-tabs" role="tablist" aria-label="꽃방 꽃잎">${[['all', '전체', st.drying.length], ...dryTypes.map(k => [k, FLOWERS[k].name, dryN(k)])].map(([k, nm, n]) => `<button type="button" class="dexchip" role="tab" data-drt="${k}" aria-pressed="${ui.dryTab === k}">${k === 'all' ? '' : spriteImg(k, 'dried', 18, false, '')}<span>${nm}</span><span class="data">${n}</span></button>`).join('')}</div>` : '';
+  const dryTabs = dryTypes.length > 1 ? `<div class="dexchips dry-tabs" role="tablist" aria-label="꽃방 꽃잎">${[['all', '전체', st.drying.length], ...dryTypes.map(k => [k, FLOWERS[k].name, dryN(k)])].map(([k, nm, n]) => `<button type="button" class="dexchip" role="tab" data-drt="${k}" aria-pressed="${ui.dryTab === k}">${k === 'all' ? '' : spriteImg(k, 'dried', 16, false, '')}<span>${nm}</span><span class="data">${n}</span></button>`).join('')}</div>` : '';
   // 말리는 중은 같은 꽃 · 같은 진행(5% 단위)이면 한 장 (×개수)
   const dryGroups = groupBy(st.drying.filter(d => dryShow(d.type)), d => [d.type, Math.round((1 - d.leftH / E.DRY_H) * 20), !!d.auto].join('|'));   // 자동 건조대가 넌 것은 따로 (다 마르면 티백, P28-10-02)
   const dryingCards = dryGroups.map(d => { const F = FLOWERS[d.type], pr = Math.round((1 - d.leftH / E.DRY_H) * 100); return `<div class="shopcard cabcard drying" style="--pc:${F.petal}">
-      <div class="sc-art">${spriteImg(d.type, 'petal', 52, false, F.name)}<span class="chip sc-form">${d.auto ? '🧺 선반' : '말리는 중'}</span>${d.ids.length > 1 ? `<span class="sc-count">×${d.ids.length}</span>` : ''}</div>
+      <div class="sc-art">${spriteImg(d.type, 'petal', 48, false, F.name)}<span class="chip sc-form">${d.auto ? '🧺 선반' : '말리는 중'}</span>${d.ids.length > 1 ? `<span class="sc-count">×${d.ids.length}</span>` : ''}</div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starStr(d.q)}</span></div>
       <div class="cc-q"><span class="qbar"><i style="width:${pr}%;background:#b49a74"></i></span><span class="data">${pr}%</span></div>
       <div class="cc-meta">${realH(E.dryLeftH(st, d) / (st.speed || 1))} 뒤 ${d.auto ? '티백이 돼요' : '다 말라요'}</div></div>`; }).join('');
@@ -243,7 +243,7 @@ function renderCab(force) {
   const driedCards = dried.map(d => {
     const F = FLOWERS[d.type], selN = d.ids.filter(id => ui.blendSel.includes(id)).length, canSel = selN < d.ids.length && ui.blendSel.length < 3 && !ui.blendSel.some(id => st.dried.find(p => p.id === id).type === d.type);
     return `<div class="shopcard cabcard driedcard ${selN ? 'picked' : ''}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">
-      <div class="sc-art">${spriteImg(d.type, 'dried', 52, false, F.name)}<span class="chip sc-form">말린 꽃잎</span><span class="sc-count">×${d.ids.length}</span></div>
+      <div class="sc-art">${spriteImg(d.type, 'dried', 48, false, F.name)}<span class="chip sc-form">말린 꽃잎</span><span class="sc-count">×${d.ids.length}</span></div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starRange(d)}</span></div>
       ${bagNeedHTML(d.type, d.ids.length)}
       <div class="cc-acts"><button type="button" class="btn primary" data-bsel="${d.type}" ${canSel ? '' : 'disabled'}>${selN ? '✓ 블렌딩' : '🫖 블렌딩'}</button><button type="button" class="btn" data-makedried="${d.ids.join(',')}">🏷️ 티백</button></div></div>`;
@@ -278,19 +278,19 @@ function renderCab(force) {
   // 🏷️ 티백 (찻집): 생화 티백 · 티백 · 블렌드 티백 → 🫖 우림
   const bagged = st.blends.filter(x => x.bagged), loose = st.blends.filter(x => !x.bagged);
   const teaCards = teas.map(t => { const F = FLOWERS[t.type]; return `<div class="shopcard cabcard teacard ${t.raw ? 'raw' : ''} ${t.hat ? 'hat' : ''}" style="--pc:${SPR.tea[t.type] || F.petal}">
-      <div class="sc-art"><span class="sc-pair">${spriteImg(t.type, 'teabag', 52, false, `${F.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(t.type, 'tea', 30, false, F.tea)}</span></span><span class="chip sc-form">${t.raw ? '🌸 생화 티백' : '🏷️ 티백'}</span><span class="sc-count">×${t.ids.length}</span></div>
+      <div class="sc-art"><span class="sc-pair">${spriteImg(t.type, 'teabag', 48, false, `${F.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(t.type, 'tea', 32, false, F.tea)}</span></span><span class="chip sc-form">${t.raw ? '🌸 생화 티백' : '🏷️ 티백'}</span><span class="sc-count">×${t.ids.length}</span></div>
       <div class="cc-name"><b>${F.tea}</b><span class="stars">${starStr(t.q)}</span></div>
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('tea', t.type)}</div>   <!-- P79-02 맛 한 줄 -->
       ${t.hat || t.fresh ? `<div class="cc-meta">${teaTags({ ...t, raw: false })}</div>` : ''}
       <button type="button" class="btn primary" data-brew="${t.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`; }).join('')
     + groupType(bagged, b => b.name).map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
-      <div class="sc-art"><span class="sc-pair">${spriteImg(b.parts[0], 'teabag', 52, false, `${b.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(b.parts[0], 'tea', 30, false, b.name)}</span></span><span class="chip sc-form blend">🫖 블렌드 티백</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
+      <div class="sc-art"><span class="sc-pair">${spriteImg(b.parts[0], 'teabag', 48, false, `${b.name} 티백`)}<span class="sc-to" aria-hidden="true">›</span><span class="sc-bloom">${spriteImg(b.parts[0], 'tea', 32, false, b.name)}</span></span><span class="chip sc-form blend">🫖 블렌드 티백</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
       <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starRange(b)}</span></div>
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
       <button type="button" class="btn primary" data-brewblend="${b.ids.join(',')}" ${shopOpen ? '' : 'disabled'}>${shopOpen ? '🫖 우리기' : '🔒 준비 중'}</button></div>`).join('');   // P82-01 여러 잔을 한 번에 만들면 같은 블렌드는 한 장 (×개수)
   // 🫖 블렌드 (제다실): 아직 티백이 아닌 블렌드 → 🏷️ 티백
   const looseCards = groupType(loose, b => b.name).map(b => `<div class="shopcard cabcard teacard blendcard" style="--pc:${SPR.tea[b.parts[0]] || FLOWERS[b.parts[0]].petal}">
-      <div class="sc-art"><span class="blend-art n${b.parts.length}">${b.parts.map(p => spriteImg(p, 'dried', 40, false, FLOWERS[p].name)).join('')}</span><span class="chip sc-form blend">🫖 블렌드</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
+      <div class="sc-art"><span class="blend-art n${b.parts.length}">${b.parts.map(p => spriteImg(p, 'dried', 32, false, FLOWERS[p].name)).join('')}</span><span class="chip sc-form blend">🫖 블렌드</span>${b.ids.length > 1 ? `<span class="sc-count">×${b.ids.length}</span>` : ''}</div>
       <div class="cc-name"><b>${b.recipe ? '✨ ' : ''}${esc(b.name)}</b><span class="stars">${starRange(b)}</span></div>
       <div class="cc-taste"><b>맛</b> ${E.teaTaste('blend', b.recipe, b.parts)}</div>
       <button type="button" class="btn primary" data-bagblend="${b.ids.join(',')}">🏷️ 티백</button></div>`).join('');
@@ -328,9 +328,9 @@ function renderCab(force) {
     ${teaCards || honeyCards ? `<div class="shopgrid cabgrid">${teaCards}${honeyCards}</div>` : '<div class="cab-empty"><span>🏷️</span><div><b>티백이 없어요</b> <span class="muted">🌿 제다실에서 티백을 만들면 여기로 와요</span></div></div>'}</div>`;
   // 🌿 제다실: 생화 · 꽃방 · 말린 꽃잎 · 블렌딩 · 블렌드 → 모두 🏷️ 티백으로 (10-06)
   $('#p-tearoom').innerHTML = `<div class="stack">
-    <div class="shop-news"><span>${cal.frozen ? '🌙 꽃잠에는 품질이 그대로예요' : '생화 꽃잎의 <b class="val-down">품질이 12시간에 20%씩 줄어요</b> · 꽃방에 말리면 멈춰요'}</span><span>🏷️ 티백은 찻집으로 가요</span></div>
+    <div class="shop-news"><span>${cal.frozen ? '🌙 꽃잠에는 품질이 그대로예요' : '생화 꽃잎의 <b>품질이 12시간에 20%씩 줄어요</b> · 꽃방에 말리면 멈춰요'}</span><span>🏷️ 티백은 찻집으로 가요</span></div>
     <nav class="flow-steps" aria-label="제다실 흐름">${[['tr-petal', '🌸', '생화', st.petals.length], ['tr-dry', '🌾', '꽃방', st.drying.length], ['tr-dried', '🍂', '말린 꽃잎', st.dried.length], ['tr-blend', '🫖', '블렌드', loose.length]].map(([id, ic, nm, n], j) => `${j ? '<span class="fs-arrow" aria-hidden="true">›</span>' : ''}<button type="button" class="fs-step ${n ? '' : 'zero'}" data-jump="${id}"><span>${ic}</span>${nm}<b class="data">${n}</b></button>`).join('')}<span class="fs-arrow" aria-hidden="true">›</span><button type="button" class="fs-step out" data-go="cab"><span>🏷️</span>찻집으로</button></nav>
-    <div class="cab-head" id="tr-petal"><span class="sb-title">🌸 생화${st.petals.length ? ` <span class="sh-n">${st.petals.length}</span>` : ''}</span><span class="muted">그냥 두면 <b class="val-down">품질이 줄어요</b> · 바로 티백(<b class="val-down">값 −10%</b>) 또는 말리기</span>${st.petals.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-dry="all">모두 말리기</button><button type="button" class="btn small" data-raw="all">모두 티백</button></span>` : ''}</div>
+    <div class="cab-head" id="tr-petal"><span class="sb-title">🌸 생화${st.petals.length ? ` <span class="sh-n">${st.petals.length}</span>` : ''}</span><span class="muted">그냥 두면 품질이 줄어요 · 바로 티백(값 −10%) 또는 말리기</span>${st.petals.length > 1 ? `<span class="right"><button type="button" class="btn small primary" data-dry="all">모두 말리기</button><button type="button" class="btn small" data-raw="all">모두 티백</button></span>` : ''}</div>
     ${petalCards ? `<div class="shopgrid cabgrid">${petalCards}</div>` : '<div class="cab-empty"><span>🧺</span><div><b>꽃잎이 없어요</b> <span class="muted">꽃이 피면 정원에서 거둬요</span></div></div>'}
     <div class="cab-head" id="tr-dry"><span class="sb-title">🌾 꽃방${st.drying.length ? ` <span class="sh-n">${st.drying.length}</span>` : ''}</span><span class="muted">${dryWhenText()}이면 다 말라요${E.placedOf(st, 'autodryer').length ? ' · ⚙️ 자동 건조기가 꽃잎을 바로 널어요' : ''}${E.placedOf(st, 'dryshelf').length ? ` · 🧺 건조 선반 ${E.placedOf(st, 'dryshelf').length}개가 아침 · 저녁 6시마다 생화를 ${E.placedOf(st, 'dryshelf').length * E.rackN()}장까지 널어 티백까지 만들어요` : ''}</span></div>
     ${dryTabs}

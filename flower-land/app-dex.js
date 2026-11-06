@@ -121,11 +121,11 @@ function econHTML() {
   const list = [...rows.filter(r => econKnown(r.key)), ...rows.filter(r => !econKnown(r.key))];
   const cols = [['값', '화원 값'], ['자람', '다 자람'], ['핌', '다시 핌'], ['수확', '한 해 수확'], ['찻값', '한 잔 ★3'], ['수입', '한 해 수입'], ['땅', '좋아하는 땅']];
   const tr = r => {
-    if (!econKnown(r.key)) return `<tr class="locked"><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 22, true, '아직 모르는 꽃')}<span>???</span></span></th>${cols.map(c => `<td data-l="${c[1]}">?</td>`).join('')}</tr>`;
+    if (!econKnown(r.key)) return `<tr class="locked"><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 16, true, '아직 모르는 꽃')}<span>???</span></span></th>${cols.map(c => `<td data-l="${c[1]}">?</td>`).join('')}</tr>`;
     const L = LANDS[r.land];
     const v = [won(r.price), realH(r.mature * E.MONTH_H), `${realH(E.RIPE_H)} <small>다 자란 뒤 · 거둔 뒤</small>`, `${r.harvests}번 × 1~${r.petals}장 <small>티백 하나에 ${r.petals}장</small>`,
       `${won(r.tea)} <small>★1 ${r.star[0].toLocaleString('ko-KR')} ~ ★5 ${r.star[4].toLocaleString('ko-KR')}</small>`, `<b>${won(r.income)}</b>`, `<span><span class="sw" style="background:${L.color}"></span>${L.name}</span>`];
-    return `<tr><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 22, false, r.name)}<span>${r.name}</span><small class="muted">${LIFE[r.life]}</small></span></th>${v.map((x, i) => `<td data-l="${cols[i][1]}" class="${i === 5 ? 'ec-inc' : ''}">${x}</td>`).join('')}</tr>`;
+    return `<tr><th scope="row"><span class="ec-name">${spriteImg(r.key, 'flower', 16, false, r.name)}<span>${r.name}</span><small class="muted">${LIFE[r.life]}</small></span></th>${v.map((x, i) => `<td data-l="${cols[i][1]}" class="${i === 5 ? 'ec-inc' : ''}">${x}</td>`).join('')}</tr>`;
   };
   const seg = `<span class="seg ec-seg" role="group" aria-label="정렬">${ECON_SORTS.map(([k, l]) => `<button type="button" data-es="${k}" aria-pressed="${k === by}">${l}</button>`).join('')}</span>`;
   return `<div class="card econ"><div class="yg-head"><b>📊 꽃별 셈</b>${seg}</div>
@@ -202,7 +202,7 @@ function renderDex(force) {
           ${r.score != null && !E.slowView(st) ? `<div class="rec-score"><b>🏅 정원 점수 ${esc(r.score)}점</b><small>${r.prevBest ? (r.score > r.prevBest ? `최고 기록이에요 · 전보다 +${r.score - r.prevBest}` : `최고 ${esc(r.prevBest)}점`) : '첫 기록'}</small><small class="rec-parts">${[['땅', 'lands'], ['꽃', 'flowers'], ['핀 꽃', 'bloom'], ['블렌드', 'blend'], ['꿀', 'honey'], ['도감', 'dex'], ['장식', 'decos'], ['주문', 'orders'], ['선물', 'gifts']].filter(([, k]) => r.scoreParts[k]).map(([n, k]) => `${n} ${esc(r.scoreParts[k])}`).join(' · ')}</small></div>` : ''}
           ${recVsHTML(r)}${ri === 0 ? bonusRecHTML() + seasonHintHTML() : ''}
           <div class="rec-chips">
-            <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 22, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
+            <span class="rec-chip">${r.best ? `${spriteImg(r.best.type, 'tea', 16, false, FLOWERS[r.best.type].tea)}<span><small>가장 좋은 차</small><b>${FLOWERS[r.best.type].tea} <span class="stars">${starStr(r.best.q)}</span></b></span>` : '<span class="rec-ic">🍵</span><span><small>가장 좋은 차</small><b class="muted">없어요</b></span>'}</span>
             ${r.titleOn && E.TITLES[r.titleOn] ? `<span class="rec-chip">${titleImg(r.titleOn, 22, false)}<span><small>대표 칭호</small><b>${E.TITLES[r.titleOn].name}</b></span></span>` : ''}<span class="rec-chip"><span class="rec-ic">📖</span><span><small>도감</small><b class="data">${esc(r.dex)} / ${esc(r.dexTotal || 32)}</b></span></span>
           </div>
           <div class="tally">${order.map(k => `<i style="width:${r.counts[k] / total * 100}%;background:${LANDS[k].color}" title="${LANDS[k].name} ${esc(r.counts[k])}칸"></i>`).join('')}</div>

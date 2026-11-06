@@ -48,7 +48,7 @@ function renderManual(force) {
       </div><figcaption>도구가 없으면 흐린 단추를 눌러 바로 사요</figcaption></div>`,
       list(['두 포기 넘게 돌볼 게 있으면 위 칩 줄의 💧 <b>모두 물 주기</b> · 🧺 <b>모두 거두기</b>로 한 번에', '🧺 정원 저장고(⛏️ 광산 입구 선반)엔 2시간마다 물병 · 비료 · 흙 같은 것이 하나씩 쌓여요 — 놓쳐도 괜찮아요', '돌보지 않은 꽃은 기운 · 품질이 조금씩 떨어질 뿐 시들지 않아요'])),
     sec('shop', '화원과 창고', '심는 달에만 팔아요',
-      fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 40, false, ''), '씨앗')}${item(spriteImg('lavender', 'form', 40, false, ''), '묘목')}${item(spriteImg('gamguk', 'form', 40, false, ''), '모종')}${item(spriteImg('lotus', 'form', 40, false, ''), '연근')}${item(spriteImg('dongbaek', 'form', 40, false, ''), '나무')}</div>`,
+      fig(`<div class="mn-flow">${item(spriteImg('chamomile', 'form', 32, false, ''), '씨앗')}${item(spriteImg('lavender', 'form', 32, false, ''), '묘목')}${item(spriteImg('gamguk', 'form', 32, false, ''), '모종')}${item(spriteImg('lotus', 'form', 32, false, ''), '연근')}${item(spriteImg('dongbaek', 'form', 32, false, ''), '나무')}</div>`,
         '산 것은 📦 <b>창고</b>로 와요 · 창고에서도 품질이 조금씩 떨어지니 너무 오래 두지 마세요'),
       list(['💐 화원 꽃잎으로 만든 차는 산 값만큼만 돌아와요 — 레시피 · 겨울 · 꽃잠 값은 직접 거둔 꽃잎에만 붙어요', `💐 화원 씨앗은 🌱 정원 등급이 오를수록 더 좋은 품질로 와요${slow ? '' : ` (1등급 ${E.pct(E.SEED_Q0)}% · 등급마다 +${E.pct(E.SEED_Q_STEP)}%)`}`, '🗓️ 꽃잠엔 다음 해 씨앗을 싸게 예약할 수 있어요 — 심는 날 아침에 와요', '🌸 꽃잎도 찻값의 60%로 살 수 있어요 — 품질 ★1 · 제다실로 와요 · 경험치 · 도감은 없어요', '싹이 안 튼 씨앗 · 품질이 다 떨어진 것은 🌱 비료가 돼요', '꽃은 심는 달 · 쉬는 달 · 꽃잠에 옮겨 심을 수 있어요', '화원엔 그 달의 장식도 하나씩 들어와요 — 놓아 두면 정원이 반겨요'])),
     sec('tea', '찻집', '매달 열어요',
