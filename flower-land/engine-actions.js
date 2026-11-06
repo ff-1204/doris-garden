@@ -336,28 +336,40 @@ function makeTeaDried(st, ids, ctx) {
   weekNote(st, 'teabag', null, r.bags, ctx); addXp(st, 'teabag', r.bags, ctx);   // P54
   return ok(`말린 꽃잎 ${r.used}장으로 티백 ${r.bags}개를 만들었어요`);
 }
-// P12-08 블렌딩: 언제든 (변경 10-06, 예전엔 꽃잠에만), 서로 다른 말린 꽃잎 2~3장으로 블렌딩 차 1잔
-function blend(st, ids, ctx) {
-  const cal = calendar(st.virtual);
+// P82-02 티백 하나에 드는 꽃잎 수 · 가진 수로 모자라는 장 수 (0이면 넉넉함)
+const bagNeed = (type, have) => ({ per: FLOWERS[type].petals, short: Math.max(0, FLOWERS[type].petals - have) });
+// P82-01 블렌딩 수량: 만들 수 있는 최대 잔 · 잔마다 쓸 꽃잎 계획 (화면 미리보기와 blend가 같은 계획을 씀)
+const blendMax = (st, parts) => Math.min(...parts.map(t => Math.floor(st.dried.filter(p => p.type === t).length / FLOWERS[t].petals)));
+function blendPlan(st, parts, n) {   // 꽃마다 좋은 꽃잎부터 petals장씩 한 잔 → [{ list, q, hat }] (첫 잔이 가장 좋음)
+  const sorted = parts.map(t => st.dried.filter(p => p.type === t).sort((a, b) => b.q - a.q));
+  return Array.from({ length: n }, (_, i) => {
+    const list = parts.flatMap((t, j) => sorted[j].slice(i * FLOWERS[t].petals, (i + 1) * FLOWERS[t].petals));
+    return { list, q: list.reduce((a, p) => a + p.q, 0) / list.length, hat: list.every(p => isHat(p.q)) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
+  });
+}
+// P12-08 블렌딩: 언제든 (변경 10-06, 예전엔 꽃잠에만), 서로 다른 말린 꽃잎 2~3장으로 블렌딩 차를 n잔 (P82-01, 기본 1잔)
+function blend(st, ids, ctx, n = 1) {
   const picked = st.dried.filter(p => ids.includes(p.id)), parts = [...new Set(picked.map(p => p.type))];   // P77-C 고른 건 꽃 종류 — 꽃마다 좋은 것부터 petals장(티백 하나 몫)씩
+  n = Math.max(1, Math.floor(n) || 1);
   if (parts.length < 2 || parts.length > 3) return no('말린 꽃잎 2~3가지를 골라 주세요');
   if (picked.length !== parts.length) return no('서로 다른 꽃의 꽃잎을 골라 주세요');
   if (!blendRecipe(parts, st)) return no(`정해진 블렌드만 만들 수 있어요 · ${blendNearText(parts, st)}`);   // P79-05 레시피 밖 짝은 막음 (예전에 만든 블렌드는 × 1.2 그대로 팖)
-  const short = parts.filter(t => st.dried.filter(p => p.type === t).length < FLOWERS[t].petals);
-  if (short.length) return no(`블렌드엔 꽃마다 티백 하나 몫이 들어가요 · ${short.map(t => `${FLOWERS[t].name} ${FLOWERS[t].petals - st.dried.filter(p => p.type === t).length}장`).join(' · ')} 더 모아요`);
-  const list = parts.flatMap(t => st.dried.filter(p => p.type === t).sort((a, b) => b.q - a.q).slice(0, FLOWERS[t].petals));
-  for (const p of list) st.dried.splice(st.dried.indexOf(p), 1);
-  const q = list.reduce((a, p) => a + p.q, 0) / list.length, recipe = blendRecipe(parts, st);
-  const name = recipe ? BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
+  const have = t => st.dried.filter(p => p.type === t).length, need = t => FLOWERS[t].petals * n, short = parts.filter(t => have(t) < need(t));
+  if (short.length) return no(`블렌드${n > 1 ? ` ${n}잔` : ''}엔 꽃마다 티백 ${n > 1 ? `${n}개` : '하나'} 몫이 들어가요 · ${short.map(t => `${FLOWERS[t].name} ${need(t) - have(t)}장`).join(' · ')} 더 모아요`);
+  const recipe = blendRecipe(parts, st), name = recipe ? BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
   seeYear(st, 'blend', recipe || parts.slice().sort().join('+'));
-  const b = { id: nid(st), parts, q, recipe, name, hat: list.every(p => isHat(p.q)) };   // 10-24: ★5 꽃잎만 섞으면 블렌드도 🍃 햇차 (값은 블렌드 배율 그대로, 햇차 잔 수 · 칭호에 셈)
-  st.blends.push(b);
+  const blends = blendPlan(st, parts, n).map(c => {
+    for (const p of c.list) st.dried.splice(st.dried.indexOf(p), 1);
+    const b = { id: nid(st), parts, q: c.q, recipe, name, hat: c.hat };
+    st.blends.push(b);
+    return b;
+  });
   if (recipe) {
     if (!st.dex.blend[recipe]) addLog(st, 9, `도감에 등록: ${name}`, ctx);
-    st.dex.blend[recipe] = Math.max(st.dex.blend[recipe] || 0, q);
+    st.dex.blend[recipe] = Math.max(st.dex.blend[recipe] || 0, blends[0].q);   // 첫 잔이 가장 좋음
   }
-  weekNote(st, 'blend', { recipe }, 1, ctx); addXp(st, 'blend', 1, ctx);   // P28-09 · P54
-  return ok(`${josa(name, '을/를')} 만들었어요`, { blend: b });
+  weekNote(st, 'blend', { recipe }, n, ctx); addXp(st, 'blend', n, ctx);   // P28-09 · P54 · P82-01 잔 수만큼
+  return ok(n > 1 ? `${name} ${n}잔을 만들었어요` : `${josa(name, '을/를')} 만들었어요`, { blend: blends[0], blends });
 }
 // 예전 규칙(P17-01: 우리지 않고 바로 팔기)의 판매 함수 — 화면은 찻잔(sellCups)만 씀. 예전 테스트 · 도구를 위해 남겨 둠
 function sellBlends(st, ids, ctx) {              // (R-D2 11-05: 화면은 brew → sellCups만 씀 · 테스트 · 시뮬 호환으로 남김)
