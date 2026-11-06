@@ -133,7 +133,7 @@ const CRAFTS = {
   autodryer: { name: '자동 건조기', need: { stone: 20, dirt: 10, quartz: 3 }, deco: 'autodryer' },   // P72-02 건조 선반 + 돌 5 · 석영 3 (생장등처럼 유리 창)
   teastand: { name: '찻집 도우미', need: { feldspar: 4, mica: 2, stone: 10 }, deco: 'teastand' },
 };
-// P44-01 ⛏️ 광산 공방 (11-01 사용자 확정): 정원에 놓는 12가지 — 재료로 만들기(CRAFTS) 또는 💰 돈으로 사기(값). 비료 · 호미 · 가위 · 찻잔은 공방 밖 "재료 만들기"
+// P44-01 ⛏️ 광산 공방 (11-01 사용자 확정): 정원에 놓는 12가지 — 재료로 만들기(CRAFTS) 또는 💰 돈으로 사기(값). 찻잔은 공방 밖 "재료 만들기" · 키우는 도구는 P83-02 TOOL_CRAFTS(값은 SUPPLIES)
 const WORKSHOP = { stonewall: 500, fossilcase: 25000, amberlamp: 20000, oldpot: 15000, jar: 8000, heatmat: 15000, growlight: 30000, greenhouse: 120000, dryshelf: 18000, autodryer: 30000, teastand: 30000 };   // P73-02 🧱 돌담 500원 · P72-02 ⚙️ 자동 건조기 30,000원 (건조 선반 18,000원 한 단계 위 — 생장등 · 찻집 도우미 값)
 const WORKSHOP_KEYS = Object.keys(WORKSHOP);
 // P44-04 공방 효과 — 정원에 놓았을 때만(창고면 쉼). 둘레 효과는 꽃마다 한 번, 광산 · 씨앗 효과는 여러 개 놓아도 한 번
@@ -167,6 +167,10 @@ function workshopBuy(st, k, ctx) {               // 💰 돈으로 사기
   if (first) addLog(st, 9, `도감에 등록: 🪴 ${DECOS[C.deco].name}`, ctx);
   return ok(`${josa(C.name, '을/를')} 샀어요 · 창고에서 정원에 놓을 수 있어요`, { deco: d });
 }
+  // P83-02 (11-06 사용자 확정): 키우는 도구 여섯을 모두 재료로 — 재료 값이 화원 값과 비슷하게 (흙 30 · 돌 50 · 장석 · 석영 250원으로 셈: 물병 50 = 돌 1 · 바구니 500 = 돌 5 + 장석 1 · 삽 500 = 돌 5 + 석영 1 · 호미 400 = 돌 3 + 장석 1 그대로)
+  water: { name: '물병', need: { stone: 1 }, supply: 'water', desc: '돌 1 → 💧 물병 1개' },
+  basket: { name: '바구니', need: { stone: 5, feldspar: 1 }, supply: 'basket', desc: '돌 5 · 장석 1 → 🧺 바구니 1개(꽃잎 거두기 10번)' },
+  shovel: { name: '삽', need: { stone: 5, quartz: 1 }, supply: 'shovel', desc: '돌 5 · 석영 1 → 🪏 삽 1개(옮겨심기 10번)' },
 const CRAFT_KEYS = Object.keys(CRAFTS);
 const canCraft = (st, k) => { const C = Object.prototype.hasOwnProperty.call(CRAFTS, k) ? CRAFTS[k] : null, bag = (st.mine && st.mine.bag) || {}; return !!C && Object.entries(C.need).every(([n, q]) => (bag[n] || 0) >= q); };
 function craft(st, k, ctx) {
@@ -211,6 +215,7 @@ function giftPot(st, ctx, want) {                // want: 안내 창에서 보�
   const tl = st.tiles[f.y * W + f.x]; tl.t = F.t; tl.m = F.m;          // 화분 흙째 옮겨 심음
   st.flowers.push(f);
   st.gift = cal.abs; st.firstFlower = type;
+const TOOL_CRAFTS = ['water', 'fert', 'hoe', 'shears', 'basket', 'shovel'];   // P83-02 공방 「🧺 키우는 도구」 카드 차례 (= SUPPLIES 키 — 재료가 모자라면 그 카드에서 buySupply)
   if (cal.frozen) {                               // 꽃잠엔 거둘 수 없으니 티백 2개도 (QA 7회차: 첫 쪽지를 들어줄 수 있게) — P22-05 꾸러미 티백 1개는 이 둘 중 하나로 셈
     for (let i = 0; i < 2; i++) st.teas.push({ id: nid(st), type, q: 0.8, seasonKey: -1, hat: false, gift: true });   // gift: 첫걸음 수확으로 치지 않음
     st.dex.teabag = st.dex.teabag || {}; st.dex.teabag[type] = true;
