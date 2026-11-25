@@ -1,5 +1,5 @@
 // 도리의 정원 — 게임 규칙 엔진 조각 10/10: 저장 파일 · 예전 저장 보정(MIGRATIONS · onOpen · migrateSave) · ☁️ 구글 드라이브
-// P66(11-03): 예전 한 파일 engine.js(줄 3544 ~ 3904)를 구역 순서 그대로 옮김. 엔진 조각 · 화면 파일은 모두 같은 전역 이름 공간을 써요 — 차례는 engine.js의 ENGINE_PARTS(index.html도 같은 차례)
+// P66(11-03): 예전 한 파일 engine.js(줄 3544 ~ 3904)를 구역 순서 그대로 옮김. 엔진 조각끼리는 같은 이름 공간을 써요(브라우저에선 함수 하나로 묶여 화면 파일과는 따로, P94-05) — 차례는 engine.js의 ENGINE_PARTS
 // 불릴 때 바로 실행되는 최상위 코드(표 만들기 등)는 앞 조각 이름만 쓸 수 있어요. 함수 몸 안에서는 뒤 조각 이름도 돼요(부를 때 찾음). 화면과 분리 — DOM을 쓰지 않아요
 // ⚠️ MIGRATIONS는 이 파일에 한 배열로 · 순서 · 글자 그대로 (st.mig가 몇 번째까지 했는지 셈 — 기능 조각 옆으로 흩지 않음). 보정 함수가 다른 조각의 함수
 //   (newBoard · MINE_W · MINE_H · MINE_MAX_E · SPEED_V · seedQ · trimLetterBox · pct · yearOf …)를 부르니, 그 함수를 바꾸면 옛 저장을 옮긴 결과도 바뀌어요 (tests/snapshot.test.js가 봄)

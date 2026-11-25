@@ -1,11 +1,12 @@
 // 도리의 정원 (Dori's Garden) — 화면: 공통 · 저장 · 파일 저장하기 · 불러오기 · 화면 상태 · 짧은 알림 · 위 막대
 // 화면 코드는 app.js → app-journal → app-garden → app-shop → app-teashop → app-dex → app-manual → app-cloud → app-main 순서로 불려요 (index.html).
-// 모두 같은 전역 이름 공간을 써요 (예전 한 파일 app.js를 10-24에 섹션 그대로 나눔). 불릴 때 바로 실행되는 코드는 앞 파일 것만 쓸 수 있어요
+// 화면 파일끼리는 모두 같은 전역 이름 공간을 써요 — 엔진은 묶음 안에 따로 있어요 (예전 한 파일 app.js를 10-24에 섹션 그대로 나눔). 불릴 때 바로 실행되는 코드는 앞 파일 것만 쓸 수 있어요
 'use strict';
 const E = window.Engine;
-if (!E) throw new Error('엔진(window.Engine)이 없어요 — 배포 직후 옛 캐시라 새로 읽는 중이면 곧 다시 열려요');   // P66 여기서 멈춰야 load()가 멀쩡한 저장을 「열지 못한 정원」으로 보관하지 않음 (예전엔 다음 줄 = E 구조 분해가 멈춰 줬음)
-// FLOWERS · FLOWER_KEYS · FORM · LIFE · LANDS · LAND_KEYS · MONTHS · SEASONS · W · H · HOUR · josa · monthName은 엔진 조각(engine-*.js)의 전역 이름을 그대로 읽어요
-// (P66 — 엔진도 같은 전역 이름 공간이라 여기서 다시 선언하면 이 파일이 SyntaxError로 통째로 멈춤 · tests/globals.test.js가 봄)
+if (!E) throw new Error('엔진(window.Engine)이 없어요 — 배포 직후 옛 캐시면 잠시 뒤 새로고침하면 열려요');   // P66 여기서 멈춰야 load()가 멀쩡한 저장을 「열지 못한 정원」으로 보관하지 않음 (예전엔 다음 줄 = E 구조 분해가 멈춰 줬음)
+// 자주 쓰는 엔진 이름 열셋은 여기서 한 번 꺼내 맨 이름으로 써요 (P94-05 — 엔진은 묶음 안에 있어 전역에 없어요). 그 밖의 엔진 이름은 E.이름으로
+// 이 줄에 없는 엔진 이름을 E. 없이 쓰면 브라우저에서 ReferenceError — tests/globals.test.js가 tools/free-names.js로 봐요
+const { FLOWERS, FLOWER_KEYS, FORM, LIFE, LANDS, LAND_KEYS, MONTHS, SEASONS, W, H, HOUR, josa, monthName } = E;
 const $ = s => document.querySelector(s);
 const KEY = 'flower-land-v3';
 const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
