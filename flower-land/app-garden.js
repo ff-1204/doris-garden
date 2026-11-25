@@ -118,14 +118,25 @@ function revealTile(x, y) {
   const top = cy < s.scrollTop + m ? cy - m : cy > s.scrollTop + h - m ? cy + m - h : s.scrollTop;
   if (left !== s.scrollLeft || top !== s.scrollTop) s.scrollTo({ left, top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
-$('#mapZoom').innerHTML = uiImg('zoom'); $('#shareBtn').innerHTML = uiImg('share');   // P89-03
+$('#mapZoom').innerHTML = uiImg('zoom', 1); $('#shareBtn').innerHTML = uiImg('share', 1);   // P89-03 · P95 28px 단추에 16px 그림
 $('#mapZoom').addEventListener('click', () => { ui.zoom = ui.zoom === 2 ? 1 : 2; $('#mapZoom').setAttribute('aria-pressed', String(ui.zoom === 2)); resize(); feedback(cell > 16 ? '🔍 지도를 크게 볼게요 · 끌어서 둘러봐요' : '🔍 지도를 작게 볼게요'); });   // R-C4
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-const LCOL = Object.fromEntries(LAND_KEYS.map(k => [k, hex(LANDS[k].color)]));
+const LBASE = Object.fromEntries(LAND_KEYS.map(k => [k, hex(LANDS[k].color)]));
+// P95 지도 색은 테마 토큰을 따라요 (style.css --map-*): 땅 색에 밝은 빛을 조금 섞고, 황무지는 모래색, 밤 시간 덧칠은 옅게. 범례 · 도감의 땅 네모는 LANDS 색 그대로
+let LCOL = LBASE, MAPNIGHT = [14, 22, 52, 0.18];
+function mapTheme() {
+  const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim(), rgb = (s, d) => { const a = s.split(',').map(Number); return a.length === 3 && a.every(isFinite) ? a : d; };
+  const wash = rgb(v('--map-wash'), [255, 255, 255]), amt = Math.min(1, Math.max(0, +v('--map-wash-amt') || 0)), bar = v('--map-barren');
+  LCOL = Object.fromEntries(LAND_KEYS.map(k => [k, (k === 'barren' && /^#[0-9a-f]{6}$/i.test(bar) ? hex(bar) : LBASE[k]).map((c, i) => Math.round(c + (wash[i] - c) * amt))]));
+  const na = +v('--map-night-amt'); MAPNIGHT = [...rgb(v('--map-night'), [14, 22, 52]), isFinite(na) && na > 0 ? na : 0.18];
+  for (const k of Object.keys(patCache)) delete patCache[k];   // 무늬 색은 땅 밝기로 고르니 다시 만듦
+}
 // P28-03 🧩 땅 무늬 보기 (M4-2 10-30): decos.js LAND_PATTERNS를 땅마다 16×16 한 장으로 — 지도엔 무늬만 겹치고, 범례 · 창의 땅 네모는 땅색 + 무늬.
 // 무늬 색은 땅 밝기로만 고름(밝은 땅은 어둡게 · 어두운 땅은 밝게) — 색상이 아니라 모양으로 구분. 보기뿐이라 규칙은 그대로
 const patInk = k => { const [r, gr, b] = LCOL[k]; return 0.299 * r + 0.587 * gr + 0.114 * b > 140 ? 'rgba(20,26,18,.34)' : 'rgba(255,255,255,.4)'; };
 const patCache = {};
+mapTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { mapTheme(); draw(); });
 function landPat(k, bg) {
   const id = k + (bg ? ':bg' : ''); if (patCache[id]) return patCache[id];
   const P = (window.LAND_PATTERNS || {})[k], c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d');
@@ -252,7 +263,7 @@ function draw(clean) {   // clean: P55 공유 그림 — 지도 · 꽃 · 장식
   if (cal.frozen) { g.fillStyle = 'rgba(150,140,200,.22)'; g.fillRect(0, 0, W * cell, H * cell); g.fillStyle = 'rgba(255,200,190,.10)'; g.fillRect(0, 0, W * cell, H * cell * 0.4); }
   else if ((st.speed || 1) <= 60) {
     const h = cal.hour, night = h < 5 || h >= 20 ? 1 : h < 7 ? (7 - h) / 2 : h >= 18 ? (h - 18) / 2 : 0;
-    if (night > 0) { g.fillStyle = `rgba(14,22,52,${0.18 * night})`; g.fillRect(0, 0, W * cell, H * cell); }
+    if (night > 0) { g.fillStyle = `rgba(${MAPNIGHT[0]},${MAPNIGHT[1]},${MAPNIGHT[2]},${MAPNIGHT[3] * night})`; g.fillRect(0, 0, W * cell, H * cell); }
   }
   for (const f of st.flowers) drawFlower(f, cal);
   // P17-16 장식: 칸에 맞춰 도트 그림 (지도 칸은 화면 폭에 따라 변해서 정수배가 아닐 수 있음 — 흐려지지 않게만, imageSmoothingEnabled는 위 땅 그리기에서 껐음)

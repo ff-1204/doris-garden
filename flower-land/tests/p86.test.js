@@ -35,7 +35,7 @@ const sizes = [...apps.matchAll(/spriteImg\((?:(?!spriteImg\().){0,70}?, (\d+), 
 check(sizes.length > 30 && sizes.every(n => n % 16 === 0), `화면 도트 크기는 모두 16의 배수 (${sizes.length}곳)`);
 
 console.log('[여섯 화면 (P86-03)]');
-check(/#p-cab \.stack > \.cabgrid \.teacard \.sc-art \{[^}]*border-bottom: 8px solid var\(--wood\)/.test(css), '찻집 티백은 선반 위');
+check(/#p-cab \.stack > \.cabgrid \.teacard \.sc-art \{[^}]*border-bottom: 8px solid var\(--timber\)/.test(css), '찻집 티백은 선반 위');
 check(!/생화 꽃잎의 <b class="val-down">/.test(tea) && !/그냥 두면 <b class="val-down">/.test(tea), '제다실에 늘 보이는 안내는 경고색이 아님');
 check(/\.needs \.nd:not\(\.on\) \{ opacity: 1; background: transparent/.test(css), '0 칩은 바탕 없이 조용히');
 check(/#p-shop \.shopcard \.btn\.primary:not\(:disabled\)/.test(css), '화원 사기 단추는 조용히');

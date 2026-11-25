@@ -11,9 +11,11 @@
 /* Layout: 위 막대(날짜·계절 시계·돈) + 탭 8개(정원·화원·제다실·찻집·창고·도감기록·매뉴얼·설정). PC는 왼쪽 탭과 오른쪽 상태창, 휴대폰은 아래 탭과 아래에서 올라오는 상태창 */
 :root {
   /* P86-01 🪵 나무 선반: 낮은 쪽지 종이 + 밝은 나무, 밤은 어두운 나무. 재질 규칙은 파일 맨 끝 "── 나무 선반 (P86)" */
-  --bg: #f6eee0; --panel0: #fffaf0; --sunk0: #f0e7d6; --ink: #33251a; --muted: #5f4c39; --line0: #e3c9a0;
+  --bg: #fbf6ea; --panel0: #fffaf0; --sunk0: #f0e7d6; --ink: #33251a; --muted: #5f4c39; --line0: #e3c9a0;
   --accent: #7f5422; --accent-ink: #fff8ea; --good: #2f6b3a; --warn: #8a4c18;
-  --wood: #7a5433; --wood-dk: #5e4530; --wood-edge: #3f2a18; --wood-ink: #fdf3df; --wood-muted: #ecdcc0; --frame: #8a6238;
+  --wood: #fffaf0; --wood-dk: #fbf1dd; --wood-edge: #f3e6cc; --wood-ink: #4a3a2a; --wood-muted: #7a6650; --frame: #e6d3b0; --timber: #b98f5e;
+  /* P95 지도 색: 땅 색에 --map-wash를 --map-wash-amt만큼 섞고, 황무지는 --map-barren, 밤 시간 덧칠은 --map-night · --map-night-amt (app-garden.js mapTheme이 읽어요) */
+  --map-wash: 255, 247, 228; --map-wash-amt: 0.3; --map-barren: #e3d9c4; --map-night: 96, 78, 132; --map-night-amt: 0.1;
   --spring: #e39ab3; --summer: #64a653; --autumn: #cc8636; --winter: #86abc3; --rest: #a993c9; --seed: #8a6a44;
   --font-display: "Gowun Batang", "Nanum Myeongjo", serif;
   --font-body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
@@ -40,14 +42,14 @@
    규칙 자체는 파일 맨 끝 "── 디자인 규칙 (P57)" 절 (뒤에 있어야 앞의 개별 규칙을 이김)
    검사      DEV 콘솔에서 flower-land/tools/layout-check.js (docs/개발.md "디자인 규칙") — 폭 375 · 768 · 1280 · 1536에서 0건 */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #211810; --panel0: #33261b; --sunk0: #2a1e15; --ink: #f4e9d6; --muted: #cdbca1; --line0: #5e4530; --accent: #dcb56e; --accent-ink: #2c2119; --good: #8fcf95; --warn: #eaa874; --seed: #c49a6a; --wood: #6e4a2c; --wood-dk: #4a3424; --wood-edge: #2c1d12; --wood-ink: #f8ecd6; --wood-muted: #e0ceb0; --frame: #6e4a2c; color-scheme: dark;
+  --bg: #262320; --panel0: #332f2a; --sunk0: #2c2925; --ink: #f3ecdf; --muted: #c9bda9; --line0: #4d463d; --accent: #dcb56e; --accent-ink: #2c2119; --good: #8fcf95; --warn: #eaa874; --seed: #c49a6a; --wood: #2f2b27; --wood-dk: #2a2723; --wood-edge: #3d3731; --wood-ink: #f3ecdf; --wood-muted: #c9bda9; --frame: #4d463d; --timber: #8a6a48; --map-wash: 40, 44, 40; --map-wash-amt: 0.12; --map-barren: #8f8778; --map-night: 30, 26, 60; --map-night-amt: 0.16; color-scheme: dark;
 } }
-:root[data-theme="dark"] { --bg: #211810; --panel0: #33261b; --sunk0: #2a1e15; --ink: #f4e9d6; --muted: #cdbca1; --line0: #5e4530; --accent: #dcb56e; --accent-ink: #2c2119; --good: #8fcf95; --warn: #eaa874; --seed: #c49a6a; --wood: #6e4a2c; --wood-dk: #4a3424; --wood-edge: #2c1d12; --wood-ink: #f8ecd6; --wood-muted: #e0ceb0; --frame: #6e4a2c; color-scheme: dark; }
+:root[data-theme="dark"] { --bg: #262320; --panel0: #332f2a; --sunk0: #2c2925; --ink: #f3ecdf; --muted: #c9bda9; --line0: #4d463d; --accent: #dcb56e; --accent-ink: #2c2119; --good: #8fcf95; --warn: #eaa874; --seed: #c49a6a; --wood: #2f2b27; --wood-dk: #2a2723; --wood-edge: #3d3731; --wood-ink: #f3ecdf; --wood-muted: #c9bda9; --frame: #4d463d; --timber: #8a6a48; --map-wash: 40, 44, 40; --map-wash-amt: 0.12; --map-barren: #8f8778; --map-night: 30, 26, 60; --map-night-amt: 0.16; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 /* 계절 바탕: 카드·지도는 그대로, 뒤 바탕만 계절 색을 아주 옅게 섞음 */
-:root { --season-c: var(--bg); --season-amt: 15%; }
+:root { --season-c: var(--bg); --season-amt: 8%; }
 /* 카드·막대·선도 같은 계절 색을 아주 조금씩 머금게 (배경과 어울리게) */
 :root { --panel: color-mix(in srgb, var(--season-c) 7%, var(--panel0)); --sunk: color-mix(in srgb, var(--season-c) 14%, var(--sunk0)); --line: color-mix(in srgb, var(--season-c) 22%, var(--line0)); }
 :root[data-season="0"] { --season-c: var(--spring); }
@@ -55,8 +57,8 @@ html, body { height: 100%; }
 :root[data-season="2"] { --season-c: var(--autumn); }
 :root[data-season="3"] { --season-c: var(--winter); }
 :root[data-season="4"] { --season-c: var(--rest); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --season-amt: 9%; } }
-:root[data-theme="dark"] { --season-amt: 9%; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --season-amt: 5%; } }
+:root[data-theme="dark"] { --season-amt: 5%; }
 :root.season-anim body { transition: background-color 3s ease; }   /* 처음 열 때는 바로, 계절이 바뀔 때만 천천히 */
 body { background: var(--bg); background-color: color-mix(in srgb, var(--season-c) var(--season-amt), var(--bg)); color: var(--ink); font-family: var(--font-body); font-size: var(--fs-base); line-height: 1.5; }
 button, select, input { font: inherit; color: inherit; }
@@ -1576,27 +1578,30 @@ body { margin: 0; }
 .act-tag.act-place { color: var(--good); border-color: var(--good); background: transparent; }
 .act-tag.act-buy { color: var(--warn); border-color: var(--warn); background: transparent; }
 
+/* ── 아침 햇살 (P95, 11-26 사용자 시안 1): 아래 나무 선반 · 젤리 도트 규칙은 그대로 두고 토큰 값만 밝게 — --wood*는 이제 크림 종이(밤 테마는 먹색), 나무 결 --plank는 없음,
+   나무가 그림인 곳은 --timber. 지도 색은 맨 위 --map-* 토큰 (app-garden.js mapTheme) */
 /* ── 나무 선반 (P86, 11-06 사용자 시안 2): 찻집 카운터의 나무 · 쪽지 종이를 게임 전체 재질로
    토큰  --wood · --wood-dk · --wood-edge 나무 / --wood-ink · --wood-muted 나무 위 글자 / --frame 판 테두리 / --gold · --gold-ink · --gold-edge 주 단추 · 고른 탭(낮 · 밤 같음)
    색 글자는 바탕과 4.5:1 이상 — 나무 위 글자는 --wood-ink · --wood-muted만 */
 :root { --gold: #d9b26a; --gold-ink: #2c2119; --gold-edge: #a8803c;
-  --plank: repeating-linear-gradient(0deg, color-mix(in srgb, var(--wood) 88%, #000000) 0 3px, var(--wood) 3px 6px); }
+  --plank: none; }   /* P95 나무 결 무늬 뺌 — 위 막대 · 탭은 밝은 종이 */
 .cabcard.drying { box-shadow: none; outline: 2px dashed var(--frame); outline-offset: 0; }
 .btn { border-color: var(--frame); background: var(--sunk); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--frame) 45%, transparent); }
 .btn:hover:not(:disabled) { border-color: var(--wood-edge); }
 .btn:active:not(:disabled) { box-shadow: none; transform: translateY(1px); }
 .btn.primary { background: var(--gold); border-color: var(--gold-edge); color: var(--gold-ink); box-shadow: inset 0 -3px 0 var(--gold-edge); }
 /* 위 막대 · 탭: 나무 */
-.topbar { background: var(--plank); background-color: var(--wood); border-bottom: 4px solid var(--wood-edge); color: var(--wood-ink); }
+.topbar { background: var(--plank); background-color: var(--wood); border-bottom: 1px solid var(--edge); color: var(--wood-ink); }
 .topbar .brand .bt b { color: var(--wood-ink); }
 .topbar .brand .bt small, .topinfo { color: var(--wood-muted); }
 .wallet { border-color: var(--frame); }
-.wallet.top-wallet { border: 0; background: var(--wood-edge); color: #f2c230; font-size: var(--fs-sm); padding: var(--sp-1) var(--sp-4); }
+.wallet.top-wallet { border: 0; background: var(--cream); color: var(--accent); font-size: var(--fs-sm); padding: var(--sp-1) var(--sp-4); }
 .wallet.top-wallet[hidden] { display: none; }
-nav.tabs { background: var(--wood-edge); border-top: 0; gap: var(--sp-1); padding: var(--sp-1); padding-bottom: calc(var(--sp-1) + env(safe-area-inset-bottom, 0px)); }
-nav.tabs button { background: var(--wood-dk); color: var(--wood-muted); }
+nav.tabs { background: var(--wood); border-top: 1px solid var(--edge); gap: var(--sp-1); padding: var(--sp-1); padding-bottom: calc(var(--sp-1) + env(safe-area-inset-bottom, 0px)); }
+nav.tabs button { background: transparent; color: var(--wood-muted); }
+@media (min-width: 900px) { nav.tabs { border-top: 0; } }
 nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -3px 0 var(--gold-edge); }
-.tab-dot { box-shadow: 0 0 0 2px var(--wood-edge); }
+.tab-dot { box-shadow: 0 0 0 2px var(--wood); }
 /* 정원: 돌봄 단추 44px · 0 칩은 조용히 · 지도는 나무 틀 */
 .hintbar { justify-content: flex-start; }
 .needs { flex: 1 1 100%; gap: var(--sp-3); min-width: 0; }
@@ -1610,7 +1615,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .needs .nd.nd-all { flex: 3 1 150px; padding: 0 var(--sp-5); background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -3px 0 var(--gold-edge); }
 .needs .nd.nd-all b, :root:not([data-theme="light"]) .needs .nd.nd-all b, :root[data-theme="dark"] .needs .nd.nd-all b { color: var(--gold-ink); }
 .needs .nd-say { min-height: 32px; display: flex; align-items: center; }
-.mapframe { border: 6px solid var(--wood); outline: 2px solid var(--wood-edge); outline-offset: 0; box-shadow: none; background: var(--wood-edge); }
+.mapframe { border: 6px solid var(--wood); outline: 2px solid var(--edge); outline-offset: 0; box-shadow: none; background: var(--wood-edge); }
 .mapscroll { overflow: auto; max-width: 100%; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--wood-muted) var(--wood-edge); }
 .mapscroll:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 .mapinner { position: relative; width: max-content; margin: 0 auto; }
@@ -1621,7 +1626,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 /* 찻집: 티백은 선반 위 도트 그림 */
 #p-cab .stack > .cabgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min-s)), 1fr)); gap: var(--sp-6) 0; }
 #p-cab .stack > .cabgrid .teacard { border: 0; background: none; box-shadow: none; padding: 0 var(--sp-3) var(--sp-3); text-align: center; justify-items: center; }
-#p-cab .stack > .cabgrid .teacard .sc-art { width: calc(100% + 2 * var(--sp-3)); margin-inline: calc(-1 * var(--sp-3)); height: 76px; place-items: end center; background: none; border-radius: 0; border-bottom: 8px solid var(--wood); box-shadow: 0 3px 0 var(--wood-edge); }
+#p-cab .stack > .cabgrid .teacard .sc-art { width: calc(100% + 2 * var(--sp-3)); margin-inline: calc(-1 * var(--sp-3)); height: 76px; place-items: end center; background: none; border-radius: 0; border-bottom: 8px solid var(--timber); box-shadow: 0 3px 0 var(--wood-edge); }
 #p-cab .stack > .cabgrid .teacard .sc-to, #p-cab .stack > .cabgrid .teacard .sc-bloom { display: none; }
 #p-cab .stack > .cabgrid .teacard .sc-form { top: 0; left: var(--sp-2); }
 #p-cab .stack > .cabgrid .teacard .cc-name { justify-content: center; }
@@ -1667,9 +1672,9 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
    둥글기 --r-sm 12px 단추 · 칩 · 탭 / --r-xl 16px 카드 · 지도 틀 · 창 / --r-pill 10px 작은 칩 / --r-xs 6px / --r-dot 4px 작은 점
    단추 말투 면 + 아래 두께(inset 그림자) · 누르면 --press만큼 내려가고 두께가 줄어요 (움직임 줄이기면 안 내려감)
    돌봄 젤리는 --k를 --jelly-base에 섞어요 — 낮 · 밤은 --jelly-* 값만 바뀜. 판 테두리는 --edge */
-:root { --gold: #f6cf7d; --gold-ink: #3a2a14; --gold-edge: #d9a447; --edge: #e3c9a0; --jelly-base: #ffffff; --jelly-a: 30%; --jelly-b: 60%; --press: 2px; --cream: #fff3cf; --cream-edge: #e8c98a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --edge: #6e5238; --jelly-base: #33261b; --jelly-a: 34%; --jelly-b: 62%; } }
-:root[data-theme="dark"] { --edge: #6e5238; --jelly-base: #33261b; --jelly-a: 34%; --jelly-b: 62%; }
+:root { --gold: #ffe3a3; --gold-ink: #3a2a14; --gold-edge: #f0c670; --edge: #eadcc0; --jelly-base: #ffffff; --jelly-a: 30%; --jelly-b: 60%; --press: 2px; --cream: #fff3cf; --cream-edge: #e8c98a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --edge: #4d463d; --jelly-base: #332f2a; --jelly-a: 34%; --jelly-b: 62%; --gold: #e9cc8a; --gold-edge: #b9975a; --cream: #3d3731; --cream-edge: #2a2622; } }
+:root[data-theme="dark"] { --edge: #4d463d; --jelly-base: #332f2a; --jelly-a: 34%; --jelly-b: 62%; --gold: #e9cc8a; --gold-edge: #b9975a; --cream: #3d3731; --cream-edge: #2a2622; }
 @media (prefers-reduced-motion: reduce) { :root { --press: 0px; } }
 /* 판: 얇은 테두리 + 아래 두께 */
 :is(.shopcard, .status, .cafe, .cab-empty, .shop-news, .blendbox, .modal, .counter) { border: 2px solid var(--edge); border-radius: var(--r-xl); box-shadow: 0 3px 0 var(--edge); }
@@ -1680,7 +1685,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .btn { border: 0; border-radius: var(--r-sm); background: var(--sunk); box-shadow: inset 0 -3px 0 var(--edge); padding-bottom: calc(var(--sp-3) + 2px); }
 .btn:hover:not(:disabled) { filter: brightness(1.04); }
 .btn:active:not(:disabled) { transform: translateY(var(--press)); box-shadow: inset 0 -1px 0 var(--edge); }
-.btn.primary { background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -4px 0 var(--gold-edge); }
+.btn.primary { background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -3px 0 var(--gold-edge); }
 .btn.primary:active:not(:disabled) { box-shadow: inset 0 -1px 0 var(--gold-edge); }
 .btn.care { background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); color: var(--ink); box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); }
 #p-shop .shopcard .btn.primary:not(:disabled) { background: color-mix(in srgb, var(--good) 22%, var(--jelly-base)); color: var(--ink); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--good) 50%, var(--jelly-base)); }
@@ -1688,7 +1693,7 @@ nav.tabs button[aria-selected="true"] { background: var(--gold); color: var(--go
 .stepper { border-radius: var(--r-sm); }
 nav.tabs { gap: var(--sp-2); padding: var(--sp-2); padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom, 0px)); }
 nav.tabs button { border-radius: var(--r-sm); }
-nav.tabs button[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--gold-edge); }
+nav.tabs button[aria-selected="true"] { box-shadow: inset 0 -2px 0 var(--gold-edge); }
 /* 돌봄 칸 */
 .needs .nd { border-radius: var(--r-sm); gap: var(--sp-2); background: color-mix(in srgb, var(--k) var(--jelly-a), var(--jelly-base)); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--k) var(--jelly-b), var(--jelly-base)); color: var(--ink); }
 .needs .nd span { display: inline-flex; }
@@ -1708,8 +1713,9 @@ nav.tabs button[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--gold-ed
 .yearstrip::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 16px; z-index: 2; pointer-events: none; background: var(--garland) repeat-x 0 0 / 16px 16px; image-rendering: pixelated; }
 .legend2.on-map { top: 28px; }
 .map-tools { position: absolute; right: var(--sp-4); top: 28px; z-index: 3; display: grid; gap: var(--sp-4); }
-.map-zoom, .share-btn.map-share { position: static; display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0 0 var(--sp-1); border: 0; border-radius: var(--r-sm); background: var(--cream); box-shadow: inset 0 -3px 0 var(--cream-edge), 0 2px 0 rgba(0, 0, 0, .18); }
-.map-zoom[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -3px 0 var(--gold-edge), 0 2px 0 rgba(0, 0, 0, .18); }
+.map-zoom, .share-btn.map-share { position: relative; inset: auto; white-space: normal; display: grid; place-items: center; width: 28px; height: 28px; min-height: 0; padding: 0 0 var(--sp-1); border: 0; border-radius: var(--r-pill); background: var(--cream); box-shadow: inset 0 -2px 0 var(--cream-edge), 0 1px 0 rgba(0, 0, 0, .12); }
+.map-zoom::after, .share-btn.map-share::after { content: ""; position: absolute; inset: -4px -8px; }   /* P95 단추는 28px로 작게, 손가락이 닿는 범위는 44 × 36px */
+.map-zoom[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -2px 0 var(--gold-edge), 0 1px 0 rgba(0, 0, 0, .12); }
 .map-zoom:active, .share-btn.map-share:active { transform: translateY(var(--press)); box-shadow: inset 0 -1px 0 var(--cream-edge); }
 .map-zoom img.px, .map-share img.px { display: block; image-rendering: pixelated; }
 .mapscroll.pan-x .mapinner { margin: 0 60px 0 0; }

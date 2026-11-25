@@ -13,7 +13,7 @@ console.log('[둥글기 (P89-01)]');
 check(/--r-xs: 6px; --r-sm: 12px; --r-md: 12px; --r-lg: 12px; --r-xl: 16px; --r-pill: 10px; --r-dot: 4px;/.test(css), '단추 12px · 카드 16px 토큰');
 check(/\.btn \{ border: 0; border-radius: var\(--r-sm\)/.test(css) && /nav\.tabs button \{ border-radius: var\(--r-sm\)/.test(css) && /\.ring-btn \{ border-radius: var\(--r-sm\)/.test(css), '단추 · 탭 · 둘레 단추는 둥근 사각형');
 check(/<div class="map-tools">\s*<button[^>]*id="mapZoom"[\s\S]*id="shareBtn"[\s\S]*?<\/div>/.test(html) && /\.map-tools \{[^}]*display: grid; gap: var\(--sp-4\)/.test(css), '🔍 · 공유는 세로로 나란히 — 서로 겹치지 않음');
-check(/\.map-zoom, \.share-btn\.map-share \{ position: static;[^}]*width: 44px; height: 44px/.test(css), '지도 위 단추 44px');
+check(/\.map-zoom, \.share-btn\.map-share \{ position: relative;[^}]*width: 28px; height: 28px/.test(css) && /\.map-zoom::after, \.share-btn\.map-share::after \{[^}]*inset: -4px -8px/.test(css), '지도 위 단추 28px · 손가락 범위는 ::after로 44 × 36px (P95 — 예전 44px)');
 
 console.log('[젤리 단추 (P89-02)]');
 check(/\.needs \.nd:not\(\.on\) \{ background: var\(--sunk\)/.test(css), '값 0 칸은 색을 뺌');
