@@ -18,9 +18,16 @@ console.log('[만들 수 없을 때]');
   check(E.presFull(s, f) && E.vigorOf(s, f) === 100, '시험 꽃은 품질 · 기운 100%');
   check(E.presReason(s, f) === '⛏️ 광산에서 특수 용액을 만들어요' && !E.preserve(s, f.id, ctx).ok, '용액이 없으면 못 만듦 · 광산 안내');
   s.presol = 1;
-  f.q = 0.99; check(E.presReason(s, f) === '품질 · 기운이 100%일 때 만들 수 있어요' && !E.preserve(s, f.id, ctx).ok, '품질 99%면 못 만듦');
-  f.q = 1; f.thirstH = E.MONTH_H; check(E.presReason(s, f) === '품질 · 기운이 100%일 때 만들 수 있어요', '목말라 기운이 떨어지면 못 만듦');
-  f.thirstH = 0; s.tiles[f.y * E.W + f.x].t = E.FLOWERS.rose.t + 10; check(E.vigorOf(s, f) < 100 && !!E.presReason(s, f), '땅이 안 맞아 기운이 낮으면 못 만듦');
+  // P97 (11-26 사용자 "품질과 기운이 90%이상이면"): 예전엔 둘 다 100%여야 했음
+  const WHY = `품질 · 기운이 ${E.PRES_MIN}% 이상일 때 만들 수 있어요`;
+  check(E.PRES_MIN === 90, '만들 수 있는 품질 · 기운은 90% 이상');
+  f.q = 0.9; check(E.presFull(s, f) && E.presReason(s, f) === '', '품질 90%면 만들 수 있음');
+  f.q = 0.99; check(E.presReason(s, f) === '', '품질 99%도 만들 수 있음 (예전엔 못 만듦)');
+  f.q = 0.89; check(E.presReason(s, f) === WHY && !E.preserve(s, f.id, ctx).ok, '품질 89%면 못 만듦');
+  f.q = 1; s.tiles[f.y * E.W + f.x].t = E.FLOWERS.rose.t + 10; check(Math.round(E.vigorOf(s, f)) < E.PRES_MIN && E.presReason(s, f) === WHY, `땅이 안 맞아 기운이 ${Math.round(E.vigorOf(s, f))}%면 못 만듦`);
+  { let lo = null, hi = null; for (let d = 0; d <= 10; d += 0.25) { s.tiles[f.y * E.W + f.x].t = E.FLOWERS.rose.t + d; const v = Math.round(E.vigorOf(s, f)); if (v >= E.PRES_MIN && v < 100) hi = v; if (v < E.PRES_MIN && lo == null) lo = v; if ((v >= E.PRES_MIN) !== (E.presReason(s, f) === '')) check(false, `기운 ${v}%에서 조건이 어긋남`); }
+    check(hi != null && lo != null, `기운 90% 이상 100% 아래(${hi}%)는 되고 그 아래(${lo}%)는 안 됨 — 경계를 실제로 지나감`); }
+  for (const src of ['app-dex.js', 'app-manual.js', 'app-shop.js']) check(require('fs').readFileSync(path.join(__dirname, '..', src), 'utf8').includes(`${E.PRES_MIN}% 이상`), `${src} 문구도 ${E.PRES_MIN}% 이상`);
   s.tiles[f.y * E.W + f.x].t = E.FLOWERS.rose.t;
   f.stage = 'mature'; check(E.presReason(s, f) === '다 핀 꽃으로 만들 수 있어요', '안 핀 꽃은 못 만듦');
   f.stage = 'bloom'; f.withered = true; check(!!E.presReason(s, f), '시든 꽃은 못 만듦');
@@ -82,7 +89,7 @@ console.log('[🧬 변이 꽃 프리저브드 · 변이 칭호]');
 { const t = fresh(MON, 'p53-m'); t.presol = 1;
   for (const k of E.MUTANT_KEYS) if (k !== 'lotus') t.dex.presMut[k] = true;
   const f = bloom(t, 'lotus', 6, 6, { mut: true });
-  check(E.mutShown(f) && E.presFull(t, f) && E.presReason(t, f) === '', '변이 꽃도 100%면 만들 수 있음');
+  check(E.mutShown(f) && E.presFull(t, f) && E.presReason(t, f) === '', '변이 꽃도 만들 수 있음');
   const r = E.preserve(t, f.id, ctx);
   check(r.ok && r.mut && t.preserving[0].mut && t.dex.mutant.lotus === 1, '변이로 담기 · 변이 도감 1단계도');
   E.advance(t, MON + 25 * H, ctx);

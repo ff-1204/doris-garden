@@ -267,7 +267,7 @@ function renderStore(force) {
 $('#p-store').addEventListener('change', e => { if (e.target.id === 'storeSort') { ui.storeSort = e.target.value; renderStore(true); } });
 $('#p-store').addEventListener('click', e => {
   const s = e.target.closest('[data-sup]'); if (s) return openSupply(s.dataset.sup);
-  if (e.target.closest('[data-presinfo]')) return feedback('🧪 품질 · 기운이 100%인 다 핀 꽃을 눌러 「🌹 프리저브드」로 써요');   // P53
+  if (e.target.closest('[data-presinfo]')) return feedback('🧪 품질 · 기운이 90% 이상인 다 핀 꽃을 눌러 「🌹 프리저브드」로 써요');   // P53
   if (e.target.closest('[data-jarinfo]')) return feedback('🫙 정원의 🧬 변이 꽃을 눌러 「유리 관에 담기」로 써요');   // P36-04
   const c = e.target.closest('[data-compost]'); if (c) return openCompost(c.dataset.compost.split(',').map(Number));
   const pp = e.target.closest('[data-presplace]'); if (pp) { ui.tool = 'deco'; ui.decoId = +pp.dataset.presplace; return setTab('garden', true); }   // P84-01 🌹
