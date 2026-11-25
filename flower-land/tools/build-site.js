@@ -1,11 +1,12 @@
 // 배포본 모으기: 화면에 필요한 파일만 _site/에 복사 (테스트 · 도구 · 미리보기 서버는 빼고)
+// engine.js는 복사하지 않고 엔진 조각 engine-*.js를 묶은 글자로 써요 (P94-05 — tools/engine-bundle.js, 조각은 배포본에 없음)
 // node flower-land/tools/build-site.js [출력 폴더] — GitHub Actions(.github/workflows/pages.yml)와 로컬 확인이 같은 목록을 씀
-const fs = require('fs'), path = require('path');
+const fs = require('fs'), path = require('path'), { bundle } = require('./engine-bundle.js');
 const src = path.join(__dirname, '..'), out = path.resolve(process.argv[2] || path.join(src, '..', '_site'));
-const FILES = ['index.html', 'style.css', 'engine-base.js', 'engine-state.js', 'engine-progress.js', 'engine-actions.js', 'engine-journal.js', 'engine-mine-mail.js', 'engine-decos.js', 'engine-auto.js', 'engine-long.js', 'engine-save.js', 'engine.js', 'sprites.js', 'decos.js', 'titles.js', 'app.js', 'app-journal.js', 'app-garden.js', 'app-mine.js', 'app-shop.js', 'app-teashop.js', 'app-forest.js', 'app-farm.js', 'app-dex.js', 'app-inbox.js', 'app-manual.js', 'app-cloud.js', 'app-main.js', 'drive.js', 'privacy.html', 'terms.html', 'policy.css', 'og.png', 'robots.txt', 'mail.json'];   // mail.json: 📮 운영자 편지 (P29, 화면이 읽기만 함) · og.png: 링크 미리보기 이미지 (tools/make-og.js) · robots.txt: AI 수집기 거절 (LICENSE)
+const FILES = ['index.html', 'style.css', 'engine.js', 'sprites.js', 'decos.js', 'titles.js', 'app.js', 'app-journal.js', 'app-garden.js', 'app-mine.js', 'app-shop.js', 'app-teashop.js', 'app-forest.js', 'app-farm.js', 'app-dex.js', 'app-inbox.js', 'app-manual.js', 'app-cloud.js', 'app-main.js', 'drive.js', 'privacy.html', 'terms.html', 'policy.css', 'og.png', 'robots.txt', 'mail.json'];   // mail.json: 📮 운영자 편지 (P29, 화면이 읽기만 함) · og.png: 링크 미리보기 이미지 (tools/make-og.js) · robots.txt: AI 수집기 거절 (LICENSE)
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
-for (const f of FILES) fs.copyFileSync(path.join(src, f), path.join(out, f));
+for (const f of FILES) { if (f === 'engine.js') fs.writeFileSync(path.join(out, f), bundle(src)); else fs.copyFileSync(path.join(src, f), path.join(out, f)); }
 // index.html이 부르는 로컬 파일이 목록에 다 있는지 확인 (빠뜨리면 배포에서 깨짐)
 const html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1]).filter(u => !/^(https?:|data:|#|mailto:)/.test(u));
