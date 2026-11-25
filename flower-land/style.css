@@ -696,6 +696,8 @@ button.bl-rec { font: inherit; font-size: calc(11.5 * var(--u)); cursor: pointer
 .bl-rec.ready { border-color: #2e7d3c; background: color-mix(in srgb, #2e7d3c 8%, var(--panel)); }   /* 지금 만들 수 있는 레시피 */
 .bl-rec.ready:hover { background: color-mix(in srgb, #2e7d3c 16%, var(--panel)); }
 .bl-rec.ready.on, .bl-rec.ready.on b { background: #2e7d3c; color: #fff; }   /* 지금 담긴 레시피 */
+button.bl-rec.short { border-style: dashed; }   /* P96-02 꽃은 있는데 한 잔 몫엔 모자람 — 눌러서 담아 볼 수는 있음 */
+button.bl-rec.short.on { border-color: var(--accent); border-style: solid; }
 .bl-book summary .val-up { font-weight: 600; }
 @media (max-width: 480px) { .bl-arrow { display: none; } .bl-row .btn { width: 100%; justify-content: center; } }
 /* 찻집 다듬기 */
