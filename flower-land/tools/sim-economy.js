@@ -56,6 +56,7 @@ for (const [flag, keys] of [['--speed=', ['grow', 'dry']], ['--ring=', E.BONUS_K
 }
 const BUY_ORDER = ['dry', 'grow', ...E.BONUS_KEYS.filter(k => E.BONUS[k].worker)];   // 🌾 → 🌱 → 곤충 둘레 (곤충은 데려온 것만 — --auto와 함께)
 const PRES = process.argv.includes('--preserved');   // P53
+const PRESBUY = process.argv.includes('--presbuy');   // P98 --preserved와 함께: 🧪 특수 용액을 공짜로 받지 않고 한 병씩 삼 (PRESOL_WON)
 const MINE_DAY = process.argv.includes('--mine=day'), MINE = MINE_DAY || process.argv.includes('--mine');   // P43 (=day: 하루 한 번만)
 let mineDay = null;
 const LAYER4 = process.argv.includes('--layer4') || process.argv.includes('--forest');
@@ -125,7 +126,7 @@ function act() {
     const presHold = PRESSEASON && seasonAt == null && E.seasonRows(st).length >= YEARS - 1;   // 마지막 해엔 모아 둠
     if (st.preserved.length && !presHold) { const r = E.sellPreserved(st, st.preserved.map(p => p.id), ctx); add(yr, '🌹 프리저브드', r.sum); add(yr, '프리저브드 수', st.stats.presSold - (presSold0 || 0)); presSold0 = st.stats.presSold; }
     for (const f of st.flowers.slice()) { if (!E.presFull(st, f) || f.stage !== 'bloom' || f.withered) continue;
-      if (MINE) { while (E.canCraft(st, 'presol') && st.presol < 1) E.craft(st, 'presol', ctx); } else st.presol = Math.max(st.presol, 1);
+      if (MINE) { while (E.canCraft(st, 'presol') && st.presol < 1) E.craft(st, 'presol', ctx); } else if (PRESBUY) { if (st.presol < 1 && E.buyPresol(st, 1).ok) add(yr, '용품', -E.PRESOL_WON); } else st.presol = Math.max(st.presol, 1);
       E.preserve(st, f.id, ctx); }
   }
   // 용품

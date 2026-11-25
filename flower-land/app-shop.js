@@ -251,7 +251,7 @@ function renderStore(force) {
       <span>${cal.frozen ? '🌙 꽃잠에는 품질이 그대로예요' : '12시간에 품질 5%씩 줄어요'}</span>
       ${soonN ? `<span class="warn">⏳ 곧 시들 것 <b>${soonN}개</b></span>` : ''}</div>
     <div class="cab-head"><span class="sb-title">🧺 정원 용품</span><span class="muted">누르면 살 수 있어요</span></div>
-    <div class="suptiles">${supTilesHTML()}${st.presol > 0 ? `<button type="button" class="suptile" data-presinfo="1" title="프리저브드를 만드는 용액 · ⛏️ 광산 만들기"><span class="si">🧪</span><b>특수 용액</b><small>${st.presol}병 남음</small></button>` : ''}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
+    <div class="suptiles">${supTilesHTML()}${st.presol > 0 ? `<button type="button" class="suptile" data-presinfo="1" title="프리저브드를 만드는 용액 · ⛏️ 광산 공방에서 만들거나 사요"><span class="si">🧪</span><b>특수 용액</b><small>${st.presol}병 남음</small></button>` : ''}${st.jar > 0 ? `<button type="button" class="suptile" data-jarinfo="1" title="변이 꽃을 담는 유리 관 · ⛏️ 광산 만들기"><span class="si">🫙</span><b>유리 관</b><small>${st.jar}개 남음</small></button>` : ''}</div>
     ${honeyStoreHTML()}
     ${presStoreHTML()}
     ${pend || resv ? `<div class="cab-head"><span class="sb-title">🚚 도착할 것</span><span class="muted">때가 되면 창고로 들어와요</span></div><div class="argrid">${pend}${resv}</div>` : ''}

@@ -238,6 +238,20 @@ function craft(st, k, ctx) {
   return ok('흙으로 비료 1개를 만들었어요');
 }
 const mineCount = st => Object.keys((st.dex && st.dex.mine) || {}).filter(k => MINE_DEX_KEYS.includes(k)).length;
+// P98 🧪 특수 용액 사기 (11-26 사용자 "특수 용액 살 수 있게 해줘. 밸런스 잘 맞춰서"): 한 병 PRESOL_WON 4,000원 — ⛏️ 공방 만들기 줄에서, 재료가 모자랄 때
+//   값의 근거: ① 재료 값(석영 3 · 운모 2 · 장석 2 = P83-02 셈으로 1,750원)보다 비싸 캐서 만드는 쪽이 늘 이득 ② 손으로 캐면 한 병에 80 ~ 120칸(기력 1.4 ~ 2시간 치)
+//   ③ 값싼 꽃(프리저브드 5,000 ~ 6,000원)도 새 꽃 값을 빼고 500 ~ 1,400원이 남음 — 5,000원이면 캐모마일 · 히비스커스 · 메리골드가 밑짐
+//   ④ 시뮬 4 7 --preserved --presbuy: 용액 값을 뺀 4년 합이 기본 정원사의 +9.5% — 용액이 공짜인 --preserved(+9.5%)와 같은 자리. 3,000 ~ 6,000원은 +9.5 ~ 13.9%로 들쭉날쭉, 8,000원부터는 기본과 같아져 살 까닭이 없음
+//   돈으로 사기라 경험치 · 주간 목표 · 도감은 없음 (P17-14 · P54). 재려면 시뮬 --preserved --presbuy
+const PRESOL_WON = 4000;
+function buyPresol(st, n) {
+  n = n == null ? 1 : n;
+  if (!Number.isInteger(n) || n < 1 || n > 99) return no('한 번에 1~99병까지 살 수 있어요');
+  const cost = PRESOL_WON * n;
+  if (st.money < cost) return no('돈이 모자라요');
+  st.money -= cost; st.presol = (st.presol || 0) + n;
+  return ok(`특수 용액 ${n}병을 샀어요 · 창고 용품에 있어요 (${st.presol}병)`);
+}
 
 // ---------------------------------------------------------------- 이웃의 화분 (P22-02, 10-24)
 // 첫 방문(첫 안내 창의 '시작')에 그 달에 피어 있거나 다음 달에 피는 여러해살이 · 나무 하나를 다 자란 채로 심어 줌. 돈은 주지 않음

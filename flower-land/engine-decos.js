@@ -207,7 +207,7 @@ function presReason(st, f) {                      // 만들 수 없으면 까닭
   if (!f || f.withered) return '시든 꽃은 만들 수 없어요';
   if (f.stage !== 'bloom') return '다 핀 꽃으로 만들 수 있어요';
   if (!presFull(st, f)) return `품질 · 기운이 ${PRES_MIN}% 이상일 때 만들 수 있어요`;
-  if (!(st.presol > 0)) return '⛏️ 광산에서 특수 용액을 만들어요';
+  if (!(st.presol > 0)) return '⛏️ 광산 공방에서 특수 용액을 만들거나 사요';
   return '';
 }
 function preserve(st, flowerId, ctx) {             // 꽃을 꺾어 꽃방 유리 돔에 (용액 1병)

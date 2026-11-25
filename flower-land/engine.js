@@ -71,7 +71,7 @@ const api = {
   isYearlyMissLine, yearlySeen, yearlyCount, yearlyDex, yearlyPast, VISITORS, VISITOR_KEYS, VISITOR_MAX, VISITOR_P, VISITOR_GIFT_AT, newVisitors,
   visitorOk, visitorCells, visitorTick, visitorsOf, visitorAt, visitorTimes, visitorCall, ORDER_MEMENTO_KEYS, helperKeep, helperTick, autoLineType,
   GEAR, growRate, wallSet, wallBlocks, bloomLeads, bloomLeftFlowH, bloomLeftH, RIPE_H, ripeOn, annualSpanH, pickFlower, DRY_H, BLENDS, BLEND_KEYS,
-  BLEND_RATE, RECIPE_RATE, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends, bagNeed, blendMax, blendPlan, PRES_MIN,
+  BLEND_RATE, RECIPE_RATE, blendRecipe, blendValue, dryPetals, makeTeaDried, blend, sellBlends, bagNeed, blendMax, blendPlan, PRES_MIN, PRESOL_WON, buyPresol,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
