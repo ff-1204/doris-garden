@@ -16,7 +16,21 @@ function bloom(s, type, x, y, o) {
 console.log('[만들 수 없을 때]');
 { const s = fresh(), f = bloom(s, 'rose', 3, 3);
   check(E.presFull(s, f) && E.vigorOf(s, f) === 100, '시험 꽃은 품질 · 기운 100%');
-  check(E.presReason(s, f) === '⛏️ 광산에서 특수 용액을 만들어요' && !E.preserve(s, f.id, ctx).ok, '용액이 없으면 못 만듦 · 광산 안내');
+  check(E.presReason(s, f) === '⛏️ 광산 공방에서 특수 용액을 만들거나 사요' && !E.preserve(s, f.id, ctx).ok, '용액이 없으면 못 만듦 · 광산 공방 안내');
+  // P98 🧪 특수 용액 사기 (11-26 사용자 "특수 용액 살 수 있게 해줘. 밸런스 잘 맞춰서")
+  { const b = fresh(), g = bloom(b, 'rose', 4, 4), xp0 = b.grade.xp, m0 = b.money = 100000;   // 여러 병을 살 만큼 넉넉히 (처음 돈 15,000원으론 네 병이 안 됨)
+    check(E.PRESOL_WON === 4000, '특수 용액 한 병 4,000원');
+    const need = E.CRAFTS.presol.need, parts = Object.entries(need).reduce((a, [, q]) => a + q * 250, 0);
+    check(E.PRESOL_WON > parts, `사는 값이 재료 값(${parts}원 — 석영 · 장석 · 운모 250원 셈)보다 비쌈: 캐서 만드는 쪽이 이득`);
+    const cheap = Math.min(...E.FLOWER_KEYS.map(k => E.presValue(b, k, false) - E.FLOWERS[k].price - E.PRESOL_WON));
+    check(cheap > 0, `가장 싼 꽃도 프리저브드 값 − 새 꽃 값 − 용액 값이 남음 (${cheap}원)`);
+    const r = E.buyPresol(b, 1); check(r.ok && b.presol === 1 && b.money === m0 - E.PRESOL_WON && b.grade.xp === xp0, '한 병 사면 값만큼 줄고 용액 1병 · 경험치 없음');
+    check(E.presReason(b, g) === '' && E.preserve(b, g.id, ctx).ok && b.presol === 0, '산 용액으로 프리저브드를 만듦');
+    check(E.buyPresol(b, 3).ok && b.presol === 3 && b.money === m0 - 4 * E.PRESOL_WON, '여러 병도 됨');
+    check(!E.buyPresol(b, 0).ok && !E.buyPresol(b, 1.5).ok && !E.buyPresol(b, 100).ok && !E.buyPresol(b, -1).ok && b.presol === 3, '0 · 소수 · 100병 · 음수는 안 됨');
+    b.money = E.PRESOL_WON - 1; check(!E.buyPresol(b, 1).ok && b.money === E.PRESOL_WON - 1 && b.presol === 3, '돈이 모자라면 못 삼');
+    const mine = require('fs').readFileSync(path.join(__dirname, '..', 'app-mine.js'), 'utf8');
+    check(/data-solbuy/.test(mine) && /E\.buyPresol\(st, 1\)/.test(mine) && /askBuy\(\{ name: '특수 용액'/.test(mine), '광산 공방 만들기 줄에 💰 단추 · 사기 전 확인 창'); }
   s.presol = 1;
   // P97 (11-26 사용자 "품질과 기운이 90%이상이면"): 예전엔 둘 다 100%여야 했음
   const WHY = `품질 · 기운이 ${E.PRES_MIN}% 이상일 때 만들 수 있어요`;
