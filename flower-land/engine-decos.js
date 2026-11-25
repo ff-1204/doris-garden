@@ -195,18 +195,18 @@ function mutDev(st, ctx) {                        // 개발용(DEV) · 테스트
   return ok(`🧬 ${josa(FLOWERS[f.type].name, '을/를')} 변이 꽃으로 · 🫙 유리 관 +3`, { flower: f });
 }
 // ---------------------------------------------------------------- 🌹 프리저브드 플라워 (P53, 11-01 사용자 요청)
-// 품질 · 기운이 100%인 다 핀 꽃을 꺾어(정원에서 사라지고 빈 칸) 🧪 특수 용액 1병과 함께 꽃방 유리 돔에 넣으면 현실 하루 뒤 완성 → 📦 창고 → 💐 화원에서 팖
+// 품질 · 기운이 PRES_MIN(90%, P97 — 예전 100%) 이상인 다 핀 꽃을 꺾어(정원에서 사라지고 빈 칸) 🧪 특수 용액 1병과 함께 꽃방 유리 돔에 넣으면 현실 하루 뒤 완성 → 📦 창고 → 💐 화원에서 팖
 //   "꽃 값" = 화원에서 파는 그 꽃 한 포기 값 FLOWERS.price (씨앗 · 묘목 값) — 프리저브드 값은 그 10배 · 🧬 변이 꽃은 다시 2배 (꽃잎을 딸 수 없는 꽃이라)
 //   유리 돔은 꽃잎 말리기(st.drying)와 따로 — 꽃방 칸 수 제한이 없어 서로 밀어내지 않음 · 🌾 말리는 속도는 닿지 않음(늘 현실 하루) · 꽃잠에도 흐름(dryTick과 같이 advance에서)
 //   도감은 기본 93칸과 따로 st.dex.pres(꽃 13) · st.dex.presMut(🧬 변이 13) — 다 모으면 덤 칭호 둘 (P52 효과 하나씩)
-const PRES_H = 24, PRES_RATE = 10, PRES_MUT_RATE = 2;
+const PRES_H = 24, PRES_RATE = 10, PRES_MUT_RATE = 2, PRES_MIN = 90;   // PRES_MIN: 만들 수 있는 품질 · 기운 % (P97 11-26 사용자 "품질과 기운이 90%이상이면" — 예전 100)
 const presValue = (st, type, mut) => Math.round(FLOWERS[type].price * PRES_RATE * (mut ? PRES_MUT_RATE : 1) * titlePerk(st, 'presValue') / 10) * 10;
 const presName = (type, mut) => mut && MUTANTS[type] ? `🧬 ${MUTANTS[type].name}` : FLOWERS[type].name;
-const presFull = (st, f) => pct(f.q) >= 100 && Math.round(vigorOf(st, f)) >= 100;
+const presFull = (st, f) => pct(f.q) >= PRES_MIN && Math.round(vigorOf(st, f)) >= PRES_MIN;
 function presReason(st, f) {                      // 만들 수 없으면 까닭 한 줄 (꽃 창 단추 아래), 만들 수 있으면 ''
   if (!f || f.withered) return '시든 꽃은 만들 수 없어요';
   if (f.stage !== 'bloom') return '다 핀 꽃으로 만들 수 있어요';
-  if (!presFull(st, f)) return '품질 · 기운이 100%일 때 만들 수 있어요';
+  if (!presFull(st, f)) return `품질 · 기운이 ${PRES_MIN}% 이상일 때 만들 수 있어요`;
   if (!(st.presol > 0)) return '⛏️ 광산에서 특수 용액을 만들어요';
   return '';
 }
