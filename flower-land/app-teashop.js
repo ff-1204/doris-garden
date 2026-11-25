@@ -155,6 +155,8 @@ function openBrewConfirm(teaIds, blendIds, counts, cup, honeyKs) {   // honeyKs:
   });
 }
 // 블렌딩 확인 창 (P12-08): 재료 말린 꽃잎 → 블렌드 찻잔, 이름 · ★ · 값, 처음 만드는 이름 있는 블렌드면 도감 안내
+// P96-03 재료 칸 수: 세 가지를 섞는 레시피(지금은 숨은 「세 정원의 오후」뿐)를 알 때만 3칸, 아니면 2칸 — 모르는 동안 세 번째를 넣으면 늘 "정해진 블렌드가 아니에요"였음
+const blendSlots = () => E.blendKeys(st).some(k => E.BLENDS[k].parts.length === 3) ? 3 : 2;
 // P82-01 만들 잔 수 n: −/+ · 최대, 가진 꽃잎으로 만들 수 있는 만큼까지 · 쓰이는 꽃잎 수가 바로 바뀜
 function openBlendConfirm(n = 1) {
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)).filter(Boolean);
@@ -168,7 +170,7 @@ function openBlendConfirm(n = 1) {
   const name = recipe ? E.BLENDS[recipe].name : `${parts.map(k => FLOWERS[k].name).join(' · ')} 블렌드`;
   const body = `<div class="rc">
     <div class="bc-hero" style="--pc:${SPR.tea[parts[0]] || FLOWERS[parts[0]].petal}">
-      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 32, false, '')}<small>${FLOWERS[p.type].name} ${FLOWERS[p.type].petals * n}장</small><small class="muted">${st.dried.filter(x => x.type === p.type).length}장 중</small></span>`).join('<b class="bc-plus">+</b>')}</div>
+      <div class="bc-parts">${sel.map(p => `<span class="bc-part">${spriteImg(p.type, 'dried', 32, false, '')}<small>${FLOWERS[p.type].name} 티백 ${n}개 몫</small><small class="muted">${FLOWERS[p.type].petals * n}장 · 가진 ${st.dried.filter(x => x.type === p.type).length}장</small></span>`).join('<b class="bc-plus">+</b>')}</div>
       <span class="bc-arrow">↓</span>
       <div class="bc-out">${spriteImg(parts[0], 'tea', 48, false, name)}<div><b>${recipe ? '✨ ' : ''}${name}</b><span class="stars">${starStr(q)}</span></div></div></div>
     <div class="bc-qty"><b>몇 잔 만들까요?</b><span class="stepper"><button type="button" data-bn="-" ${n <= 1 ? 'disabled' : ''} aria-label="줄이기">−</button><span>${n}</span><button type="button" data-bn="+" ${n >= max ? 'disabled' : ''} aria-label="늘리기">+</button></span><button type="button" class="btn small" data-bn="max" ${n >= max ? 'disabled' : ''}>최대 ${max}잔</button></div>
@@ -181,8 +183,8 @@ function openBlendConfirm(n = 1) {
 }
 // P82-02 티백 하나에 드는 꽃잎 수 한 줄 (카드 · 고르는 화면) — 모자라면 몇 장 더
 function bagNeedHTML(type, have) {
-  const { per, short } = E.bagNeed(type, have);
-  return `<div class="cc-need">티백 1개 = 꽃잎 ${per}장${short ? ` · <b class="val-down">${short}장 더 모아요</b>` : ''}</div>`;
+  const { per, short } = E.bagNeed(type, have), bags = Math.floor(have / per), rest = have - bags * per;   // P96-04 가진 꽃잎을 티백 몇 개 몫인지로도 세어 보여요 (블렌딩은 꽃마다 1개 몫씩)
+  return `<div class="cc-need">티백 1개 = 꽃잎 ${per}장${short ? ` · <b class="val-down">${short}장 더 모아요</b>` : ` · <b>티백 ${bags}개 몫</b>${rest ? ` · ${rest}장 남음` : ''}`}</div>`;
 }
 function groupBy(list, keyFn) {
   const m = new Map();
@@ -241,7 +243,7 @@ function renderCab(force) {
   const presBox = pres.length ? `<div class="cab-head" id="tr-pres"><span class="sb-title">🌹 유리 돔 <span class="sh-n">${pres.length}</span></span><span class="muted">하루 뒤 프리저브드가 돼요 · 꽃잎 말리기와 따로예요</span></div><div class="shopgrid cabgrid">${presCards}</div>` : '';
   const starRange = g => E.stars(g.qMin != null ? g.qMin : g.q) === E.stars(g.q) ? starStr(g.q) : `★${E.stars(g.qMin)}~${E.stars(g.q)}`;   // 묶음의 품질 범위 (10-24)
   const driedCards = dried.map(d => {
-    const F = FLOWERS[d.type], selN = d.ids.filter(id => ui.blendSel.includes(id)).length, canSel = selN < d.ids.length && ui.blendSel.length < 3 && !ui.blendSel.some(id => st.dried.find(p => p.id === id).type === d.type);
+    const F = FLOWERS[d.type], selN = d.ids.filter(id => ui.blendSel.includes(id)).length, canSel = selN < d.ids.length && ui.blendSel.length < blendSlots() && !ui.blendSel.some(id => st.dried.find(p => p.id === id).type === d.type);
     return `<div class="shopcard cabcard driedcard ${selN ? 'picked' : ''}" style="--pc:${mixHex(F.petal, '#b49a74', 0.45)}">
       <div class="sc-art">${spriteImg(d.type, 'dried', 48, false, F.name)}<span class="chip sc-form">말린 꽃잎</span><span class="sc-count">×${d.ids.length}</span></div>
       <div class="cc-name"><b>${F.name}</b><span class="stars">${starRange(d)}</span></div>
@@ -250,24 +252,27 @@ function renderCab(force) {
   }).join('');
   // 🫖 블렌딩 (P12-08): 언제든 (10-06)
   const sel = ui.blendSel.map(id => st.dried.find(p => p.id === id)), parts = sel.map(p => p.type);
-  const recipe = parts.length >= 2 ? E.blendRecipe(parts, st) : null, avg = sel.length ? sel.reduce((a, p) => a + p.q, 0) / sel.length : 0;
-  const previewVal = parts.length >= 2 ? E.blendValue({ parts, q: avg, recipe, ...(E.blendMax(st, parts) > 0 ? E.blendPlan(st, parts, 1)[0].by : {}) }) : 0;   // P85-03 산 꽃잎이 들면 배율 없음
+  const recipe = parts.length >= 2 ? E.blendRecipe(parts, st) : null;
+  // P96-01 칸에 보이는 별은 실제 한 잔과 같게: 꽃마다 좋은 꽃잎부터 티백 하나 몫(모자라면 가진 만큼)을 모두 평균 — 한 잔 몫이 다 있으면 E.blendPlan(st, parts, 1)[0].q와 같아요
+  //   (예전엔 고른 한 장씩만 평균이라, 좋은 꽃잎이 한 장만 있어도 확인 창 · 실제보다 별이 높게 보였어요)
+  const cupOf = parts.flatMap(t => st.dried.filter(p => p.type === t).sort((a, b) => b.q - a.q).slice(0, FLOWERS[t].petals)), avg = cupOf.length ? cupOf.reduce((a, p) => a + p.q, 0) / cupOf.length : 0;
   // P82-02 고른 재료마다 한 잔에 드는 장 수 · 모자라면 몇 장 더 · 넉넉하면 지금 최대 몇 잔
   const haveOf = t => st.dried.filter(p => p.type === t).length, blendMaxN = parts.length ? E.blendMax(st, parts) : 0;
   const lackText = parts.filter(t => E.bagNeed(t, haveOf(t)).short).map(t => `${FLOWERS[t].name} ${E.bagNeed(t, haveOf(t)).short}장`).join(' · ');
-  const needHTML = parts.length ? `<div class="bl-need">🫖 한 잔에 ${parts.map(t => `${FLOWERS[t].name} ${FLOWERS[t].petals}장`).join(' · ')}${lackText ? ` · <b class="val-down">${lackText} 더 모아요</b>` : parts.length >= 2 && recipe ? ` · <b class="val-up">지금 최대 ${blendMaxN}잔</b>` : ''}</div>` : '';
+  const needHTML = parts.length ? `<div class="bl-need">🫖 한 잔에 ${parts.map(t => `${FLOWERS[t].name} 1개 몫`).join(' + ')} <small class="muted">(${parts.map(t => `${FLOWERS[t].petals}장`).join(' + ')})</small>${lackText ? ` · <b class="val-down">${lackText} 더 모아요</b>` : parts.length >= 2 && recipe ? ` · <b class="val-up">지금 최대 ${blendMaxN}잔</b>` : ''}</div>` : '';
   // 한 줄: 재료 칸 세 개 → 결과 → 블렌딩하기. 레시피는 접어 둠
   const gotN = E.blendKeys(st).filter(k => st.dex.blend[k] != null).length;
   // 레시피: 말린 꽃잎이 다 있는 것은 "지금 만들 수 있어요"로 맨 앞, 누르면 재료 칸에 담김 (10-06)
-  const haveDried = new Set(st.dried.map(p => p.type)), canMake = k => E.BLENDS[k].parts.every(p => haveDried.has(p));
-  const recKeys = E.blendKeys(st).slice().sort((x, y) => canMake(y) - canMake(x)), readyN = E.blendKeys(st).filter(canMake).length;
+  // P96-02 canMake = 한 잔 몫이 다 있음(세는 것 · 초록) · canPick = 꽃마다 한 장이라도 있음(칸에 담아 모자란 장 수를 볼 수 있음 · 점선)
+  const haveDried = new Set(st.dried.map(p => p.type)), canPick = k => E.BLENDS[k].parts.every(p => haveDried.has(p)), canMake = k => canPick(k) && E.blendMax(st, E.BLENDS[k].parts) >= 1;
+  const recRank = k => canMake(k) ? 2 : canPick(k) ? 1 : 0, recKeys = E.blendKeys(st).slice().sort((x, y) => recRank(y) - recRank(x)), readyN = E.blendKeys(st).filter(canMake).length;
   const bookHTML = `<details class="bl-book"${ui.bookOpen ?? readyN > 0 ? ' open' : ''}><summary>📖 레시피 <span class="data">${gotN} / ${E.blendKeys(st).length}</span>${readyN ? ` · <b class="val-up">지금 만들 수 있어요 ${readyN}</b>` : ''}</summary>
-        <div class="bl-recs">${recKeys.map(k => { const B = E.BLENDS[k], got = st.dex.blend[k] != null, ok = canMake(k), inner = `${got ? '✓ ' : ''}<b>${B.name}</b> <small>${B.parts.map(p => FLOWERS[p].name).join(' + ')}</small> <small class="bl-taste">· ${B.taste}</small>`; return ok ? `<button type="button" class="bl-rec ready ${got ? 'got' : ''} ${recipe === k ? 'on' : ''}" aria-pressed="${recipe === k}" data-recipe="${k}" title="재료를 블렌딩 칸에 담아요">🫖 ${inner}</button>` : `<span class="bl-rec ${got ? 'got' : ''}">${inner}</span>`; }).join('')}</div></details>`;
+        <div class="bl-recs">${recKeys.map(k => { const B = E.BLENDS[k], got = st.dex.blend[k] != null, ok = canPick(k), full = canMake(k), inner = `${got ? '✓ ' : ''}<b>${B.name}</b> <small>${B.parts.map(p => FLOWERS[p].name).join(' + ')}</small> <small class="bl-taste">· ${B.taste}</small>`; return ok ? `<button type="button" class="bl-rec ${full ? 'ready' : 'short'} ${got ? 'got' : ''} ${recipe === k ? 'on' : ''}" aria-pressed="${recipe === k}" data-recipe="${k}" title="${full ? '재료를 블렌딩 칸에 담아요' : '재료를 담아 모자란 꽃잎 수를 봐요'}">${full ? '🫖 ' : ''}${inner}${full ? '' : ' <small>· 꽃잎이 모자라요</small>'}</button>` : `<span class="bl-rec ${got ? 'got' : ''}">${inner}</span>`; }).join('')}</div></details>`;
   const blendBox = true ? `
-    <div class="cab-head" id="tr-blend"><span class="sb-title">🫖 블렌딩</span><span class="muted">말린 꽃잎 2~3가지 · 꽃마다 티백 하나 몫</span></div>
+    <div class="cab-head" id="tr-blend"><span class="sb-title">🫖 블렌딩</span><span class="muted">말린 꽃잎 ${blendSlots() === 3 ? '2~3가지' : '두 가지'} · 꽃마다 티백 하나 몫</span></div>
     <div class="blendbox">
       <div class="bl-row">
-        <div class="bl-slots">${[0, 1, 2].map(i => sel[i] ? `<button type="button" class="bl-slot on" data-bunsel="${sel[i].id}" title="${FLOWERS[sel[i].type].name} 빼기" style="--pc:${FLOWERS[sel[i].type].petal}">${spriteImg(sel[i].type, 'dried', 32, false, '')}<small>${FLOWERS[sel[i].type].name}</small></button>` : `<span class="bl-slot ${i < 2 ? '' : 'opt'}" ${i < 2 ? '' : 'title="세 번째는 넣어도, 안 넣어도 돼요"'}>+${i < 2 ? '' : '<small>더</small>'}</span>`).join('')}</div>
+        <div class="bl-slots">${Array.from({ length: blendSlots() }, (_, i) => i).map(i => sel[i] ? `<button type="button" class="bl-slot on" data-bunsel="${sel[i].id}" title="${FLOWERS[sel[i].type].name} 빼기" style="--pc:${FLOWERS[sel[i].type].petal}">${spriteImg(sel[i].type, 'dried', 32, false, '')}<small>${FLOWERS[sel[i].type].name}</small></button>` : `<span class="bl-slot ${i < 2 ? '' : 'opt'}" ${i < 2 ? '' : 'title="세 번째는 넣어도, 안 넣어도 돼요"'}>+${i < 2 ? '' : '<small>더</small>'}</span>`).join('')}</div>
         <span class="bl-arrow" aria-hidden="true">→</span>
         <div class="bl-out">${parts.length >= 2 && !recipe ? `<b class="val-down">정해진 블렌드가 아니에요</b><small class="bl-taste">${E.blendNearText(parts, st)}</small>` : parts.length >= 2 ? `<b>✨ ${E.BLENDS[recipe].name}</b><span><span class="stars">${starStr(avg)}</span></span><small class="bl-taste"><b>맛</b> ${E.teaTaste('blend', recipe, parts)}</small>` : `<span class="muted">${!st.dried.length ? '꽃방에서 꽃잎을 말리면 섞을 수 있어요' : readyN ? '말린 꽃잎의 🫖 블렌딩이나 아래 레시피를 눌러요' : '위 말린 꽃잎에서 🫖 블렌딩을 눌러요'}</span>`}</div>
       </div>
@@ -440,7 +445,7 @@ function cabClick(e) {
   if (b.dataset.makedried) return openTeaConfirm(b.dataset.makedried.split(',').map(Number), true);
   if (b.dataset.bsel) {                                // 블렌딩 재료 고르기: 같은 묶음에서 아직 안 고른 한 장
     const type = b.dataset.bsel, p = st.dried.filter(x => x.type === type && !ui.blendSel.includes(x.id)).sort((a, c) => c.q - a.q)[0];   // 그 꽃 중 가장 좋은 한 장
-    if (p && ui.blendSel.length < 3) ui.blendSel.push(p.id);
+    if (p && ui.blendSel.length < blendSlots()) ui.blendSel.push(p.id);
     return renderCab(true);
   }
   if (b.dataset.recipe) {
